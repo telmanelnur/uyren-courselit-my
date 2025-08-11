@@ -1,0 +1,22 @@
+{
+    "name": "@workspace/page-models",
+    "version": "0.0.0",
+    "main": "src/index.ts",
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "build": "tsc",
+        "clean": "rimraf dist/",
+        "prepublishOnly": "pnpm run build"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "devDependencies": {
+        "@workspace/typescript-config": "workspace:*",
+        "@typescript-eslint/eslint-plugin": "^5.18.0",
+        "@typescript-eslint/parser": "^5.18.0",
+        "eslint": "^8.12.0",
+        "rimraf": "^4.1.1",
+        "typescript": "^5.8.3"
+    }
+}

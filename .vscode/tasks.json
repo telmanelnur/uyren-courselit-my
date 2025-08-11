@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Check seed script",
+			"type": "shell",
+			"command": "node --check apps/web/scripts/seed.ts",
+			"group": "build",
+			"isBackground": false
+		}
+	]
+}
