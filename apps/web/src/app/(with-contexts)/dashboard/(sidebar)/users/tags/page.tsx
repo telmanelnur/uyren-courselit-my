@@ -3,14 +3,13 @@
 import DashboardContent from "@/components/admin/dashboard-content";
 import LoadingScreen from "@/components/admin/loading-screen";
 import Tags from "@/components/admin/users/tags";
-import { AddressContext, ProfileContext } from "@components/contexts";
-import { UIConstants } from "@workspace/common-models";
-import { checkPermission } from "@workspace/utils";
+import { useProfile } from "@/components/contexts/profile-context";
 import {
     USERS_MANAGER_PAGE_HEADING,
     USERS_TAG_HEADER,
 } from "@/lib/ui/config/strings";
-import { useContext } from "react";
+import { UIConstants } from "@workspace/common-models";
+import { checkPermission } from "@workspace/utils";
 
 const { permissions } = UIConstants;
 
@@ -26,8 +25,7 @@ const breadcrumbs = [
 ];
 
 export default function Page() {
-    const address = useContext(AddressContext);
-    const { profile } = useContext(ProfileContext);
+    const { profile } = useProfile();
 
     if (!checkPermission(profile.permissions!, [permissions.manageUsers])) {
         return <LoadingScreen />;
@@ -35,7 +33,7 @@ export default function Page() {
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <Tags address={address} />
+            <Tags />
         </DashboardContent>
     );
 }

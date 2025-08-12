@@ -2,11 +2,13 @@ import DomainModel from "@/models/Domain";
 import UserModel from "@/models/User";
 import { createUser } from "@/server/api/routers/user/helpers";
 import { adminAuth } from "@/server/lib/firebaseAdmin";
+import { connectToDatabase } from "@workspace/common-logic";
+import { Media } from "@workspace/common-models";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import z from "zod";
 import { Log } from "../logger";
-import { connectToDatabase } from "@workspace/common-logic";
+import { firebaseAuth } from "./firebase";
 
 const AuthorizeFirebaseSchema = z.object({
   idToken: z.string().min(1, "ID Token is required"),
@@ -43,6 +45,8 @@ export const authOptions: NextAuthOptions = {
           //   await connectToDatabase();
           const decoded = await adminAuth.verifyIdToken(idToken);
 
+          console.log("decoded", decoded);  
+
           if (!decoded.email_verified) {
             throw new Error("Email is not verified");
           }
@@ -71,12 +75,16 @@ export const authOptions: NextAuthOptions = {
             });
             user.avatar = decoded.picture
               ? {
-                  storageType: "custom",
-                  data: {
-                    url: decoded.picture,
-                    caption: "Google profile picture",
-                  },
-                }
+                url: decoded.picture,
+                mediaId: `google_${decoded.uid}`,
+                originalFileName: "google_profile_picture",
+                mimeType: "image/jpeg",
+                size: 0,
+                access: "public",
+                thumbnail: decoded.picture,
+                caption: "Google profile picture",
+                storageProvider: "custom",
+              }
               : undefined;
             await user.save();
           }
@@ -84,12 +92,24 @@ export const authOptions: NextAuthOptions = {
           if (!user.active) {
             return null;
           }
+          const media: Media | undefined = user.avatar ? {
+            storageProvider: "custom",
+            url: user.avatar.url,
+            mediaId: user.avatar.mediaId,
+            originalFileName: user.avatar.originalFileName,
+            mimeType: user.avatar.mimeType,
+            size: user.avatar.size,
+            access: user.avatar.access,
+            thumbnail: user.avatar.thumbnail,
+            caption: user.avatar.caption,
+            file: user.avatar.file,
+          } : undefined;
           return {
             id: user.userId,
             userId: user.userId,
             email: sanitizedEmail,
             name: user.name,
-            avatar: user.avatar,
+            avatar: media,
             permissions: user.permissions || [],
             roles: user.roles || [],
             active: user.active,
@@ -142,6 +162,21 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  events: {
+    signOut: async () => {
+      try {
+        
+        // Sign out from Firebase if user is authenticated
+        if (firebaseAuth.currentUser) {
+          await firebaseAuth.signOut();
+          console.log("Firebase user signed out successfully");
+        }
+      } catch (error) {
+        console.error("Error signing out from Firebase:", error);
+        // Don't throw error - continue with NextAuth signOut
+      }
+    },
+  },
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
@@ -159,20 +194,7 @@ declare module "next-auth" {
     userId: string;
     email: string;
     name?: string;
-    avatar?: {
-      storageType: "media" | "custom";
-      data: {
-        url?: string;
-        mediaId?: string;
-        originalFileName?: string;
-        mimeType?: string;
-        size?: number;
-        access?: string;
-        thumbnail?: string;
-        caption?: string;
-        file?: string;
-      };
-    };
+    avatar?: Media;
     permissions: string[];
     roles: string[];
     active: boolean;
@@ -203,20 +225,7 @@ declare module "next-auth/jwt" {
       userId: string;
       email: string;
       name: string;
-      avatar?: {
-        storageType: "media" | "custom";
-        data: {
-          url?: string;
-          mediaId?: string;
-          originalFileName?: string;
-          mimeType?: string;
-          size?: number;
-          access?: string;
-          thumbnail?: string;
-          caption?: string;
-          file?: string;
-        };
-      };
+      avatar?: Media;
       permissions: string[];
       roles: string[];
       active: boolean;

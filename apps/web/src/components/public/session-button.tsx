@@ -7,13 +7,34 @@ import {
 import { Button } from "@workspace/components-library";
 // import { AppState } from "@workspace/state-management";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useToast } from "@workspace/components-library";
 
 export default function SessionButton() {
     const { data: session } = useSession();
+    const { toast } = useToast();
+
+    const handleSignOut = async () => {
+        try {
+            // NextAuth will automatically handle Firebase logout through the callback
+            await signOut({ callbackUrl: "/auth/login" });
+            
+            toast({
+                title: "Signed out successfully",
+                description: "You have been logged out",
+            });
+        } catch (error) {
+            console.error("Sign out error:", error);
+            toast({
+                title: "Sign out error",
+                description: "There was an issue signing out. Please try again.",
+                variant: "destructive",
+            });
+        }
+    };
 
     if (session) {
         return (
-            <Button onClick={() => signOut()} component="button">
+            <Button onClick={handleSignOut} component="button">
                 {GENERIC_SIGNOUT_TEXT}
             </Button>
         );

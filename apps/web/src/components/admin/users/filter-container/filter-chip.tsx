@@ -29,6 +29,9 @@ export default function FilterChip({
             dispValue = "";
         }
         if (name === "permission") {
+            if(!permissionToCaptionMap[value]) {
+                throw new Error(`Permission ${value} not found in permissionToCaptionMap`);
+            }
             dispValue = permissionToCaptionMap[value];
         }
         return dispValue;

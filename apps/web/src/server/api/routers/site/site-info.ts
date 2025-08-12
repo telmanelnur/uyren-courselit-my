@@ -3,7 +3,7 @@ import { responses } from "@/config/strings";
 import ApikeyModel from "@/models/ApiKey";
 import DomainModel, { Domain } from "@/models/Domain";
 import PageModel from "@/models/Page";
-import { connectToDatabase } from "@workspace/common-logic";
+
 import {
   Constants,
   PaymentMethod,
@@ -141,7 +141,7 @@ const getPaymentInvalidException = (paymentMethod: string) =>
 
 export const siteInfoRouter = router({
   publicGetSettings: publicProcedure.query(async ({ ctx }) => {
-    await connectToDatabase();
+    
 
     const { domainObj } = ctx.domainData || {};
 
@@ -160,7 +160,7 @@ export const siteInfoRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
 
       console.log("[publicGetFullSiteSetup]");
 

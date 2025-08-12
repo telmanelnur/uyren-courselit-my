@@ -1,17 +1,3 @@
-import React, { FormEvent, useState } from "react";
-import { Address } from "@workspace/common-models";
-import {
-    Form,
-    FormField,
-    Select,
-    Link,
-    Button,
-    useToast,
-} from "@workspace/components-library";
-import { AppDispatch, AppState } from "@workspace/state-management";
-import { FetchBuilder } from "@workspace/utils";
-import { useRouter } from "next/navigation";
-import { connect } from "react-redux";
 import {
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,
@@ -20,57 +6,47 @@ import {
     BTN_CONTINUE,
     BTN_NEW_PRODUCT,
     BUTTON_CANCEL_TEXT,
-    TOAST_TITLE_ERROR,
     FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
     FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
     FORM_NEW_PRODUCT_TYPE,
+    TOAST_TITLE_ERROR,
 } from "@/lib/ui/config/strings";
 import { capitalize } from "@/lib/ui/lib/utils";
-import { networkAction } from "@workspace/state-management/dist/action-creators";
-import { usePathname } from "next/navigation";
+import { trpc } from "@/utils/trpc";
+import { CourseType } from "@workspace/common-models";
+import {
+    Button,
+    Form,
+    FormField,
+    Link,
+    Select,
+    useToast,
+} from "@workspace/components-library";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 
-interface NewProductProps {
-    address: Address;
-    dispatch?: AppDispatch;
-    networkAction: boolean;
-}
 
-export function NewProduct({
-    address,
-    dispatch,
-    networkAction: loading,
-}: NewProductProps) {
+export function NewProduct() {
     const [title, setTitle] = useState("");
-    const [type, setType] = useState(COURSE_TYPE_COURSE);
+    const [type, setType] = useState<CourseType>(COURSE_TYPE_COURSE);
     const router = useRouter();
-    const path = usePathname();
     const { toast } = useToast();
+
+    const createCourseMutation = trpc.lmsModule.courseModule.course.create.useMutation();
 
     const createCourse = async (e: FormEvent) => {
         e.preventDefault();
-
-        const query = `
-            mutation {
-                course: createCourse(courseData: {
-                    title: "${title}",
-                    type: ${type.toUpperCase()},
-                }) {
-                    courseId
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
         try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.course) {
+            const response = await createCourseMutation.mutateAsync({
+                data: {
+                    title,
+                    type,
+                },
+            });
+            if (response) {
                 router.replace(
-                    `/dashboard/product/${response.course.courseId}`,
+                    `/dashboard/product/${response.courseId}`,
                 );
             }
         } catch (err: any) {
@@ -79,10 +55,10 @@ export function NewProduct({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
+
+    const loading = createCourseMutation.isPending;
 
     return (
         <div className="flex flex-col">
@@ -96,13 +72,13 @@ export function NewProduct({
                         label="Title"
                         name="title"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e: any) => setTitle(e.target.value)}
                         placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
                     />
                     <Select
                         title={FORM_NEW_PRODUCT_TYPE}
                         value={type}
-                        onChange={(e: string) => setType(e)}
+                        onChange={(e) => setType(e)}
                         options={[
                             {
                                 label: capitalize(COURSE_TYPE_COURSE),
@@ -138,12 +114,3 @@ export function NewProduct({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewProduct);

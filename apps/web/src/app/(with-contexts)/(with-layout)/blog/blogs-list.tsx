@@ -1,14 +1,14 @@
 "use client";
 
-import { useContext, useMemo } from "react";
-import { BlogContentCard } from "./content-card";
-import { PaginationControls } from "@components/public/pagination";
-import { Constants, Course } from "@workspace/common-models";
+import { useTheme } from "@/components/contexts/theme-context";
+import { PaginationControls } from "@/components/public/pagination";
 import { useProducts } from "@/hooks/use-products";
+import { Constants, Course } from "@workspace/common-models";
 import { ProductCardSkeleton } from "@workspace/page-blocks";
-import { ThemeContext } from "@components/contexts";
-import { BookOpen } from "lucide-react";
 import { Button, Subheader1 } from "@workspace/page-primitives";
+import { BookOpen } from "lucide-react";
+import { useMemo } from "react";
+import { BlogContentCard } from "./content-card";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -21,7 +21,7 @@ export function BlogsList({
     itemsPerPage?: number;
     onPageChange: (page: number) => void;
 }) {
-    const { theme: uiTheme } = useContext(ThemeContext);
+    const { theme: uiTheme } = useTheme()
     const { theme } = uiTheme;
 
     const filters = useMemo(
@@ -52,14 +52,14 @@ export function BlogsList({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading
                     ? Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                          <ProductCardSkeleton key={index} theme={theme} />
-                      ))
+                        <ProductCardSkeleton key={index} theme={theme} />
+                    ))
                     : products.map((product: Course) => (
-                          <BlogContentCard
-                              key={product.courseId}
-                              product={product}
-                          />
-                      ))}
+                        <BlogContentCard
+                            key={product.courseId}
+                            product={product}
+                        />
+                    ))}
             </div>
             <PaginationControls
                 currentPage={page}

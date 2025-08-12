@@ -1,85 +1,44 @@
-import { Address, Course } from "@workspace/common-models";
-import { useToast } from "@workspace/components-library";
 import { TOAST_TITLE_ERROR } from "@/lib/ui/config/strings";
-import { useCallback, useEffect, useState } from "react";
 import { trpc } from "@/utils/trpc";
+import { Course, ProductAccessType } from "@workspace/common-models";
+import { useToast } from "@workspace/components-library";
+import { useEffect, useState } from "react";
 
 type CourseWithAdminProps = Partial<
     Course & {
         published: boolean;
-        privacy: string;
+        privacy: ProductAccessType;
     }
 >;
 
 export default function useCourse(
-    id: string,
-    address: Address,
-    dispatch?: AppDispatch,
+    courseId: string,
 ): CourseWithAdminProps | undefined | null {
-    // const address = useSelector((state: AppState) => state.address);
     const [course, setCourse] = useState<
         CourseWithAdminProps | undefined | null
     >();
     const { toast } = useToast();
 
-    const loadCourseQuery = trpc.lmsModule.courseModule.course
-
-    const loadCourse = useCallback(
-        async (courseId: string) => {
-            const query = `
-            query {
-                course: getCourse(id: "${courseId}") {
-                    title,
-                    description,
-                    courseId,
-                    slug,
-                    featuredImage {
-                        mediaId,
-                        originalFileName,
-                        mimeType,
-                        size,
-                        access,
-                        file,
-                        thumbnail,
-                        caption
-                    },
-                    published,
-                    privacy,
-                }
-            }
-        `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            try {
-                dispatch && dispatch(networkAction(true));
-                const response = await fetch.exec();
-                if (response.course) {
-                    setCourse(response.course);
-                } else {
-                    setCourse(null);
-                }
-            } catch (err: any) {
-                setCourse(null);
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message,
-                    variant: "destructive",
-                });
-            } finally {
-                dispatch && dispatch(networkAction(false));
-            }
-        },
-        [address?.backend, dispatch],
-    );
+    const loadCourseQuery = trpc.lmsModule.courseModule.course.getByCourseId.useQuery({
+        courseId,
+    });
 
     useEffect(() => {
-        if (id && address) {
-            loadCourse(id);
+        if (loadCourseQuery.data) {
+            setCourse(loadCourseQuery.data);
         }
-    }, [id, address, loadCourse]);
+    }, [loadCourseQuery.data]);
+
+    useEffect(() => {
+        if (loadCourseQuery.error) {
+            setCourse(null);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: loadCourseQuery.error.message,
+                variant: "destructive",
+            });
+        }
+    }, [loadCourseQuery.error]);
 
     return course;
 }

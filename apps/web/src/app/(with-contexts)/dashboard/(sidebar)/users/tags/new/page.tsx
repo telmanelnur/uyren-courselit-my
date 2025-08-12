@@ -16,10 +16,10 @@ import {
     USERS_TAG_HEADER,
     USERS_TAG_NEW_HEADER,
 } from "@/lib/ui/config/strings";
-import { FetchBuilder } from "@workspace/utils";
+import { trpc } from "@/utils/trpc";
 import { FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import { useProfile } from "@/components/contexts/profile-context";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
@@ -43,46 +43,34 @@ const breadcrumbs = [
 ];
 
 export default function Page() {
-    const address = useContext(AddressContext);
     const [name, setName] = useState("");
-    const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
-    const { profile } = useContext(ProfileContext);
+    const { profile } = useProfile();
+
+    // Use tRPC mutation for creating tags
+    const createTagMutation = trpc.userModule.tag.addTags.useMutation({
+        onSuccess: () => {
+            toast({
+                title: "Success",
+                description: "Tag created successfully",
+            });
+            router.replace("/dashboard/users/tags");
+        },
+        onError: (error) => {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        },
+    });
 
     const createTag = async (e: FormEvent) => {
         e.preventDefault();
-
-        const mutation = `
-            mutation CreateTag($name: [String!]!) {
-              tags: addTags(tags: $name)
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    name: [name],
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            setLoading(true);
-            const response = await fetch.exec();
-            if (response.tags) {
-                router.replace("/dashboard/users/tags");
-            }
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
-            setLoading(false);
-        }
+        createTagMutation.mutate({
+            tags: [name],
+        });
     };
 
     if (!checkPermission(profile.permissions!, [permissions.manageUsers])) {
@@ -103,7 +91,7 @@ export default function Page() {
                     }
                 />
                 <div className="flex gap-2">
-                    <Button disabled={!name || loading} onClick={createTag}>
+                    <Button disabled={!name || createTagMutation.isPending} onClick={createTag}>
                         {BTN_CONTINUE}
                     </Button>
                     <Button

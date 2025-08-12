@@ -1,5 +1,5 @@
 import PageModel from "@/models/Page";
-import { connectToDatabase } from "@workspace/common-logic";
+
 import { z } from "zod";
 import { NotFoundException } from "../../core/exceptions";
 import {
@@ -30,7 +30,7 @@ export const pageRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
       let page: any = null;
 
       if (input.id) {
@@ -75,7 +75,7 @@ export const pageRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
 
       const page = await PageModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -104,7 +104,7 @@ export const pageRouter = router({
   publicGetDefault: publicProcedure
     .use(createDomainRequiredMiddleware())
     .query(async ({ ctx }) => {
-      await connectToDatabase();
+      
 
       const page = await PageModel.findOne({
         domain: ctx.domainData.domainObj._id,

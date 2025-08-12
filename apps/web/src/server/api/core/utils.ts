@@ -1,4 +1,5 @@
 import { createModel } from "@workspace/common-logic";
+import { RootFilterQuery } from "mongoose";
 
 export function paginate(p?: {
   skip?: number;
@@ -22,7 +23,7 @@ export const like = (s?: string) =>
   s?.trim() ? { contains: s.trim(), mode: "insensitive" as const } : undefined;
 
 interface QueryOptions<T> {
-  filter?: Partial<Record<keyof T, any>>;
+  filter?: RootFilterQuery<T>;
   pagination?: {
     page?: number;
     take?: number;

@@ -1,8 +1,6 @@
-"use client";
-
 import DashboardContent from "@/components/admin/dashboard-content";
-import { UIConstants } from "@workspace/common-models";
 import { HEADER_COURSELIT } from "@/lib/ui/config/strings";
+import { UIConstants } from "@workspace/common-models";
 
 const breadcrumbs = [{ label: HEADER_COURSELIT, href: "#" }];
 

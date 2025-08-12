@@ -12,7 +12,7 @@ import PageModel from "@/models/Page";
 import PaymentPlanModel from "@/models/PaymentPlan";
 import { addNotification } from "@/server/lib/queue";
 import { getPaymentMethodFromSettings } from "@/server/services/payment";
-import { connectToDatabase } from "@workspace/common-logic";
+
 import {
   Community,
   CommunityMedia,
@@ -23,7 +23,7 @@ import {
   UIConstants,
 } from "@workspace/common-models";
 import { checkPermission, generateUniqueId, slugify } from "@workspace/utils";
-import mongoose from "mongoose";
+import mongoose, { RootFilterQuery } from "mongoose";
 import { z } from "zod";
 import {
   AuthorizationException,
@@ -34,6 +34,7 @@ import {
 import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
+  MainContextType,
   protectedProcedure,
 } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
@@ -94,7 +95,7 @@ async function getMembersCount({
   communityId: string;
   status?: CommunityMemberStatus;
 }): Promise<number> {
-  const query: Record<string, unknown> = {
+  const query: RootFilterQuery<typeof MembershipModel> = {
     domain: domainId,
     entityId: communityId,
     entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -111,7 +112,7 @@ async function getMembersCount({
 
 async function formatCommunity(
   community: InternalCommunity,
-  ctx: any
+  ctx: MainContextType
 ): Promise<Community & Pick<InternalCommunity, "autoAcceptMembers">> {
   return {
     name: community.name,
@@ -225,9 +226,7 @@ export const communityRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(ListInputSchema)
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
-
-      const query: Partial<InternalCommunity> = {
+      const query: RootFilterQuery<typeof CommunityModel> = {
         domain: ctx.domainData.domainObj._id,
         deleted: false,
       };
@@ -311,7 +310,6 @@ export const communityRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
       const query = {
         domain: ctx.domainData.domainObj!._id,
         communityId: input.data.communityId,
@@ -329,7 +327,7 @@ export const communityRouter = router({
         return null;
       }
 
-      return await formatCommunity(community, ctx);
+      return await formatCommunity(community, ctx as any);
     }),
 
   create: protectedProcedure
@@ -337,7 +335,6 @@ export const communityRouter = router({
     .use(createPermissionMiddleware([UIConstants.permissions.manageCommunity]))
     .input(CreateSchema)
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
       // Check if community with same name already exists in this domain
       const existingCommunity = await CommunityModel.findOne({
         name: input.data.name,
@@ -404,7 +401,6 @@ export const communityRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(UpdateSchema)
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
       const community = await getCommunityObjOrAssert(ctx, input.communityId);
       const member = await getMembership(ctx, community.communityId);
       if (
@@ -436,7 +432,7 @@ export const communityRouter = router({
         }
       }
       await community.save();
-      return await formatCommunity(community, ctx);
+      return await formatCommunity(community, ctx as any);
     }),
 
   delete: protectedProcedure
@@ -448,7 +444,6 @@ export const communityRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
       const community = await getCommunityObjOrAssert(ctx, input.communityId);
 
       await PageModel.updateOne(
@@ -472,7 +467,7 @@ export const communityRouter = router({
         }
       );
 
-      return await formatCommunity(community, ctx);
+      return await formatCommunity(community, ctx as any);
     }),
 
   addCategory: protectedProcedure
@@ -484,7 +479,6 @@ export const communityRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
       const community = await getCommunityObjOrAssert(
         ctx,
         input.data.communityId
@@ -502,7 +496,7 @@ export const communityRouter = router({
         community.categories.push(input.data.category);
       }
       await community.save();
-      return await formatCommunity(community, ctx);
+      return await formatCommunity(community, ctx as any);
     }),
 
   deleteCategory: protectedProcedure
@@ -515,7 +509,6 @@ export const communityRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
       const community = await getCommunityObjOrAssert(
         ctx,
         input.data.communityId
@@ -542,7 +535,7 @@ export const communityRouter = router({
         (cat) => cat !== input.data.category
       );
       await community.save();
-      return await formatCommunity(community, ctx);
+      return await formatCommunity(community, ctx as any);
     }),
 
   createPaymentPlan: protectedProcedure
@@ -561,7 +554,6 @@ export const communityRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
       const {
         type,
         oneTimeAmount,

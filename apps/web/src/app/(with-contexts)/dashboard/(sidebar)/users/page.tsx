@@ -7,11 +7,11 @@ export async function generateMetadata(
         searchParams,
     }: {
         params: any;
-        searchParams: { [key: string]: string | string[] | undefined };
+        searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
     },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const tab = searchParams["tab"] || "All users";
+    const tab = (await searchParams)?.["tab"] || "All users";
 
     return {
         title: `${tab} | ${(await parent)?.title?.absolute}`,

@@ -50,7 +50,7 @@ const Details = ({ userId, address }: DetailsProps) => {
     }
   }, [getUserQuery.error]);
 
-  const tagsQuery = trpc.userModule.user.getTags.useQuery();
+  const tagsQuery = trpc.userModule.tag.list.useQuery();
   useEffect(() => {
     if (tagsQuery.data) {
       setTags(tagsQuery.data);
@@ -65,16 +65,7 @@ const Details = ({ userId, address }: DetailsProps) => {
 //     }
 //   }, [enrolledCoursesQuery.data]);
 
-  // TODO: test this method. A hard-coded userId was there in the query.
-  // GraphQL fetch for enrolled courses (commented out)
-  // const getEnrolledCourses = async () => {
-  //   ...existing code...
-  // };
 
-  // GraphQL mutation for active state (commented out)
-  // const toggleActiveState = async (value: boolean) => {
-  //   ...existing code...
-  // };
 
   // tRPC equivalent for active state
   const updateUserMutation = trpc.userModule.user.update.useMutation();
@@ -82,7 +73,7 @@ const Details = ({ userId, address }: DetailsProps) => {
     if (!userData) return;
     try {
       const response = await updateUserMutation.mutateAsync({
-        id: userData.userId,
+        userId: userData.userId,
         data: {
           active: value,
         },
@@ -102,17 +93,14 @@ const Details = ({ userId, address }: DetailsProps) => {
     }
   };
 
-  // GraphQL mutation for updating tags (commented out)
-  // const updateTags = async (tags: string[]) => {
-  //   ...existing code...
-  // };
+
 
   // tRPC equivalent for updating tags
   const updateTags = async (tags: string[]) => {
     if (!userData) return;
     try {
       const response = await updateUserMutation.mutateAsync({
-        id: userData.userId,
+        userId: userData.userId,
         data: {
           tags,
         },

@@ -1,8 +1,15 @@
+import { responses } from "@/config/strings";
 import CourseModel from "@/models/Course";
 import LessonModel from "@/models/Lesson";
+import { AuthorizationException, ConflictException, NotFoundException, ValidationException } from "@/server/api/core/exceptions";
 import { MainContextType } from "@/server/api/core/procedures";
 import { deleteMedia } from "@/server/services/media";
+import { InternalCourse } from "@workspace/common-logic";
+import { Constants, UIConstants } from "@workspace/common-models";
 import mongoose from "mongoose";
+import { getPlans } from "../../community/helpers";
+import { checkOwnershipWithoutModel } from "@/server/api/core/permissions";
+import { checkPermission } from "@workspace/utils";
 
 export const getGroupedLessons = async (
   courseId: string,
@@ -77,10 +84,119 @@ export const deleteAllLessons = async (courseId: string, ctx: MainContextType) =
     }
   );
   for (let l of allLessonsWithMedia) {
-    await deleteMedia(l.mediaId);
+    if (l.media) {
+      await deleteMedia(l.media);
+    }
   }
   await LessonModel.deleteMany({
     courseId,
     domain: ctx.domainData.domainObj._id,
   });
+};
+
+export const validateCourse = async (
+  courseData: InternalCourse,
+  ctx: MainContextType,
+) => {
+  if (courseData.type === Constants.CourseType.BLOG) {
+    if (!courseData.description) {
+      throw new ValidationException(responses.blog_description_empty);
+    }
+
+    if (courseData.lessons && courseData.lessons.length) {
+      throw new ConflictException(responses.cannot_convert_to_blog);
+    }
+  }
+
+  // if (courseData.costType !== constants.costPaid) {
+  //     courseData.cost = 0;
+  // }
+
+  // if (courseData.costType === constants.costPaid && courseData.cost < 0) {
+  //     throw new Error(responses.invalid_cost);
+  // }
+
+  // if (
+  //     courseData.type === constants.course &&
+  //     courseData.costType === constants.costEmail
+  // ) {
+  //     throw new Error(responses.courses_cannot_be_downloaded);
+  // }
+
+  // if (courseData.costType === constants.costPaid && courseData.cost > 0) {
+  //     await validatePaymentMethod(ctx.subdomain._id.toString());
+  // }
+
+  if (
+    courseData.type === Constants.CourseType.COURSE ||
+    courseData.type === Constants.CourseType.DOWNLOAD
+  ) {
+    if (courseData.published && courseData.paymentPlans.length === 0) {
+      throw new ConflictException(responses.payment_plan_required);
+    }
+
+    if (
+      courseData.type === Constants.CourseType.DOWNLOAD &&
+      courseData.leadMagnet
+    ) {
+      const paymentPlans = await getPlans({
+        planIds: courseData.paymentPlans,
+        domainId: ctx.domainData.domainObj._id,
+      });
+      if (
+        paymentPlans.length === 0 ||
+        paymentPlans.length > 1 ||
+        paymentPlans.some(
+          (plan) => plan.type !== Constants.PaymentPlanType.FREE,
+        )
+      ) {
+        throw new ConflictException(responses.lead_magnet_invalid_settings);
+      }
+    }
+  }
+
+  return courseData;
+};
+export const getCourseOrThrow = async (
+  id: mongoose.Types.ObjectId | undefined,
+  ctx: {
+    user: {
+      _id: mongoose.Types.ObjectId | string;
+      userId: mongoose.Types.ObjectId | string;
+      permissions: string[];
+    };
+    domainData: { domainObj: { _id: mongoose.Types.ObjectId } };
+  },
+  courseId?: string
+) => {
+  const query = courseId
+    ? {
+      courseId,
+    }
+    : {
+      _id: id,
+    };
+
+  const course = await CourseModel.findOne({
+    ...query,
+    domain: ctx.domainData.domainObj._id,
+  });
+
+  if (!course) {
+    throw new NotFoundException("Course", String(courseId || id));
+  }
+
+  if (!checkPermission(ctx.user.permissions, [UIConstants.permissions.manageAnyCourse])) {
+    if (!checkOwnershipWithoutModel(course, ctx)) {
+      throw new NotFoundException("Course", String(courseId || id));
+    } else {
+      if (!checkPermission(ctx.user.permissions, [UIConstants.permissions.manageCourse])) {
+        throw new AuthorizationException(
+          `You are not allowed to manage this course`
+        );
+      }
+    }
+  }
+
+  return course;
 };

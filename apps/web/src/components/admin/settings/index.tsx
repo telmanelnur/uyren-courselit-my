@@ -104,11 +104,11 @@ interface SettingsProps {
   address: Address;
   loading: boolean;
   selectedTab:
-    | typeof SITE_SETTINGS_SECTION_GENERAL
-    | typeof SITE_SETTINGS_SECTION_PAYMENT
-    | typeof SITE_MAILS_HEADER
-    | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
-    | typeof SITE_APIKEYS_SETTING_HEADER;
+  | typeof SITE_SETTINGS_SECTION_GENERAL
+  | typeof SITE_SETTINGS_SECTION_PAYMENT
+  | typeof SITE_MAILS_HEADER
+  | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
+  | typeof SITE_APIKEYS_SETTING_HEADER;
 }
 
 type ApiKeyType =
@@ -166,7 +166,7 @@ const Settings = (props: SettingsProps) => {
 
   useEffect(() => {
     if (loadSettingsQuery.data) {
-      setSettings(loadSettingsQuery.data.settings);
+      setSettingsState(loadSettingsQuery.data.settings);
     }
   }, [loadSettingsQuery.data]);
 
@@ -223,17 +223,20 @@ const Settings = (props: SettingsProps) => {
   ) => {
     event.preventDefault();
     try {
-      await updateSiteInfoMutation.mutateAsync({
+      const response = await updateSiteInfoMutation.mutateAsync({
         data: {
           title: newSettings.title,
           subtitle: newSettings.subtitle,
           hideCourseLitBranding: newSettings.hideCourseLitBranding,
         },
       });
-      toast({
-        title: TOAST_TITLE_SUCCESS,
-        description: APP_MESSAGE_SETTINGS_SAVED,
-      });
+      if (response.settings) {
+        setSettingsState(response.settings);
+        toast({
+          title: TOAST_TITLE_SUCCESS,
+          description: APP_MESSAGE_SETTINGS_SAVED,
+        });
+      }
     } catch (error: any) {
       toast({
         title: TOAST_TITLE_ERROR,
@@ -351,8 +354,8 @@ const Settings = (props: SettingsProps) => {
 
     const change = Object.prototype.hasOwnProperty.call(e, "mediaId")
       ? {
-          logo: e,
-        }
+        logo: e,
+      }
       : { [e.target.name]: e.target.value };
     setNewSettings(Object.assign({}, newSettings, change));
   };
@@ -557,11 +560,11 @@ const Settings = (props: SettingsProps) => {
                     subtitle: settings.subtitle,
                     hideCourseLitBranding: settings.hideCourseLitBranding,
                   }) ===
-                    JSON.stringify({
-                      title: newSettings.title,
-                      subtitle: newSettings.subtitle,
-                      hideCourseLitBranding: newSettings.hideCourseLitBranding,
-                    }) ||
+                  JSON.stringify({
+                    title: newSettings.title,
+                    subtitle: newSettings.subtitle,
+                    hideCourseLitBranding: newSettings.hideCourseLitBranding,
+                  }) ||
                   !newSettings.title ||
                   networkAction
                 }
@@ -634,7 +637,7 @@ const Settings = (props: SettingsProps) => {
                   disabled: currencies.some(
                     (x) =>
                       x.isoCode ===
-                        newSettings.currencyISOCode?.toUpperCase() && !x.stripe
+                      newSettings.currencyISOCode?.toUpperCase() && !x.stripe
                   ),
                 },
                 {
@@ -643,7 +646,7 @@ const Settings = (props: SettingsProps) => {
                   disabled: currencies.some(
                     (x) =>
                       x.isoCode ===
-                        newSettings.currencyISOCode?.toUpperCase() &&
+                      newSettings.currencyISOCode?.toUpperCase() &&
                       !x.razorpay
                   ),
                 },
@@ -653,7 +656,7 @@ const Settings = (props: SettingsProps) => {
                   disabled: currencies.some(
                     (x) =>
                       x.isoCode ===
-                        newSettings.currencyISOCode?.toUpperCase() &&
+                      newSettings.currencyISOCode?.toUpperCase() &&
                       !x.lemonsqueezy
                   ),
                 },
@@ -928,7 +931,7 @@ const Settings = (props: SettingsProps) => {
               disabled={
                 (settings.codeInjectionHead === newSettings.codeInjectionHead &&
                   settings.codeInjectionBody ===
-                    newSettings.codeInjectionBody) ||
+                  newSettings.codeInjectionBody) ||
                 networkAction
               }
             >

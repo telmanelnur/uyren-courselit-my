@@ -6,7 +6,7 @@ import CourseModel from "@/models/Course";
 import MembershipModel from "@/models/Membership";
 import PaymentPlanModel, { InternalPaymentPlan } from "@/models/PaymentPlan";
 import { TRPCError } from "@trpc/server";
-import { connectToDatabase } from "@workspace/common-logic";
+
 import {
   Constants,
   MembershipEntityType,
@@ -14,7 +14,7 @@ import {
   UIConstants,
 } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
-import mongoose from "mongoose";
+import mongoose, { RootFilterQuery } from "mongoose";
 import {
   AuthorizationException,
   NotFoundException,
@@ -27,7 +27,7 @@ export async function fetchEntity(
   entityId: string,
   domainId: string
 ) {
-  await connectToDatabase();
+  
 
   if (entityType === membershipEntityType.COURSE) {
     return await CourseModel.findOne({
@@ -71,15 +71,13 @@ export async function getPlans({
 }: {
   planIds: string[];
   domainId: mongoose.Types.ObjectId | string;
-}): Promise<InternalPaymentPlan[]> {
-  await connectToDatabase();
-
+}) {
   return PaymentPlanModel.find({
     domain: domainId,
     planId: { $in: planIds },
     archived: false,
     internal: false,
-  }).lean();
+  })
 }
 
 export async function validatePaymentPlanInputs(
@@ -128,7 +126,7 @@ export async function checkDuplicatePaymentPlans(
   subscriptionMonthlyAmount?: number,
   subscriptionYearlyAmount?: number
 ) {
-  await connectToDatabase();
+  
 
   const existingPlansForEntity = await PaymentPlanModel.find({
     domain: domainId,
@@ -161,7 +159,7 @@ export async function checkDuplicatePaymentPlans(
 }
 
 export async function getInternalPaymentPlan(domainId: string) {
-  await connectToDatabase();
+  
 
   return await PaymentPlanModel.findOne({
     domain: domainId,
@@ -173,7 +171,7 @@ export async function createInternalPaymentPlan(
   domainId: string,
   userId: string
 ) {
-  await connectToDatabase();
+  
 
   return await PaymentPlanModel.create({
     domain: domainId,
@@ -212,7 +210,7 @@ export const getCommunityObjOrAssert = async (
   ctx: any,
   communityId: string
 ) => {
-  const query: Record<string, unknown> = {
+  const query: RootFilterQuery<typeof CommunityModel> = {
     domain: ctx.domainData.domainObj._id,
     communityId,
     deleted: false,

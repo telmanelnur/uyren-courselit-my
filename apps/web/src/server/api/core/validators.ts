@@ -61,7 +61,8 @@ export const mediaWrappedFieldValidator = (zod = z) => {
       // url is an optional string
       url: z.string().optional(),
       // storageProvider must be one of 'local' or 'cloudinary'
-      storageProvider: z.enum(["local", "cloudinary"]),
+      storageProvider: z.enum(["local", "cloudinary", "custom"]),
+      domain: z.string().optional(),
+      userId: z.string().optional(),
     })
-    .strict();
 };

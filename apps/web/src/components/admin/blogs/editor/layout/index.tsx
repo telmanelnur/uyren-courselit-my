@@ -1,25 +1,20 @@
-import React, { ReactNode } from "react";
-import dynamic from "next/dynamic";
-import { Address, Profile, SiteInfo } from "@workspace/common-models";
-import useCourse from "../course-hook";
 import { truncate } from "@/lib/ui/lib/utils";
+import dynamic from "next/dynamic";
+import { ReactNode } from "react";
+import useCourse from "../course-hook";
 
 const BlogHeader = dynamic(() => import("./header"));
 
 interface BlogEditorLayoutProps {
     id: string;
-    profile: Profile;
-    siteInfo: SiteInfo;
     children: ReactNode;
-    address: Address;
 }
 
 export default function BlogEditorLayout({
     id,
     children,
-    address,
 }: BlogEditorLayoutProps) {
-    const course = useCourse(id, address);
+    const course = useCourse(id);
     const breadcrumbs = [
         { text: "Blogs", url: "/dashboard/blogs" },
         {
@@ -33,7 +28,6 @@ export default function BlogEditorLayout({
             <BlogHeader
                 id={id as string}
                 breadcrumbs={breadcrumbs}
-                address={address}
             />
             {course && children}
         </div>

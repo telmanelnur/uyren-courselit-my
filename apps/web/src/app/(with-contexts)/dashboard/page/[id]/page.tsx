@@ -1,14 +1,6 @@
 "use client";
 
 import PageEditor from "@/components/admin/page-editor";
-import {
-    AddressContext,
-    ProfileContext,
-    ServerConfigContext,
-    SiteInfoContext,
-    ThemeContext,
-    TypefacesContext,
-} from "@components/contexts";
 import { Profile } from "@workspace/common-models";
 import { useSearchParams } from "next/navigation";
 import { useContext } from "react";

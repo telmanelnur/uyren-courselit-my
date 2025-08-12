@@ -2,34 +2,8 @@
 
 import DashboardContent from "@/components/admin/dashboard-content";
 import LoadingScreen from "@/components/admin/loading-screen";
-import FilterContainer from "@/components/admin/users/filter-container";
-import { AddressContext, ProfileContext } from "@components/contexts";
-import { PaginationControls } from "@components/public/pagination";
-import {
-    Table,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@workspace/ui/components/table";
-import {
-    User,
-    UserFilter,
-    UIConstants,
-    UserFilterAggregator,
-} from "@workspace/common-models";
-import { MembershipEntityType } from "@workspace/common-models/dist/constants";
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-    Badge,
-    Link,
-    TableBody,
-    useToast,
-    Skeleton,
-} from "@workspace/components-library";
-import { checkPermission, FetchBuilder } from "@workspace/utils";
+import { useProfile } from "@/components/contexts/profile-context";
+import { PaginationControls } from "@/components/public/pagination";
 import {
     TOAST_TITLE_ERROR,
     USER_TABLE_HEADER_COMMUNITIES,
@@ -41,105 +15,98 @@ import {
     USERS_MANAGER_PAGE_HEADING,
 } from "@/lib/ui/config/strings";
 import { formattedLocaleDate } from "@/lib/ui/lib/utils";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { trpc } from "@/utils/trpc";
+import {
+    Constants,
+    UIConstants,
+    User
+} from "@workspace/common-models";
+import {
+    Link,
+    TableBody,
+    useToast,
+} from "@workspace/components-library";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Input } from "@workspace/ui/components/input";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import {
+    Table,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@workspace/ui/components/table";
+import { checkPermission } from "@workspace/utils";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: "Users", href: "#" }];
 
+type UserItemType = GeneralRouterOutputs["userModule"]["user"]["list"]["items"][number];
+
 export default function UsersHub() {
-    const address = useContext(AddressContext);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [rowsPerPage, _] = useState(10);
-    const [users, setUsers] = useState<User[]>([]);
-    const [filters, setFilters] = useState<UserFilter[]>([]);
-    const [filtersAggregator, setFiltersAggregator] =
-        useState<UserFilterAggregator>("or");
+    const [users, setUsers] = useState<UserItemType[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const [count, setCount] = useState(0);
     const { toast } = useToast();
 
-    const { profile } = useContext(ProfileContext);
+    const { profile } = useProfile();
 
-    const loadUsers = useCallback(async () => {
-        setLoading(true);
-        const query = `
-                query ($page: Int, $filters: String) {
-                    users: getUsers(
-                        filters: $filters
-                        page: $page
-                    ) {
-                        name
-                        userId
-                        email
-                        permissions
-                        createdAt
-                        updatedAt
-                        avatar {
-                            mediaId
-                            originalFileName
-                            mimeType
-                            size
-                            access
-                            file
-                            thumbnail
-                            caption
-                        },
-                        active 
-                        content {
-                            entityType
-                            entity {
-                                id
-                                title
-                            }
-                        }
-                    },
-                    count: getUsersCount(filters: $filters)
-                }
-            `;
+    // Use tRPC query instead of GraphQL
+    const { data: usersData, isLoading, error } = trpc.userModule.user.list.useQuery({
+        pagination: {
+            skip: (page - 1) * rowsPerPage,
+            take: rowsPerPage,
+        },
+        search: {
+            q: searchQuery || undefined,
+        },
+    });
 
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query,
-                variables: {
-                    page,
-                    filters: JSON.stringify({
-                        aggregator: filtersAggregator,
-                        filters,
-                    }),
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            if (response.users) {
-                setUsers(response.users);
-            }
-            if (typeof response.count !== "undefined") {
-                setCount(response.count);
-            }
-        } catch (err) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
+    // Update local state when tRPC data changes
+    useEffect(() => {
+        if (usersData) {
+            setUsers(usersData.items || []);
+            setCount(usersData.total || 0);
             setLoading(false);
         }
-    }, [address.backend, page, rowsPerPage, filters, filtersAggregator]);
+    }, [usersData]);
 
+    // Handle loading state
     useEffect(() => {
-        loadUsers();
-    }, [loadUsers]);
+        setLoading(isLoading);
+    }, [isLoading]);
 
-    const onFilterChange = useCallback(({ filters, aggregator, segmentId }) => {
-        setFilters(filters);
-        setFiltersAggregator(aggregator);
-        setPage(1);
+    // Handle errors
+    useEffect(() => {
+        if (error) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    }, [error, toast]);
+
+    // Handle search query changes
+    const handleSearchChange = useCallback((value: string) => {
+        setSearchQuery(value);
+        setPage(1); // Reset to first page when searching
     }, []);
+
+    const getUserNamePreview = useCallback((user?: UserItemType) => {
+        if (!user?.name) return "";
+        return (user.name
+            ? user.name.charAt(0)
+            : user.email.charAt(0)
+        ).toUpperCase()
+    }, [])
 
     if (!checkPermission(profile.permissions!, [permissions.manageUsers])) {
         return <LoadingScreen />;
@@ -154,9 +121,11 @@ export default function UsersHub() {
             </div>
             <div className="w-full mt-4 space-y-8">
                 <div className="mb-4">
-                    <FilterContainer
-                        address={address}
-                        onChange={onFilterChange}
+                    <Input
+                        placeholder="Search users by name or email..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        className="max-w-sm"
                     />
                 </div>
                 <Table>
@@ -191,120 +160,117 @@ export default function UsersHub() {
                     <TableBody>
                         {loading
                             ? Array(5)
-                                  .fill(0)
-                                  .map((_, index) => (
-                                      <TableRow key={index}>
-                                          <TableCell>
-                                              <div className="flex items-center gap-2">
-                                                  <Skeleton className="h-10 w-10 rounded-full" />
-                                                  <div className="space-y-1.5">
-                                                      <Skeleton className="h-5 w-[200px]" />
-                                                      <Skeleton className="h-3.5 w-[150px]" />
-                                                  </div>
-                                              </div>
-                                          </TableCell>
-                                          <TableCell>
-                                              <Skeleton className="h-6 w-20" />
-                                          </TableCell>
-                                          <TableCell>
-                                              <Skeleton className="h-4 w-8" />
-                                          </TableCell>
-                                          <TableCell>
-                                              <Skeleton className="h-4 w-8" />
-                                          </TableCell>
-                                          <TableCell className="hidden lg:table-cell">
-                                              <Skeleton className="h-4 w-[100px] ml-auto" />
-                                          </TableCell>
-                                          <TableCell className="hidden lg:table-cell">
-                                              <Skeleton className="h-4 w-[100px] ml-auto" />
-                                          </TableCell>
-                                      </TableRow>
-                                  ))
-                            : users.map((user) => (
-                                  <TableRow key={user.email}>
-                                      <TableCell className="py-2">
-                                          <div className="flex items-center gap-2">
-                                              <Avatar>
-                                                  <AvatarImage
-                                                      src={
-                                                          user.avatar
-                                                              ? user.avatar
-                                                                    ?.file
-                                                              : "/courselit_backdrop_square.webp"
-                                                      }
-                                                  />
-                                                  <AvatarFallback>
-                                                      {(user.name
-                                                          ? user.name.charAt(0)
-                                                          : user.email.charAt(0)
-                                                      ).toUpperCase()}
-                                                  </AvatarFallback>
-                                              </Avatar>
-                                              <div>
-                                                  <Link
-                                                      href={`/dashboard/users/${user.userId}`}
-                                                  >
-                                                      <span className="font-medium text-base">
-                                                          {user.name
-                                                              ? user.name
-                                                              : user.email}
-                                                      </span>
-                                                  </Link>
-                                                  <div className="text-xs text-muted-foreground">
-                                                      {user.email}
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      </TableCell>
-                                      <TableCell>
-                                          <Badge
-                                              variant={
-                                                  user.active
-                                                      ? "default"
-                                                      : "secondary"
-                                              }
-                                          >
-                                              {user.active
-                                                  ? "Active"
-                                                  : "Restricted"}
-                                          </Badge>
-                                      </TableCell>
-                                      <TableCell>
-                                          {
-                                              user.content.filter(
-                                                  (content) =>
-                                                      content.entityType.toLowerCase() ===
-                                                      MembershipEntityType.COURSE,
-                                              ).length
-                                          }
-                                      </TableCell>
-                                      <TableCell>
-                                          {
-                                              user.content.filter(
-                                                  (content) =>
-                                                      content.entityType.toLowerCase() ===
-                                                      MembershipEntityType.COMMUNITY,
-                                              ).length
-                                          }
-                                      </TableCell>
-                                      <TableCell className="hidden lg:table-cell">
-                                          {user.createdAt
-                                              ? formattedLocaleDate(
-                                                    user.createdAt,
+                                .fill(0)
+                                .map((_, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <Skeleton className="h-10 w-10 rounded-full" />
+                                                <div className="space-y-1.5">
+                                                    <Skeleton className="h-5 w-[200px]" />
+                                                    <Skeleton className="h-3.5 w-[150px]" />
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton className="h-6 w-20" />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton className="h-4 w-8" />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton className="h-4 w-8" />
+                                        </TableCell>
+                                        <TableCell className="hidden lg:table-cell">
+                                            <Skeleton className="h-4 w-[100px] ml-auto" />
+                                        </TableCell>
+                                        <TableCell className="hidden lg:table-cell">
+                                            <Skeleton className="h-4 w-[100px] ml-auto" />
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            : users.map((user, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="py-2">
+                                        <div className="flex items-center gap-2">
+                                            <Avatar>
+                                                <AvatarImage
+                                                    src={
+                                                        user.avatar
+                                                            ? user.avatar
+                                                                ?.file
+                                                            : "/courselit_backdrop_square.webp"
+                                                    }
+                                                />
+                                                <AvatarFallback>
+                                                    {getUserNamePreview(user)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <Link
+                                                    href={`/dashboard/users/${user.userId}`}
+                                                >
+                                                    <span className="font-medium text-base">
+                                                        {user.name
+                                                            ? user.name
+                                                            : user.email} 
+                                                    </span>
+                                                </Link>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {user.email}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant={
+                                                user.active
+                                                    ? "default"
+                                                    : "secondary"
+                                            }
+                                        >
+                                            {user.active
+                                                ? "Active"
+                                                : "Restricted"}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {
+                                            user.content.filter(
+                                                (content: any) =>
+                                                    content.entityType.toLowerCase() ===
+                                                    Constants.MembershipEntityType.COURSE,
+                                            ).length
+                                        }
+                                    </TableCell>
+                                    <TableCell>
+                                        {
+                                            user.content.filter(
+                                                (content: any) =>
+                                                    content.entityType.toLowerCase() ===
+                                                    Constants.MembershipEntityType.COMMUNITY,
+                                            ).length
+                                        }
+                                    </TableCell>
+                                    <TableCell className="hidden lg:table-cell">
+                                        {user.createdAt
+                                            ? formattedLocaleDate(
+                                                user.createdAt,
+                                            )
+                                            : ""}
+                                    </TableCell>
+                                    <TableCell className="hidden lg:table-cell">
+                                        {user.updatedAt !== user.createdAt
+                                            ? user.updatedAt
+                                                ? formattedLocaleDate(
+                                                    user.updatedAt,
                                                 )
-                                              : ""}
-                                      </TableCell>
-                                      <TableCell className="hidden lg:table-cell">
-                                          {user.updatedAt !== user.createdAt
-                                              ? user.updatedAt
-                                                  ? formattedLocaleDate(
-                                                        user.updatedAt,
-                                                    )
-                                                  : ""
-                                              : ""}
-                                      </TableCell>
-                                  </TableRow>
-                              ))}
+                                                : ""
+                                            : ""}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                     </TableBody>
                 </Table>
                 <PaginationControls

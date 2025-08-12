@@ -1,10 +1,13 @@
 import { Constants, Media } from "@workspace/common-models";
 import mongoose from "mongoose";
 
-type MediaWithOwner = Media & { userId: string };
+type MediaWithOwner = Media & {
+    userId: string;
+    domain: mongoose.Types.ObjectId;
+};
 
 export const MediaSchema = new mongoose.Schema<MediaWithOwner>({
-    mediaId: { type: String, required: true },
+    mediaId: { type: String, required: true, unique: true },
     originalFileName: { type: String, required: true },
     mimeType: { type: String, required: true },
     size: { type: Number, required: true },
@@ -16,4 +19,10 @@ export const MediaSchema = new mongoose.Schema<MediaWithOwner>({
     thumbnail: String,
     caption: String,
     file: String,
+    url: { type: String, required: true },
+    storageProvider: { type: String, required: true, },
+    userId: { type: String, required: false },
+    domain: { type: mongoose.Schema.Types.ObjectId, ref: "Domain", required: false },
+}, {
+    timestamps: true,
 });

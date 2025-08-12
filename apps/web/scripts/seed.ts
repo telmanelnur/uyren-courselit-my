@@ -6,8 +6,25 @@
 // Load environment variables from .env files
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { UIConstants } from "@workspace/common-models";
-import constants from "../src/config/constants.js";
+// Define constants locally to avoid import issues
+const UIConstants = {
+  permissions: {
+    manageCourse: "course:manage",
+    manageAnyCourse: "course:manage_any",
+    publishCourse: "course:publish",
+    enrollInCourse: "course:enroll",
+    manageMedia: "media:manage",
+    manageSite: "site:manage",
+    manageSettings: "setting:manage",
+    manageUsers: "user:manage",
+    manageCommunity: "community:manage",
+  },
+  roles: {
+    admin: "admin",
+    instructor: "instructor",
+    student: "student",
+  }
+};
 
 dotenv.config(); // Load .env as fallback
 
@@ -178,7 +195,7 @@ async function createUser({
       purchases: [],
       permissions: superAdminPermissions,
       roles,
-      lead: lead || constants.leadWebsite,
+      lead: lead || "website",
       subscribedToUpdates,
       invited,
       providerData,
@@ -200,14 +217,14 @@ async function createUser({
 async function createRootDomain() {
   console.log("🌱 Creating or finding root domain...");
 
-  const rootDomainName = constants.domainNameForSingleTenancy;
+  const rootDomainName = "main";
   let domain = await DomainModel.findOne({ name: rootDomainName });
 
   if (!domain) {
     console.log(`📝 Creating new domain: ${rootDomainName}`);
 
     const defaultSettings = {
-      title: constants.schoolNameForSingleTenancy || "My Learning Platform",
+      title: "My School",
       subtitle: "Welcome to your new learning platform",
       logo: null,
       currencyISOCode: "USD",
@@ -227,7 +244,7 @@ async function createRootDomain() {
       typefaces: [
         {
           section: "default",
-          typeface: constants.typeface || "Roboto",
+          typeface: "Roboto",
           fontWeights: [300, 400, 500, 700],
           fontSize: 0,
           lineHeight: 0,
@@ -238,7 +255,7 @@ async function createRootDomain() {
       draftTypefaces: [
         {
           section: "default",
-          typeface: constants.typeface || "Roboto",
+          typeface: "Roboto",
           fontWeights: [300, 400, 500, 700],
           fontSize: 0,
           lineHeight: 0,
@@ -329,35 +346,69 @@ async function createSuperAdmin(
     domain,
     name: process.env.SUPER_ADMIN_NAME || "Super Administrator",
     email: superAdminEmail,
-    lead: constants.leadWebsite,
+    lead: "website",
     superAdmin: true,
     subscribedToUpdates: true,
     invited: false,
     providerData,
   });
 
-  console.log(`✅ Created super admin user with ID: ${superAdmin._id}`);
-  console.log(`📧 Email: ${superAdmin.email}`);
-  console.log(`👤 Name: ${superAdmin.name}`);
-  console.log(`🔑 Permissions: ${superAdmin.permissions.join(", ")}`);
-  console.log(`👥 Roles: ${superAdmin.roles.join(", ")}`);
+  console.log(`✅ Created super admin user: ${superAdmin.email}`);
 
   if (providerData) {
-    console.log(
-      `🔥 Firebase Provider: ${providerData.provider} (UID: ${providerData.uid})`
-    );
-  } else {
-    console.log(
-      "⚠️  No Firebase UID provided - you'll need to manually link this user in Firebase Auth"
-    );
+    console.log(`🔥 Firebase UID: ${providerData.uid}`);
   }
 
-  console.log("ℹ️  Note: Password authentication is handled by Firebase Auth");
-  console.log(
-    "ℹ️  Please set up the user in Firebase Auth console with the same email"
+  return superAdmin;
+}
+
+/**
+ * Sets all available permissions for the super admin user
+ */
+async function setAllPermissionsForSuperAdmin(
+  superAdmin: Awaited<ReturnType<typeof createSuperAdmin>>
+) {
+  console.log("🔐 Setting all permissions for super admin...");
+
+  // Define all available permissions
+  const ALL_PERMISSIONS = [
+    "course:manage",
+    "course:manage_any", 
+    "course:publish",
+    "course:enroll",
+    "media:manage",
+    "site:manage",
+    "setting:manage",
+    "user:manage",
+    "community:manage",
+  ];
+
+  // Define all available roles
+  const ALL_ROLES = [
+    "admin",
+    "instructor", 
+    "student",
+  ];
+
+  // Update user with all permissions and roles
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    superAdmin._id,
+    {
+      $set: {
+        permissions: ALL_PERMISSIONS,
+        roles: ALL_ROLES,
+      }
+    },
+    { new: true }
   );
 
-  return superAdmin;
+  if (!updatedUser) {
+    throw new Error("Failed to update super admin permissions");
+  }
+
+  console.log(`✅ Granted all permissions (${updatedUser.permissions.length}) and roles (${updatedUser.roles.length})`);
+
+  return updatedUser;
 }
 
 /**
@@ -400,25 +451,16 @@ async function seed(): Promise<void> {
     // Create super admin
     const superAdmin = await createSuperAdmin(domain);
 
+    // Set all permissions for super admin
+    const updatedSuperAdmin = await setAllPermissionsForSuperAdmin(superAdmin);
+
     // Seed default data
-    await seedDefaultData(domain, superAdmin);
+    await seedDefaultData(domain, updatedSuperAdmin);
 
-    console.log("\n🎉 Database seeding completed successfully!");
-    console.log("\n📋 Summary:");
-    console.log(`  - Domain: ${domain.name} (${domain._id})`);
-    console.log(`  - Super Admin: ${superAdmin.email} (${superAdmin._id})`);
-    console.log(
-      `  - Permissions: ${superAdmin.permissions.length} permissions assigned`
-    );
-    console.log(`  - Roles: ${superAdmin.roles.join(", ")}`);
-    console.log(`  - First Run: ${domain.firstRun ? "Yes" : "No"}`);
-
-    console.log("\n🔐 Next Steps for Authentication Setup:");
-    console.log("1. Go to your Firebase Console");
-    console.log("2. Navigate to Authentication > Users");
-    console.log(`3. Create a user with email: ${superAdmin.email}`);
-    console.log("4. Set a secure password for the user");
-    console.log("5. The user will automatically have admin permissions");
+    console.log("\n🎉 Seeding completed!");
+    console.log(`📋 Domain: ${domain.name}`);
+    console.log(`👤 Super Admin: ${superAdmin.email}`);
+    console.log(`🔐 Permissions: ${superAdmin.permissions.length} granted`);
   } catch (error) {
     console.error("❌ Error during seeding:", error);
     if (error instanceof Error && error.stack) {

@@ -34,7 +34,9 @@ import { Checkbox } from "@workspace/ui/components/checkbox";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Textarea } from "@workspace/ui/components/textarea";
+import { generateUniqueId } from "@workspace/utils";
 import { useSession } from "next-auth/react";
+import { MediaAccessType } from "node_modules/@workspace/common-models/src/constants";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 const breadcrumbs = [{ label: PROFILE_PAGE_HEADER, href: "#" }];
@@ -49,20 +51,19 @@ export default function Page() {
 
   // TRPC mutations
   const updateProfileMutation =
-    trpc.userModule.user.updateProfileProtected.useMutation({
+    trpc.userModule.user.updateProfile.useMutation({
       onSuccess: (data) => {
         toast({
           title: "Success",
           description: data.message,
-          variant: "default",
         });
 
         // Update profile context with new data
         if (data.user && profile) {
           setProfile({
             ...profile,
-            name: data.user.name,
-            bio: data.user.bio,
+            name: data.user.name || "",
+            bio: data.user.bio || "",
             avatar: data.user.avatar,
             subscribedToUpdates: data.user.subscribedToUpdates,
           });
@@ -89,20 +90,19 @@ export default function Page() {
   const updateProfilePic = async (media?: Media) => {
     if (!profile) return;
 
-    const avatarData = media
+    const avatarData: Media | null = media
       ? {
-          storageType: "media" as const,
-          data: {
-            mediaId: media.mediaId,
-            originalFileName: media.originalFileName,
-            mimeType: media.mimeType,
-            size: media.size,
-            access: media.access,
-            thumbnail: media.thumbnail,
-            caption: media.caption,
-            file: media.file,
-          },
-        }
+        storageProvider: "custom",
+        mediaId: media.mediaId,
+        originalFileName: media.originalFileName,
+        mimeType: media.mimeType,
+        size: media.size,
+        access: media.access,
+        thumbnail: media.thumbnail,
+        caption: media.caption,
+        file: media.file,
+        url: media.url,
+      }
       : null;
 
     updateProfileMutation.mutate({
@@ -147,12 +147,16 @@ export default function Page() {
       }
 
       // Create avatar data from Firebase photo
-      const avatarData = {
-        storageType: "custom" as const,
-        data: {
-          url: firebaseProfile.photoURL,
-          caption: "Firebase profile picture",
-        },
+      const avatarData: Media = {
+        storageProvider: "custom",
+        url: firebaseProfile.photoURL,
+        caption: "Firebase profile picture",
+        mediaId: generateUniqueId(),
+        originalFileName: "",
+        mimeType: "",
+        size: 0,
+        access: MediaAccessType.PUBLIC,
+        thumbnail: firebaseProfile.photoURL,
       };
 
       updateProfileMutation.mutate({
@@ -162,7 +166,6 @@ export default function Page() {
       toast({
         title: "Avatar Reset",
         description: "Profile picture has been restored from Firebase",
-        variant: "default",
       });
     } catch (error) {
       toast({

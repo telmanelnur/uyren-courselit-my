@@ -1,21 +1,6 @@
-import { Media } from "@workspace/common-models";
-import mongoose from "mongoose";
-import constants from "../config/constants";
-const { publicMedia, privateMedia } = constants;
+import { createModel, MediaSchema } from "@workspace/common-logic";
 
-type MediaWithOwner = Media & { userId: string };
+const MediaModel = createModel("Media", MediaSchema);
 
-const MediaSchema = new mongoose.Schema<MediaWithOwner>({
-  mediaId: { type: String, required: true },
-  originalFileName: { type: String, required: true },
-  mimeType: { type: String, required: true },
-  size: { type: Number, required: true },
-  access: { type: String, required: true, enum: [publicMedia, privateMedia] },
-  thumbnail: String,
-  caption: String,
-  file: String,
-  url: String,
-  storageProvider: { type: String, required: true },
-});
-
-export default MediaSchema;
+export default MediaModel;
+export { MediaSchema };

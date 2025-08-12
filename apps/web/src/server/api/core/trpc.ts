@@ -1,11 +1,9 @@
 import { authOptions } from "@/lib/auth/options";
 import { getDomainData, getDomainHeaders } from "@/lib/domain";
-import { Log } from "@/lib/logger";
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import { getServerSession } from "next-auth";
 import superjson from "superjson";
-import { APIException } from "./exceptions";
-import z, { ZodError } from "zod";
+import z from "zod";
 
 export async function createTRPCContext() {
   const session = await getServerSession(authOptions);
@@ -21,58 +19,63 @@ type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 
 export const t = initTRPC.context<Context>().create({
   transformer: superjson,
-  // errorFormatter({ shape }) {
-  //   return shape;
-  // },
   errorFormatter: ({ shape, error }) => {
-    console.error(
-      "[errorBoundary]TRPC Error:",
-      // { ...error.cause },
-      // typeof error.cause,
-      // error instanceof APIException,
-      error.code,
-      "|",
-      typeof error.cause,
-      error.cause instanceof ZodError,
-      error instanceof APIException,
-      "|",
-      error.cause
-    );
-    if (error instanceof APIException) {
-      // shape = {
-      //   ...shape,
-      //   data: {
-      //     ...shape.data,
-      //     error: error.cause,
-      //   },
-      // };
-    }
+    // Handle different error types with proper formatting
     if (error.code === "BAD_REQUEST") {
-      // if (error.cause instanceof ZodError) {
-        return {
-          ...shape,
-          data: {
-            ...shape.data,
-            zodError:
-              error.cause instanceof z.ZodError ? error.cause.issues : null,
-            stack:
-              process.env.NODE_ENV === "development" ? error.stack : undefined,
-            code: error.code,
-            message: error.message,
-            name: "Custom"
-            // Add custom error codes mapping
-            // errorCode: mapErrorCode(error.code),
-          },
-          // data: {
-          //   ...shape.data,
-          //   zodError: error.cause.flatten(),
-          // },
-        };
-      // }
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          zodError: error.cause instanceof z.ZodError ? error.cause.issues : null,
+          code: error.code,
+          message: error.message,
+          name: "ValidationError",
+          stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        },
+      };
     }
-    return shape;
+
+    if (error.code === "UNAUTHORIZED") {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          code: error.code,
+          message: error.message,
+          name: "AuthenticationError",
+          redirectTo: "/auth/login",
+          stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        },
+      };
+    }
+
+    if (error.code === "FORBIDDEN") {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          code: error.code,
+          message: error.message,
+          name: "AuthorizationError",
+          redirectTo: "/auth/login",
+          stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        },
+      };
+    }
+
+    // Default error formatting
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        code: error.code,
+        message: error.message,
+        name: error.name || "UnknownError",
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
+    };
   },
 });
 
 export const router = t.router;
-export const rootProcedure = t.procedure; //.use(errorBoundary);
+export const rootProcedure = t.procedure;

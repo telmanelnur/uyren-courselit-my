@@ -1,7 +1,6 @@
 "use client";
 
 import DashboardContent from "@/components/admin/dashboard-content";
-import { SiteInfoContext } from "@components/contexts";
 import {
     Constants,
     Course,
@@ -21,9 +20,9 @@ import {
     ContentCardContent,
     ContentCardImage,
     ContentCardHeader,
-    Badge,
     getSymbolFromCurrency,
 } from "@workspace/components-library";
+import { Badge } from "@workspace/ui/components/badge";
 import {
     Download,
     BookOpen,
@@ -33,7 +32,7 @@ import {
     CheckCircle,
     CircleDashed,
 } from "lucide-react";
-import { PaginationControls } from "@components/public/pagination";
+import { PaginationControls } from "@/components/public/pagination";
 import { useProducts } from "@/hooks/use-products";
 import {
     Select,
@@ -51,8 +50,10 @@ import {
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/app/(with-contexts)/(with-layout)/products/empty-state";
-import Resources from "@components/resources";
-import { SkeletonCard } from "@components/skeleton-card";
+import Resources from "@/components/resources";
+import { SkeletonCard } from "@/components/skeleton-card";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { InternalCourse } from "@workspace/common-logic";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -60,13 +61,13 @@ const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: MANAGE_COURSES_PAGE_HEADING, href: "#" }];
 
-function ProductCard({ product }: { product: Course }) {
-    const siteinfo = useContext(SiteInfoContext);
+function ProductCard({ product }: { product: InternalCourse }) {
+    const { siteInfo } = useSiteInfo()
 
     return (
         <ContentCard href={`/dashboard/product/${product.courseId}`}>
             <ContentCardImage
-                src={product.featuredImage?.file}
+                src={product.featuredImage?.url || "/courselit_backdrop_square.webp"}
                 alt={product.title}
             />
             <ContentCardContent>
@@ -74,7 +75,7 @@ function ProductCard({ product }: { product: Course }) {
                 <div className="flex items-center justify-between gap-2 mb-4">
                     <Badge variant="outline">
                         {product.type.toLowerCase() ===
-                        Constants.CourseType.COURSE ? (
+                            Constants.CourseType.COURSE ? (
                             <BookOpen className="h-4 w-4 mr-1" />
                         ) : (
                             <Download className="h-4 w-4 mr-1" />
@@ -86,7 +87,7 @@ function ProductCard({ product }: { product: Course }) {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     {product.privacy?.toLowerCase() ===
-                                    Constants.ProductAccessType.PUBLIC ? (
+                                        Constants.ProductAccessType.PUBLIC ? (
                                         <Eye className="h-4 w-4 text-muted-foreground" />
                                     ) : (
                                         <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -94,7 +95,7 @@ function ProductCard({ product }: { product: Course }) {
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     {product.privacy?.toLowerCase() ===
-                                    Constants.ProductAccessType.PUBLIC
+                                        Constants.ProductAccessType.PUBLIC
                                         ? "Public"
                                         : "Hidden"}
                                 </TooltipContent>
@@ -121,7 +122,7 @@ function ProductCard({ product }: { product: Course }) {
                         <span>
                             <span className="text-base">
                                 {getSymbolFromCurrency(
-                                    siteinfo.currencyISOCode || "USD",
+                                    siteInfo.currencyISOCode || "USD",
                                 )}{" "}
                             </span>
                             {product.sales.toLocaleString()} sales

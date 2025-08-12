@@ -2,6 +2,7 @@ import { Constants, User } from "@workspace/common-models";
 import { generateUniqueId } from "@workspace/utils";
 import mongoose from "mongoose";
 import { ProgressSchema } from "./progress";
+import { MediaSchema } from "../media";
 
 export interface InternalUser extends User {
   _id: mongoose.Types.ObjectId;
@@ -33,43 +34,7 @@ export const UserSchema = new mongoose.Schema<InternalUser>(
       required: true,
       default: generateUniqueId,
     },
-    avatar: {
-      type: mongoose.Schema.Types.Mixed,
-      validate: {
-        validator: function (value: any) {
-          // Allow null/undefined
-          if (!value) return true;
-
-          // Must be an object
-          if (typeof value !== "object") return false;
-
-          // Must have storageType and data fields
-          if (!value.storageType || !value.data) return false;
-
-          // Validate based on storageType
-          if (value.storageType === "media") {
-            // Use default Media schema validation
-            const data = value.data;
-            return (
-              data.mediaId &&
-              data.originalFileName &&
-              data.mimeType &&
-              typeof data.size === "number" &&
-              data.access &&
-              data.thumbnail
-            );
-          } else if (value.storageType === "custom") {
-            // CustomMedia: must have url
-            const data = value.data;
-            return data.url && typeof data.url === "string";
-          }
-
-          return false;
-        },
-        message:
-          'Avatar must be a MediaWrapper with valid storageType ("media" or "custom") and corresponding data',
-      },
-    },
+    avatar: MediaSchema,
     invited: { type: Boolean },
     providerData: {
       type: {

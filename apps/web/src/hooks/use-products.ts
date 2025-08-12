@@ -1,85 +1,30 @@
+import { trpc } from "@/utils/trpc";
 import { Course } from "@workspace/common-models";
-import { useState, useEffect, useContext } from "react";
+import { useMemo } from "react";
 
 export function useProducts(
     page: number,
     itemsPerPage: number,
-    filter?: string[],
+    filterBy?: string[],
     publicView: boolean = false,
 ) {
-    const [products, setProducts] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const address = useContext(AddressContext);
+    const listQuery = trpc.lmsModule.product.list.useQuery({
+        pagination: {
+            take: itemsPerPage,
+            skip: (page - 1) * itemsPerPage,
+        },
+        filter: {
+            filterBy: filterBy as any,
+            publicView,
+        },
+    });
 
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
-
-    useEffect(() => {
-        const fetchProducts = async () => {
-            const query = `
-            query ($page: Int, $limit: Int, $filter: [CourseFilters], $publicView: Boolean) {
-                products: getProducts(page: $page, limit: $limit, filterBy: $filter, publicView: $publicView) {
-                    title
-                    courseId
-                    sales
-                    customers
-                    featuredImage {
-                        thumbnail
-                        file
-                    }
-                    pageId
-                    type
-                    published
-                    paymentPlans {
-                        planId
-                        name
-                        type
-                        oneTimeAmount
-                        emiAmount
-                        emiTotalInstallments
-                        subscriptionMonthlyAmount
-                        subscriptionYearlyAmount
-                    }
-                    defaultPaymentPlan
-                    user {
-                        name
-                        avatar {
-                            thumbnail
-                        }
-                    }
-                    privacy
-                    slug
-                },
-                totalProducts: getProductsCount(filterBy: $filter, publicView: $publicView)
-            }`;
-            try {
-                setLoading(true);
-                const fetchRequest = fetch
-                    .setPayload({
-                        query,
-                        variables: {
-                            page,
-                            limit: itemsPerPage,
-                            filter,
-                            publicView,
-                        },
-                    })
-                    .build();
-                const response = await fetchRequest.exec();
-                if (response.products) {
-                    setProducts(response.products);
-                    setTotalPages(response.totalProducts);
-                }
-            } catch (e) {
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProducts();
-    }, [page, itemsPerPage, filter, address.backend, publicView]);
+    const products = useMemo(() => listQuery.data?.items as Course[] || [], [listQuery.data?.items]);
+    const loading = listQuery.isLoading;
+    const totalPages = useMemo(
+        () => (listQuery.data?.total ? listQuery.data.total : 0),
+        [listQuery.data?.total],
+    );
 
     return { products, loading, totalPages };
 }

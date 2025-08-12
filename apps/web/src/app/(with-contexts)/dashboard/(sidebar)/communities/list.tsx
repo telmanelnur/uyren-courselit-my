@@ -25,13 +25,10 @@ export default function List() {
 
   // Use tRPC query to fetch communities with pagination count
   const { data, isLoading } =
-    trpc.communityModule.community.getCommunities.useQuery({
+    trpc.communityModule.community.list.useQuery({
       pagination: {
         skip: (page - 1) * communitiesResultsLimit,
         take: communitiesResultsLimit,
-      },
-      options: {
-        paginationCount: true,
       },
     });
 

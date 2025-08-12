@@ -11,9 +11,9 @@ import {
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import useProduct from "@/hooks/use-product";
-import { AddressContext } from "@components/contexts";
 import { useContext, useMemo } from "react";
 import { truncate } from "@/lib/ui/lib/utils";
+import { useAddress } from "@/components/contexts/address-context";
 
 export default function DripEmailEditorPage({
     params,
@@ -26,7 +26,7 @@ export default function DripEmailEditorPage({
     const { productId, sectionId } = params;
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { product, loaded: productLoaded } = useProduct(productId, address);
 
     const group = useMemo(() => {

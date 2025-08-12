@@ -1,6 +1,6 @@
 import { parseHost } from "@/lib/domain";
 import DomainModel from "@/models/Domain";
-import { connectToDatabase } from "@workspace/common-logic";
+
 import { z } from "zod";
 import {
   NotFoundException,
@@ -9,7 +9,7 @@ import {
 import { adminProcedure, publicProcedure } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
-import { like, orderBy, paginate } from "../../core/utils";
+import { like, paginate } from "../../core/utils";
 import {
   documentIdValidator,
   documentSlugValidator,
@@ -45,7 +45,7 @@ const UpdateSchema = getFormDataSchema({
 });
 
 async function ensureUniqueName(name: string, excludeId?: string) {
-  await connectToDatabase();
+  
   const existing = await DomainModel.findOne({
     name,
     deleted: false,
@@ -58,7 +58,7 @@ async function ensureUniqueCustomDomain(
   customDomain: string,
   excludeId?: string
 ) {
-  await connectToDatabase();
+  
   const existing = await DomainModel.findOne({
     customDomain,
     deleted: false,
@@ -81,7 +81,7 @@ export const domainRouter = router({
       })
     )
     .query(async ({ input }) => {
-      await connectToDatabase();
+      
 
       const q = input?.search?.q;
       const baseWhere: any = {
@@ -101,21 +101,37 @@ export const domainRouter = router({
           : {}),
       };
 
-      const { skip, take } = paginate(input?.pagination);
-      const ob = orderBy(input?.orderBy?.field, input?.orderBy?.direction);
+      const paginationMeta = paginate(input?.pagination);
+      const orderByConfig = input?.orderBy || {
+        field: "createdAt",
+        direction: "desc",
+      };
+      const sortObject: Record<string, 1 | -1> = {
+        [orderByConfig.field]: orderByConfig.direction === "asc" ? 1 : -1,
+      };
 
       const [items, total] = await Promise.all([
-        DomainModel.find(baseWhere).sort(ob).skip(skip).limit(take).lean(),
-        DomainModel.countDocuments(baseWhere),
+        DomainModel.find(baseWhere)
+          .sort(sortObject)
+          .skip(paginationMeta.skip)
+          .limit(paginationMeta.take)
+          .lean(),
+        paginationMeta.includePaginationCount
+          ? DomainModel.countDocuments(baseWhere)
+          : Promise.resolve(null),
       ]);
 
-      return { items, total, meta: { skip, take } };
+      return { 
+        items, 
+        total, 
+        meta: paginationMeta 
+      };
     }),
 
   getById: adminProcedure
     .input(documentIdValidator())
     .query(async ({ input }) => {
-      await connectToDatabase();
+      
 
       const domain = await DomainModel.findOne({
         _id: input,
@@ -127,7 +143,7 @@ export const domainRouter = router({
     }),
 
   create: adminProcedure.input(CreateSchema).mutation(async ({ input }) => {
-    await connectToDatabase();
+    
 
     await ensureUniqueName(input.data.name);
 
@@ -147,7 +163,7 @@ export const domainRouter = router({
   }),
 
   update: adminProcedure.input(UpdateSchema).mutation(async ({ input }) => {
-    await connectToDatabase();
+    
 
     const existing = await DomainModel.findOne({
       _id: input.id,
@@ -174,7 +190,7 @@ export const domainRouter = router({
   delete: adminProcedure
     .input(documentIdValidator())
     .mutation(async ({ input }) => {
-      await connectToDatabase();
+      
 
       const existing = await DomainModel.findOne({
         _id: input,
@@ -205,7 +221,7 @@ export const domainRouter = router({
   publicGetByHost: publicProcedure
     .input(z.object({ host: z.string() }))
     .query(async ({ input }) => {
-      await connectToDatabase();
+      
 
       const { cleanHost, subdomain } = parseHost(input.host);
       if (!cleanHost) throw new NotFoundException("Domain", input.host);

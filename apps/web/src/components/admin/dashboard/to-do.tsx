@@ -1,21 +1,18 @@
 "use client";
 
-import { SiteInfoContext } from "@components/contexts";
-import { Link } from "@workspace/components-library";
-import { AppState } from "@workspace/state-management";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
 import {
     SITE_SETTINGS_SECTION_GENERAL,
     SITE_SETTINGS_SECTION_PAYMENT,
 } from "@/lib/ui/config/strings";
-import { connect } from "react-redux";
-import { useContext } from "react";
+import { Link } from "@workspace/components-library";
 
-export const Todo = () => {
-    const siteinfo = useContext(SiteInfoContext);
+const Todo = () => {
+    const { siteInfo } = useSiteInfo();
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {(!siteinfo.title || (siteinfo.logo && !siteinfo.logo.file)) && (
+            {(!siteInfo.title || (siteInfo.logo && !siteInfo.logo.file)) && (
                 <div className="flex flex-col border border-red-200 p-4 rounded-lg">
                     <h2 className="font-medium mb-1">
                         Basic details missing 💁‍♀️
@@ -34,7 +31,7 @@ export const Todo = () => {
                     </div>
                 </div>
             )}
-            {(!siteinfo.currencyISOCode || !siteinfo.paymentMethod) && (
+            {(!siteInfo.currencyISOCode || !siteInfo.paymentMethod) && (
                 <div className="flex flex-col border border-red-200 p-4 rounded-lg">
                     <h2 className="font-semibold mb-1">Start earning 💸</h2>
                     <p className="text-sm text-muted-foreground mb-4">
@@ -55,8 +52,4 @@ export const Todo = () => {
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-});
-
-export default connect(mapStateToProps)(Todo);
+export default Todo;

@@ -6,7 +6,7 @@ import {
 } from "@workspace/common-models";
 import mongoose from "mongoose";
 import constants from "../config/constants";
-import MediaSchema from "./Media";
+import { MediaSchema } from "./Media";
 import WidgetSchema from "./Widget";
 const { product, site, blogPage, communityPage } = constants;
 

@@ -1,8 +1,7 @@
-import { SiteInfoContext } from "@components/contexts";
-import { Card, CardContent, CardTitle, CardHeader } from "@workspace/ui/components/card";
-import { Skeleton } from "@workspace/ui/components/skeleton";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
 import { getSymbolFromCurrency } from "@workspace/components-library";
-import { useContext } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
     CartesianGrid,
     Line,
@@ -20,7 +19,7 @@ export default function SalesCard({
     data: any;
     loading: boolean;
 }) {
-    const siteinfo = useContext(SiteInfoContext);
+    const { siteInfo } = useSiteInfo()
 
     return (
         <div className="mt-4">
@@ -58,7 +57,7 @@ export default function SalesCard({
                                     />
                                     <YAxis
                                         tickFormatter={(value) =>
-                                            `${getSymbolFromCurrency(siteinfo.currencyISOCode || "USD")}${value}`
+                                            `${getSymbolFromCurrency(siteInfo.currencyISOCode || "USD")}${value}`
                                         }
                                         className="text-xs"
                                         axisLine={false}

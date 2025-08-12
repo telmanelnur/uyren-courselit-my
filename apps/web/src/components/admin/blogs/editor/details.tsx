@@ -21,19 +21,20 @@ import {
 } from "@/lib/ui/config/strings";
 import { MIMETYPE_IMAGE } from "@/lib/ui/config/constants";
 import { Media } from "@workspace/common-models";
+import { trpc } from "@/utils/trpc";
 
 interface DetailsProps {
     id: string;
-    profile: Profile;
     address: Address;
+    profile: Profile;
 }
 
-export function Details({ id, address, profile }: DetailsProps) {
+export function Details({ id, profile, address }: DetailsProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState(TextEditorEmptyDoc);
     const [featuredImage, setFeaturedImage] = useState<Partial<Media>>({});
     const [refreshDetails, setRefreshDetails] = useState(0);
-    const course = useCourse(id, address, dispatch);
+    const course = useCourse(id);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -49,29 +50,19 @@ export function Details({ id, address, profile }: DetailsProps) {
         }
     }, [course]);
 
+    const updateCourseMutation = trpc.lmsModule.courseModule.course.update.useMutation();
+
     const updateDetails = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        const mutation = `
-            mutation {
-                updateCourse(courseData: {
-                    id: "${course!.courseId}"
-                    title: "${title}",
-                    description: ${JSON.stringify(JSON.stringify(description))}
-                }) {
-                    courseId 
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
-            .setIsGraphQLEndpoint(true)
-            .build();
         try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.updateCourse) {
+            const response = await updateCourseMutation.mutateAsync({
+                courseId: course!.courseId!,
+                data: {
+                    title: title,
+                    description: JSON.stringify(JSON.stringify(description)),
+                }
+            });
+            if (response) {
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_COURSE_SAVED,
@@ -83,37 +74,18 @@ export function Details({ id, address, profile }: DetailsProps) {
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 
     const saveFeaturedImage = async (media?: Media) => {
-        const mutation = `
-            mutation ($courseId: String!, $media: MediaInput) {
-                updateCourse(courseData: {
-                    id: $courseId
-                    featuredImage: $media
-                }) {
-                    courseId
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    courseId: course?.courseId,
-                    media: media || null,
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
         try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.updateCourse) {
+            const response = await updateCourseMutation.mutateAsync({
+                courseId: course!.courseId!,
+                data: {
+                    featuredImage: media || null,
+                }
+            });
+            if (response) {
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_COURSE_SAVED,
@@ -125,8 +97,6 @@ export function Details({ id, address, profile }: DetailsProps) {
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -138,7 +108,7 @@ export function Details({ id, address, profile }: DetailsProps) {
                     label="Title"
                     name="title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e: any) => setTitle(e.target.value)}
                 />
                 <PageBuilderPropertyHeader label={COURSE_CONTENT_HEADER} />
                 <TextEditor

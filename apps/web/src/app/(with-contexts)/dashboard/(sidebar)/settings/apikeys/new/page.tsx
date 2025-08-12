@@ -1,12 +1,11 @@
 "use client";
 
-import { useContext } from "react";
-import LoadingScreen from "@/components/admin/loading-screen";
-import { checkPermission } from "@workspace/utils";
-import { AddressContext, ProfileContext } from "@components/contexts";
-import { UIConstants } from "@workspace/common-models";
 import DashboardContent from "@/components/admin/dashboard-content";
+import LoadingScreen from "@/components/admin/loading-screen";
+import { useProfile } from "@/components/contexts/profile-context";
 import { SITE_SETTINGS_PAGE_HEADING } from "@/lib/ui/config/strings";
+import { UIConstants } from "@workspace/common-models";
+import { checkPermission } from "@workspace/utils";
 import dynamic from "next/dynamic";
 const { permissions } = UIConstants;
 
@@ -17,8 +16,7 @@ const ApikeyNew = dynamic(
 const breadcrumbs = [{ label: SITE_SETTINGS_PAGE_HEADING, href: "#" }];
 
 export default function Page() {
-    const address = useContext(AddressContext);
-    const { profile } = useContext(ProfileContext);
+    const { profile } = useProfile();
 
     if (!checkPermission(profile.permissions!, [permissions.manageSettings])) {
         return <LoadingScreen />;
@@ -26,7 +24,7 @@ export default function Page() {
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <ApikeyNew address={address} />
+            <ApikeyNew />
         </DashboardContent>
     );
 }

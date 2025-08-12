@@ -1,6 +1,6 @@
 import { Domain } from "@/models/Domain";
 import UserModel from "@/models/User";
-import { InternalUser } from "@workspace/common-logic";
+import { connectToDatabase, InternalUser } from "@workspace/common-logic";
 import { UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { Session } from "next-auth";
@@ -66,6 +66,7 @@ export const protectedProcedure = rootProcedure.use(
     if (!ctx.session?.user) {
       throw new AuthenticationException("User not authenticated");
     }
+    await connectToDatabase();
     const user = await UserModel.findOne({
       userId: ctx.session.user.userId,
     }).lean();
@@ -76,7 +77,6 @@ export const protectedProcedure = rootProcedure.use(
       ctx: {
         ...ctx,
         session: ctx.session!,
-        // user: ctx.session.user,
         user,
       },
     });

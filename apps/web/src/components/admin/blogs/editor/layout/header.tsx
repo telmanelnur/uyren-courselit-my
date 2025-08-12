@@ -1,27 +1,23 @@
-import React from "react";
-import dynamic from "next/dynamic";
-import useCourse from "../course-hook";
-import {
-    MenuItem,
-    Menu2,
-    Link,
-    Breadcrumbs,
-    useToast,
-} from "@workspace/components-library";
 import {
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
     MENU_BLOG_VISIT,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
-} from "../../@/lib/ui/config/strings";
-import { MoreVert } from "@workspace/icons";
-import { deleteProduct } from "../../helpers";
-import { AppDispatch } from "@workspace/state-management";
-import { Address } from "@workspace/common-models";
-import { useRouter } from "next/navigation";
+} from "@/lib/ui/config/strings";
 import { truncate } from "@/lib/ui/lib/utils";
+import {
+    Breadcrumbs,
+    Link,
+    Menu2,
+    MenuItem,
+    useToast,
+} from "@workspace/components-library";
+import { MoreVert } from "@workspace/icons";
+import { useRouter } from "next/navigation";
+import { useDeleteProduct } from "../../helpers";
+import useCourse from "../course-hook";
 
-const AppLoader = dynamic(() => import("../../../../app-loader"));
+// const AppLoader = dynamic(() => import("@/components/app-loader"));
 
 interface Breadcrumb {
     text: string;
@@ -31,19 +27,17 @@ interface Breadcrumb {
 interface BlogHeaderProps {
     breadcrumbs?: Breadcrumb[];
     id: string;
-    address: Address;
-    dispatch?: AppDispatch;
 }
 
 export default function BlogHeader({
     id,
     breadcrumbs,
-    address,
-    dispatch,
 }: BlogHeaderProps) {
-    const course = useCourse(id, address);
+    const course = useCourse(id);
     const router = useRouter();
     const { toast } = useToast();
+
+    const { deleteProduct } = useDeleteProduct();
 
     if (!course) {
         return <></>;
@@ -89,9 +83,7 @@ export default function BlogHeader({
                             description={DELETE_PRODUCT_POPUP_TEXT}
                             onClick={() =>
                                 deleteProduct({
-                                    id: course!.id as string,
-                                    backend: address.backend,
-                                    dispatch,
+                                    courseId: course.courseId!,
                                     onDeleteComplete: () => {
                                         router.replace(`/dashboard/blogs`);
                                     },

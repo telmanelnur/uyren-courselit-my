@@ -1,9 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Address, Course, SiteInfo } from "@workspace/common-models";
-import { AppDispatch, AppState } from "@workspace/state-management";
-import { networkAction } from "@workspace/state-management/dist/action-creators";
-import { FetchBuilder } from "@workspace/utils";
-import { connect } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { Course } from "@workspace/common-models";
 import {
     BLOG_TABLE_HEADER_NAME,
     BTN_NEW_BLOG,
@@ -26,17 +22,12 @@ import {
     useToast,
 } from "@workspace/components-library";
 import { usePathname } from "next/navigation";
+import { trpc } from "@/utils/trpc";
+import appConstants from "@/config/constants";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
-interface IndexProps {
-    dispatch?: AppDispatch;
-    address: Address;
-    loading: boolean;
-    siteinfo: SiteInfo;
-}
-
-export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
+export const Index = () => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
@@ -45,56 +36,37 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
     const path = usePathname();
     const { toast } = useToast();
 
-    const loadBlogs = useCallback(async () => {
-        const query = `
-    query {
-      courses: getCoursesAsAdmin(
-        offset: ${coursesPaginationOffset},
-        filterBy: BLOG
-      ) {
-        id,
-        title,
-        featuredImage {
-          thumbnail
+    const loadBlogsQuery = trpc.lmsModule.courseModule.course.list.useQuery({
+        pagination: {
+            take: 10,
+            skip: (coursesPaginationOffset - 1) * 10,
         },
-        courseId,
-        published,
-      }
-    }
-    `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch && dispatch(networkAction(true));
-            setEndReached(false);
-            const response = await fetch.exec();
-            if (response.courses) {
-                setCreatorCourses([...response.courses]);
-                if (response.courses.length === 0) {
-                    setEndReached(true);
-                }
+        filter: {
+            type: appConstants.blog,
+        },
+    });
+
+    useEffect(() => {
+        if (loadBlogsQuery.data?.items) {
+            setCreatorCourses(loadBlogsQuery.data.items as any);
+            if (loadBlogsQuery.data.items.length === 0) {
+                setEndReached(true);
             }
-        } catch (err: any) {
+        }
+        if (loadBlogsQuery.error) {
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
+                description: loadBlogsQuery.error.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
-    }, [address.backend, coursesPaginationOffset, dispatch]);
+    }, [loadBlogsQuery.data, loadBlogsQuery.error]);
 
     useEffect(() => {
-        loadBlogs();
-    }, []);
-
-    useEffect(() => {
-        loadBlogs();
-    }, [coursesPaginationOffset, loadBlogs]);
+        if (loadBlogsQuery.isLoading) {
+            setEndReached(false);
+        }
+    }, [loadBlogsQuery.isLoading]);
 
     const onDelete = (index: number) => {
         creatorCourses.splice(index, 1);
@@ -130,7 +102,7 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                     <td align="right">{PRODUCTS_TABLE_HEADER_ACTIONS}</td>
                 </TableHead>
                 <TableBody
-                    loading={loading}
+                    loading={loadBlogsQuery.isLoading}
                     endReached={endReached}
                     page={coursesPaginationOffset}
                     onPageChange={(value: number) => {
@@ -149,8 +121,6 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                                 details={product}
                                 position={index}
                                 onDelete={onDelete}
-                                siteinfo={siteinfo}
-                                address={address}
                             />
                         ),
                     )}
@@ -174,15 +144,4 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    profile: state.profile,
-    address: state.address,
-    loading: state.networkAction,
-    siteinfo: state.siteinfo,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Index);
+export default Index;

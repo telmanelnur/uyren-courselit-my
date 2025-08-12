@@ -102,6 +102,7 @@ export async function addNotification({
   userId: string;
   entityTargetId?: string;
 }) {
+  console.log("addNotification", domain, entityId, entityAction, forUserIds, userId, entityTargetId);
   try {
     const jwtSecret = getJwtSecret();
     const token = jwtUtils.generateToken(

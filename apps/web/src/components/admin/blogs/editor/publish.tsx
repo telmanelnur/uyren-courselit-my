@@ -1,32 +1,28 @@
-import React, { FormEvent, useEffect, useState } from "react";
-import { Button, Form, useToast } from "@workspace/components-library";
-import useCourse from "./course-hook";
-import { connect } from "react-redux";
-import { capitalize, FetchBuilder } from "@workspace/utils";
-import { networkAction } from "@workspace/state-management/dist/action-creators";
-import { Address } from "@workspace/common-models";
 import {
     BTN_PUBLISH,
     BTN_UNPUBLISH,
-    TOAST_TITLE_ERROR,
     PUBLISH_TAB_STATUS_SUBTITLE,
     PUBLISH_TAB_STATUS_TITLE,
     PUBLISH_TAB_VISIBILITY_SUBTITLE,
     PUBLISH_TAB_VISIBILITY_TITLE,
-} from "../@/lib/ui/config/strings";
-import { AppDispatch, AppState } from "@workspace/state-management";
+    TOAST_TITLE_ERROR,
+} from "@/lib/ui/config/strings";
+import { trpc } from "@/utils/trpc";
+import { ProductAccessType } from "@workspace/common-models";
+import { Button, Form, useToast } from "@workspace/components-library";
+import { capitalize, } from "@workspace/utils";
+import { FormEvent, useEffect, useState } from "react";
+import useCourse from "./course-hook";
 
 interface PublishProps {
     id: string;
-    address: Address;
-    dispatch?: AppDispatch;
     loading: boolean;
 }
 
-export function Publish({ id, address, dispatch, loading }: PublishProps) {
-    let course = useCourse(id, address, dispatch);
+function Publish({ id, loading }: PublishProps) {
+    const course = useCourse(id);
     const [published, setPublished] = useState(course?.published);
-    const [privacy, setPrivacy] = useState(course?.privacy);
+    const [privacy, setPrivacy] = useState<ProductAccessType | undefined>(course?.privacy);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -40,58 +36,34 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
         e.preventDefault();
     };
 
+    const updateCourseMutation = trpc.lmsModule.courseModule.course.update.useMutation();
+
     const togglePublishedStatus = async () => {
-        const query = `
-      mutation {
-        course: updateCourse(courseData: {
-          id: "${course!.courseId}"
-          published: ${!published}
-        }) {
-          courseId,
-          published
-        }
-      }
-    `;
-        const response = await saveSettings(query);
-        setPublished(response.published);
+        const response = await saveSettings();
+        setPublished(response?.published);
     };
 
     const toggleVisibility = async () => {
-        const query = `
-        mutation {
-            course: updateCourse(courseData: {
-                id: "${course!.courseId}"
-                privacy: ${privacy === "UNLISTED" ? "PUBLIC" : "UNLISTED"}
-            }) {
-                courseId,
-                privacy 
-            }
-        }
-        `;
-        const response = await saveSettings(query);
-        setPrivacy(response.privacy);
+        const response = await saveSettings();
+        setPrivacy(response?.privacy);
     };
 
-    const saveSettings = async (mutation: string) => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
-            .setIsGraphQLEndpoint(true)
-            .build();
+    const saveSettings = async () => {
         try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.course) {
-                return response.course;
-            }
+            const response = await updateCourseMutation.mutateAsync({
+                courseId: course!.courseId!,
+                data: {
+                    published: published,
+                    privacy: privacy,
+                }
+            });
+            return response;
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -131,18 +103,11 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
                     variant="soft"
                     disabled={loading}
                 >
-                    {capitalize(privacy)}
+                    {capitalize(privacy || "")}
                 </Button>
             </div>
         </Form>
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Publish);
+export default Publish;

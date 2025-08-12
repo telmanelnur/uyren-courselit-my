@@ -1,13 +1,14 @@
 "use client";
 
 import { Address, Media, Profile } from "@workspace/common-models";
-import { X } from "lucide-react";
+import { X, Upload } from "lucide-react";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Button2, PageBuilderPropertyHeader, Tooltip, useToast } from "..";
 import Dialog2 from "../dialog2";
 import Form from "../form";
 import FormField from "../form-field";
 import { Image } from "../image";
+import { Progress } from "@workspace/ui/components/progress";
 import Access from "./access";
 
 interface Strings {
@@ -62,6 +63,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
   const [dialogOpened, setDialogOpened] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const defaultUploadData = {
     caption: "",
     uploading: false,
@@ -93,48 +95,61 @@ const MediaSelector = (props: MediaSelectorProps) => {
     props.onSelection(media);
   };
 
-  const getPresignedUrl = async () => {
-    const response = (await fetch(
-      `${address.backend}/api/media/presigned`
-    )) as any;
-    return response.url;
-  };
-
   useEffect(() => {
     if (!dialogOpened) {
       setSelectedFile(null);
       setCaption("");
+      setUploadProgress(0);
     }
   }, [dialogOpened]);
 
-  const uploadToServer = async (presignedUrl: string): Promise<Media> => {
+  const uploadToCloudinary = async (): Promise<Media> => {
     if (!selectedFile) {
       throw new Error("No file selected for upload");
     }
-    const fD = new FormData();
-    fD.append("caption", (uploadData.caption = caption));
-    fD.append("access", uploadData.public ? "public" : "private");
-    fD.append("file", selectedFile);
 
-    setUploadData(
-      Object.assign({}, uploadData, {
-        uploading: true,
-      })
-    );
-    const res = await fetch(presignedUrl, {
-      method: "POST",
-      body: fD,
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("caption", caption);
+    formData.append("access", uploadData.public ? "public" : "private");
+    formData.append("type", props.type);
+
+    // Create XMLHttpRequest for progress tracking
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      });
+
+      xhr.addEventListener("load", () => {
+        if (xhr.status === 200) {
+          try {
+            const media = JSON.parse(xhr.responseText);
+            resolve(media);
+          } catch (err) {
+            reject(new Error("Invalid response format"));
+          }
+        } else {
+          try {
+            const error = JSON.parse(xhr.responseText);
+            reject(new Error(error.message || "Upload failed"));
+          } catch (err) {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        }
+      });
+
+      xhr.addEventListener("error", () => {
+        reject(new Error("Network error during upload"));
+      });
+
+      xhr.open("POST", `${address.backend}/api/media/upload?storageType=cloudinary`);
+      xhr.send(formData);
     });
-    if (res.status === 200) {
-      const media = await res.json();
-      if (media) {
-        delete media.group;
-      }
-      return media;
-    } else {
-      const resp = await res.json();
-      throw new Error(resp.error);
-    }
   };
 
   const uploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -148,13 +163,18 @@ const MediaSelector = (props: MediaSelectorProps) => {
 
     try {
       setUploading(true);
-      const presignedUrl = await getPresignedUrl();
-      const media = await uploadToServer(presignedUrl);
+      setUploadProgress(0);
+      const media = await uploadToCloudinary();
       onSelection(media);
+      toast({
+        title: "Success",
+        description: strings.fileUploaded || "File uploaded successfully",
+      });
     } catch (err: any) {
       onError(err);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
       setSelectedFile(null);
       setCaption("");
       setDialogOpened(false);
@@ -164,21 +184,30 @@ const MediaSelector = (props: MediaSelectorProps) => {
   const removeFile = async () => {
     try {
       setUploading(true);
-      const response = (await fetch(
-        `${address.backend}/api/media/${props.mediaId}/${props.type}`,
+      const response = await fetch(
+        `${address.backend}/api/media/${props.mediaId}?storageType=cloudinary`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
         }
-      )) as any;
-      if (response.message !== "success") {
-        throw new Error(response.message);
+      );
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Delete failed");
       }
+      
       if (props.onRemove) {
         props.onRemove();
       }
+      
+      toast({
+        title: "Success",
+        description: strings.mediaDeleted || "Media deleted successfully",
+      });
     } catch (err: any) {
       onError(err);
     } finally {
@@ -262,6 +291,29 @@ const MediaSelector = (props: MediaSelectorProps) => {
                   className="mt-2"
                   required
                 />
+                
+                {selectedFile && (
+                  <div className="p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Upload className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm font-medium">{selectedFile.name}</span>
+                      <span className="text-xs text-gray-500">
+                        ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    
+                    {uploading && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>Uploading...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <Progress value={uploadProgress} className="h-2" />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 <FormField
                   label={"Caption"}
                   name="caption"

@@ -1,4 +1,3 @@
-import React from "react";
 import { Root, Thumb } from "@radix-ui/react-switch";
 
 interface SwitchProps {

@@ -1,12 +1,13 @@
-import { ActivityType, User } from "@workspace/common-models";
+import constants from "@/config/constants";
+import ActivityModel, { Activity } from "@/models/Activity";
+import { Domain } from "@/models/Domain";
+import { ActivityType } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { AuthenticationException } from "../../core/exceptions";
-import constants from "@/config/constants";
-import { Domain } from "@/models/Domain";
-import ActivityModel, { Activity } from "@/models/Activity";
-const { permissions, activityTypes, analyticsDurations } = constants;
+import { MainContextType } from "../../core/procedures";
+const { permissions, analyticsDurations } = constants;
 
-interface Activities {
+type ActivitiesType = {
   count: number;
   points?: { date: Date; count: number }[];
   growth?: number;
@@ -20,18 +21,13 @@ export const getActivities = async ({
   growth = false,
   entityId,
 }: {
-  ctx: {
-    user: User;
-    domainData: {
-        domainObj: Domain;
-    }
-  };
+  ctx: MainContextType;
   type: ActivityType;
   duration: (typeof analyticsDurations)[number];
   points?: boolean;
   growth?: boolean;
   entityId?: string;
-}): Promise<Activities> => {
+}): Promise<ActivitiesType> => {
   if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
     throw new AuthenticationException("");
   }
@@ -39,10 +35,10 @@ export const getActivities = async ({
   let startFromDate = calculatePastDate(duration, ctx.domainData.domainObj);
   let extendedStartDate = growth
     ? calculatePastDate(
-        duration,
-        ctx.domainData.domainObj,
-        new Date(startFromDate.getTime() - 1)
-      )
+      duration,
+      ctx.domainData.domainObj,
+      new Date(startFromDate.getTime() - 1)
+    )
     : startFromDate;
 
   // Single query for both current and previous period
@@ -65,7 +61,7 @@ export const getActivities = async ({
     0
   );
 
-  let result: Activities = { count };
+  let result: ActivitiesType = { count };
 
   if (growth) {
     const previousPeriodActivities = activities.filter(

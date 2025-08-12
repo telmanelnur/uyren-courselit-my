@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
@@ -43,7 +45,7 @@ export default function Banner({
       await onSaveBanner(editedBannerText);
       setBannerText(editedBannerText);
       setIsEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: TOAST_TITLE_SUCCESS,
         description: error.message,

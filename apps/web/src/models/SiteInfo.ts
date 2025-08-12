@@ -1,6 +1,6 @@
 import { Constants, SiteInfo } from "@workspace/common-models";
 import mongoose from "mongoose";
-import MediaSchema from "./Media";
+import { MediaSchema } from "./Media";
 
 const SettingsSchema = new mongoose.Schema<SiteInfo>({
   title: { type: String },

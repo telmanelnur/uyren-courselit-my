@@ -1,75 +1,56 @@
-import React, { FormEvent, useState } from "react";
-import { Address } from "@workspace/common-models";
-import {
-    Form,
-    FormField,
-    Button,
-    useToast,
-} from "@workspace/components-library";
-import { AppDispatch, AppState } from "@workspace/state-management";
-import { FetchBuilder } from "@workspace/utils";
-import { useRouter } from "next/navigation";
-import { connect } from "react-redux";
 import {
     BTN_CONTINUE,
     BTN_NEW_BLOG,
     BUTTON_CANCEL_TEXT,
-    COURSE_TYPE_BLOG,
-    TOAST_TITLE_ERROR,
     FORM_NEW_PRODUCT_TITLE_PLC,
-} from "@/ui-config/strings";
-import { networkAction } from "@workspace/state-management/dist/action-creators";
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS
+} from "@/lib/ui/config/strings";
+import { trpc } from "@/utils/trpc";
+import { Constants } from "@workspace/common-models";
+import {
+    Button,
+    Form,
+    FormField,
+    useToast,
+} from "@workspace/components-library";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 
-interface NewBlogProps {
-    address: Address;
-    dispatch?: AppDispatch;
-    networkAction: boolean;
-}
 
-export function NewBlog({
-    address,
-    dispatch,
-    networkAction: loading,
-}: NewBlogProps) {
+function NewBlog() {
     const [title, setTitle] = useState("");
     const router = useRouter();
     const { toast } = useToast();
 
-    const createCourse = async (e: FormEvent) => {
-        e.preventDefault();
-
-        const query = `
-            mutation {
-                course: createCourse(courseData: {
-                    title: "${title}",
-                    type: ${COURSE_TYPE_BLOG.toUpperCase()},
-                }) {
-                    courseId
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.course) {
-                router.replace(`/dashboard/blog/${response.course.courseId}`);
-            }
-        } catch (err: any) {
+    const createCourseMutation = trpc.lmsModule.courseModule.course.create.useMutation({
+        onSuccess: (response) => {
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: "Course created successfully",
+            });
+            router.replace(`/dashboard/blog/${response.courseId}`);
+        },
+        onError: (error) => {
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
+                description: error.message,
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-        }
+        },
+    });
+
+    const createCourse = async (e: FormEvent) => {
+        e.preventDefault();
+        createCourseMutation.mutate({
+            data: {
+                title,
+                type: Constants.CourseType.BLOG,
+            },
+        });
     };
+
+    const loading = createCourseMutation.isPending;
 
     return (
         <div className="flex flex-col">
@@ -81,7 +62,7 @@ export function NewBlog({
                         label="Title"
                         name="title"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e: any) => setTitle(e.target.value)}
                         placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
                     />
                     <div className="flex gap-2">
@@ -101,11 +82,4 @@ export function NewBlog({
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewBlog);
+export default NewBlog;

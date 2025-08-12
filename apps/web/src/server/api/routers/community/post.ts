@@ -13,10 +13,10 @@ import CommunityPostSubscriberModel, {
 import MembershipModel from "@/models/Membership";
 import NotificationModel from "@/models/Notification";
 import { addNotification } from "@/server/lib/queue";
-import { connectToDatabase, InternalUser } from "@workspace/common-logic";
+import { InternalUser } from "@workspace/common-logic";
 import { Constants, Membership, User } from "@workspace/common-models";
 import { generateUniqueId } from "@workspace/utils";
-import mongoose from "mongoose";
+import mongoose, { RootFilterQuery } from "mongoose";
 import { z } from "zod";
 import {
   AuthorizationException,
@@ -160,8 +160,8 @@ export const postRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
-      const query: Partial<InternalCommunityPost> = {
+      
+      const query: RootFilterQuery<typeof CommunityPostModel> = {
         domain: ctx.domainData.domainObj._id as any,
         deleted: false,
       };
@@ -245,7 +245,7 @@ export const postRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(CreateSchema)
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.data.communityId
@@ -344,12 +344,12 @@ export const postRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(z.object({ postId: z.string(), communityId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.communityId
       );
-      const query: Record<string, any> = {
+      const query: RootFilterQuery<typeof CommunityPostModel> = {
         domain: ctx.domainData.domainObj._id,
         postId: input.postId,
         communityId: communityObj.communityId,
@@ -377,7 +377,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.communityId
@@ -437,7 +437,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.communityId
@@ -476,7 +476,7 @@ export const postRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
 
       const community = await getCommunityObjOrAssert(
         ctx,
@@ -536,7 +536,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
 
       const community = await getCommunityObjOrAssert(
         ctx,
@@ -658,7 +658,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
 
       const community = await getCommunityObjOrAssert(
         ctx,

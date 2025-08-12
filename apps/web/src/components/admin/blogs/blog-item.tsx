@@ -1,44 +1,50 @@
-import React from "react";
-import { Course } from "@workspace/common-models";
 import {
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
+    TOAST_TITLE_ERROR,
 } from "@/lib/ui/config/strings";
-import { MoreVert } from "@workspace/icons";
-import type { AppDispatch } from "@workspace/state-management";
-import type { SiteInfo, Address } from "@workspace/common-models";
-// import { connect } from "react-redux";
+import { trpc } from "@/utils/trpc";
+import { Course } from "@workspace/common-models";
 import {
     Chip,
+    Link,
     Menu2,
     MenuItem,
-    Link,
+    TableRow,
     useToast,
 } from "@workspace/components-library";
-import { deleteProduct } from "./helpers";
-import { TableRow } from "@workspace/components-library";
+import { MoreVert } from "@workspace/icons";
 
 export default function BlogItem({
     details,
-    address,
-    dispatch,
     position,
     onDelete,
 }: {
     details: Course & {
         published: boolean;
     };
-    siteinfo: SiteInfo;
-    address: Address;
-    dispatch?: AppDispatch;
     position: number;
     onDelete: (position: number) => void;
 }) {
     const product = details;
     const { toast } = useToast();
+
+    const deleteCourseMutation =
+        trpc.lmsModule.courseModule.course.delete.useMutation({
+            onSuccess: () => {
+                onDelete(position);
+            },
+            onError: (error) => {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: error.message,
+                    variant: "destructive",
+                });
+            },
+        });
 
     return (
         <TableRow key={product.courseId}>
@@ -70,14 +76,8 @@ export default function BlogItem({
                         }
                         description={DELETE_PRODUCT_POPUP_TEXT}
                         onClick={() =>
-                            deleteProduct({
-                                id: product.courseId,
-                                backend: address.backend,
-                                dispatch,
-                                onDeleteComplete: () => {
-                                    onDelete(position);
-                                },
-                                toast,
+                            deleteCourseMutation.mutate({
+                                courseId: product.courseId,
                             })
                         }
                     ></MenuItem>
@@ -86,12 +86,3 @@ export default function BlogItem({
         </TableRow>
     );
 }
-
-// const mapStateToProps = (state: AppState) => ({
-//     siteinfo: state.siteinfo,
-//     address: state.address,
-// });
-
-// const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-// export default connect(mapStateToProps, mapDispatchToProps)(BlogItem);

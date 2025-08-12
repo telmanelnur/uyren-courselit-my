@@ -40,6 +40,7 @@ import {
 import { useState } from "react";
 import { useProfile } from "../contexts/profile-context";
 import { isCommunityComment } from "./utils";
+import { trpc } from "@/utils/trpc";
 
 interface CommentProps {
   communityId: string;
@@ -115,61 +116,37 @@ export function Comment({
     }
   };
 
-  //   const handleReport = async (
-  //     contentId: string,
-  //     reason: string,
-  //     contentParentId?: string
-  //   ) => {
-  //     const query = `
-  //             mutation ($communityId: String!, $contentId: String!, $type: CommunityReportContentType!, $reason: String!, $contentParentId: String) {
-  //                 report: reportCommunityContent(communityId: $communityId, contentId: $contentId, type: $type, reason: $reason, contentParentId: $contentParentId) {
-  //                     communityId
-  //                     reportId
-  //                     content {
-  //                         id
-  //                         content
-  //                     }
-  //                     type
-  //                     reason
-  //                     status
-  //                     contentParentId
-  //                     rejectionReason
-  //                     createdAt
-  //                     updatedAt
-  //                 }
-  //             }
-  //         `;
-  //     const fetch = new FetchBuilder()
-  //       .setUrl(`${address.backend}/api/graph`)
-  //       .setPayload({
-  //         query,
-  //         variables: {
-  //           communityId: communityId,
-  //           contentId,
-  //           type: contentParentId
-  //             ? Constants.CommunityReportType.REPLY.toUpperCase()
-  //             : Constants.CommunityReportType.COMMENT.toUpperCase(),
-  //           reason,
-  //           contentParentId,
-  //         },
-  //       })
-  //       .setIsGraphQLEndpoint(true)
-  //       .build();
+  // const reportMutation = trpc.communityModule.report.create.useMutation({
+  //   onSuccess: () => {
+  //     toast({
+  //       title: "Reported",
+  //       description: "Content has been reported",
+  //     });
+  //   },
+  //   onError: (err) => {
+  //     toast({
+  //       title: "Error",
+  //       description: err.message,
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
 
-  //     try {
-  //       await fetch.exec();
-  //       toast({
-  //         title: "Reported",
-  //         description: "Content has been reported",
-  //       });
-  //     } catch (err: any) {
-  //       toast({
-  //         title: "Error",
-  //         description: err.message,
-  //         variant: "destructive",
-  //       });
-  //     }
-  //   };
+  // const handleReport = async (
+  //   contentId: string,
+  //   reason: string,
+  //   contentParentId?: string
+  // ) => {
+  //   reportMutation.mutate({
+  //     communityId: communityId,
+  //     contentId,
+  //     type: contentParentId
+  //       ? Constants.CommunityReportType.REPLY.toUpperCase()
+  //       : Constants.CommunityReportType.COMMENT.toUpperCase(),
+  //     reason,
+  //     contentParentId,
+  //   });
+  // };
 
   if (!profile) {
     return null;

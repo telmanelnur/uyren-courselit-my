@@ -3,7 +3,7 @@ import { Media, Quiz, TextEditorContent } from "@workspace/common-models";
 import { generateUniqueId } from "@workspace/utils";
 import mongoose from "mongoose";
 import constants from "../config/constants";
-import MediaSchema from "./Media";
+import { MediaSchema } from "./Media";
 const { text, video, audio, pdf, quiz, file, embed } = constants;
 
 export interface Lesson {

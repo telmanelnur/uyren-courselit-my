@@ -4,7 +4,7 @@ export type MediaAccessType =
   (typeof MediaAccessType)[keyof typeof MediaAccessType];
 
 export interface Media {
-  storageProvider: "cloudinary" | "local";
+  storageProvider: "cloudinary" | "local" | "custom";
   url: string;
   mediaId: string;
   originalFileName: string;

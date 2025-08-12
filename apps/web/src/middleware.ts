@@ -113,11 +113,10 @@ export const config = {
      * 5. trpc routes
      */
     "/((?!api(?!/auth)|_next/static|_next/image|favicon.ico|.*\\..*|public).*)",
-    "/api/auth/(.*)",
+    "/api/(.*)",
     "/dashboard/(.*)",
     "/admin/(.*)",
     "/profile/(.*)",
     "/settings/(.*)",
-    "/api/trpc/(.*)",
   ],
 };

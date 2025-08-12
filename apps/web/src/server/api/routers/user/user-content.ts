@@ -2,33 +2,32 @@ import CommunityModel from "@/models/Community";
 import CourseModel from "@/models/Course";
 import MembershipModel from "@/models/Membership";
 import UserModel from "@/models/User";
-import { TRPCError } from "@trpc/server";
 import { Constants } from "@workspace/common-models";
 import { NotFoundException } from "../../core/exceptions";
 import { assertDomainExist } from "../../core/permissions";
-import { protectedProcedure } from "../../core/procedures";
+import { createDomainRequiredMiddleware, protectedProcedure } from "../../core/procedures";
 import { router } from "../../core/trpc";
 
 const { MembershipStatus, MembershipEntityType } = Constants;
 
 export const userContentRouter = router({
-  getProtectedUserContent: protectedProcedure.query(async ({ ctx }) => {
-    try {
+  getProtectedUserContent: protectedProcedure
+    .use(
+      createDomainRequiredMiddleware()
+    ).query(async ({ ctx }) => {
       const domainObj = await assertDomainExist(ctx);
-      const userId = ctx.session.user.id;
-
       const user = await UserModel.findOne({
-        userId: userId,
+        userId: ctx.user.userId,
         domain: domainObj._id,
       });
 
       if (!user) {
-        throw new NotFoundException("User", userId);
+        throw new NotFoundException("User");
       }
 
       const memberships = await MembershipModel.find({
         domain: domainObj._id,
-        userId,
+        userId: user.userId,
         status: MembershipStatus.ACTIVE,
       });
 
@@ -81,16 +80,6 @@ export const userContentRouter = router({
       }
 
       return content;
-    } catch (error) {
-      if (error instanceof TRPCError) {
-        throw error;
-      }
 
-      console.error("Error fetching user content:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch user content",
-      });
-    }
-  }),
+    }),
 });

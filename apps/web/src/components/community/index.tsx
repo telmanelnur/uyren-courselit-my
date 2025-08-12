@@ -332,30 +332,7 @@ export function CommunityForum({
   //     }
   //   };
 
-  //   const getPresignedUrl = async () => {
-  //     const fetch = new FetchBuilder()
-  //       .setUrl(`${address.backend}/api/media/presigned`)
-  //       .setIsGraphQLEndpoint(false)
-  //       .build();
-  //     const response = await fetch.exec();
-  //     return response.url;
-  //   };
 
-  // const removeFile = async (mediaId: string) => {
-  //     try {
-  //         const fetch = new FetchBuilder()
-  //             .setUrl(`${address.backend}/api/media/${mediaId}`)
-  //             .setHttpMethod("DELETE")
-  //             .setIsGraphQLEndpoint(false)
-  //             .build();
-  //         const response = await fetch.exec();
-  //         if (response.message !== "success") {
-  //             throw new Error(response.message);
-  //         }
-  //     } catch (err: any) {
-  //         console.error("Error in removing file", err.message);
-  //     }
-  // };
 
   const createPostMutation = trpc.communityModule.post.create.useMutation({
     onSuccess: (data) => {

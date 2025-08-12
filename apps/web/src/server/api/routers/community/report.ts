@@ -10,7 +10,7 @@ import CommunityPostSubscriberModel, {
 import CommunityReportModel, {
   InternalCommunityReport,
 } from "@/models/CommunityReport";
-import { connectToDatabase, InternalUser } from "@workspace/common-logic";
+import { InternalUser } from "@workspace/common-logic";
 import {
   CommunityMedia,
   CommunityReport,
@@ -176,7 +176,7 @@ export const reportRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.filter.communityId
@@ -233,7 +233,7 @@ export const reportRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await connectToDatabase();
+      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.data.communityId

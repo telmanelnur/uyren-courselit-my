@@ -34,7 +34,7 @@ function PermissionsEditor({ user }: PermissionsEditorProps) {
     }
     try {
       const response = await updateUserMutation.mutateAsync({
-        id: user.userId,
+        userId: user.userId,
         data: {
           permissions: newPermissions.map((item) => `"${item}"`),
         },

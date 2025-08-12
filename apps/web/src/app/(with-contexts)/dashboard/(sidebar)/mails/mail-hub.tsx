@@ -1,19 +1,17 @@
 "use client";
 
+import DashboardContent from "@/components/admin/dashboard-content";
+import LoadingScreen from "@/components/admin/loading-screen";
 import Mails from "@/components/admin/mails";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import { useProfile } from "@/components/contexts/profile-context";
+import { UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { useSearchParams } from "next/navigation";
-import { useContext } from "react";
-import { UIConstants } from "@workspace/common-models";
-import LoadingScreen from "@/components/admin/loading-screen";
-import DashboardContent from "@/components/admin/dashboard-content";
 
 const { permissions } = UIConstants;
 
 export default function MailHub() {
-    const address = useContext(AddressContext);
-    const { profile } = useContext(ProfileContext);
+    const { profile } = useProfile();
     const searchParams = useSearchParams();
 
     const tab = searchParams?.get("tab") || "Broadcasts";
@@ -26,7 +24,7 @@ export default function MailHub() {
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <Mails selectedTab={tab as any} address={address} loading={false} />
+            <Mails selectedTab={tab} loading={false} />
         </DashboardContent>
     );
 }

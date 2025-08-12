@@ -3,6 +3,8 @@ import { communityModuleRouter } from "./routers/community";
 import { lmsModuleRouter } from "./routers/lms";
 import { siteModuleRouter } from "./routers/site";
 import { userModuleRouter } from "./routers/user";
+import { activityModuleRouter } from "./routers/activity";
+import { mediaModuleRouter } from "./routers/media";
 
 /**
  * This is the primary router for your server.
@@ -20,6 +22,8 @@ export const appRouter = router({
   // agentModule: agentModuleRouter,
   // organizationModule: organizationModuleRouter,
   lmsModule: lmsModuleRouter,
+  activityModule: activityModuleRouter,
+  mediaModule: mediaModuleRouter,
 });
 
 // export type definition of API

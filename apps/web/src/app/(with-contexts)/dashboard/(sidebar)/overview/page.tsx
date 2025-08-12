@@ -1,11 +1,7 @@
 "use client";
 
 import { useContext, useState } from "react";
-import {
-    AddressContext,
-    ProfileContext,
-    SiteInfoContext,
-} from "@components/contexts";
+import { useProfile } from "@/components/contexts/profile-context";
 import { UIConstants, Constants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import {
@@ -13,13 +9,14 @@ import {
     OVERVIEW_HEADER,
     UNNAMED_USER,
 } from "@/lib/ui/config/strings";
-import { TIME_RANGES } from "@ui-config/constants";
 import { useActivities } from "@/hooks/use-activities";
 import dynamic from "next/dynamic";
 import DashboardContent from "@/components/admin/dashboard-content";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { TIME_RANGES } from "@/lib/ui/config/constants";
 const Todo = dynamic(() =>
     import("@/components/admin/dashboard/to-do").then((mod) => ({
-        default: mod.Todo,
+        default: mod.default,
     })),
 );
 const LoadingScreen = dynamic(() => import("@/components/admin/loading-screen"));
@@ -67,9 +64,8 @@ const Mail = dynamic(() =>
 const breadcrumbs = [{ label: OVERVIEW_HEADER, href: "#" }];
 
 export default function Page() {
-    const siteInfo = useContext(SiteInfoContext);
-    const address = useContext(AddressContext);
-    const { profile } = useContext(ProfileContext);
+    const { siteInfo } = useSiteInfo();
+    const { profile } = useProfile();
     const [timeRange, setTimeRange] = useState("7d");
     const { data: salesData, loading: salesLoading } = useActivities(
         Constants.ActivityType.PURCHASED,
@@ -134,7 +130,7 @@ export default function Page() {
                                 ))}
                             </SelectContent>
                         </Select> */}
-            <Todo siteinfo={siteInfo} />
+            <Todo />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
                 <MetricCard
                     title="Sales"

@@ -1,7 +1,7 @@
 import DomainModel from "@/models/Domain";
 import UserModel from "@/models/User";
 import { TRPCError } from "@trpc/server";
-import { connectToDatabase } from "@workspace/common-logic";
+
 import { UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { z } from "zod";
@@ -22,6 +22,9 @@ import { addTags } from "./helpers";
 const { permissions } = UIConstants;
 
 const getTagsWithDetails = async (ctx: MainContextType) => {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+    throw new AuthorizationException();
+  }
   const tagsWithUsersCount = await UserModel.aggregate([
     { $unwind: "$tags" },
     {
