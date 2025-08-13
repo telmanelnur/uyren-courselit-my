@@ -62,7 +62,7 @@ export default function Page({
         id: string;
     };
 }) {
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { id } = params;
     const { sequence, loading, error, loadSequence } = useSequence();
     const [filters, setFilters] = useState<UserFilter[]>([]);

@@ -36,12 +36,12 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLoginComplete }: LoginFormProps) {
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { profile, setProfile } = useContext(ProfileContext);
     const [loginStep, setLoginStep] = useState<LoginStep>("email");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
-    const { theme } = useContext(ThemeContext);
+    const { theme } = useTheme();
 
     useEffect(() => {
         if (profile && profile.email) {

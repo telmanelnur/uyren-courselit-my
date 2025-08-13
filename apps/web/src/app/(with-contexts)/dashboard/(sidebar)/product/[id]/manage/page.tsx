@@ -169,7 +169,7 @@ export default function SettingsPage() {
     const params = useParams();
     const productId = params.id as string;
     const [errors, setErrors] = useState({});
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { product, loaded: productLoaded } = useProduct(productId, address);
     const profile = useContext(ProfileContext);
     const [loading, setLoading] = useState(false);

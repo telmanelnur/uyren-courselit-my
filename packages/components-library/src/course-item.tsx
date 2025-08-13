@@ -48,8 +48,8 @@ const CourseItem = (props: CourseItemProps) => {
                 {!(course.type === Constants.CourseType.BLOG) && (
                     <PriceTag
                         cost={course.cost}
-                        freeCostCaption={freeCostCaption}
-                        currencyISOCode={siteInfo.currencyISOCode}
+                        freeCostCaption={freeCostCaption || ""}
+                        currencyISOCode={siteInfo.currencyISOCode || ""}
                     />
                 )}
             </article>

@@ -15,7 +15,7 @@ import { useParams } from "next/navigation";
 export default function Page() {
     const params = useParams();
     const productId = params.id as string;
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { product } = useProduct(productId, address);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },

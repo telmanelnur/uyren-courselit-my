@@ -1,113 +1,95 @@
-import { Address } from "@workspace/common-models";
+import { TOAST_TITLE_ERROR } from "@/lib/ui/config/strings";
+import { trpc } from "@/utils/trpc";
+import { InternalCourse } from "@workspace/common-logic";
 import { Lesson } from "@workspace/common-models";
 import { useToast } from "@workspace/components-library";
-import { AppDispatch } from "@workspace/state-management";
-import { networkAction } from "@workspace/state-management/dist/action-creators";
-import { FetchBuilder } from "@workspace/utils";
-import { InternalCourse } from "@models/Course";
-import { TOAST_TITLE_ERROR } from "@/lib/ui/config/strings";
 import { useCallback, useEffect, useState } from "react";
 
 export type CourseWithAdminProps = Partial<
     InternalCourse & {
-        lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
-            { id: string }[];
+        lessons: Array<Pick<Lesson, "lessonId" | "type" | "title" | "groupId"> & { id: string }>;
     }
 >;
 
 export default function useCourse(
-    id: string,
-    address: Address,
-    dispatch?: AppDispatch,
+    courseId: string,
 ): CourseWithAdminProps | undefined | null {
     const [course, setCourse] = useState<
-        CourseWithAdminProps | undefined | null
+        CourseWithAdminProps | null
     >();
     const { toast } = useToast();
 
-    const loadCourse = useCallback(
-        async (courseId: string) => {
-            const query = `
-            query {
-                course: getCourse(id: "${courseId}") {
-                    title,
-                    description,
-                    type,
-                    slug,
-                    lessons {
-                        id,
-                        title,
-                        groupId,
-                        lessonId,
-                        type
-                    },
-                    groups {
-                        id,
-                        name,
-                        rank,
-                        lessonsOrder,
-                        drip {
-                            type,
-                            status,
-                            delayInMillis,
-                            dateInUTC,
-                            email {
-                                content,
-                                subject
-                            }
-                        }
-                    },
-                    courseId,
-                    cost,
-                    costType,
-                    featuredImage {
-                        mediaId,
-                        originalFileName,
-                        mimeType,
-                        size,
-                        access,
-                        file,
-                        thumbnail,
-                        caption
-                    },
-                    published,
-                    privacy,
-                    pageId
-                }
-            }
-        `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            try {
-                dispatch && dispatch(networkAction(true));
-                const response = await fetch.exec();
-                if (response.course) {
-                    setCourse(response.course);
-                } else {
-                    setCourse(null);
-                }
-            } catch (err: any) {
-                setCourse(null);
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message,
-                    variant: "destructive",
-                });
-            } finally {
-                dispatch && dispatch(networkAction(false));
-            }
-        },
-        [dispatch, address?.backend],
-    );
+    const loadCourseQuery = trpc.lmsModule.courseModule.course.getByCourseDetailed.useQuery({
+        courseId,
+    });
 
     useEffect(() => {
-        if (id && address) {
-            loadCourse(id);
+        if (loadCourseQuery.data) {
+            setCourse(loadCourseQuery.data as any);
         }
-    }, [id, address, loadCourse]);
+    }, [loadCourseQuery.data]);
+
+    useEffect(() => {
+        if (loadCourseQuery.error) {
+            setCourse(null);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: loadCourseQuery.error.message,
+                variant: "destructive",
+            });
+        }
+    }, [loadCourseQuery.error]);
+
+        //     const query = `
+        //     query {
+        //         course: getCourse(id: "${courseId}") {
+        //             title,
+        //             description,
+        //             type,
+        //             slug,
+        //             lessons {
+        //                 id,
+        //                 title,
+        //                 groupId,
+        //                 lessonId,
+        //                 type
+        //             },
+        //             groups {
+        //                 id,
+        //                 name,
+        //                 rank,
+        //                 lessonsOrder,
+        //                 drip {
+        //                     type,
+        //                     status,
+        //                     delayInMillis,
+        //                     dateInUTC,
+        //                     email {
+        //                         content,
+        //                         subject
+        //                     }
+        //                 }
+        //             },
+        //             courseId,
+        //             cost,
+        //             costType,
+        //             featuredImage {
+        //                 mediaId,
+        //                 originalFileName,
+        //                 mimeType,
+        //                 size,
+        //                 access,
+        //                 file,
+        //                 thumbnail,
+        //                 caption
+        //             },
+        //             published,
+        //             privacy,
+        //             pageId
+        //         }
+        //     }
+        // `;
+
 
     return course;
 }

@@ -249,6 +249,15 @@ function getSidebarItems(
       icon: LifeBuoy,
       isActive: path === "/dashboard/support",
     },
+
+    // MY
+    {
+      title: "Test Media",
+      url: "/dashboard/test-media-dropdown",
+      icon: Text,
+      isActive: path === "/dashboard/test-media-dropdown",
+    },
+    // ENDMY
   ];
   const navProjectItems = [
     {

@@ -16,7 +16,7 @@ export default function Page() {
     const [paymentStatus, setPaymentStatus] =
         useState<InvoicesStatus>("pending");
     const [loading, setLoading] = useState(false);
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
 
     const verifyPayment = async () => {
         setPaymentStatus("pending"); // Hide check status again

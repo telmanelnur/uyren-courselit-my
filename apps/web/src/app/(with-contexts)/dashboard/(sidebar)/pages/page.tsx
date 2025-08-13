@@ -13,7 +13,7 @@ const { permissions } = UIConstants;
 const breadcrumbs = [{ label: MANAGE_PAGES_PAGE_HEADING, href: "#" }];
 
 export default function Page() {
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { profile } = useContext(ProfileContext);
 
     if (!checkPermission(profile.permissions!, [permissions.manageSite])) {

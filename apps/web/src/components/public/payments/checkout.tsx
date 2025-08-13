@@ -99,7 +99,7 @@ export default function Checkout({
 }: CheckoutScreenProps) {
     const siteinfo = useContext(SiteInfoContext);
     const { profile } = useContext(ProfileContext);
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const currencySymbol =
         getSymbolFromCurrency(siteinfo.currencyISOCode || "USD") || "$";
 
@@ -116,7 +116,7 @@ export default function Checkout({
     const stripePromise = loadStripe(siteinfo.stripeKey as string);
     const router = useRouter();
     const { toast } = useToast();
-    const { theme } = useContext(ThemeContext);
+    const { theme } = useTheme();
 
     useEffect(() => {
         const fetchMembership = async () => {

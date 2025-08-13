@@ -11,7 +11,7 @@ export default function BlogsPage() {
     const searchParams = useSearchParams();
     const page = parseInt(searchParams?.get("page") || "1");
     const router = useRouter();
-    const { theme } = useContext(ThemeContext);
+    const { theme } = useTheme();
 
     const handlePageChange = useCallback(
         (value: number) => {

@@ -24,7 +24,7 @@ interface ButtonMenuItemProps {
 type MenuItemProps = ButtonMenuItemProps | DialogMenuItemProps;
 
 // eslint-disable-next-line react/display-name
-const MenuItem = forwardRef((props: MenuItemProps, forwardedRef: any) => {
+const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>((props: any, forwardedRef) => {
     if (isButton(props)) {
         const { children, ...otherProps } = props;
         return (

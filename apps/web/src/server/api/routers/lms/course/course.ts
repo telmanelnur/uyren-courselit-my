@@ -30,7 +30,7 @@ import {
 } from "@/server/api/core/validators";
 import { deleteMedia } from "@/server/services/media";
 import { InternalCourse } from "@workspace/common-logic";
-import { Constants, Drip, Email, Group, Lesson, UIConstants } from "@workspace/common-models";
+import { Constants, Drip, Email, Group, Lesson, UIConstants, WidgetInstance } from "@workspace/common-models";
 import { checkPermission, slugify } from "@workspace/utils";
 import mongoose from "mongoose";
 import { ActivityType } from "node_modules/@workspace/common-models/src/constants";
@@ -101,11 +101,13 @@ async function formatCourse(
 
 
 const getInitialLayout = (type: "course" | "download") => {
-  const layout: Record<string, any>[] = [
+  // TODO: remove as return
+  const layout: any = [
     {
       name: "header",
       deleteable: false,
       shared: true,
+      widgetId: ""
     },
     {
       name: "banner",
@@ -125,7 +127,7 @@ const getInitialLayout = (type: "course" | "download") => {
     deleteable: false,
     shared: true,
   });
-  return layout;
+  return layout as WidgetInstance[];
 };
 
 
@@ -469,7 +471,7 @@ export const courseRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(
       z.object({
-        courseId: documentIdValidator(),
+        courseId: z.string(),
         asGuest: z.boolean().optional().default(false),
         withLessons: z.boolean().optional().default(false),
       })
@@ -519,7 +521,7 @@ export const courseRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(
       z.object({
-        courseId: documentIdValidator(),
+        courseId: z.string(),
         asGuest: z.boolean().optional().default(false),
       })
     )
@@ -529,7 +531,7 @@ export const courseRouter = router({
         domain: ctx.domainData.domainObj._id,
       })
         .populate<{
-          lessons: Lesson[];
+          lessons: Array<Pick<Lesson, "lessonId" | "type" | "title" | "groupId"> & { id: string }>;
         }>({
           path: "lessons",
           select: "lessonId type title groupId",

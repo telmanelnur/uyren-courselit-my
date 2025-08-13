@@ -19,7 +19,7 @@ interface PublishProps {
     loading: boolean;
 }
 
-function Publish({ id, loading }: PublishProps) {
+export function Publish({ id, loading }: PublishProps) {
     const course = useCourse(id);
     const [published, setPublished] = useState(course?.published);
     const [privacy, setPrivacy] = useState<ProductAccessType | undefined>(course?.privacy);
@@ -109,5 +109,3 @@ function Publish({ id, loading }: PublishProps) {
         </Form>
     );
 }
-
-export default Publish;

@@ -1,4 +1,4 @@
-import NewBlog from "@/components/admin/blogs/new-blog";
+import { NewBlog } from "@/components/admin/blogs/new-blog";
 import DashboardContent from "@/components/admin/dashboard-content";
 import {
   BTN_NEW_BLOG,

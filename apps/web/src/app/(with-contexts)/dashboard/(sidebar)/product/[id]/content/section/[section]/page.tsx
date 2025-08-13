@@ -63,7 +63,7 @@ export default function SectionPage({
     const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
     const [emailSubject, setEmailSubject] = useState("");
     const [emailId, setEmailId] = useState("");
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { product } = useProduct(productId, address);
     const [loading, setLoading] = useState(false);
     const breadcrumbs = [

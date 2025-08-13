@@ -72,7 +72,7 @@ export default function CustomersPage() {
     const [members, setMembers] = useState<Member[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { product } = useProduct(productId, address);
     const { toast } = useToast();
 

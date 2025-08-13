@@ -1,4 +1,4 @@
-import { MediaWrapper } from "./media";
+import { Media } from "./media";
 import { Progress } from "./progress";
 
 export default interface Profile {
@@ -11,5 +11,5 @@ export default interface Profile {
   permissions: string[];
   userId: string;
   subscribedToUpdates: boolean;
-  avatar: Partial<MediaWrapper>;
+  avatar: Partial<Media>;
 }

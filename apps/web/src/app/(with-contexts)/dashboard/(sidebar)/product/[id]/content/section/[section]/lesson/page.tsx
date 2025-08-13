@@ -111,7 +111,7 @@ export default function LessonPage() {
     );
     const [initialLessonType, setInitialLessonType] =
         useState<LessonType | null>(null);
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { profile } = useContext(ProfileContext);
     const { product, loaded: productLoaded } = useProduct(productId, address);
     const breadcrumbs = [

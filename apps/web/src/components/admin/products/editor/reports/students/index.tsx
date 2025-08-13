@@ -9,11 +9,8 @@ import {
     COURSE_STUDENT_TABLE_HEADER_SIGNED_UP_ON,
     PRICING_EMAIL,
     USER_TABLE_HEADER_NAME,
-} from "../../../@/lib/ui/config/strings";
+} from "@/lib/ui/config/strings";
 import { ChangeEvent, useEffect, useState } from "react";
-import { FetchBuilder } from "@workspace/utils";
-import { actionCreators, AppDispatch } from "@workspace/state-management";
-import { Address } from "@workspace/common-models";
 import { Search, Circle, CheckCircled } from "@workspace/icons";
 import useCourse from "../../course-hook";
 import {
@@ -23,13 +20,10 @@ import {
     Form,
     FormField,
 } from "@workspace/components-library";
-const { networkAction } = actionCreators;
+import { trpc } from "@/utils/trpc";
 
 interface StudentsProps {
     course: ReturnType<typeof useCourse>;
-    address: Address;
-    dispatch?: AppDispatch;
-    loading: boolean;
 }
 
 interface Student {
@@ -43,70 +37,58 @@ interface Student {
 
 export default function Students({
     course,
-    address,
-    dispatch,
-    loading,
 }: StudentsProps) {
     const [students, setStudents] = useState<Student[]>([]);
     const [text, setText] = useState("");
 
-    useEffect(() => {
-        if (course?.courseId) {
-            fetchStudents();
-        }
-    }, [course]);
 
-    const fetchStudents = async () => {
-        const mutation = text
-            ? `
-            query {
-                report: getReports(id: "${course?.courseId}") {
-                    students (text: "${text}") {
-                        email,
-                        userId,
-                        name,
-                        progress,
-                        signedUpOn,
-                        lastAccessedOn,
-                        downloaded
-                    }
-                }
-            }
-            `
-            : `
-            query {
-                report: getReports(id: "${course?.courseId}") {
-                    students {
-                        email,
-                        userId,
-                        name,
-                        progress,
-                        signedUpOn,
-                        lastAccessedOn,
-                        downloaded
-                    }
-                }
-            }
-            `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            setStudents(response.report.students);
-        } finally {
-            dispatch && dispatch(networkAction(false));
-        }
-    };
+    const loadReportsQuery = trpc.communityModule.report.list.useQuery({
+        filter: {
+            courseId: course?.courseId,
+        },
+    } , {
+        enabled: !!course?.courseId, // TODO: CHECK this refetch
+    });
+
+        // const mutation = text
+        //     ? `
+        //     query {
+        //         report: getReports(id: "${course?.courseId}") {
+        //             students (text: "${text}") {
+        //                 email,
+        //                 userId,
+        //                 name,
+        //                 progress,
+        //                 signedUpOn,
+        //                 lastAccessedOn,
+        //                 downloaded
+        //             }
+        //         }
+        //     }
+        //     `
+        //     : `
+        //     query {
+        //         report: getReports(id: "${course?.courseId}") {
+        //             students {
+        //                 email,
+        //                 userId,
+        //                 name,
+        //                 progress,
+        //                 signedUpOn,
+        //                 lastAccessedOn,
+        //                 downloaded
+        //             }
+        //         }
+        //     }
+        //     `;
 
     const onKeyDown = (e: any) => {
         if (e.keyCode === 13) {
-            fetchStudents();
+            loadReportsQuery.refetch();
         }
     };
+
+    const loading = loadReportsQuery.isLoading;
 
     return (
         <div className="flex flex-col">
@@ -116,11 +98,12 @@ export default function Students({
             <Form
                 onSubmit={(e: ChangeEvent<HTMLInputElement>) => {
                     e.preventDefault();
-                    fetchStudents();
+                    loadReportsQuery.refetch();
                 }}
                 className="flex gap-2 mb-4"
             >
                 <FormField
+                    name="search"
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setText(e.target.value)
                     }
@@ -163,61 +146,60 @@ export default function Students({
                             </td>
                             {course?.costType?.toLowerCase() !==
                                 PRICING_EMAIL && (
-                                <td className="underline">
-                                    <Dialog2
-                                        title={`${
-                                            student!.name || student!.email
-                                        }'s Progress`}
-                                        trigger={
-                                            <span className="cursor-pointer w-full">
-                                                {
-                                                    (
-                                                        student.progress as string[]
-                                                    ).length
-                                                }{" "}
-                                                / {course?.lessons?.length}
-                                            </span>
-                                        }
-                                    >
-                                        {course?.lessons?.map((lesson: any) => (
-                                            <div
-                                                key={lesson.lessonId}
-                                                className="flex justify-between items-center mb-1"
-                                            >
-                                                <p>{lesson.title}</p>
-                                                <span>
-                                                    {student.progress.includes(
-                                                        lesson.lessonId,
-                                                    ) ? (
-                                                        <CheckCircled />
-                                                    ) : (
-                                                        <Circle />
-                                                    )}
+                                    <td className="underline">
+                                        <Dialog2
+                                            title={`${student!.name || student!.email
+                                                }'s Progress`}
+                                            trigger={
+                                                <span className="cursor-pointer w-full">
+                                                    {
+                                                        (
+                                                            student.progress as string[]
+                                                        ).length
+                                                    }{" "}
+                                                    / {course?.lessons?.length}
                                                 </span>
-                                            </div>
-                                        ))}
-                                    </Dialog2>
-                                </td>
-                            )}
+                                            }
+                                        >
+                                            {course?.lessons?.map((lesson: any) => (
+                                                <div
+                                                    key={lesson.lessonId}
+                                                    className="flex justify-between items-center mb-1"
+                                                >
+                                                    <p>{lesson.title}</p>
+                                                    <span>
+                                                        {student.progress.includes(
+                                                            lesson.lessonId,
+                                                        ) ? (
+                                                            <CheckCircled />
+                                                        ) : (
+                                                            <Circle />
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </Dialog2>
+                                    </td>
+                                )}
                             {course?.costType?.toLowerCase() ===
                                 PRICING_EMAIL && (
-                                <td>
-                                    {student.downloaded && <CheckCircled />}
-                                    {!student.downloaded && <></>}
-                                </td>
-                            )}
+                                    <td>
+                                        {student.downloaded && <CheckCircled />}
+                                        {!student.downloaded && <></>}
+                                    </td>
+                                )}
                             <td>
                                 {student.signedUpOn
                                     ? new Date(
-                                          student.signedUpOn as number,
-                                      ).toLocaleDateString()
+                                        student.signedUpOn as number,
+                                    ).toLocaleDateString()
                                     : "-"}
                             </td>
                             <td>
                                 {student.lastAccessedOn
                                     ? new Date(
-                                          student.lastAccessedOn as number,
-                                      ).toLocaleDateString()
+                                        student.lastAccessedOn as number,
+                                    ).toLocaleDateString()
                                     : "-"}
                             </td>
                         </tr>

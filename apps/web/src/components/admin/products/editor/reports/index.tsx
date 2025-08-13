@@ -1,23 +1,14 @@
-import React from "react";
 import useCourse from "../course-hook";
 import Students from "./students";
-import { Address } from "@workspace/common-models";
-import { AppDispatch } from "@workspace/state-management";
 
 interface CourseReportsProps {
-    id: string;
-    address: Address;
-    loading?: boolean;
-    dispatch?: AppDispatch;
+    courseId: string;
 }
 
 export default function CourseReports({
-    id,
-    address,
-    loading = false,
-    dispatch,
+    courseId,
 }: CourseReportsProps) {
-    let course = useCourse(id, address);
+    let course = useCourse(courseId);
 
     if (!course) {
         return null;
@@ -27,9 +18,6 @@ export default function CourseReports({
         <div>
             <Students
                 course={course}
-                address={address}
-                loading={loading}
-                dispatch={dispatch}
             />
         </div>
     );

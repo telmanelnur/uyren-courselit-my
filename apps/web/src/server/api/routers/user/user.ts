@@ -23,6 +23,9 @@ import CommunityModel from "@/models/Community";
 import { getCourseOrThrow } from "../lms/course/helpers";
 import { responses } from "@/config/strings";
 import mongoose from "mongoose";
+import { getInternalPaymentPlan, getMembership } from "../community/helpers";
+import { addMailJob } from "@/server/lib/queue";
+import { generateEmailFrom } from "@/lib/utils";
 
 const { permissions } = UIConstants;
 
@@ -348,50 +351,10 @@ export const userRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const keys = Object.keys(input.data);
-
-      const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
-        permissions.manageUsers,
-      ]);
-      const isModifyingSelf = input.userId === ctx.user.userId.toString();
-      const restrictedKeys = ["permissions", "active"];
-
-      if (
-        (isModifyingSelf && keys.some((key) => restrictedKeys.includes(key))) ||
-        (!isModifyingSelf && !hasPermissionToManageUser)
-      ) {
-        throw new AuthorizationException(
-          "You do not have permission to modify this user"
-        );
-      }
-
-      let user = await UserModel.findOne({
-        userId: input.userId,
-        domain: ctx.domainData.domainObj._id,
-      });
-      if (!user) throw new NotFoundException("User not found");
-
-      for (const key of keys.filter((key) => key !== "id")) {
-        if (key === "tags") {
-          addTags(input.data["tags"]!, ctx as any);
-        }
-
-        (user as any)[key] = (input as any).data[key];
-      }
-
-      if (!user.tags) {
-        user.tags = [];
-      }
-
-      validateUserProperties(user);
-
-      user = await user.save();
-
-      if (input.data.name) {
-        await updateCoursesForCreatorName(user.userId || user.id, user.name!);
-      }
-
-      return user;
+      return await updateUser({
+        ...input.data,
+        id: input,
+      }, ctx as any);
     }),
 
   inviteCustomer: protectedProcedure
@@ -403,7 +366,7 @@ export const userRouter = router({
       courseId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const course = await getCourseOrThrow(undefined, ctx, id);
+      const course = await getCourseOrThrow(undefined, ctx, input.data.courseId);
       if (!course.published) {
         throw new ConflictException(responses.cannot_invite_to_unpublished_product);
       }
@@ -426,16 +389,20 @@ export const userRouter = router({
         user = await updateUser(
           {
             id: user._id,
-            tags: [...user.tags, ...input.data.tags],
+            tags: [...(user.tags || []), ...input.data.tags],
           },
           ctx as any,
         );
       }
 
-      const paymentPlan = await getInternalPaymentPlan(ctx);
+      const paymentPlan = await getInternalPaymentPlan(ctx.domainData.domainObj._id.toString());
+
+      if (!paymentPlan) {
+        throw new ConflictException("Payment plan not found");
+      }
 
       const membership = await getMembership({
-        domainId: ctx.subdomain._id,
+        domainId: ctx.domainData.domainObj._id,
         userId: user.userId,
         entityType: Constants.MembershipEntityType.COURSE,
         entityId: course.courseId,

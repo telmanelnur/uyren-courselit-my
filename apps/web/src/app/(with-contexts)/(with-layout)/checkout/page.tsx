@@ -6,7 +6,7 @@ import { useContext } from "react";
 import ProductCheckout from "./product";
 
 export default function CheckoutPage() {
-    const { theme } = useContext(ThemeContext);
+    const { theme } = useTheme();
     return (
         <Section theme={theme.theme}>
             <div className="flex flex-col">

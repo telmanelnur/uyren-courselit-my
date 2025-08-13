@@ -16,7 +16,7 @@ const breadcrumbs = [
 ];
 
 export default function Page() {
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>

@@ -87,7 +87,7 @@ export function MembershipList({ id }: { id: string }) {
     const [page, setPage] = useState(1);
     const [totalMembers, setTotalMembers] = useState(0);
     const [members, setMembers] = useState<Member[]>([]);
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const { profile } = useContext(ProfileContext);

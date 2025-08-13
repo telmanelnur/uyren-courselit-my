@@ -22,7 +22,7 @@ export const MediaSchema = new mongoose.Schema<MediaWithOwner>({
     url: { type: String, required: true },
     storageProvider: { type: String, required: true, },
     userId: { type: String, required: false },
-    domain: { type: mongoose.Schema.Types.ObjectId, ref: "Domain", required: false },
+    domain: { type: mongoose.Schema.Types.ObjectId, ref: "Domain", required: true },
 }, {
     timestamps: true,
 });

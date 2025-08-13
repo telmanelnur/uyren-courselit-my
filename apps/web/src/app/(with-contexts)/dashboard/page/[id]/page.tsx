@@ -9,12 +9,12 @@ export default function Page({ params }: { params: { id: string } }) {
     const { id } = params;
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const siteInfo = useContext(SiteInfoContext);
     const typefaces = useContext(TypefacesContext);
     const { profile } = useContext(ProfileContext);
     const config = useContext(ServerConfigContext);
-    const { theme } = useContext(ThemeContext);
+    const { theme } = useTheme();
 
     return (
         <PageEditor

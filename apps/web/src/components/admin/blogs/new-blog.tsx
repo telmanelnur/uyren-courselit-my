@@ -1,3 +1,5 @@
+"use client";
+
 import {
     BTN_CONTINUE,
     BTN_NEW_BLOG,
@@ -19,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 
-function NewBlog() {
+export function NewBlog() {
     const [title, setTitle] = useState("");
     const router = useRouter();
     const { toast } = useToast();
@@ -81,5 +83,3 @@ function NewBlog() {
         </div>
     );
 }
-
-export default NewBlog;

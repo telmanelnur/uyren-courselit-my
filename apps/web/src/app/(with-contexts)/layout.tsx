@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/contexts/theme-context";
 import { ThemeProvider as NextThemesProvider } from "@/components/next-theme-provider";
 import SessionWrapper from "@/components/providers/session-wrapper";
 import { authOptions } from "@/lib/auth/options";
+import { Provider as NiceModalProvider } from "@workspace/components-library";
 import { getServerSession } from "next-auth";
 import React from "react";
 import { Toaster } from "sonner";
@@ -28,7 +29,11 @@ export default async function Layout({
                 enableSystem
                 disableTransitionOnChange
               >
-                <ProfileProvider>{children}</ProfileProvider>
+                <ProfileProvider>
+                  <NiceModalProvider>
+                    {children}
+                  </NiceModalProvider>
+                </ProfileProvider>
               </NextThemesProvider>
             </ServerConfigProvider>
           </ThemeProvider>

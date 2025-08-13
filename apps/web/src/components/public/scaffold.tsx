@@ -1,9 +1,7 @@
 import React, { ReactNode, useState } from "react";
 import Header from "./base-layout/header";
-import { connect } from "react-redux";
 import { useRouter } from "next/router";
-import { AppDispatch, AppState } from "@workspace/state-management";
-import { Chip, Link, Modal, Toaster } from "@workspace/components-library";
+import { Chip, Link, Modal } from "@workspace/components-library";
 import { Message, SiteInfo } from "@workspace/common-models";
 
 export interface ComponentScaffoldMenuItem {
@@ -22,7 +20,6 @@ interface ComponentScaffoldProps {
     drawerWidth?: number;
     siteinfo: SiteInfo;
     showCourseLitBranding?: boolean;
-    dispatch?: AppDispatch;
     message?: Message;
 }
 
@@ -32,7 +29,6 @@ const ComponentScaffold = ({
     drawerWidth = 240,
     siteinfo,
     showCourseLitBranding,
-    dispatch,
     message,
 }: ComponentScaffoldProps) => {
     const [open, setOpen] = useState(false);
@@ -124,16 +120,8 @@ const ComponentScaffold = ({
             >
                 {drawer}
             </Modal>
-            <Toaster />
+            {/* MY <Toaster /> ENDMY */}
         </div>
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-    message: state.message,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps)(ComponentScaffold);

@@ -11,7 +11,7 @@ export default function useThemes() {
     const [error, setError] = useState<string | null>(null);
     const [theme, setTheme] = useState<ThemeWithDraftState | null>(null);
     const [loaded, setLoaded] = useState(false);
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
 
     useEffect(() => {
         if (theme) {

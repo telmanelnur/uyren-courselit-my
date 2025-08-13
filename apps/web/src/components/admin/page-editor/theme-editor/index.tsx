@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { ExpandMoreRight } from "@workspace/icons";
 import { ColorSelector } from "@workspace/components-library";
-import { capitalize, FetchBuilder, truncate } from "@workspace/utils";
+import { capitalize, truncate } from "@workspace/utils";
 import {
     Columns3,
     PaletteIcon,
@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import TypographySelector from "./typography-selector";
 import { toast } from "@/hooks/use-toast";
-import { AddressContext, ThemeContext } from "@components/contexts";
 import { TOAST_TITLE_ERROR } from "@/lib/ui/config/strings";
 import {
     InteractiveSelector,
@@ -35,8 +34,11 @@ import {
     AccordionItem,
     AccordionTrigger,
     AccordionContent,
-} from "@workspace/components-library";
+} from "@workspace/ui/components/accordion";
 import { Input } from "@workspace/ui/components/input";
+import { useAddress } from "@/components/contexts/address-context";
+import { useTheme } from "@/components/contexts/theme-context";
+import { trpc } from "@/utils/trpc";
 
 type Section = {
     id: string;
@@ -288,9 +290,9 @@ function ThemeEditor({
         return initial;
     });
     const [isLoading, setIsLoading] = useState(true);
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { theme: currentTheme, setTheme: setCurrentTheme } =
-        useContext(ThemeContext);
+        useTheme();
     const selectedThemeRef = useRef<HTMLDivElement>(null);
     const [openCategory, setOpenCategory] = useState<string | null>(null);
 
@@ -329,6 +331,8 @@ function ThemeEditor({
             [categoryName]: !prev[categoryName],
         }));
     }, []);
+
+    const updateDraftThemeMutation = trpc//
 
     const updateThemeCategory = useCallback(
         async (

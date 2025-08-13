@@ -12,7 +12,7 @@ import { useCallback, useContext, useEffect, useState } from "react";
 const { MembershipEntityType } = Constants;
 
 export default function ProductCheckout() {
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const searchParams = useSearchParams();
     const entityId = searchParams?.get("id");
     const entityType = searchParams?.get("type");

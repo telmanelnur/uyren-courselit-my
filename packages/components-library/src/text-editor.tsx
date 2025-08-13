@@ -1,5 +1,5 @@
-import { WysiwygEditor as TextEditor } from "@workspace/text-editor";
-export { emptyDoc } from "@workspace/text-editor";
+// import { WysiwygEditor as TextEditor } from "@workspace/text-editor";
+// export { emptyDoc } from "@workspace/text-editor";
 
 export interface WysiwygEditorProps {
   initialContent?: any;
@@ -20,7 +20,7 @@ export default function Editor({
 }: WysiwygEditorProps) {
   return (
     <div className="text-editor">
-      <TextEditor
+      {/* <TextEditor
         initialContent={initialContent}
         onChange={onChange}
         showToolbar={showToolbar}
@@ -28,7 +28,7 @@ export default function Editor({
         refresh={refresh}
         fontFamily={"inherit"}
         url={url}
-      />
+      /> */}
     </div>
   );
 }

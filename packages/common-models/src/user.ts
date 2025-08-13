@@ -21,7 +21,7 @@ export default interface User {
   subscribedToUpdates: boolean;
   lead: (typeof Constants.leads)[number];
   tags?: string[];
-  avatar?: Media; // Wrapper object with storageType and data
+  avatar?: Media;
   invited?: boolean;
-  providerData?: ProviderData; // Provider authentication data
+  providerData?: ProviderData;
 }

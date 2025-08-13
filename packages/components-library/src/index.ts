@@ -1,5 +1,6 @@
 // import "./styles.css";
 
+
 // // TODO: Rename Menu2, Dialog2 to Menu and Dialog respectively.
 
 import AdminWidgetPanel from "./admin-widget-panel";
@@ -15,14 +16,15 @@ import IconButton from "./icon-button";
 import LessonIcon from "./lesson-icon";
 import Link from "./link";
 import MediaSelector from "./media-selector";
+import { MediaBrowserNiceDialog, showMediaBrowser } from "./media-browser";
+export * from "./nice-modal";
 import MenuItem from "./menu-item";
 import Menu2 from "./menu2";
 import PriceTag from "./pricetag";
 import Section from "./section";
-import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
 import TextRenderer from "./text-renderer";
 import Chip from "./chip";
-// import Modal from "./modal";
+import Modal from "./modal";
 // import Toast from "./toast";
 import Switch from "./switch";
 import Checkbox from "./checkbox";
@@ -70,15 +72,17 @@ export {
   Select,
   Link,
   MediaSelector,
+  MediaBrowserNiceDialog,
+  showMediaBrowser,
   Menu2,
   MenuItem,
   PageBuilderPropertyHeader,
   PriceTag,
   Section,
   Chip,
-  //     Modal,
+  Modal,
   //     Toast,
-      Switch,
+  Switch,
   Checkbox,
   Tabs as Tabbs,
   Table,
@@ -89,8 +93,6 @@ export {
   Popover,
   ScrollArea,
   ComboBox,
-  TextEditor,
-  TextEditorEmptyDoc,
   TextRenderer,
   Tooltip,
 };

@@ -13,10 +13,13 @@
     "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.10",
     "@firebase/auth": "^1.11.0",
     "@hookform/resolvers": "^5.2.1",
     "@stripe/stripe-js": "^7.8.0",
     "@tanstack/react-query": "^5.66.0",
+    "@tiptap/extension-placeholder": "^3.1.0",
+    "@tiptap/extension-table": "^3.1.0",
     "@trpc/client": "^11.0.8",
     "@trpc/react-query": "^11.0.8",
     "@trpc/server": "^11.0.8",
@@ -27,8 +30,10 @@
     "@workspace/icons": "workspace:*",
     "@workspace/page-models": "workspace:*",
     "@workspace/page-primitives": "workspace:*",
+    "@workspace/text-editor": "workspace:*",
     "@workspace/ui": "workspace:*",
     "@workspace/utils": "workspace:*",
+    "ai": "^5.0.10",
     "base-64": "^1.0.0",
     "cloudinary": "^2.7.0",
     "color-convert": "^3.1.0",
@@ -61,6 +66,7 @@
     "@workspace/eslint-config": "workspace:^",
     "@workspace/typescript-config": "workspace:*",
     "dotenv": "^17.2.1",
+    "sass": "^1.90.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
   }

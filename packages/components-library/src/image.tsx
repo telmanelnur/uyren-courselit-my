@@ -75,8 +75,9 @@ export const Image = (props: ImgProps) => {
         alt={alt || source}
         priority={loading === "eager"}
         sizes={sizes}
-        layout="fill"
-        objectFit={objectFit}
+        // layout="fill"
+        fill
+        // objectFit={objectFit}
       />
     </div>
   );

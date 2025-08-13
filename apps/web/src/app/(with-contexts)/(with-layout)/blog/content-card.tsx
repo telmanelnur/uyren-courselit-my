@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 
 export function BlogContentCard({ product }: { product: Course }) {
-    const { theme: uiTheme } = useContext(ThemeContext);
+    const { theme: uiTheme } = useTheme();
     const { theme } = uiTheme;
 
     return (

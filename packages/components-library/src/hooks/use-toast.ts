@@ -186,8 +186,7 @@
 
 // export { toast, useToast };
 
-import { useEffect, useState } from "react";
-import { toast as sonnerToast, Toaster } from "sonner"; // Renamed to avoid conflict
+import { toast as sonnerToast } from "sonner"; // Renamed to avoid conflict
 
 // Type definitions for sonner toast, adjusted to match sonner's API
 // Note: sonner's toast does not directly use 'ToastActionElement' or 'ToastProps'

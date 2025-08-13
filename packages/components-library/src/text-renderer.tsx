@@ -41,7 +41,7 @@ export default function TextRenderer({
                 </nav>
             )}
             <span className="flex-grow">
-                <Renderer json={json as any} fontFamily={"inherit"} />
+                {/* <Renderer json={json as any} fontFamily={"inherit"} /> */}
             </span>
         </span>
     );

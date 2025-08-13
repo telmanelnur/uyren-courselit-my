@@ -61,7 +61,7 @@ export default function EmailEditorPage({
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { product, loaded: productLoaded } = useProduct(productId, address);
     const [section, setSection] = useState<Group | null>(null);
 

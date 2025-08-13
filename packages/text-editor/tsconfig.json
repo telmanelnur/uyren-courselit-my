@@ -2,8 +2,10 @@
   "extends": "@workspace/typescript-config/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./dist"
+    "paths": {
+      "@workspace/text-editor/tiptap/*": ["./src/tiptap/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": ["."],
+  "exclude": ["dist",  "node_modules"]
 }

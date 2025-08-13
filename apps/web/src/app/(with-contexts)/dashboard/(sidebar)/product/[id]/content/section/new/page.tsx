@@ -36,7 +36,7 @@ export default function SectionPage() {
     //   const [dripType, setDripType] = useState<"date" | "days">("date")
     //   const [notifyUsers, setNotifyUsers] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const address = useContext(AddressContext);
+    const { address } = useAddress();
     const { product } = useProduct(productId, address);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },

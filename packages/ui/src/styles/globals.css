@@ -3,6 +3,9 @@
 @source "../../../components/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
 
+/* forpackages.componet-library */
+@source "../../../components-library/src/**/*.{ts,tsx}";
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
