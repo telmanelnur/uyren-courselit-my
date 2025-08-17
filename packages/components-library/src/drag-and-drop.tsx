@@ -1,17 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useState } from "react";
-import { DragHandle } from "@workspace/icons";
 import {
     DndContext,
     KeyboardSensor,
-    PointerSensor,
     MouseSensor,
+    PointerSensor,
     TouchSensor,
+    closestCorners,
     useSensor,
     useSensors,
-    closestCorners,
 } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -19,10 +16,12 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { DragHandle } from "@workspace/icons";
+import { FC, useEffect, useState } from "react";
 
 import { useSortable } from "@dnd-kit/sortable";
-import clsx from "clsx";
 import { CSS } from "@dnd-kit/utilities";
+import clsx from "clsx";
 
 export function SortableItem({
     id,
@@ -74,7 +73,7 @@ const DragAndDrop = ({
 }: {
     items: any;
     onChange: any;
-    Renderer: any;
+    Renderer: FC<any>;
 }) => {
     const [data, setData] = useState(items);
 
@@ -117,6 +116,10 @@ const DragAndDrop = ({
             onChange(data);
         }
     }, [data]);
+
+    useEffect(() => {
+        setData(items);
+    }, [items]);
 
     return (
         <DndContext

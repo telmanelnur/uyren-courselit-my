@@ -1,11 +1,8 @@
 import { authOptions } from "@/lib/auth/options";
 import { getDomainData } from "@/lib/domain";
-import DomainModel from "@/models/Domain";
 import MediaModel from "@/models/Media";
 import { CloudinaryService } from "@/server/services/cloudinary";
 import { connectToDatabase } from "@workspace/common-logic";
-import { Constants } from "@workspace/common-models";
-import { generateUniqueId } from "@workspace/utils";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -20,6 +17,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Connect to database
+    await connectToDatabase();
     const domainData = await getDomainData()
 
     // Get query parameters
@@ -57,8 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    await connectToDatabase();
     if (!domainData.domainObj) {
       return NextResponse.json(
         { error: "Domain not found" },

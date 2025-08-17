@@ -64,7 +64,7 @@ export default function Page() {
             ...profile,
             name: data.user.name || "",
             bio: data.user.bio || "",
-            avatar: data.user.avatar,
+            avatar: data.user.avatar || null,
             subscribedToUpdates: data.user.subscribedToUpdates,
           });
         }
@@ -152,8 +152,8 @@ export default function Page() {
         url: firebaseProfile.photoURL,
         caption: "Firebase profile picture",
         mediaId: generateUniqueId(),
-        originalFileName: "",
-        mimeType: "",
+        originalFileName: "Firebase profile picture",
+        mimeType: "image/jpeg",
         size: 0,
         access: MediaAccessType.PUBLIC,
         thumbnail: firebaseProfile.photoURL,
@@ -209,13 +209,7 @@ export default function Page() {
           <CardContent className="flex flex-col items-center space-y-4">
             <Avatar className="w-32 h-32">
               <AvatarImage
-                src={
-                  profile.avatar?.storageType === "custom"
-                    ? profile.avatar.data.url
-                    : profile.avatar?.storageType === "media"
-                      ? profile.avatar.data.file
-                      : undefined
-                }
+                src={profile.avatar?.url}
                 alt={profile.name || "Profile"}
               />
               <AvatarFallback className="text-2xl">
@@ -227,7 +221,7 @@ export default function Page() {
             {profile.avatar && (
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">
-                  {profile.avatar.storageType === "custom"
+                  {profile.avatar.storageProvider === "custom"
                     ? "Firebase Avatar"
                     : "Uploaded Image"}
                 </p>
@@ -263,7 +257,7 @@ export default function Page() {
                     ? "Resetting..."
                     : "Reset from Google Provider"}
                 </Button>
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
@@ -273,7 +267,7 @@ export default function Page() {
                   className="flex-1"
                 >
                   Reset current sesssion
-                </Button>
+                </Button> */}
               </div>
             </div>
           </CardContent>

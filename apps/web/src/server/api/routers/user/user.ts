@@ -1,11 +1,20 @@
+import { responses } from "@/config/strings";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
+import { Log } from "@/lib/logger";
+import { generateEmailFrom } from "@/lib/utils";
+import CommunityModel from "@/models/Community";
 import CourseModel from "@/models/Course";
+import MembershipModel from "@/models/Membership";
 import UserModel from "@/models/User";
+import { addMailJob } from "@/server/lib/queue";
+import courseEnrollTemplate from "@/server/services/mail/templates/course-enroll";
 import { TRPCError } from "@trpc/server";
-import { UIConstants, User } from "@workspace/common-models";
+import { Constants, MembershipEntityType, UIConstants, User } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
+import mongoose from "mongoose";
+import pug from "pug";
 import { z } from "zod";
-import { AuthorizationException, ConflictException, NotFoundException } from "../../core/exceptions";
+import { ConflictException, NotFoundException } from "../../core/exceptions";
 import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
@@ -16,16 +25,10 @@ import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
 import { paginate } from "../../core/utils";
 import { mediaWrappedFieldValidator } from "../../core/validators";
-import { addTags, createUser } from "./helpers";
-import MembershipModel from "@/models/Membership";
-import { Constants } from "@workspace/common-models";
-import CommunityModel from "@/models/Community";
+import { getInternalPaymentPlan } from "../community/helpers";
 import { getCourseOrThrow } from "../lms/course/helpers";
-import { responses } from "@/config/strings";
-import mongoose from "mongoose";
-import { getInternalPaymentPlan, getMembership } from "../community/helpers";
-import { addMailJob } from "@/server/lib/queue";
-import { generateEmailFrom } from "@/lib/utils";
+import { activateMembership } from "../payment/helpers";
+import { addTags, createUser } from "./helpers";
 
 const { permissions } = UIConstants;
 
@@ -62,6 +65,7 @@ async function getUserContentInternal(ctx: MainContextType, user: User) {
   });
 
   const content: Record<string, unknown>[] = [];
+
 
   for (const membership of memberships) {
     if (membership.entityType === Constants.MembershipEntityType.COURSE) {
@@ -158,6 +162,40 @@ const updateUser = async (userData: {
 
   return user;
 };
+export const getMembership = async ({
+  domainId,
+  userId,
+  entityType,
+  entityId,
+  planId,
+}: {
+  domainId: mongoose.Types.ObjectId;
+  userId: string;
+  entityType: MembershipEntityType;
+  entityId: string;
+  planId: string;
+}) => {
+  const existingMembership =
+    await MembershipModel.findOne({
+      domain: domainId,
+      userId,
+      entityType,
+      entityId,
+    });
+
+  let membership =
+    existingMembership ||
+    (await MembershipModel.create({
+      domain: domainId,
+      userId,
+      paymentPlanId: planId,
+      entityId,
+      entityType,
+      status: Constants.MembershipStatus.PENDING,
+    }));
+
+  return membership;
+};
 
 
 export const userRouter = router({
@@ -196,6 +234,8 @@ export const userRouter = router({
             active: 1,
             createdAt: 1,
             updatedAt: 1,
+            avatar: 1,
+            purchases: 1,
           })
           .skip(paginationMeta.skip)
           .limit(paginationMeta.take)
@@ -206,6 +246,7 @@ export const userRouter = router({
       ]);
 
       return {
+        // items,
         items: await Promise.all(items.map(
           async (i) => ({
             ...i.toJSON(),
@@ -217,44 +258,44 @@ export const userRouter = router({
       };
     }),
   // Get user profile data from MongoDB
-  getProfileProtected: protectedProcedure.query(async ({ ctx }) => {
-    // Connect to MongoDB
+  getProfileProtected: protectedProcedure
+    .query(async ({ ctx }) => {
 
-    const user = await UserModel.findOne({
-      userId: ctx.session.user.userId,
-    }).select({
-      name: 1,
-      _id: 1,
-      email: 1,
-      userId: 1,
-      bio: 1,
-      permissions: 1,
-      purchases: 1,
-      avatar: 1,
-      subscribedToUpdates: 1,
-    });
+      const user = await UserModel.findOne({
+        userId: ctx.session.user.userId,
+      }).select({
+        name: 1,
+        _id: 1,
+        email: 1,
+        userId: 1,
+        bio: 1,
+        permissions: 1,
+        purchases: 1,
+        avatar: 1,
+        subscribedToUpdates: 1,
+      });
 
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
+      if (!user) {
+        throw new NotFoundException("User not found");
+      }
 
-    return {
-      name: user.name,
-      id: user._id.toString(),
-      email: user.email,
-      userId: user.userId,
-      bio: user.bio,
-      permissions: user.permissions || [],
-      purchases:
-        user.purchases?.map((purchase: any) => ({
-          courseId: purchase.courseId,
-          completedLessons: purchase.completedLessons || [],
-          accessibleGroups: purchase.accessibleGroups || [],
-        })) || [],
-      avatar: user.avatar,
-      subscribedToUpdates: user.subscribedToUpdates || false,
-    };
-  }),
+      return {
+        name: user.name,
+        id: user._id.toString(),
+        email: user.email,
+        userId: user.userId,
+        bio: user.bio,
+        permissions: user.permissions || [],
+        purchases:
+          user.purchases?.map((purchase: any) => ({
+            courseId: purchase.courseId,
+            completedLessons: purchase.completedLessons || [],
+            accessibleGroups: purchase.accessibleGroups || [],
+          })) || [],
+        avatar: user.avatar,
+        subscribedToUpdates: user.subscribedToUpdates || false,
+      };
+    }),
 
   // Update user profile
   updateProfile: protectedProcedure
@@ -353,7 +394,7 @@ export const userRouter = router({
     .mutation(async ({ ctx, input }) => {
       return await updateUser({
         ...input.data,
-        id: input,
+        id: ctx.user._id,
       }, ctx as any);
     }),
 
@@ -366,6 +407,7 @@ export const userRouter = router({
       courseId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
+      const domain = ctx.domainData.domainObj;
       const course = await getCourseOrThrow(undefined, ctx, input.data.courseId);
       if (!course.published) {
         throw new ConflictException(responses.cannot_invite_to_unpublished_product);
@@ -374,11 +416,11 @@ export const userRouter = router({
       const sanitizedEmail = input.data.email.toLowerCase();
       let user = await UserModel.findOne({
         email: sanitizedEmail,
-        domain: ctx.domainData.domainObj._id,
+        domain: domain._id,
       });
       if (!user) {
         user = await createUser({
-          domain: ctx.domainData.domainObj,
+          domain: domain,
           email: sanitizedEmail,
           subscribedToUpdates: true,
           invited: true,
@@ -389,7 +431,7 @@ export const userRouter = router({
         user = await updateUser(
           {
             id: user._id,
-            tags: [...(user.tags || []), ...input.data.tags],
+            tags: Array.from(new Set([...(user.tags || []), ...input.data.tags])),
           },
           ctx as any,
         );
@@ -402,7 +444,7 @@ export const userRouter = router({
       }
 
       const membership = await getMembership({
-        domainId: ctx.domainData.domainObj._id,
+        domainId: domain._id,
         userId: user.userId,
         entityType: Constants.MembershipEntityType.COURSE,
         entityId: course.courseId,
@@ -413,14 +455,14 @@ export const userRouter = router({
         return user;
       }
 
-      await activateMembership(ctx.subdomain!, membership, paymentPlan);
+      await activateMembership(ctx.domainData.domainObj, membership as any, paymentPlan);
 
       try {
+        const address = ctx.domainData.headers.host;
         const emailBody = pug.render(courseEnrollTemplate, {
           courseName: course.title,
-          loginLink: `${ctx.address}/login`,
-          hideCourseLitBranding:
-            ctx.subdomain.settings?.hideCourseLitBranding,
+          loginLink: `${address}/login`,
+          hideCourseLitBranding: domain.settings?.hideCourseLitBranding,
         });
 
         await addMailJob({
@@ -428,15 +470,36 @@ export const userRouter = router({
           subject: `You have been invited to ${course.title}`,
           body: emailBody,
           from: generateEmailFrom({
-            name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
-            email: process.env.EMAIL_FROM || ctx.subdomain.email,
+            name: domain.settings?.title || domain.name,
+            email: process.env.EMAIL_FROM || domain.email,
           }),
         });
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.log("error", error);
+        Log.error("Error sending email", error as Error);
       }
 
       return user;
+    }),
+
+  getMembershipStatus: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(
+      z.object({
+        entityId: z.string(),
+        entityType: z.nativeEnum(Constants.MembershipEntityType),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { entityId, entityType } = input;
+
+      const membership: any = await MembershipModel.findOne({
+        domain: ctx.domainData.domainObj._id,
+        entityId,
+        entityType,
+        userId: ctx.user.userId,
+      });
+
+      return membership ? membership.status : null;
     }),
 });

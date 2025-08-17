@@ -12,7 +12,7 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import useProduct from "@/hooks/use-product";
 import { useContext, useMemo } from "react";
-import { truncate } from "@/lib/ui/lib/utils";
+import { truncate } from "@workspace/utils";
 import { useAddress } from "@/components/contexts/address-context";
 
 export default function DripEmailEditorPage({
@@ -27,10 +27,10 @@ export default function DripEmailEditorPage({
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");
     const { address } = useAddress();
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
 
     const group = useMemo(() => {
-        return product?.groups?.find((group) => group.id === sectionId);
+        return product?.groups?.find((group) => group.groupId === sectionId);
     }, [product, sectionId]);
 
     return (

@@ -1,4 +1,8 @@
 import { responses } from "@/config/strings";
+import { Log } from "@/lib/logger";
+import { generateEmailFrom } from "@/lib/utils";
+import MembershipModel from "@/models/Membership";
+import { addMailJob } from "@/server/lib/queue";
 import {
   Constants,
   PaymentPlan,
@@ -6,8 +10,10 @@ import {
   UIConstants,
 } from "@workspace/common-models";
 import Stripe from "stripe";
+import { sendInvoiceMembershipEmail } from "../mail/invoice-membership-mail";
 import { getUnitAmount } from "./helpers";
 import Payment, { InitiateProps } from "./types";
+import { Domain } from "@/models/Domain";
 
 export default class StripePayment implements Payment {
   public siteinfo: SiteInfo;
@@ -54,7 +60,7 @@ export default class StripePayment implements Payment {
       ],
       mode:
         paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION ||
-        paymentPlan.type === Constants.PaymentPlanType.EMI
+          paymentPlan.type === Constants.PaymentPlanType.EMI
           ? "subscription"
           : "payment",
       success_url: `${origin}/checkout/verify?id=${metadata.invoiceId}`,
@@ -71,7 +77,12 @@ export default class StripePayment implements Payment {
     return this.siteinfo.currencyISOCode!;
   }
 
-  async verify(event: Stripe.Event) {
+  async verify(event: Stripe.Event, meta: {
+    domain: Domain;
+    headers: {
+      host: string;
+    };
+  }) {
     if (!event) {
       return false;
     }
@@ -80,6 +91,33 @@ export default class StripePayment implements Payment {
       (event.data.object as any).payment_status === "paid"
     ) {
       return true;
+    }
+    if (event.type === "checkout.session.expired") {
+      const metadata = event.data.object.metadata as any;
+      try {
+        // Send email notification about payment expiration
+        await sendInvoiceMembershipEmail({
+          membershipId: metadata.membershipId,
+          invoiceId: metadata.invoiceId,
+          domain: meta.domain,
+          headers: meta.headers,
+          eventType: event.type,
+        });
+        
+        Log.info("Payment expiration email sent successfully", {
+          membershipId: metadata.membershipId,
+          invoiceId: metadata.invoiceId,
+          eventType: event.type,
+        });
+      } catch (error) {
+        Log.error("Error sending payment expiration email", {
+          error: error instanceof Error ? error.message : String(error),
+          membershipId: metadata.membershipId,
+          invoiceId: metadata.invoiceId,
+          eventType: event.type,
+        });
+      }
+      return false;
     }
     if (
       event.type === "invoice.paid" &&

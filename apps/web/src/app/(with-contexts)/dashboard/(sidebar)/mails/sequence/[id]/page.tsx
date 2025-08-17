@@ -1,7 +1,6 @@
 "use client";
 
 import DashboardContent from "@/components/admin/dashboard-content";
-import { AddressContext } from "@components/contexts";
 import {
     DELETE_EMAIL_DIALOG_HEADER,
     PAGE_HEADER_EDIT_SEQUENCE,
@@ -13,11 +12,9 @@ import {
 import { useContext, useState, useEffect, useCallback } from "react";
 import { Tabbs, useToast } from "@workspace/components-library";
 import EmailAnalytics from "@/components/admin/mails/email-analytics";
-import { useSequence } from "@/hooks/use-sequence";
-import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import { truncate } from "@workspace/utils";
 import { Button } from "@workspace/ui/components/button";
-import { Play, Pause, Add, MoreVert } from "@workspace/icons";
+import { Play, Pause, Plus, MoreVertical } from "lucide-react";
 import {
     Form,
     FormField,
@@ -26,7 +23,6 @@ import {
     Menu2,
     MenuItem,
     FormSubmit,
-    Badge,
 } from "@workspace/components-library";
 import { Community, Course } from "@workspace/common-models";
 import {
@@ -39,6 +35,8 @@ import {
     SEQUENCE_UNPUBLISHED_WARNING,
 } from "@/lib/ui/config/strings";
 import { ChangeEvent, FormEvent } from "react";
+import { trpc } from "@/utils/trpc";
+import { Badge } from "@workspace/ui/components/badge";
 
 const breadcrumbs = [
     { label: SEQUENCES, href: "/dashboard/mails?tab=Sequences" },
@@ -56,9 +54,7 @@ export default function Page({
         id: string;
     };
 }) {
-    const { address } = useAddress();
     const { id } = params;
-    const { sequence, loading, loadSequence } = useSequence();
     const [activeTab, setActiveTab] = useState("Compose");
     const [buttonLoading, setButtonLoading] = useState(false);
     const [title, setTitle] = useState("");
@@ -67,7 +63,6 @@ export default function Page({
     const [triggerType, setTriggerType] = useState("SUBSCRIBER_ADDED");
     const [triggerData, setTriggerData] = useState<string | null>(null);
     const [emails, setEmails] = useState<any[]>([]);
-    const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [products, setProducts] = useState<
         Pick<Course, "title" | "courseId">[]
     >([]);
@@ -77,60 +72,58 @@ export default function Page({
     const [emailsOrder, setEmailsOrder] = useState<string[]>([]);
     const [status, setStatus] = useState<string | null>(null);
     const { toast } = useToast();
-    const fetch = useGraphQLFetch();
+
+    // tRPC mutations
+    const addMailMutation = trpc.mailModule.sequence.addMailToSequence.useMutation();
+    const updateSequenceMutation = trpc.mailModule.sequence.update.useMutation();
+    const deleteMailMutation = trpc.mailModule.sequence.deleteMailFromSequence.useMutation();
+    const startSequenceMutation = trpc.mailModule.sequence.startSequence.useMutation();
+    const pauseSequenceMutation = trpc.mailModule.sequence.pauseSequence.useMutation();
+
+    // Load sequence data using tRPC
+    const loadSequence = useCallback(async () => {
+        try {
+            const result = await trpc.mailModule.sequence.getById.query({ sequenceId: id });
+            if (result) {
+                setTitle(result.title || "");
+                setFrom(result.from?.name || "");
+                setFromEmail(result.from?.email || "");
+                setTriggerType(result.trigger?.type || "SUBSCRIBER_ADDED");
+                setTriggerData(result.trigger?.data || null);
+                setEmails(result.emails || []);
+                setEmailsOrder(result.emailsOrder || []);
+                setStatus(result.status);
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        }
+    }, [id, toast]);
 
     // Load sequence on mount
     useEffect(() => {
-        loadSequence(id);
-    }, [loadSequence, id]);
+        loadSequence();
+    }, [loadSequence]);
 
-    // Update local state when sequence data is loaded
-    useEffect(() => {
-        if (sequence) {
-            setTitle(sequence.title || "");
-            setFrom(sequence.from?.name || "");
-            setFromEmail(sequence.from?.email || "");
-            setTriggerType(sequence.trigger?.type);
-            setTriggerData(sequence.trigger?.data || null);
-            setEmails(sequence.emails || []);
-            setEmailsOrder(sequence.emailsOrder || []);
-            setStatus(sequence.status);
-        }
-    }, [sequence]);
+    const loadTagsWithDetails = trpc.userModule.tag.withDetails.useQuery();
+    const tags = loadTagsWithDetails.data || [];
 
-    const getTags = useCallback(async () => {
-        const query = `
-            query {
-                tags: tagsWithDetails {
-                    tag,
-                    count
-                }
-            }
-        `;
-        const fetcher = fetch.setPayload(query).build();
-        try {
-            const response = await fetcher.exec();
-            if (response.tags) {
-                setTags(response.tags);
-            }
-        } catch (err) {}
-    }, [fetch]);
+    const loadCommunities = trpc.communityModule.community.list.useQuery({});
 
     const getProducts = useCallback(async () => {
-        const query = `
-            query { courses: getCoursesAsAdmin(
-                offset: 1
-              ) {
-                title,
-                courseId,
-              }
-            }
-        `;
-        const fetcher = fetch.setPayload(query).build();
         try {
-            const response = await fetcher.exec();
-            if (response.courses) {
-                setProducts([...response.courses]);
+            const response = await trpc.lmsModule.course.list.query({
+                pagination: { skip: 0, take: 1000 },
+                filter: {},
+            });
+            if (response.items) {
+                setProducts(response.items.map((course: any) => ({
+                    title: course.title,
+                    courseId: course.courseId,
+                })));
             }
         } catch (err: any) {
             toast({
@@ -139,22 +132,19 @@ export default function Page({
                 variant: "destructive",
             });
         }
-    }, [fetch, toast]);
+    }, [toast]);
 
     const getCommunities = useCallback(async () => {
-        const query = `
-            query {
-                communities: getCommunities(page: 1, limit: 1000000) {
-                    communityId,
-                    name    
-                }
-            }
-        `;
-        const fetcher = fetch.setPayload(query).build();
         try {
-            const response = await fetcher.exec();
-            if (response.communities) {
-                setCommunities([...response.communities]);
+            const response = await trpc.communityModule.community.list.query({
+                pagination: { skip: 0, take: 1000 },
+                filter: {},
+            });
+            if (response.items) {
+                setCommunities(response.items.map((community: any) => ({
+                    communityId: community.communityId,
+                    name: community.name,
+                })));
             }
         } catch (err: any) {
             toast({
@@ -163,14 +153,14 @@ export default function Page({
                 variant: "destructive",
             });
         }
-    }, [fetch, toast]);
+    }, [toast]);
 
     useEffect(() => {
         if (
             (triggerType === "TAG_ADDED" || triggerType === "TAG_REMOVED") &&
             tags.length === 0
         ) {
-            getTags();
+            // Tags are already loaded via tRPC
         }
         if (triggerType === "PRODUCT_PURCHASED" && products.length === 0) {
             getProducts();
@@ -181,24 +171,13 @@ export default function Page({
         ) {
             getCommunities();
         }
-    }, [triggerType]);
+    }, [triggerType, tags.length, products.length, communities.length, getProducts, getCommunities]);
 
     const addMailToSequence = useCallback(async () => {
-        const query = `
-            mutation AddMailToSequence($sequenceId: String!) {
-                sequence: addMailToSequence(sequenceId: $sequenceId) {
-                    sequenceId,
-                }
-            }`;
-
-        const fetcher = fetch
-            .setPayload({ query, variables: { sequenceId: id } })
-            .build();
-
         try {
-            const response = await fetcher.exec();
-            if (response.sequence) {
-                await loadSequence(id);
+            const response = await addMailMutation.mutateAsync({ sequenceId: id });
+            if (response) {
+                await loadSequence();
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: "New email added to sequence",
@@ -211,35 +190,13 @@ export default function Page({
                 variant: "destructive",
             });
         }
-    }, [fetch, id, loadSequence, toast]);
+    }, [id, loadSequence, toast, addMailMutation]);
 
     const updateSequence = useCallback(async () => {
-        const query = `
-            mutation UpdateSequence(
-                $sequenceId: String!
-                $title: String!
-                $fromName: String!
-                $triggerType: SequenceTriggerType!
-                $triggerData: String
-                $emailsOrder: [String!]
-            ) {
-                sequence: updateSequence(
-                    sequenceId: $sequenceId
-                    title: $title,
-                    fromName: $fromName,
-                    triggerType: $triggerType,
-                    triggerData: $triggerData,
-                    emailsOrder: $emailsOrder
-                ) {
-                    sequenceId,
-                }
-            }`;
-
-        const fetcher = fetch
-            .setPayload({
-                query,
-                variables: {
-                    sequenceId: id,
+        try {
+            const response = await updateSequenceMutation.mutateAsync({
+                sequenceId: id,
+                data: {
                     title,
                     fromName: from,
                     fromEmail,
@@ -247,14 +204,9 @@ export default function Page({
                     triggerData,
                     emailsOrder,
                 },
-            })
-            .build();
-
-        try {
-            const response = await fetcher.exec();
-            if (response.sequence) {
-                // Reload sequence data after action
-                await loadSequence(id);
+            });
+            if (response) {
+                await loadSequence();
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: TOAST_SEQUENCE_SAVED,
@@ -268,7 +220,6 @@ export default function Page({
             });
         }
     }, [
-        fetch,
         id,
         title,
         from,
@@ -278,37 +229,18 @@ export default function Page({
         emailsOrder,
         loadSequence,
         toast,
+        updateSequenceMutation,
     ]);
 
     const deleteMail = useCallback(
         async ({ emailId }: { emailId: string }) => {
-            const query = `
-        mutation DeleteMailFromSequence(
-            $sequenceId: String!
-            $emailId: String!
-        ) {
-            sequence: deleteMailFromSequence(
-                sequenceId: $sequenceId,
-                emailId: $emailId
-            ) {
-                sequenceId,
-            }
-        }`;
-
-            const fetcher = fetch
-                .setPayload({
-                    query,
-                    variables: {
-                        sequenceId: id,
-                        emailId,
-                    },
-                })
-                .build();
-
             try {
-                const response = await fetcher.exec();
-                if (response.sequence) {
-                    await loadSequence(id);
+                const response = await deleteMailMutation.mutateAsync({
+                    sequenceId: id,
+                    emailId,
+                });
+                if (response) {
+                    await loadSequence();
                 }
             } catch (e: any) {
                 toast({
@@ -318,7 +250,7 @@ export default function Page({
                 });
             }
         },
-        [fetch, id, loadSequence, toast],
+        [id, loadSequence, toast, deleteMailMutation],
     );
 
     const onSubmit = async (e: FormEvent) => {
@@ -329,42 +261,15 @@ export default function Page({
     const startSequence = useCallback(
         async (action: "start" | "pause") => {
             setButtonLoading(true);
-            const query =
-                action === "start"
-                    ? `
-            mutation StartSequence(
-                $sequenceId: String!
-            ) {
-                sequence: startSequence(
-                    sequenceId: $sequenceId
-                ) {
-                    sequenceId,
-                }
-            }`
-                    : `
-            mutation PauseSequence(
-                $sequenceId: String!
-            ) {
-                sequence: pauseSequence(
-                    sequenceId: $sequenceId
-                ) {
-                    sequenceId,
-                }
-            }`;
-
-            const fetcher = fetch
-                .setPayload({
-                    query,
-                    variables: {
-                        sequenceId: id,
-                    },
-                })
-                .build();
-
             try {
-                const response = await fetcher.exec();
-                if (response.sequence) {
-                    await loadSequence(id);
+                let response;
+                if (action === "start") {
+                    response = await startSequenceMutation.mutateAsync({ sequenceId: id });
+                } else {
+                    response = await pauseSequenceMutation.mutateAsync({ sequenceId: id });
+                }
+                if (response) {
+                    await loadSequence();
                 }
             } catch (e: any) {
                 toast({
@@ -376,10 +281,20 @@ export default function Page({
                 setButtonLoading(false);
             }
         },
-        [fetch, id, loadSequence, toast],
+        [id, loadSequence, toast, startSequenceMutation, pauseSequenceMutation],
     );
 
-    if (loading || !sequence) {
+    // Get sequence data for display
+    const sequence = {
+        title,
+        from: { name: from, email: fromEmail },
+        trigger: { type: triggerType, data: triggerData },
+        emails,
+        emailsOrder,
+        status,
+    };
+
+    if (!sequence) {
         return null;
     }
 
@@ -420,126 +335,113 @@ export default function Page({
                 value={activeTab}
                 onChange={setActiveTab}
             >
-                <div className="mt-4">
-                    <div className="flex flex-col gap-4">
-                        <Form
-                            className="flex flex-col gap-4 mb-8"
-                            onSubmit={onSubmit}
-                        >
-                            <FormField
-                                value={title}
-                                label={COMPOSE_SEQUENCE_FORM_TITLE}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setTitle(e.target.value)
-                                }
-                            />
-                            <FormField
-                                value={from}
-                                label={COMPOSE_SEQUENCE_FORM_FROM}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFrom(e.target.value)
-                                }
-                                placeholder={COMPOSE_SEQUENCE_FROM_PLC}
-                            />
-                            <Select
-                                value={triggerType}
-                                onChange={(value: string) => {
-                                    if (value && value !== triggerType) {
-                                        setTriggerType(value);
+                {activeTab === "Compose" && (
+                    <div className="space-y-6">
+                        <Form onSubmit={onSubmit}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    name="title"
+                                    label={COMPOSE_SEQUENCE_FORM_TITLE}
+                                    value={title}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                        setTitle(e.target.value)
                                     }
-                                }}
-                                title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION}
-                                options={[
-                                    {
-                                        label: "Tag added",
-                                        value: "TAG_ADDED",
-                                    },
-                                    {
-                                        label: "Tag removed",
-                                        value: "TAG_REMOVED",
-                                    },
-                                    {
-                                        label: "Product purchased",
-                                        value: "PRODUCT_PURCHASED",
-                                    },
-                                    {
-                                        label: "Subscriber added",
-                                        value: "SUBSCRIBER_ADDED",
-                                    },
-                                    {
-                                        label: "Community joined",
-                                        value: "COMMUNITY_JOINED",
-                                    },
-                                    {
-                                        label: "Community left",
-                                        value: "COMMUNITY_LEFT",
-                                    },
-                                ]}
-                            />
-                            {triggerType !== "SUBSCRIBER_ADDED" && (
-                                <Select
-                                    value={triggerData || ""}
-                                    onChange={(value: string) =>
-                                        setTriggerData(value)
-                                    }
-                                    title={
-                                        COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA
-                                    }
-                                    options={(() => {
-                                        switch (triggerType) {
-                                            case "TAG_ADDED":
-                                            case "TAG_REMOVED":
-                                                return tags.map((tag) => ({
-                                                    label: tag.tag,
-                                                    value: tag.tag,
-                                                }));
-                                            case "PRODUCT_PURCHASED":
-                                                return products.map(
-                                                    (product) => ({
-                                                        label: product.title,
-                                                        value: product.courseId,
-                                                    }),
-                                                );
-                                            case "COMMUNITY_JOINED":
-                                            case "COMMUNITY_LEFT":
-                                                return communities.map(
-                                                    (community) => ({
-                                                        label: community.name,
-                                                        value: community.communityId,
-                                                    }),
-                                                );
-                                            default:
-                                                return [];
-                                        }
-                                    })()}
+                                    placeholder="Enter sequence title"
                                 />
-                            )}
-                            <div className="flex justify-between">
-                                <FormSubmit
-                                    text="Save"
-                                    loading={loading}
-                                    disabled={
-                                        !title ||
-                                        !from ||
-                                        triggerType === "" ||
-                                        (triggerType !== "SUBSCRIBER_ADDED" &&
-                                            !triggerData) ||
-                                        (sequence.title === title &&
-                                            sequence.from?.name === from &&
-                                            sequence.from?.email ===
-                                                fromEmail &&
-                                            sequence.trigger?.type ===
-                                                triggerType &&
-                                            sequence.trigger?.data ===
-                                                triggerData)
+                                <FormField
+                                    name="from"
+                                    label={COMPOSE_SEQUENCE_FORM_FROM}
+                                    value={from}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                        setFrom(e.target.value)
                                     }
+                                    placeholder={COMPOSE_SEQUENCE_FORM_FROM_PLC}
                                 />
                             </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Select
+                                    label={COMPOSE_SEQUENCE_ENTRANCE_CONDITION}
+                                    value={triggerType}
+                                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                                        setTriggerType(e.target.value)
+                                    }
+                                >
+                                    <option value="SUBSCRIBER_ADDED">Subscriber Added</option>
+                                    <option value="TAG_ADDED">Tag Added</option>
+                                    <option value="TAG_REMOVED">Tag Removed</option>
+                                    <option value="PRODUCT_PURCHASED">Product Purchased</option>
+                                    <option value="COMMUNITY_JOINED">Community Joined</option>
+                                    <option value="COMMUNITY_LEFT">Community Left</option>
+                                </Select>
+                                {triggerType === "TAG_ADDED" ||
+                                triggerType === "TAG_REMOVED" ? (
+                                    <Select
+                                        label={COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA}
+                                        value={triggerData || ""}
+                                        onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                                            setTriggerData(e.target.value)
+                                        }
+                                    >
+                                        <option value="">Select a tag</option>
+                                        {tags.map((tag) => (
+                                            <option key={tag.tag} value={tag.tag}>
+                                                {tag.tag} ({tag.count})
+                                            </option>
+                                        ))}
+                                    </Select>
+                                ) : triggerType === "PRODUCT_PURCHASED" ? (
+                                    <Select
+                                        label={COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA}
+                                        value={triggerData || ""}
+                                        onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                                            setTriggerData(e.target.value)
+                                        }
+                                    >
+                                        <option value="">Select a product</option>
+                                        {products.map((product) => (
+                                            <option key={product.courseId} value={product.courseId}>
+                                                {product.title}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                ) : triggerType === "COMMUNITY_JOINED" ||
+                                  triggerType === "COMMUNITY_LEFT" ? (
+                                    <Select
+                                        label={COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA}
+                                        value={triggerData || ""}
+                                        onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                                            setTriggerData(e.target.value)
+                                        }
+                                    >
+                                        <option value="">Select a community</option>
+                                        {communities.map((community) => (
+                                            <option key={community.communityId} value={community.communityId}>
+                                                {community.name}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                ) : null}
+                            </div>
+                            <FormSubmit>Save Sequence</FormSubmit>
                         </Form>
-                        <div className="flex flex-col gap-2">
-                            <h2 className="font-semibold">Emails</h2>
-                            <div className="flex flex-col gap-2 mb-2">
-                                {emails.map((email) => (
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-semibold">Emails</h2>
+                                <div>
+                                    <Button
+                                        variant="outline"
+                                        onClick={addMailToSequence}
+                                        disabled={buttonLoading}
+                                        size="sm"
+                                    >
+                                        <Plus />
+                                        New mail
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                {emails.map((email, index) => (
                                     <div
                                         key={email.emailId}
                                         className="flex gap-2 px-2 items-center border rounded hover:bg-accent"
@@ -572,44 +474,29 @@ export default function Page({
                                             </Badge>
                                         )}
                                         <Menu2
-                                            icon={<MoreVert />}
-                                            variant="soft"
+                                            trigger={
+                                                <Button variant="ghost" size="sm">
+                                                    <MoreVertical />
+                                                </Button>
+                                            }
                                         >
                                             <MenuItem
-                                                component="dialog"
-                                                title={
-                                                    DELETE_EMAIL_DIALOG_HEADER
-                                                }
-                                                triggerChildren={
-                                                    DELETE_EMAIL_MENU
-                                                }
                                                 onClick={() =>
-                                                    deleteMail({
-                                                        emailId: email.emailId,
-                                                    })
+                                                    deleteMail({ emailId: email.emailId })
                                                 }
-                                            />
+                                            >
+                                                {DELETE_EMAIL_MENU}
+                                            </MenuItem>
                                         </Menu2>
                                     </div>
                                 ))}
                             </div>
-                            <div>
-                                <Button
-                                    variant="outline"
-                                    onClick={addMailToSequence}
-                                    disabled={loading}
-                                    size="sm"
-                                >
-                                    <Add />
-                                    New mail
-                                </Button>
-                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="mt-4">
-                    <EmailAnalytics sequence={sequence} />
-                </div>
+                )}
+                {activeTab === "Analytics" && (
+                    <EmailAnalytics sequenceId={id} />
+                )}
             </Tabbs>
         </DashboardContent>
     );

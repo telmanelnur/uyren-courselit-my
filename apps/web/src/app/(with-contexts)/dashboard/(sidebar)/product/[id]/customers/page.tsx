@@ -1,6 +1,5 @@
 "use client";
 
-import { useContext, useState, useEffect } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import {
@@ -11,6 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@workspace/ui/components/table";
+import { useEffect, useState } from "react";
 // import {
 //     DropdownMenu,
 //     DropdownMenuContent,
@@ -20,20 +20,24 @@ import {
 //     DropdownMenuTrigger,
 // } from "@workspace/ui/components/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge as UIBadge } from "@workspace/ui/components/badge";
 // import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Search, UserPlus, Copy } from "lucide-react";
-import { useParams } from "next/navigation";
-import { capitalize, FetchBuilder } from "@workspace/utils";
-import { AddressContext } from "@components/contexts";
 import DashboardContent from "@/components/admin/dashboard-content";
+import useProduct from "@/hooks/use-product";
 import {
     COURSE_CUSTOMERS_PAGE_HEADING,
     MANAGE_COURSES_PAGE_HEADING,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
 } from "@/lib/ui/config/strings";
-import useProduct from "@/hooks/use-product";
-import { formattedLocaleDate, truncate } from "@/lib/ui/lib/utils";
-import Link from "next/link";
+import {  truncate } from "@workspace/utils";
+import {
+    Constants,
+    Membership,
+    Progress,
+    User,
+} from "@workspace/common-models";
+import { Tooltip, useToast } from "@workspace/components-library";
+import { CheckCircled, Circle } from "@workspace/icons";
 import {
     Dialog,
     DialogContent,
@@ -42,15 +46,14 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { CheckCircled, Circle } from "@workspace/icons";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import {
-    Constants,
-    Progress,
-    Membership,
-    User,
-} from "@workspace/common-models";
-import { Tooltip, useToast, Badge } from "@workspace/components-library";
+import { capitalize } from "@workspace/utils";
+import { Copy, Search, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { trpc } from "@/utils/trpc";
+import { useParams } from "next/navigation";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { formattedLocaleDate } from "@/lib/ui/lib/utils";
 
 type Member = Pick<
     Membership,
@@ -66,14 +69,17 @@ type Member = Pick<
         user: User;
     };
 
+type MemberType = GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getMembers"][number] & {
+    progressInPercentage: number;
+};
+
 export default function CustomersPage() {
     const params = useParams();
     const productId = params.id as string;
-    const [members, setMembers] = useState<Member[]>([]);
+    const [members, setMembers] = useState<MemberType[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
-    const { address } = useAddress();
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const { toast } = useToast();
 
     const breadcrumbs = [
@@ -87,88 +93,50 @@ export default function CustomersPage() {
 
     const filteredMembers = members.filter(
         (member) =>
-            member.user.name
+            member.user?.name
                 ?.toLowerCase()
                 .includes(searchTerm.toLowerCase()) ||
-            member.user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+            member.user?.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
-    const fetchStudents = async () => {
-        setLoading(true);
-        const mutation =
-            // searchTerm
-            // ? `
-            // query {
-            //     report: getReports(id: "${productId}") {
-            //         students (text: "${searchTerm}") {
-            //             email,
-            //             userId,
-            //             name,
-            //             progress,
-            //             signedUpOn,
-            //             lastAccessedOn,
-            //             downloaded,
-            //             avatar {
-            //                 thumbnail
-            //             }
-            //         }
-            //     }
-            // }
-            // `
-            // :
-            `
-            query GetMembers($productId: String!) {
-                members: getProductMembers(courseId: $productId, limit: 10000000) {
-                    user {
-                        userId
-                        avatar {
-                            thumbnail
-                        }
-                        name
-                        email
-                    }
-                    status
-                    completedLessons
-                    downloaded
-                    subscriptionMethod
-                    subscriptionId
-                    createdAt
-                    updatedAt
-                }
-            }
-            `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query: mutation, variables: { productId } })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            setMembers(
-                response.members.map((member: any) => ({
-                    ...member,
-                    progressInPercentage:
-                        product?.type?.toLowerCase() ===
-                            Constants.CourseType.COURSE &&
-                        product?.lessons?.length! > 0
-                            ? Math.round(
-                                  ((member.completedLessons?.length || 0) /
-                                      (product?.lessons?.length || 0)) *
-                                      100,
-                              )
-                            : undefined,
-                })),
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+    const loadMembersQuery = trpc.lmsModule.courseModule.course.getMembers.useQuery(
+        {
+            filter: {
+                courseId: productId, 
+            },
+            pagination: {
+                take: 1000,
+                skip: 0,
+            },
+        },
+        { enabled: !!product }
+    );
 
     useEffect(() => {
-        if (product) {
-            fetchStudents();
-        }
-    }, [product]);
+        setLoading(loadMembersQuery.isLoading);
+    }, [loadMembersQuery.isLoading]);
+
+    useEffect(() => {
+        if (!loadMembersQuery.data) return;
+        const computed = loadMembersQuery.data.map((member: any) => ({
+            ...member,
+            progressInPercentage:
+                product?.type === Constants.CourseType.COURSE &&
+                    product?.lessons?.length! > 0
+                    ? Math.round(
+                        ((member.completedLessons?.length || 0) /
+                            (product?.lessons?.length || 0)) * 100,
+                    )
+                    : undefined,
+        }));
+        setMembers(computed);
+    }, [loadMembersQuery.data, product]);
+
+    // useEffect(() => {
+    //     if (product) {
+    //         fetchStudents();
+    //     }
+    // }, [product]);
 
     const handleCopyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -277,7 +245,7 @@ export default function CustomersPage() {
                         <TableHead>Status</TableHead>
                         <TableHead>
                             {product?.type?.toLowerCase() ===
-                            Constants.CourseType.COURSE
+                                Constants.CourseType.COURSE
                                 ? "Progress"
                                 : "Downloaded"}
                         </TableHead>
@@ -290,56 +258,56 @@ export default function CustomersPage() {
                 <TableBody>
                     {loading
                         ? Array(5)
-                              .fill(0)
-                              .map((_, index) => (
-                                  <TableRow key={index}>
-                                      <TableCell>
-                                          <div className="flex items-center space-x-2">
-                                              <Skeleton className="h-8 w-8 rounded-full" />
-                                              <Skeleton className="h-4 w-[200px]" />
-                                          </div>
-                                      </TableCell>
-                                      <TableCell>
-                                          <div className="flex items-center space-x-2">
-                                              <Skeleton className="h-2.5 w-20" />
-                                              <Skeleton className="h-4 w-8" />
-                                          </div>
-                                      </TableCell>
-                                      <TableCell>
-                                          <Skeleton className="h-4 w-[100px]" />
-                                      </TableCell>
-                                      <TableCell>
-                                          <Skeleton className="h-4 w-[100px]" />
-                                      </TableCell>
-                                  </TableRow>
-                              ))
-                        : filteredMembers.map((member: Member) => (
-                              <TableRow key={member.user.email}>
-                                  <TableCell className="font-medium">
-                                      <Link
-                                          href={`/dashboard/users/${member.user.userId}`}
-                                      >
-                                          <div className="flex items-center space-x-2">
-                                              <Avatar className="h-8 w-8">
-                                                  <AvatarImage
-                                                      src={
-                                                          member.user.avatar
-                                                              ?.thumbnail ||
-                                                          "/courselit_backdrop_square.webp"
-                                                      }
-                                                      alt={
-                                                          member.user.name ||
-                                                          member.user.email
-                                                      }
-                                                  />
-                                                  <AvatarFallback>
-                                                      {(
-                                                          member.user.name ||
-                                                          member.user.email
-                                                      ).charAt(0)}
-                                                  </AvatarFallback>
-                                              </Avatar>
-                                              {/* <Avatar className="h-8 w-8">
+                            .fill(0)
+                            .map((_, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>
+                                        <div className="flex items-center space-x-2">
+                                            <Skeleton className="h-8 w-8 rounded-full" />
+                                            <Skeleton className="h-4 w-[200px]" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center space-x-2">
+                                            <Skeleton className="h-2.5 w-20" />
+                                            <Skeleton className="h-4 w-8" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-4 w-[100px]" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-4 w-[100px]" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        : filteredMembers.map((member, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-medium">
+                                    {member.user && (<Link
+                                        href={`/dashboard/users/${member.user.userId}`}
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage
+                                                    src={
+                                                        member.user.avatar
+                                                            ?.thumbnail ||
+                                                        "/courselit_backdrop_square.webp"
+                                                    }
+                                                    alt={
+                                                        member.user.name ||
+                                                        member.user.email
+                                                    }
+                                                />
+                                                <AvatarFallback>
+                                                    {(
+                                                        member.user.name ||
+                                                        member.user.email
+                                                    ).charAt(0)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            {/* <Avatar className="h-8 w-8">
                                                   <AvatarImage
                                                       src={
                                                           member.user.avatar
@@ -357,35 +325,35 @@ export default function CustomersPage() {
                                                           .join("")}
                                                   </AvatarFallback>
                                               </Avatar> */}
-                                              <span>
-                                                  {member.user.name ||
-                                                      member.user.email}
-                                              </span>
-                                          </div>
-                                      </Link>
-                                  </TableCell>
-                                  {/* <TableCell>
+                                            <span>
+                                                {member.user.name ||
+                                                    member.user.email}
+                                            </span>
+                                        </div>
+                                    </Link>)}
+                                </TableCell>
+                                {/* <TableCell>
                                       {member.status}
                                   </TableCell> */}
-                                  <TableCell>
-                                      <div className="flex items-center space-x-2">
-                                          <Badge
-                                              variant={
-                                                  member.status.toLowerCase() ===
-                                                  "pending"
-                                                      ? "success"
-                                                      : member.status.toLowerCase() ===
-                                                          "active"
+                                <TableCell>
+                                    <div className="flex items-center space-x-2">
+                                        <UIBadge
+                                            variant={
+                                                member.status.toLowerCase() ===
+                                                    "pending"
+                                                    ? "secondary"
+                                                    : member.status.toLowerCase() ===
+                                                        "active"
                                                         ? "default"
                                                         : "destructive"
-                                              }
-                                          >
-                                              {member.status
-                                                  .charAt(0)
-                                                  .toUpperCase() +
-                                                  member.status.slice(1)}
-                                          </Badge>
-                                          {/* {member.user.userId !==
+                                            }
+                                        >
+                                            {member.status
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                                member.status.slice(1)}
+                                        </UIBadge>
+                                        {/* {member.user.userId !==
                                                     profile.userId && (
                                                     <Tooltip title="Change status">
                                                         <Button
@@ -404,139 +372,136 @@ export default function CustomersPage() {
                                                         </Button>
                                                     </Tooltip>
                                                 )} */}
-                                      </div>
-                                  </TableCell>
-                                  <TableCell>
-                                      {product?.type?.toLowerCase() ===
-                                      Constants.CourseType.COURSE ? (
-                                          <>
-                                              {product?.lessons?.length! >
-                                                  0 && (
-                                                  <div className="flex items-center space-x-2">
-                                                      <div className="w-20 bg-gray-200 rounded-full h-2.5">
-                                                          <div
-                                                              className="bg-primary h-2.5 rounded-full"
-                                                              style={{
-                                                                  width: `${member.progressInPercentage}%`,
-                                                              }}
-                                                          ></div>
-                                                      </div>
-                                                      <span>
-                                                          {
-                                                              member.progressInPercentage
-                                                          }
-                                                          %
-                                                      </span>
-                                                      <Dialog>
-                                                          <DialogTrigger className="text-xs text-muted-foreground underline">
-                                                              View
-                                                          </DialogTrigger>
-                                                          <DialogContent>
-                                                              <DialogHeader>
-                                                                  <DialogTitle>
-                                                                      {truncate(
-                                                                          member
-                                                                              .user
-                                                                              .name ||
-                                                                              member
-                                                                                  .user
-                                                                                  .email,
-                                                                          10,
-                                                                      )}
-                                                                      &apos;s
-                                                                      Progress
-                                                                  </DialogTitle>
-                                                              </DialogHeader>
-                                                              <DialogDescription>
-                                                                  {/* {product?.lessons?.map((lesson: any) => (
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    {product?.type?.toLowerCase() ===
+                                        Constants.CourseType.COURSE ? (
+                                        <>
+                                            {product?.lessons?.length! >
+                                                0 && (
+                                                    <div className="flex items-center space-x-2">
+                                                        <div className="w-20 bg-gray-200 rounded-full h-2.5">
+                                                            <div
+                                                                className="bg-primary h-2.5 rounded-full"
+                                                                style={{
+                                                                    width: `${member.progressInPercentage}%`,
+                                                                }}
+                                                            ></div>
+                                                        </div>
+                                                        <span>
+                                                            {
+                                                                member.progressInPercentage
+                                                            }
+                                                            %
+                                                        </span>
+                                                        <Dialog>
+                                                            <DialogTrigger className="text-xs text-muted-foreground underline">
+                                                                View
+                                                            </DialogTrigger>
+                                                            <DialogContent>
+                                                                <DialogHeader>
+                                                                    <DialogTitle>
+                                                                        {truncate(
+                                                                            member.user?.name ||
+                                                                            member.user?.email ||
+                                                                            "...",
+                                                                            10
+                                                                        )}
+                                                                        &apos;s
+                                                                        Progress
+                                                                    </DialogTitle>
+                                                                </DialogHeader>
+                                                                <DialogDescription>
+                                                                    {/* {product?.lessons?.map((lesson: any) => (
                                                     <div key={lesson.lessonId}>
                                                         <h3>{lesson.title}</h3>
                                                     </div>
                                                 ))} */}
-                                                                  {product?.lessons?.map(
-                                                                      (
-                                                                          lesson: any,
-                                                                      ) => (
-                                                                          <div
-                                                                              key={
-                                                                                  lesson.lessonId
-                                                                              }
-                                                                              className="flex justify-between items-center mb-1"
-                                                                          >
-                                                                              <p>
-                                                                                  {
-                                                                                      lesson.title
-                                                                                  }
-                                                                              </p>
-                                                                              <span>
-                                                                                  {member.completedLessons?.includes(
-                                                                                      lesson.lessonId,
-                                                                                  ) ? (
-                                                                                      <CheckCircled />
-                                                                                  ) : (
-                                                                                      <Circle />
-                                                                                  )}
-                                                                              </span>
-                                                                          </div>
-                                                                      ),
-                                                                  )}
-                                                              </DialogDescription>
-                                                          </DialogContent>
-                                                      </Dialog>
-                                                  </div>
-                                              )}
-                                          </>
-                                      ) : (
-                                          <div className="flex items-center space-x-2">
-                                              {!!member.downloaded ? (
-                                                  <CheckCircled />
-                                              ) : (
-                                                  <Circle />
-                                              )}
-                                          </div>
-                                      )}
-                                  </TableCell>
-                                  <TableCell>
-                                      {formattedLocaleDate(member.createdAt)}
-                                  </TableCell>
-                                  <TableCell>
-                                      {formattedLocaleDate(member.updatedAt)}
-                                  </TableCell>
-                                  <TableCell>
-                                      <div className="flex items-center gap-2">
-                                          <Tooltip
-                                              title={`Method: ${capitalize(member.subscriptionMethod || "")}`}
-                                          >
-                                              {member.subscriptionId
-                                                  ? truncate(
-                                                        member.subscriptionId,
-                                                        10,
-                                                    )
-                                                  : "-"}
-                                          </Tooltip>
-                                          {member.subscriptionId && (
-                                              <Tooltip title="Copy Subscription ID">
-                                                  <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      onClick={() =>
-                                                          handleCopyToClipboard(
-                                                              member.subscriptionId ||
-                                                                  "",
-                                                          )
-                                                      }
-                                                  >
-                                                      <Copy className="h-4 w-4" />
-                                                  </Button>
-                                              </Tooltip>
-                                          )}
-                                      </div>
-                                  </TableCell>
-                                  {/* <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                                                    {product?.lessons?.map(
+                                                                        (
+                                                                            lesson: any,
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    lesson.lessonId
+                                                                                }
+                                                                                className="flex justify-between items-center mb-1"
+                                                                            >
+                                                                                <p>
+                                                                                    {
+                                                                                        lesson.title
+                                                                                    }
+                                                                                </p>
+                                                                                <span>
+                                                                                    {member.completedLessons?.includes(
+                                                                                        lesson.lessonId,
+                                                                                    ) ? (
+                                                                                        <CheckCircled />
+                                                                                    ) : (
+                                                                                        <Circle />
+                                                                                    )}
+                                                                                </span>
+                                                                            </div>
+                                                                        ),
+                                                                    )}
+                                                                </DialogDescription>
+                                                            </DialogContent>
+                                                        </Dialog>
+                                                    </div>
+                                                )}
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center space-x-2">
+                                            {!!member.downloaded ? (
+                                                <CheckCircled />
+                                            ) : (
+                                                <Circle />
+                                            )}
+                                        </div>
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    {formattedLocaleDate(member.createdAt)}
+                                </TableCell>
+                                <TableCell>
+                                    {formattedLocaleDate(member.updatedAt)}
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <Tooltip
+                                            title={`Method: ${capitalize(member.subscriptionMethod || "")}`}
+                                        >
+                                            {member.subscriptionId
+                                                ? truncate(
+                                                    member.subscriptionId,
+                                                    10,
+                                                )
+                                                : "-"}
+                                        </Tooltip>
+                                        {member.subscriptionId && (
+                                            <Tooltip title="Copy Subscription ID">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        handleCopyToClipboard(
+                                                            member.subscriptionId ||
+                                                            "",
+                                                        )
+                                                    }
+                                                >
+                                                    <Copy className="h-4 w-4" />
+                                                </Button>
+                                            </Tooltip>
+                                        )}
+                                    </div>
+                                </TableCell>
+                                {/* <TableCell className="hidden xl:table-cell max-w-xs truncate">
                                       {capitalize(member.subscriptionMethod) ||
                                           "-"}
                                   </TableCell> */}
-                                  {/* <TableCell>
+                                {/* <TableCell>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button
@@ -566,8 +531,8 @@ export default function CustomersPage() {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell> */}
-                              </TableRow>
-                          ))}
+                            </TableRow>
+                        ))}
                 </TableBody>
             </Table>
         </DashboardContent>

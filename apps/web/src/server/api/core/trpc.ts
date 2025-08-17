@@ -1,18 +1,16 @@
 import { authOptions } from "@/lib/auth/options";
-import { getDomainData, getDomainHeaders } from "@/lib/domain";
-import { initTRPC, TRPCError } from "@trpc/server";
+import { getDomainData } from "@/lib/domain";
+import { initTRPC } from "@trpc/server";
 import { getServerSession } from "next-auth";
 import superjson from "superjson";
 import z from "zod";
 
 export async function createTRPCContext() {
   const session = await getServerSession(authOptions);
-  const domainHeaders = await getDomainHeaders();
-  const domainData = await getDomainData(domainHeaders);
+  const domainData = await getDomainData();
   return {
     session,
     domainData,
-    domainHeaders,
   };
 }
 type Context = Awaited<ReturnType<typeof createTRPCContext>>;

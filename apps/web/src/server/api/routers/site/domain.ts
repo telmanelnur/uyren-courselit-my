@@ -1,4 +1,5 @@
 import { parseHost } from "@/lib/domain";
+import DomainManager from "@/lib/domain";
 import DomainModel from "@/models/Domain";
 
 import { z } from "zod";
@@ -159,7 +160,12 @@ export const domainRouter = router({
     });
 
     const saved = await domain.save();
-    return saved.toObject();
+    const domainObj = saved.toObject();
+    
+    // Cache the new domain in Redis
+    await DomainManager.setDomainCache(domainObj);
+    
+    return domainObj;
   }),
 
   update: adminProcedure.input(UpdateSchema).mutation(async ({ input }) => {
@@ -180,11 +186,19 @@ export const domainRouter = router({
       await ensureUniqueCustomDomain(input.data.customDomain, input.id);
     }
 
+    // Remove old cache entries before updating
+    await DomainManager.removeFromCache(existing.toObject());
+
     const updated = await DomainModel.findByIdAndUpdate(input.id, input.data, {
       new: true,
     });
 
-    return updated!.toObject();
+    const updatedObj = updated!.toObject();
+    
+    // Cache the updated domain data
+    await DomainManager.setDomainCache(updatedObj);
+
+    return updatedObj;
   }),
 
   delete: adminProcedure
@@ -206,13 +220,17 @@ export const domainRouter = router({
         { new: true }
       );
 
-      return deleted!.toObject();
+      const deletedObj = deleted!.toObject();
+      
+      // Remove from Redis cache
+      await DomainManager.removeFromCache(deletedObj);
+
+      return deletedObj;
     }),
 
   // Get current domain context from tRPC context
   getCurrentDomain: publicProcedure.query(async ({ ctx }) => {
     return {
-      domainHeaders: ctx.domainHeaders,
       domainData: ctx.domainData,
     };
   }),

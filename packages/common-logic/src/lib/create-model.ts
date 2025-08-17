@@ -11,3 +11,4 @@ export const createModel = <T = any>(
 
   return mongoose.model<T>(modelName, schema);
 };
+

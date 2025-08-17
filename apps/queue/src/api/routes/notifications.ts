@@ -16,22 +16,19 @@ const sseClients = new Map<string, Set<Response>>();
  * Queue a notification for a user
  */
 router.post(
-  "/api/notifications",
+  "/api/job/notification",
   verifyJWTMiddleware,
   async (req: Request, res: Response) => {
     const { user } = req;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    console.log("[user]", user, req.body);
 
     try {
       const { forUserIds, entityAction, entityId, entityTargetId } = req.body;
 
       for (const forUserId of forUserIds) {
         const notification = await NotificationModel.create({
-          domain: new ObjectId(user.domain),
-          userId: user.userId,
+          domain: new ObjectId(user!.domain),
+          userId: user!.userId,
           forUserId,
           entityAction,
           entityId,

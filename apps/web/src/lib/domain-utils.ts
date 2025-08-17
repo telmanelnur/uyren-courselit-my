@@ -46,7 +46,7 @@ export function extractSubdomain(
  * @param baseDomain - The base domain to check against
  * @returns True if it's a custom domain
  */
-export function isCustomDomain(
+function isCustomDomain(
   host: string,
   baseDomain = "localhost"
 ): boolean {

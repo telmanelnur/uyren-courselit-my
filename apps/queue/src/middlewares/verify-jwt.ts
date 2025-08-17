@@ -62,6 +62,7 @@ export const verifyJWTMiddleware = (
       [key: string]: any;
     };
 
+
     if (!decoded || !decoded.user) {
       throw new AuthenticationError("Invalid token");
     }

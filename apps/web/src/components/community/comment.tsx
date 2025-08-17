@@ -40,7 +40,6 @@ import {
 import { useState } from "react";
 import { useProfile } from "../contexts/profile-context";
 import { isCommunityComment } from "./utils";
-import { trpc } from "@/utils/trpc";
 
 interface CommentProps {
   communityId: string;
@@ -50,8 +49,8 @@ interface CommentProps {
   onDelete: (comment: CommunityComment | CommunityCommentReply) => void;
   depth?: number;
   membership:
-    | Pick<Membership, "status" | "role" | "rejectionReason">
-    | undefined;
+  | Pick<Membership, "status" | "role" | "rejectionReason">
+  | undefined;
 }
 
 export function Comment({
@@ -196,11 +195,11 @@ export function Comment({
                     Constants.MembershipRole.MODERATE
                   ) ||
                     profile.userId === comment.user?.userId) && (
-                    <DropdownMenuItem onClick={() => handleDeletePost(comment)}>
-                      <Trash className="h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  )}
+                      <DropdownMenuItem onClick={() => handleDeletePost(comment)}>
+                        <Trash className="h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    )}
                   {profile.userId !== comment.user?.userId && (
                     <DropdownMenuItem onClick={() => handleReportPost(comment)}>
                       <FlagTriangleRight /> Report
@@ -259,6 +258,7 @@ export function Comment({
             <Button
               size="sm"
               onClick={() => {
+                console.log("[onReply]", comment, replyContent);
                 if (replyContent.trim()) {
                   isCommunityComment(comment)
                     ? onReply(comment.commentId, replyContent)

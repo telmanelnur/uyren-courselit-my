@@ -7,12 +7,12 @@ type MediaWithOwner = Media & {
 };
 
 export const MediaSchema = new mongoose.Schema<MediaWithOwner>({
-    mediaId: { type: String, required: true, unique: true },
+    mediaId: { type: String, required: true, },
     originalFileName: { type: String, required: true },
     mimeType: { type: String, required: true },
     size: { type: Number, required: true },
     access: {
-        type: String,
+        type: String, 
         required: true,
         enum: Object.values(Constants.MediaAccessType),
     },
@@ -21,8 +21,4 @@ export const MediaSchema = new mongoose.Schema<MediaWithOwner>({
     file: String,
     url: { type: String, required: true },
     storageProvider: { type: String, required: true, },
-    userId: { type: String, required: false },
-    domain: { type: mongoose.Schema.Types.ObjectId, ref: "Domain", required: true },
-}, {
-    timestamps: true,
 });

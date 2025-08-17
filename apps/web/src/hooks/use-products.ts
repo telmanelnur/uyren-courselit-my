@@ -1,5 +1,4 @@
 import { trpc } from "@/utils/trpc";
-import { Course } from "@workspace/common-models";
 import { useMemo } from "react";
 
 export function useProducts(
@@ -19,7 +18,7 @@ export function useProducts(
         },
     });
 
-    const products = useMemo(() => listQuery.data?.items as Course[] || [], [listQuery.data?.items]);
+    const products = useMemo(() => listQuery.data?.items || [], [listQuery.data?.items]);
     const loading = listQuery.isLoading;
     const totalPages = useMemo(
         () => (listQuery.data?.total ? listQuery.data.total : 0),

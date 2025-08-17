@@ -7,12 +7,9 @@ import type {
   Group,
   Membership,
   MembershipRole,
-  Page,
   PaymentPlan,
   Profile,
-  SiteInfo,
-  TextEditorContent,
-  Typeface,
+  Typeface
 } from "@workspace/common-models";
 import { Constants, UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
@@ -36,8 +33,7 @@ export const formattedLocaleDate = (
 };
 
 export const formulateCourseUrl = (course: any, backend = "") =>
-  `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${
-    course.slug
+  `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${course.slug
   }`;
 
 export const getAddress = (host: string) => {
@@ -58,48 +54,7 @@ export const canAccessDashboard = (profile: Profile) => {
   ]);
 };
 
-export const constructThumbnailUrlFromFileUrl = (url: string) => {
-  const tmp = url.split("/").pop();
-  if (tmp == undefined) {
-    throw new Error("Invalid URL format: No file name found.");
-  }
-  return url ? url.replace(tmp, "thumb.webp") : null;
-};
 
-type FrontEndPage = Pick<
-  Page,
-  | "name"
-  | "type"
-  | "title"
-  | "layout"
-  | "pageData"
-  | "description"
-  | "socialImage"
-  | "robotsAllowed"
->;
-export const getPage = async (
-  backend: string,
-  id?: string
-): Promise<FrontEndPage | null> => {
-  try {
-    const response = await trpcCaller.siteModule.page.publicGet({ id });
-    return response;
-  } catch (e: any) {
-    console.log("getPage", e.message); // eslint-disable-line no-console
-    return null;
-  }
-};
-
-export const getSiteInfo = async (
-  backend: string
-): Promise<SiteInfo | undefined> => {
-  try {
-    const response = await trpcCaller.siteModule.siteInfo.publicGetSettings();
-    return response;
-  } catch (e: any) {
-    return undefined;
-  }
-};
 export const isEnrolled = (courseId: string, profile: Profile) =>
   profile.fetched &&
   profile.purchases.some((purchase: any) => purchase.courseId === courseId);
@@ -178,19 +133,6 @@ export const sortCourseGroups = (course: Course) => {
   return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
 };
 
-export function truncate(str?: string, length?: number) {
-  if (!str || !length) {
-    return "";
-  }
-  return str.length <= length ? str : `${str.substring(0, length)}...`;
-}
-
-export function isTextEditorNonEmpty(content: TextEditorContent) {
-  return (
-    content?.content &&
-    (!!content.content[0]?.content || content.content.length > 1)
-  );
-}
 
 export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
   const statusCycle = [
@@ -264,7 +206,7 @@ export function hasCommunityPermission(
   return memberRoleIndex >= requiredRoleIndex;
 }
 
-export async function getAddressFromHeaders(headers) {
+export async function getAddressFromHeaders(headers: any) {
   const headersList = await headers();
   const address = getBackendAddress({
     "x-forwarded-proto": headersList.get("x-forwarded-proto"),

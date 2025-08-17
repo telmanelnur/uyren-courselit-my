@@ -22,7 +22,7 @@ class NotificationQueueManager {
     });
   }
 
-  async addNotification(data: InternalNotification): Promise<any> {
+  async addNotification(data: InternalNotification) {
     return await this.notificationQueue.add(
       "notification",
       data

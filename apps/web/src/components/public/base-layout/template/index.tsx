@@ -1,11 +1,8 @@
-import React, { ReactNode } from "react";
 import { WidgetInstance } from "@workspace/common-models";
 import { Footer, Header } from "@workspace/page-blocks";
-import { Toaster } from "@workspace/components-library";
-import { AppDispatch, AppState } from "@workspace/state-management";
+import { ReactNode } from "react";
+import { Toaster } from "sonner";
 import EditableWidget from "./editable-widget";
-import { generateThemeStyles } from "@/lib/theme-styles";
-import { Theme } from "@workspace/page-models";
 
 type PageData = Record<string, unknown> & {
     pageType?: "product" | "site" | "blog" | "community";
@@ -21,8 +18,6 @@ interface TemplateProps {
     onAddWidgetBelow?: (index: number) => void;
     onMoveWidgetUp?: (index: number) => void;
     onMoveWidgetDown?: (index: number) => void;
-    dispatch?: AppDispatch;
-    state: Partial<AppState>;
     id?: string;
     injectThemeStyles?: boolean;
 }
@@ -38,8 +33,6 @@ const Template = (props: TemplateProps) => {
         onAddWidgetBelow,
         onMoveWidgetUp,
         onMoveWidgetDown,
-        dispatch,
-        state,
     } = props;
 
     if (!layout) return <></>;
@@ -70,8 +63,6 @@ const Template = (props: TemplateProps) => {
                 onMoveWidgetDown={onMoveWidgetDown}
                 onMoveWidgetUp={onMoveWidgetUp}
                 index={index + 1}
-                dispatch={dispatch}
-                state={state}
             />
         ),
     );
@@ -89,8 +80,6 @@ const Template = (props: TemplateProps) => {
                     onMoveWidgetDown={onMoveWidgetDown}
                     onMoveWidgetUp={onMoveWidgetUp}
                     index={0}
-                    dispatch={dispatch}
-                    state={state}
                 />
             )}
             {childrenOnTop && (
@@ -112,12 +101,10 @@ const Template = (props: TemplateProps) => {
                     editing={editing}
                     onEditClick={onEditClick}
                     index={layout.length - 1}
-                    dispatch={dispatch}
-                    state={state}
                 />
             )}
             <Toaster />
-            <style>{generateThemeStyles(state.theme as Theme)}</style>
+            {/* <style>{generateThemeStyles(state.theme as Theme)}</style> */}
         </div>
     );
 };

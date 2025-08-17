@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { EmailTemplate as PublicEmailTemplate } from "@workspace/common-models";
 import { generateUniqueId } from "@workspace/utils";
-import { EmailContentSchema } from "@workspace/common-logic";
+import { createModel, EmailContentSchema } from "@workspace/common-logic";
 
 interface EmailTemplate extends PublicEmailTemplate {
     domain: mongoose.Schema.Types.ObjectId;
@@ -13,7 +13,7 @@ const EmailTemplateSchema = new mongoose.Schema<EmailTemplate>({
     templateId: { type: String, required: true, default: generateUniqueId },
     title: { type: String, required: true },
     creatorId: { type: String, required: true },
-    content: { type: EmailContentSchema, required: true },
+    // content: { type: EmailContentSchema, required: true },
 });
 
 EmailTemplateSchema.index(
@@ -24,5 +24,6 @@ EmailTemplateSchema.index(
     { unique: true },
 );
 
-export default mongoose.models.EmailTemplate ||
-    mongoose.model("EmailTemplate", EmailTemplateSchema);
+const EmailTemplateModel = createModel("EmailTemplate", EmailTemplateSchema);
+
+export default EmailTemplateModel;

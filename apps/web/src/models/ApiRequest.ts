@@ -1,6 +1,6 @@
+import { User } from "@workspace/common-models";
 import { Domain } from "./Domain";
 import { NextApiRequest } from "next";
-import { User } from "./User";
 
 type ApiRequest = NextApiRequest & {
     user?: User;

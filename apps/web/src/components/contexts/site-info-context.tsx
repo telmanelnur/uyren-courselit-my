@@ -23,8 +23,17 @@ const SiteInfoContext = createContext<SiteInfoContextType>({
   },
 });
 
-export const SiteInfoProvider = ({ children }: PropsWithChildren) => {
-  const [siteInfo, setSiteInfo] = useState<SiteInfo>(defaultState.siteinfo);
+export const SiteInfoProvider = ({
+  children,
+  initialSiteInfo,
+}: PropsWithChildren<{ initialSiteInfo?: SiteInfo }>) => {
+  const [siteInfo, setSiteInfo] = useState<SiteInfo>(
+    initialSiteInfo || defaultState.siteinfo
+  );
+
+  // useEffect(() => {
+  //   // Site info updated
+  // }, [siteInfo]);
 
   return (
     <SiteInfoContext.Provider value={{ siteInfo, setSiteInfo }}>

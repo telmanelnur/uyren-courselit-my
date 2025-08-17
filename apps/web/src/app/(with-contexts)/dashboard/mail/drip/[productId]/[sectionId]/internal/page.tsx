@@ -76,7 +76,7 @@ export default function EmailEditorPage({
     useEffect(() => {
         if (sectionId && product && product.groups) {
             const group = product.groups.find(
-                (group) => group.id === sectionId,
+                (group) => group.groupId === sectionId,
             );
             if (group) {
                 setSection(group);

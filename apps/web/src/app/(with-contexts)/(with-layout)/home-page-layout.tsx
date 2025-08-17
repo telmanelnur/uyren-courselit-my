@@ -1,17 +1,22 @@
 "use client";
 
 import { PropsWithChildren } from "react";
-// import { BaseLayout } from "@components/public/base-layout";
-// import { CodeInjector } from "@components/public/code-injector";
+import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 
 export default function HomepageLayout({ children }: PropsWithChildren) {
-  //   const { address } = useAddress();
-  //   const { siteInfo: siteinfo } = useSiteInfo();
-  //   const { typefaces } = useTypefaces();
-  //   const { config } = useServerConfig();
-  //   const { profile } = useProfile();
-  //   const { theme } = useTheme();
-  return children;
+  return (
+    <ThemeProvider>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">
+          {children}
+        </main>
+        <Footer />
+      </div>
+    </ThemeProvider>
+  );
   //   return {
   //     /*
   //             <BaseLayout

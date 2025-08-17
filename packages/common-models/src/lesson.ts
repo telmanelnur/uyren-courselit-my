@@ -1,8 +1,12 @@
 import { Media } from "./media";
 import { LessonType } from "./lesson-type";
 import type { Quiz } from "./quiz";
-import type { TextEditorContent } from "./text-editor-content";
+import { TextEditorContent } from "./custom/text-editor-content";
+// import type { TextEditorContent } from "./text-editor-content";
 
+/**
+ * @deprecated The method should not be used
+ */
 export default interface Lesson {
     lessonId: string;
     title: string;

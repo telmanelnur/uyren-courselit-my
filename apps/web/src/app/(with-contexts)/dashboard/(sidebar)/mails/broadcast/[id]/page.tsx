@@ -1,17 +1,18 @@
 "use client";
 
-import DashboardContent from "@/components/admin/dashboard-content";
+import DashboardContent from "@components/admin/dashboard-content";
 import { isDateInFuture } from "@/lib/utils";
-import { BROADCASTS } from "@/lib/ui/config/strings";
+import { AddressContext } from "@components/contexts";
+import { BROADCASTS } from "@ui-config/strings";
 import { useContext, useState } from "react";
-import { PaperPlane, Clock } from "@workspace/icons";
+import { PaperPlane, Clock } from "@courselit/icons";
 import {
     Form,
     FormField,
     Dialog2,
     useToast,
     Tabbs,
-} from "@workspace/components-library";
+} from "@courselit/components-library";
 import {
     ChangeEvent,
     FormEvent,
@@ -25,7 +26,7 @@ import {
     UserFilter,
     UserFilterAggregator,
     SequenceStatus,
-} from "@workspace/common-models";
+} from "@courselit/common-models";
 import {
     BTN_SCHEDULE,
     BTN_SEND,
@@ -40,15 +41,15 @@ import {
     PAGE_HEADER_EDIT_MAIL,
     TOAST_MAIL_SENT,
     TOAST_TITLE_SUCCESS,
-} from "@/lib/ui/config/strings";
-import { Email as EmailContent } from "@workspace/email-editor";
+} from "@ui-config/strings";
+import { Email as EmailContent } from "@courselit/email-editor";
 import { useSequence } from "@/hooks/use-sequence";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
-import FilterContainer from "@/components/admin/users/filter-container";
-import EmailViewer from "@/components/admin/mails/email-viewer";
-import { Button } from "@workspace/ui/components/button";
-import { truncate } from "@workspace/utils";
-import EmailAnalytics from "@/components/admin/mails/email-analytics";
+import FilterContainer from "@components/admin/users/filter-container";
+import EmailViewer from "@components/admin/mails/email-viewer";
+import { Button } from "@components/ui/button";
+import { truncate } from "@courselit/utils";
+import EmailAnalytics from "@components/admin/mails/email-analytics";
 
 const breadcrumbs = [
     { label: BROADCASTS, href: "/dashboard/mails?tab=Broadcasts" },
@@ -62,7 +63,7 @@ export default function Page({
         id: string;
     };
 }) {
-    const { address } = useAddress();
+    const address = useContext(AddressContext);
     const { id } = params;
     const { sequence, loading, error, loadSequence } = useSequence();
     const [filters, setFilters] = useState<UserFilter[]>([]);

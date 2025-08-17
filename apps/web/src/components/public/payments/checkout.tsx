@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,13 +27,6 @@ import {
     UIConstants,
     MembershipStatus,
 } from "@workspace/common-models";
-import {
-    AddressContext,
-    ProfileContext,
-    SiteInfoContext,
-    ThemeContext,
-} from "@components/contexts";
-import { FetchBuilder } from "@workspace/utils";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { getSymbolFromCurrency, useToast } from "@workspace/components-library";
@@ -48,6 +41,11 @@ import {
     Text1,
 } from "@workspace/page-primitives";
 import { CHECKOUT_PAGE_ORDER_SUMMARY } from "@/lib/ui/config/strings";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { useProfile } from "@/components/contexts/profile-context";
+import { useAddress } from "@/components/contexts/address-context";
+import { trpc } from "@/utils/trpc";
+import { useTheme } from "@/components/contexts/theme-context";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export interface Product {
@@ -97,11 +95,12 @@ export default function Checkout({
     product,
     paymentPlans,
 }: CheckoutScreenProps) {
-    const siteinfo = useContext(SiteInfoContext);
-    const { profile } = useContext(ProfileContext);
+    const { siteInfo } = useSiteInfo();
+    const { theme } = useTheme();
+    const { profile } = useProfile();
     const { address } = useAddress();
     const currencySymbol =
-        getSymbolFromCurrency(siteinfo.currencyISOCode || "USD") || "$";
+        getSymbolFromCurrency(siteInfo.currencyISOCode || "USD") || "$";
 
     const [selectedPlan, setSelectedPlan] = useState<PaymentPlan | null>(null);
     const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState(true);
@@ -113,50 +112,24 @@ export default function Checkout({
     >();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const stripePromise = loadStripe(siteinfo.stripeKey as string);
+    const stripePromise = loadStripe(siteInfo.stripeKey as string);
     const router = useRouter();
     const { toast } = useToast();
-    const { theme } = useTheme();
+    // Remove theme usage for now
+
+    // Get membership status using tRPC
+    const { data: membershipStatusData } = trpc.userModule.user.getMembershipStatus.useQuery({
+        entityId: product.id,
+        entityType: product.type,
+    }, {
+        enabled: !!profile.userId && !!product.id,
+    });
 
     useEffect(() => {
-        const fetchMembership = async () => {
-            const query = `
-                query ($entityId: String!, $entityType: MembershipEntityType!) {
-                    membershipStatus: getMembershipStatus(entityId: $entityId, entityType: $entityType)
-                }
-            `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setIsGraphQLEndpoint(true)
-                .setPayload({
-                    query,
-                    variables: {
-                        entityId: product.id,
-                        entityType: product.type.toUpperCase(),
-                    },
-                })
-                .build();
-
-            try {
-                const response = await fetch.exec();
-                if (response.membershipStatus) {
-                    setMembershipStatus(
-                        response.membershipStatus.toLowerCase(),
-                    );
-                }
-            } catch (err) {
-                toast({
-                    title: "Error",
-                    description: err.message,
-                    variant: "destructive",
-                });
-            }
-        };
-
-        if (profile.userId) {
-            fetchMembership();
+        if (membershipStatusData !== undefined) {
+            setMembershipStatus(membershipStatusData);
         }
-    }, [profile]);
+    }, [membershipStatusData]);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -168,7 +141,7 @@ export default function Checkout({
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true);
-        const { paymentMethod } = siteinfo;
+        const { paymentMethod } = siteInfo;
 
         let payload: Record<string, unknown> | null = {
             joiningReason: values.joiningReason,
@@ -178,28 +151,29 @@ export default function Checkout({
             origin: address.frontend,
         };
 
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/payment/initiate`)
-            .setHeaders({
-                "Content-Type": "application/json",
-            })
-            .setPayload(JSON.stringify(payload))
-            .build();
-
         try {
-            const response = await fetch.exec();
-            if (response.status === "initiated") {
+            const response = await fetch(`${address.backend}/api/payment/initiate`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const responseData = await response.json();
+            console.log("responseData", responseData);
+            if (responseData.status === "initiated") {
                 if (paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE) {
                     await redirectToStripeCheckout({
                         stripe: await stripePromise,
-                        sessionId: response.paymentTracker,
+                        sessionId: responseData.paymentTracker,
                     });
                 }
                 if (paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY) {
                     const razorpayPayload = {
-                        key: siteinfo.razorpayKey,
+                        key: siteInfo.razorpayKey,
                         name: product.name,
-                        image: product.featuredImage || siteinfo.logo?.file,
+                        image: product.featuredImage || siteInfo.logo?.file,
                         prefill: {
                             email: profile.email,
                         },
@@ -212,9 +186,9 @@ export default function Checkout({
                         selectedPlan?.type === paymentPlanType.EMI
                     ) {
                         razorpayPayload["subscription_id"] =
-                            response.paymentTracker;
+                            responseData.paymentTracker;
                     } else {
-                        razorpayPayload["order_id"] = response.paymentTracker;
+                        razorpayPayload["order_id"] = responseData.paymentTracker;
                         // razorpayPayload["handler"] = function (response) {
                         //     verifySignature(response);
                         // }
@@ -318,7 +292,7 @@ export default function Checkout({
                         <div
                             className="flex items-center justify-between p-4 border-b w-full"
                             style={{
-                                borderBottomColor: theme.theme.colors.border,
+                                // borderBottomColor: theme.theme.colors.border,
                             }}
                         >
                             <div className="flex items-center gap-1">
@@ -364,7 +338,7 @@ export default function Checkout({
                         </CollapsibleTrigger>
                         <CollapsibleContent
                             style={{
-                                borderBottomColor: theme.theme.colors.border,
+                                // borderBottomColor: theme.theme.colors.border,
                             }}
                         >
                             <div className="p-4 space-y-4">
@@ -397,8 +371,7 @@ export default function Checkout({
                                         <div
                                             className="flex justify-between pt-4 border-t"
                                             style={{
-                                                borderTopColor:
-                                                    theme.theme.colors.border,
+                                                // borderTopColor:  theme.theme.colors.border,
                                             }}
                                         >
                                             <Header3 theme={theme.theme}>
@@ -461,7 +434,7 @@ export default function Checkout({
                     <div
                         className="mt-4 pt-4 border-t"
                         style={{
-                            borderTopColor: theme.theme.colors.border,
+                            // borderTopColor: theme.theme.colors.border,
                         }}
                     >
                         <div className="flex justify-between items-center">
@@ -491,11 +464,24 @@ export default function Checkout({
         }
 
         if (
-            siteinfo.paymentMethod === UIConstants.PAYMENT_METHOD_LEMONSQUEEZY
+            siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_LEMONSQUEEZY
         ) {
             setupLemonSqueezy();
         }
-    }, [siteinfo, (window as any).createLemonSqueezy]);
+    }, [siteInfo, (window as any).createLemonSqueezy]);
+
+
+    const watchJoiningReason = form.watch("joiningReason");
+
+    const canJoin = useMemo(() => {
+        if (selectedPlan?.type === paymentPlanType.FREE &&
+            product.type === Constants
+                .MembershipEntityType
+                .COMMUNITY) {
+            return !!watchJoiningReason;
+        }
+        return true;
+    }, [selectedPlan, product, watchJoiningReason]);
 
     return (
         <div className="min-h-screen w-full">
@@ -505,55 +491,55 @@ export default function Checkout({
                     <div className="space-y-8">
                         {membershipStatus ===
                             Constants.MembershipStatus.ACTIVE ||
-                        membershipStatus ===
+                            membershipStatus ===
                             Constants.MembershipStatus.REJECTED ? (
                             <div className="space-y-4">
                                 <Header3 theme={theme.theme}>
                                     {membershipStatus ===
-                                    Constants.MembershipStatus.ACTIVE ? (
+                                        Constants.MembershipStatus.ACTIVE ? (
                                         <Check />
                                     ) : (
                                         <X />
                                     )}
                                     {membershipStatus ===
-                                    Constants.MembershipStatus.ACTIVE
+                                        Constants.MembershipStatus.ACTIVE
                                         ? "Already owned"
                                         : "Access Denied"}
                                 </Header3>
                                 <Text1 theme={theme.theme}>
                                     {membershipStatus ===
-                                    Constants.MembershipStatus.ACTIVE
+                                        Constants.MembershipStatus.ACTIVE
                                         ? "You already have access to this resource."
                                         : "You have been rejected and cannot proceed with the checkout."}
                                 </Text1>
                                 {membershipStatus ===
                                     Constants.MembershipStatus.ACTIVE && (
-                                    <Button
-                                        onClick={() => {
-                                            if (
-                                                product.type ===
-                                                Constants.MembershipEntityType
-                                                    .COMMUNITY
-                                            ) {
-                                                router.replace(
-                                                    `/dashboard/community/${product.id}`,
-                                                );
-                                            } else if (
-                                                product.type ===
-                                                Constants.MembershipEntityType
-                                                    .COURSE
-                                            ) {
-                                                router.replace(
-                                                    `/course/${product.slug}/${product.id}`,
-                                                );
-                                            }
-                                        }}
-                                        className="bg-black text-white hover:bg-black/90"
-                                        theme={theme.theme}
-                                    >
-                                        Go to the resource
-                                    </Button>
-                                )}
+                                        <Button
+                                            onClick={() => {
+                                                if (
+                                                    product.type ===
+                                                    Constants.MembershipEntityType
+                                                        .COMMUNITY
+                                                ) {
+                                                    router.replace(
+                                                        `/dashboard/community/${product.id}`,
+                                                    );
+                                                } else if (
+                                                    product.type ===
+                                                    Constants.MembershipEntityType
+                                                        .COURSE
+                                                ) {
+                                                    router.replace(
+                                                        `/course/${product.slug}/${product.id}`,
+                                                    );
+                                                }
+                                            }}
+                                            className="bg-black text-white hover:bg-black/90"
+                                            theme={theme.theme}
+                                        >
+                                            Go to the resource
+                                        </Button>
+                                    )}
                             </div>
                         ) : (
                             <>
@@ -663,8 +649,8 @@ export default function Checkout({
                                         {selectedPlan?.type ===
                                             paymentPlanType.FREE &&
                                             product.type ===
-                                                Constants.MembershipEntityType
-                                                    .COMMUNITY && (
+                                            Constants.MembershipEntityType
+                                                .COMMUNITY && (
                                                 <FormField
                                                     control={form.control}
                                                     name="joiningReason"
@@ -692,15 +678,7 @@ export default function Checkout({
                                                 isSubmitting ||
                                                 !isLoggedIn ||
                                                 !form.formState.isValid ||
-                                                (selectedPlan?.type ===
-                                                    paymentPlanType.FREE &&
-                                                    product.type ===
-                                                        Constants
-                                                            .MembershipEntityType
-                                                            .COMMUNITY &&
-                                                    !form.getValues(
-                                                        "joiningReason",
-                                                    ))
+                                                !canJoin
                                             }
                                             theme={theme.theme}
                                         >

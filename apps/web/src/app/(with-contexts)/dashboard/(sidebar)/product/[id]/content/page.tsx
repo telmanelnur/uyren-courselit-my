@@ -1,34 +1,8 @@
 "use client";
 
-import { useContext, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@workspace/ui/components/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@workspace/ui/components/dialog";
-import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import {
-    ChevronRight,
-    MoreHorizontal,
-    Plus,
-    FileText,
-    Video,
-    HelpCircle,
-    ChevronDown,
-} from "lucide-react";
-import Link from "next/link";
+import DashboardContent from "@/components/admin/dashboard-content";
+import { useAddress } from "@/components/contexts/address-context";
+import useProduct from "@/hooks/use-product";
 import {
     BUTTON_NEW_LESSON_TEXT,
     BUTTON_NEW_LESSON_TEXT_DOWNLOAD,
@@ -37,22 +11,53 @@ import {
     LESSON_GROUP_DELETED,
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
-    TOAST_TITLE_SUCCESS,
+    TOAST_TITLE_SUCCESS
 } from "@/lib/ui/config/strings";
-import DashboardContent from "@/components/admin/dashboard-content";
-import { AddressContext } from "@components/contexts";
-import useProduct from "../../../../../../../hooks/use-product";
-import { truncate } from "@/lib/ui/lib/utils";
-import { Constants, Lesson } from "@workspace/common-models";
+import { truncate } from "@workspace/utils";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { trpc } from "@/utils/trpc";
+import { Constants, Group, LessonType } from "@workspace/common-models";
 import { DragAndDrop, useToast } from "@workspace/components-library";
-import { FetchBuilder } from "@workspace/utils";
+import { Button } from "@workspace/ui/components/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@workspace/ui/components/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
-import { Droplets } from "lucide-react";
+import {
+    ChevronDown,
+    ChevronRight,
+    Droplets,
+    FileText,
+    HelpCircle,
+    MoreHorizontal,
+    Plus,
+    Video,
+} from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+
+
+
+type ProductType = GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getByCourseDetailed"];
 
 export default function ContentPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -67,16 +72,19 @@ export default function ContentPage() {
     const router = useRouter();
     const params = useParams();
     const productId = params.id as string;
-    const { address } = useAddress();
-    const { product } = useProduct(productId, address);
-    const breadcrumbs = [
-        { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
-        {
-            label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product/${productId}`,
-        },
-        { label: COURSE_CONTENT_HEADER, href: "#" },
-    ];
+    const { data: product } = trpc.lmsModule.courseModule.course.getByCourseDetailed.useQuery({
+      courseId: productId,
+    });
+    const breadcrumbs = useMemo(() => {
+        return [
+            { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
+            {
+                label: product ? truncate(product.title || "", 20) || "..." : "...",
+                href: `/dashboard/product/${productId}`,
+            },
+            { label: COURSE_CONTENT_HEADER, href: "#" },
+        ]
+    }, [product]);
     const { toast } = useToast();
 
     const handleDelete = async () => {
@@ -93,96 +101,71 @@ export default function ContentPage() {
         );
     };
 
-    const LessonTypeIcon = ({ type }) => {
-        switch (type) {
-            case "video":
-                return <Video className="h-4 w-4" />;
-            case "text":
-                return <FileText className="h-4 w-4" />;
-            case "quiz":
-                return <HelpCircle className="h-4 w-4" />;
-            default:
-                return null;
-        }
-    };
-
-    const updateGroup = async (group, lessonsOrder: string[]) => {
-        const mutation = `
-        mutation UpdateGroup ($id: ID!, $courseId: String!, $lessonsOrder: [String]!) {
-            updateGroup(
-                id: $id,
-                courseId: $courseId,
-                lessonsOrder: $lessonsOrder
-            ) {
-               courseId,
-               title
-            }
-        }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    id: group.id,
-                    courseId: product?.courseId,
-                    lessonsOrder,
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            await fetch.exec();
-        } catch (err: any) {
+    const updateGroupMutation = trpc.lmsModule.courseModule.course.updateGroup.useMutation({
+        onError: (error) => {
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
+                description: error.message,
                 variant: "destructive",
             });
-        }
+        },
+    });
+    const removeGroupMutation = trpc.lmsModule.courseModule.course.removeGroup.useMutation({
+        onSuccess: () => {
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: LESSON_GROUP_DELETED,
+            });
+        },
+        onError: (error) => {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        },
+    });
+
+    const updateGroup = async (group: Group, lessonsOrder: string[]) => {
+        // const mutation = `
+        // mutation UpdateGroup ($id: ID!, $courseId: String!, $lessonsOrder: [String]!) {
+        //     updateGroup(
+        //         id: $id,
+        //         courseId: $courseId,
+        //         lessonsOrder: $lessonsOrder
+        //     ) {
+        //        courseId,
+        //        title
+        //     }
+        // }
+        // `;
+        const updated = await updateGroupMutation.mutateAsync({
+            data: {
+                groupId: group.groupId,
+                courseId: product!.courseId,
+                lessonsOrder,
+            },
+        });
+
     };
+    const trpcUtils = trpc.useUtils();
 
     const removeGroup = async (groupId: string, courseId: string) => {
-        const mutation = `
-            mutation RemoveGroup ($id: String!, $courseId: String!) {
-                removeGroup(
-                    id: $id,
-                    courseId: $courseId
-                ) {
-                courseId 
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    id: groupId,
-                    courseId: courseId,
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            if (response.removeGroup?.courseId) {
-                toast({
-                    title: TOAST_TITLE_SUCCESS,
-                    description: LESSON_GROUP_DELETED,
-                });
-                // course.groups.splice(
-                //     course.groups.findIndex((group) => group.id === groupId),
-                //     1,
-                // );
-            }
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        }
+        // const mutation = `
+        //     mutation RemoveGroup ($id: String!, $courseId: String!) {
+        //         removeGroup(
+        //             id: $id,
+        //             courseId: $courseId
+        //         ) {
+        //         courseId 
+        //         }
+        //     }
+        // `;
+        await removeGroupMutation.mutateAsync({
+            groupId: groupId,
+            courseId: courseId,
+        });
+        trpcUtils.lmsModule.courseModule.course.getByCourseDetailed.invalidate();
     };
 
     return (
@@ -194,7 +177,7 @@ export default function ContentPage() {
             <ScrollArea className="h-[calc(100vh-180px)]">
                 {product?.groups!.map((section, index) => (
                     <div
-                        key={section.id}
+                        key={section.groupId}
                         className="mb-6 relative"
                         onMouseEnter={() => setHoveredSectionIndex(index)}
                         onMouseLeave={() => setHoveredSectionIndex(null)}
@@ -205,11 +188,11 @@ export default function ContentPage() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() =>
-                                        toggleSectionCollapse(section.id)
+                                        toggleSectionCollapse(section.groupId)
                                     }
                                     className="p-0 hover:bg-transparent"
                                 >
-                                    {collapsedSections.includes(section.id) ? (
+                                    {collapsedSections.includes(section.groupId) ? (
                                         <ChevronRight className="h-5 w-5 text-gray-500" />
                                     ) : (
                                         <ChevronDown className="h-5 w-5 text-gray-500" />
@@ -250,7 +233,7 @@ export default function ContentPage() {
                                     <DropdownMenuItem
                                         onClick={() =>
                                             router.push(
-                                                `/dashboard/product/${productId}/content/section/${section.id}`,
+                                                `/dashboard/product/${productId}/content/section/${section.groupId}`,
                                             )
                                         }
                                     >
@@ -267,112 +250,31 @@ export default function ContentPage() {
                                     </DropdownMenuItem> */}
                                     {!(
                                         product?.type?.toLowerCase() ===
-                                            Constants.CourseType.DOWNLOAD &&
+                                        Constants.CourseType.DOWNLOAD &&
                                         product?.groups?.length === 1
                                     ) && (
-                                        <>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                onClick={() => {
-                                                    setItemToDelete({
-                                                        type: "section",
-                                                        title: section.name,
-                                                        id: section.id,
-                                                    });
-                                                    setDeleteDialogOpen(true);
-                                                }}
-                                                className="text-red-600"
-                                            >
-                                                Delete Section
-                                            </DropdownMenuItem>
-                                        </>
-                                    )}
+                                            <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        setItemToDelete({
+                                                            type: "section",
+                                                            title: section.name,
+                                                            id: section.groupId,
+                                                        });
+                                                        setDeleteDialogOpen(true);
+                                                    }}
+                                                    className="text-red-600"
+                                                >
+                                                    Delete Section
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
-                        {!collapsedSections.includes(section.id) && (
-                            <div className="space-y-2 ml-8">
-                                {/* {section.lessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-                    onClick={() => router.push(`/dashboard/product/${productId}/content/lesson?id=${lesson.id}`)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <LessonTypeIcon type={lesson.type} />
-                      <span className="text-sm font-medium">{lesson.title}</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                  </div>
-                ))} */}
-                                <DragAndDrop
-                                    items={product
-                                        ?.lessons!.filter(
-                                            (lesson: Lesson) =>
-                                                lesson.groupId === section.id,
-                                        )
-                                        .sort(
-                                            (a: any, b: any) =>
-                                                (
-                                                    section.lessonsOrder as any[]
-                                                )?.indexOf(a.lessonId) -
-                                                (
-                                                    section.lessonsOrder as any[]
-                                                )?.indexOf(b.lessonId),
-                                        )
-                                        .map((lesson: Lesson) => ({
-                                            id: lesson.lessonId,
-                                            courseId: product?.courseId,
-                                            groupId: lesson.groupId,
-                                            lesson,
-                                        }))}
-                                    Renderer={({ lesson }) => (
-                                        <div
-                                            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer w-full"
-                                            onClick={() =>
-                                                router.push(
-                                                    `/dashboard/product/${productId}/content/section/${section.id}/lesson?id=${lesson.lessonId}`,
-                                                )
-                                            }
-                                        >
-                                            <div className="flex items-center space-x-3">
-                                                <LessonTypeIcon
-                                                    type={lesson.type}
-                                                />
-                                                <span className="text-sm font-medium">
-                                                    {lesson.title}
-                                                </span>
-                                            </div>
-                                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                                        </div>
-                                    )}
-                                    key={JSON.stringify(product.lessons)}
-                                    onChange={(items: any) => {
-                                        const newLessonsOrder: any = items.map(
-                                            (item: {
-                                                lesson: { lessonId: any };
-                                            }) => item.lesson.lessonId,
-                                        );
-                                        updateGroup(section, newLessonsOrder);
-                                    }}
-                                />
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="mt-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                                    asChild
-                                >
-                                    <Link
-                                        href={`/dashboard/product/${productId}/content/section/${section.id}/lesson`}
-                                    >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        {product?.type?.toLowerCase() ===
-                                        Constants.CourseType.DOWNLOAD
-                                            ? BUTTON_NEW_LESSON_TEXT_DOWNLOAD
-                                            : BUTTON_NEW_LESSON_TEXT}
-                                    </Link>
-                                </Button>
-                            </div>
+                        {!collapsedSections.includes(section.groupId) && (
+                            <CollapsibleSection section={section} product={product!} onUpdateGroup={updateGroup} />
                         )}
                         {hoveredSectionIndex === index && (
                             <div
@@ -401,21 +303,21 @@ export default function ContentPage() {
                 ))}
                 {product?.type?.toLowerCase() !==
                     Constants.CourseType.DOWNLOAD && (
-                    <div className="mt-8 flex justify-center">
-                        <Button
-                            variant="outline"
-                            className="text-sm font-medium"
-                            asChild
-                        >
-                            <Link
-                                href={`/dashboard/product/${productId}/content/section/new`}
+                        <div className="mt-8 flex justify-center">
+                            <Button
+                                variant="outline"
+                                className="text-sm font-medium"
+                                asChild
                             >
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Section
-                            </Link>
-                        </Button>
-                    </div>
-                )}
+                                <Link
+                                    href={`/dashboard/product/${productId}/content/section/new`}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Section
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
             </ScrollArea>
 
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -446,3 +348,114 @@ export default function ContentPage() {
         </DashboardContent>
     );
 }
+
+const CollapsibleSection = ({ section, product, onUpdateGroup }: {
+    section: Group;
+    product: ProductType;
+    onUpdateGroup: (group: Group, lessonsOrder: string[]) => void;
+}) => {
+    const router = useRouter();
+
+    const LessonTypeIcon = ({ type }: {
+        type: LessonType;
+    }) => {
+        switch (type) {
+            case Constants.LessonType.VIDEO:
+                return <Video className="h-4 w-4" />;
+            case Constants.LessonType.TEXT:
+                return <FileText className="h-4 w-4" />;
+            case Constants.LessonType.QUIZ:
+                return <HelpCircle className="h-4 w-4" />;
+            default:
+                return null;
+        }
+    };
+
+    const dndItems = useMemo(() => {
+        return product
+            ?.attachedLessons!.filter(
+                (lesson) =>
+                    lesson.groupId === section.groupId,
+            )
+            .sort(
+                (a, b) =>
+                    (
+                        section.lessonsOrder
+                    )?.indexOf(a.lessonId) -
+                    (
+                        section.lessonsOrder
+                    )?.indexOf(b.lessonId),
+            )
+            .map((lesson) => ({
+                id: lesson.lessonId,
+                courseId: product?.courseId,
+                groupId: lesson.groupId,
+                lesson,
+            }));
+    }, [product, section]);
+
+    return (
+        <div className="space-y-2 ml-8">
+            {/* {section.attachedLessons.map((lesson) => (
+                <div
+                    key={lesson.id}
+                    className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                    onClick={() => router.push(`/dashboard/product/${productId}/content/lesson?id=${lesson.id}`)}
+                >
+                    <div className="flex items-center space-x-3">
+                        <LessonTypeIcon type={lesson.type} />
+                        <span className="text-sm font-medium">{lesson.title}</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                </div>
+            ))} */}
+            <DragAndDrop
+                items={dndItems}
+                Renderer={({ lesson }) => (
+                    <div
+                        className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer w-full"
+                        onClick={() =>
+                            router.push(
+                                `/dashboard/product/${product.courseId}/content/section/${section.groupId}/lesson?id=${lesson.lessonId}`,
+                            )
+                        }
+                    >
+                        <div className="flex items-center space-x-3">
+                            <LessonTypeIcon
+                                type={lesson.type}
+                            />
+                            <span className="text-sm font-medium">
+                                {lesson.title}
+                            </span>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                    </div>
+                )}
+                onChange={(items: any) => {
+                    const newLessonsOrder: any = items.map(
+                        (item: {
+                            lesson: { lessonId: any };
+                        }) => item.lesson.lessonId,
+                    );
+                    onUpdateGroup(section, newLessonsOrder);
+                }}
+            />
+            <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                asChild
+            >
+                <Link
+                    href={`/dashboard/product/${product.courseId}/content/section/${section.groupId}/lesson`}
+                >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {product?.type ===
+                        Constants.CourseType.DOWNLOAD
+                        ? BUTTON_NEW_LESSON_TEXT_DOWNLOAD
+                        : BUTTON_NEW_LESSON_TEXT}
+                </Link>
+            </Button>
+        </div>
+    );
+};

@@ -1,7 +1,6 @@
-import State from "./state";
-import WidgetDefaultSettings from "./widget-default-settings";
-import { PaymentPlan } from "./payment-plan";
 import { PageType } from "./constants";
+import { PaymentPlan } from "./payment-plan";
+import WidgetDefaultSettings from "./widget-default-settings";
 
 export default interface WidgetProps<T extends WidgetDefaultSettings> {
     id: string;
@@ -12,8 +11,6 @@ export default interface WidgetProps<T extends WidgetDefaultSettings> {
         defaultPaymentPlan?: string;
         [x: string]: unknown;
     };
-    state: State;
-    dispatch: any;
     settings: T;
     editing: boolean;
     toggleTheme: () => void;

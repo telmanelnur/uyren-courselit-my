@@ -7,11 +7,10 @@ import CommunityCommentModel, {
 import CommunityPostModel, {
   InternalCommunityPost,
 } from "@/models/CommunityPost";
-import CommunityPostSubscriberModel, {
-  CommunityPostSubscriber,
-} from "@/models/CommunityPostSubscriber";
+import CommunityPostSubscriberModel from "@/models/CommunityPostSubscriber";
 import MembershipModel from "@/models/Membership";
 import NotificationModel from "@/models/Notification";
+import UserModel from "@/models/User";
 import { addNotification } from "@/server/lib/queue";
 import { InternalUser } from "@workspace/common-logic";
 import { Constants, Membership, User } from "@workspace/common-models";
@@ -21,26 +20,21 @@ import { z } from "zod";
 import {
   AuthorizationException,
   NotFoundException,
-  ResourceExistsException,
-  ValidationException,
+  ValidationException
 } from "../../core/exceptions";
 import {
   createDomainRequiredMiddleware,
-  protectedProcedure,
+  protectedProcedure
 } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
 import { buildMongooseQuery } from "../../core/utils";
 import {
-  documentIdValidator,
-  documentSlugValidator,
-  toSlug,
-} from "../../core/validators";
-import {
   addPostSubscription,
   getCommunityObjOrAssert,
   getMembership,
 } from "./helpers";
+
 
 const CreateSchema = getFormDataSchema({
   title: z.string().min(1),
@@ -49,23 +43,6 @@ const CreateSchema = getFormDataSchema({
   category: z.string(),
 });
 
-const UpdateSchema = getFormDataSchema({
-  slug: documentSlugValidator().transform(toSlug).optional(),
-  title: z.string().min(1).optional(),
-  content: z.string().optional(),
-  excerpt: z.string().optional(),
-  thumbnailImageId: documentIdValidator().nullable().optional(),
-}).extend({
-  id: documentIdValidator(),
-});
-
-async function ensureUniqueSlug(ctx: any, slug: string, excludeId?: number) {
-  const e = await ctx.prisma.post.findFirst({
-    where: { slug, ...(excludeId ? { id: { not: excludeId } } : {}) },
-    select: { id: true },
-  });
-  if (e) throw new ResourceExistsException("Post", "slug", slug);
-}
 
 type PostUserType = Pick<InternalUser, "userId" | "name" | "avatar" | "email">;
 const formatPost = (
@@ -114,7 +91,6 @@ const formatComment = (comment: any, user: User) => ({
     user: reply.user,
   })),
   deleted: comment.deleted,
-  user: (comment as any).user ? ((comment as any).user as User) : undefined,
 });
 
 async function getPostSubscribersExceptUserId({
@@ -125,7 +101,7 @@ async function getPostSubscribersExceptUserId({
   domain: mongoose.Types.ObjectId;
   userId: string;
   postId: string;
-}): Promise<CommunityPostSubscriber[]> {
+}) {
   return await CommunityPostSubscriberModel.find({
     domain,
     postId,
@@ -160,7 +136,7 @@ export const postRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      
+
       const query: RootFilterQuery<typeof CommunityPostModel> = {
         domain: ctx.domainData.domainObj._id as any,
         deleted: false,
@@ -216,8 +192,8 @@ export const postRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(
       getFormDataSchema({
-        postId: documentIdValidator(),
-        communityId: documentIdValidator(),
+        postId: z.string(),
+        communityId: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -245,7 +221,7 @@ export const postRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(CreateSchema)
     .mutation(async ({ ctx, input }) => {
-      
+
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.data.communityId
@@ -344,7 +320,7 @@ export const postRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(z.object({ postId: z.string(), communityId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      
+
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.communityId
@@ -377,7 +353,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      
+
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.communityId
@@ -437,7 +413,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      
+
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.communityId
@@ -476,7 +452,7 @@ export const postRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      
+
 
       const community = await getCommunityObjOrAssert(
         ctx,
@@ -504,7 +480,7 @@ export const postRouter = router({
       const [items, total] = await Promise.all([
         CommunityCommentModel.find(query)
           .populate<{
-            user: User;
+            user: User | null;
           }>({
             path: "user",
             select: "userId name avatar email",
@@ -515,7 +491,10 @@ export const postRouter = router({
           : Promise.resolve(null),
       ]);
       return {
-        items: items.map((comment) => formatComment(comment, ctx.user as any)),
+        items: items.map((comment) => ({
+          ...formatComment(comment, ctx.user as any),
+          user: comment.user,
+        })),
         total: total,
         meta: {
           skip: input.pagination?.skip || 0,
@@ -536,7 +515,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      
+
 
       const community = await getCommunityObjOrAssert(
         ctx,
@@ -644,7 +623,17 @@ export const postRouter = router({
         postId: post.postId,
       });
 
-      return formatComment(comment, ctx.user as any);
+      return {
+        ...formatComment(comment, ctx.user as any),
+        user: await UserModel.findOne({
+          userId: comment.userId,
+        }, {
+          userId: 1,
+          name: 1,
+          avatar: 1,
+          email: 1,
+        }),
+      };
     }),
 
   deleteComment: protectedProcedure
@@ -658,7 +647,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      
+
 
       const community = await getCommunityObjOrAssert(
         ctx,
@@ -736,6 +725,16 @@ export const postRouter = router({
         }
       }
       await post.save();
-      return comment ? formatComment(comment, ctx.user as any) : null;
+      return comment ? {
+        ...formatComment(comment, ctx.user as any),
+        user: await UserModel.findOne({
+          userId: comment.userId,
+        }, {
+          userId: 1,
+          name: 1,
+          avatar: 1,
+          email: 1,
+        }),
+      } : null;
     }),
 });

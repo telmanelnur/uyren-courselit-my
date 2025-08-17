@@ -184,7 +184,7 @@ export function CreatePostDialog({
             <AvatarImage
               src={
                 profile.avatar
-                  ? profile.avatar.data?.url
+                  ? profile.avatar?.url
                   : "/courselit_backdrop_square.webp"
               }
               alt={`${profile.name} avatar`}
@@ -207,7 +207,7 @@ export function CreatePostDialog({
               placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-lg border-none px-0 font-semibold"
+              className="text-lg font-semibold"
             />
             {errors.title && (
               <p className="text-red-500 text-sm mt-1">{errors.title}</p>

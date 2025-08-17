@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Address,
   Profile,
@@ -55,7 +53,7 @@ export const defaultState: {
       thumbnail: "",
       caption: "",
     },
-    subscribedToUpdates: ""
+    subscribedToUpdates: false
   },
   message: {
     open: false,
@@ -69,7 +67,7 @@ export const defaultState: {
   typefaces: [],
   config: {
     turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
-    queueServer: process.env.NEXT_PUBLIC_QUEUE_SERVER || "",
+    queueServer: process.env.QUEUE_SERVER || "",
   },
   theme: {
     id: "",

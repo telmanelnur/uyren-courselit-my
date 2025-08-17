@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import { EmailEventSchema } from "@workspace/common-logic";
+import { createModel, EmailEventSchema } from "@workspace/common-logic";
 
-export default mongoose.models.EmailEvent ||
-    mongoose.model("EmailEvent", EmailEventSchema);
+const EmailEventModel = createModel("EmailEvent", EmailEventSchema);
+
+export default EmailEventModel;

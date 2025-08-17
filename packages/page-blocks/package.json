@@ -1,0 +1,43 @@
+{
+  "name": "@workspace/page-blocks",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./blocks/*": "./src/blocks/*.tsx",
+    "./types/*": "./src/types/*.ts",
+    "./utils/*": "./src/utils/*.ts"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@workspace/ui": "workspace:^",
+    "@workspace/common-models": "workspace:^",
+    "@workspace/page-models": "workspace:^",
+    "@workspace/page-primitives": "workspace:^",
+    "@workspace/components-library": "workspace:^",
+    "@workspace/utils": "workspace:^",
+    "@workspace/icons": "workspace:^",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "clsx": "^2.1.1",
+    "class-variance-authority": "^0.7.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "next": "*",
+    "react": "*"
+  }
+}
+

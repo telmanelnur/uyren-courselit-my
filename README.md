@@ -29,3 +29,7 @@ To use the components in your app, import them from the `ui` package.
 ```tsx
 import { Button } from "@workspace/ui/components/button"
 ```
+
+
+COMMANDS:
+lt --port 3000 --subdomain uyren-courselit-my-1

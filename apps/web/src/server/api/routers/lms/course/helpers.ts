@@ -11,6 +11,7 @@ import { getPlans } from "../../community/helpers";
 import { checkOwnershipWithoutModel } from "@/server/api/core/permissions";
 import { checkPermission } from "@workspace/utils";
 
+
 export const getGroupedLessons = async (
   courseId: string,
   domainId: mongoose.Types.ObjectId
@@ -38,7 +39,7 @@ export const getGroupedLessons = async (
   for (let group of course.groups.sort((a, b) => a.rank - b.rank)) {
     lessonsInSequentialOrder.push(
       ...allLessons
-        .filter((lesson) => lesson.groupId === group.id)
+        .filter((lesson) => lesson.groupId === group.groupId)
         .sort(
           (a, b) =>
             group.lessonsOrder?.indexOf(a.lessonId) -

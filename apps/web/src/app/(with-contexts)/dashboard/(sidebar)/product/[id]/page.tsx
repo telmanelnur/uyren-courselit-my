@@ -1,23 +1,14 @@
 "use client";
 
-import { useState, useContext } from "react";
-import { redirect, useParams } from "next/navigation";
-import { Button } from "@workspace/ui/components/button";
 import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
-    Users,
-    GraduationCap,
-    DollarSign,
-    Download,
-    BookOpen,
-    ChevronDown,
-    Eye,
-    Globe,
-    Settings,
-    UserPlus,
-    Share2,
-} from "lucide-react";
-import Link from "next/link";
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import {
     Select,
     SelectContent,
@@ -27,13 +18,28 @@ import {
 } from "@workspace/ui/components/select";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-    DropdownMenuSeparator,
-} from "@workspace/ui/components/dropdown-menu";
+    BookOpen,
+    ChevronDown,
+    DollarSign,
+    Download,
+    Eye,
+    Globe,
+    GraduationCap,
+    Settings,
+    Share2,
+    UserPlus,
+    Users,
+} from "lucide-react";
+import Link from "next/link";
+import { redirect, useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import DashboardContent from "@/components/admin/dashboard-content";
+import { useAddress } from "@/components/contexts/address-context";
+import Resources from "@/components/resources";
+import { useActivities } from "@/hooks/use-activities";
+import useProduct from "@/hooks/use-product";
+import { TIME_RANGES } from "@/lib/ui/config/constants";
 import {
     EDIT_CONTENT_MENU_ITEM,
     EDIT_PAGE_MENU_ITEM,
@@ -44,19 +50,13 @@ import {
     TOAST_TITLE_SUCCESS,
     VIEW_PAGE_MENU_ITEM,
 } from "@/lib/ui/config/strings";
-import DashboardContent from "@/components/admin/dashboard-content";
-import { AddressContext, SiteInfoContext } from "@components/contexts";
-import useProduct from "../../../../../../hooks/use-product";
-import { formatDistanceToNow } from "date-fns";
-import { capitalize } from "@workspace/utils";
-import { truncate } from "@/lib/ui/lib/utils";
-import MetricCard from "./metric-card";
-import { useToast, Tooltip as TooltipCL } from "@workspace/components-library";
-import { useActivities } from "@/hooks/use-activities";
+import { truncate } from "@workspace/utils";
 import { Constants } from "@workspace/common-models";
-import Resources from "@components/resources";
-import { TIME_RANGES } from "@ui-config/constants";
+import { Tooltip as TooltipCL, useToast } from "@workspace/components-library";
+import { capitalize } from "@workspace/utils";
+import { formatDistanceToNow } from "date-fns";
 import SalesCard from "../../overview/sales-card";
+import MetricCard from "./metric-card";
 
 const { ActivityType } = Constants;
 
@@ -65,8 +65,7 @@ export default function DashboardPage() {
     const productId = params?.id as string;
     const [timeRange, setTimeRange] = useState("7d");
     // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const { address } = useAddress();
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
@@ -74,7 +73,7 @@ export default function DashboardPage() {
             href: "#",
         },
     ];
-    const siteinfo = useContext(SiteInfoContext);
+    const { address } = useAddress();
     const { data: salesData, loading: salesLoading } = useActivities(
         ActivityType.PURCHASED,
         timeRange,
@@ -82,9 +81,12 @@ export default function DashboardPage() {
         true,
     );
     const { toast } = useToast();
-    if (productLoaded && !product) {
-        redirect("/dashboard/products");
-    }
+
+    useEffect(() => {
+        if (productLoaded && !product) {
+            redirect("/dashboard/products");
+        }
+    }, [productLoaded, product]);
 
     const handleShareClick = () => {
         navigator.clipboard.writeText(
@@ -134,7 +136,7 @@ export default function DashboardPage() {
                                 <>
                                     <Badge variant="secondary">
                                         {capitalize(product.type!) ===
-                                        "Course" ? (
+                                            "Course" ? (
                                             <BookOpen className="h-4 w-4 mr-1" />
                                         ) : (
                                             <Download className="h-4 w-4 mr-1" />
@@ -150,9 +152,9 @@ export default function DashboardPage() {
                                         Last updated{" "}
                                         {product.updatedAt
                                             ? formatDistanceToNow(
-                                                  new Date(+product.updatedAt),
-                                                  { addSuffix: true },
-                                              )
+                                                new Date(+product.updatedAt),
+                                                { addSuffix: true },
+                                            )
                                             : "N/A"}
                                     </span>
                                 </>

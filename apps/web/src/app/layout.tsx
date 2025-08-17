@@ -1,24 +1,21 @@
 import * as fonts from "@/lib/fonts";
 import { SITE_SETTINGS_DEFAULT_TITLE } from "@/lib/ui/config/strings";
-import { getAddressFromHeaders, getSiteInfo } from "@/lib/ui/lib/utils";
+import { getSiteInfo as getServerSiteInfo } from "@/server/lib/site-info";
 import { TRPCReactProvider } from "@/server/provider";
 import { TRPCError } from "@trpc/server";
 // import "@workspace/components-library/styles.css";
 // import "@workspace/page-blocks/styles.css";
 // import "@workspace/page-primitives/styles.css";
-import "@workspace/ui/styles/globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { headers } from "next/headers";
 import NotFound from "./not-found";
 // import "remirror/styles/all.css";
-// import "../styles/globals.css";
+import "@/styles/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const address = await getAddressFromHeaders(headers);
-  const siteInfo = await getSiteInfo(address);
+  const siteInfo = await getServerSiteInfo();
 
   return {
     title: `${siteInfo?.title || SITE_SETTINGS_DEFAULT_TITLE}`,
@@ -53,21 +50,15 @@ interface RootLayoutProps {
 }
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-  let siteSetup;
   let hasError = false;
-  const address = await getAddressFromHeaders(headers);
   try {
-    const siteInfo = await getSiteInfo(address);
-    // siteSetup = await trpcCaller.siteModule.siteInfo.publicGetFullSiteSetup({});
+    await getServerSiteInfo();
   } catch (error) {
-    console.log("Errors", error);
     if (error instanceof TRPCError) {
       hasError = true;
     }
   }
-  // const themeStyles = siteSetup?.theme
-  //   ? generateThemeStyles((siteSetup as any).theme)
-  //   : "";
+
 
   if (hasError) {
     return (

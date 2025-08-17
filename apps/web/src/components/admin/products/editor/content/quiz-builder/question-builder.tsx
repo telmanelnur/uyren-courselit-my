@@ -11,7 +11,7 @@ import {
     QUESTION_BUILDER_CORRECT_ANS_TOOLTIP,
     QUESTION_BUILDER_DELETE_TOOLTIP,
     QUESTION_BUILDER_EXPAND_TOOLTIP,
-} from "@/ui-config/strings";
+} from "@/lib/ui/config/strings";
 import {
     Checkbox,
     IconButton,
@@ -101,14 +101,15 @@ export function QuestionBuilder({
                 </div>
             </div>
             <FormField
+                name="questionText"
                 value={details.text}
-                onChange={(e) => setQuestionText(e.target.value)}
+                onChange={(e: any) => setQuestionText(e.target.value)}
                 placeholder={LESSON_QUIZ_QUESTION_PLACEHOLDER}
             />
             {/* <h4 className="font-medium text-slate-500">
                 {LESSON_QUIZ_OPTIONS_HEADER}
             </h4> */}
-            {details.options.map((option: Option, index: number) => (
+            {details.options.map((option, index) => (
                 <div className="flex items-center gap-2" key={index}>
                     <Tooltip title={QUESTION_BUILDER_CORRECT_ANS_TOOLTIP}>
                         <Checkbox
@@ -119,8 +120,9 @@ export function QuestionBuilder({
                         />
                     </Tooltip>
                     <FormField
+                        name="optionText"
                         value={option.text}
-                        onChange={(e) => setOptionText(index, e.target.value)}
+                        onChange={(e: any) => setOptionText(index, e.target.value)}
                         placeholder={LESSON_QUIZ_OPTION_PLACEHOLDER}
                         className="w-full"
                     />
@@ -136,8 +138,8 @@ export function QuestionBuilder({
             ))}
             <div>
                 <Button
-                    component="button"
-                    onClick={(e: FormEvent<HTMLInputElement>) => {
+                    type="button"
+                    onClick={(e: any) => {
                         e.preventDefault();
                         addNewOption();
                     }}

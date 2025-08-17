@@ -2,7 +2,7 @@ import User from "./user";
 
 export interface CommunityCommentReply {
     replyId: string;
-    user: User;
+    user?: User;
     content: string;
     media: {
         type: string;

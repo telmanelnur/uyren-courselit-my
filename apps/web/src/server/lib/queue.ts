@@ -1,4 +1,3 @@
-import { responses } from "@/config/strings";
 import { Log } from "@/lib/logger";
 import NotificationModel from "@/models/Notification";
 import { NotificationEntityAction } from "@workspace/common-models";
@@ -8,9 +7,9 @@ import { ObjectId } from "mongodb";
 const queueServer = process.env.QUEUE_SERVER;
 
 function getJwtSecret(): string {
-  const jwtSecret = process.env.COURSELIT_JWT_SECRET;
+  const jwtSecret = process.env.TRANSPORT_JWT_SECRET;
   if (!jwtSecret) {
-    throw new Error("COURSELIT_JWT_SECRET is not defined");
+    throw new Error("TRANSPORT_JWT_SECRET is not defined");
   }
   return jwtSecret;
 }
@@ -21,22 +20,19 @@ interface MailProps {
   body: string;
   from: string;
 }
-const transporter = {
-  sendMail: async function ({
-    to,
-    from,
-    subject,
-    html,
-  }: Pick<MailProps, "to" | "subject" | "from"> & { html?: string }) {
-    console.log("Mail:", to, from, subject, html); // eslint-disable-line no-console
-  },
-};
 
 export async function addMailJob({ to, from, subject, body }: MailProps) {
   try {
     const jwtSecret = getJwtSecret();
-    const token = jwtUtils.generateToken({ service: "app" }, jwtSecret);
-    const response = await fetch(`${queueServer}/job/mail`, {
+    const token = jwtUtils.generateToken({
+      user: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        domain: "test-domain-id"
+      },
+      service: "app"
+    }, jwtSecret);
+    const response = await fetch(`${queueServer}/api/job/mail`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -60,30 +56,7 @@ export async function addMailJob({ to, from, subject, body }: MailProps) {
       to,
       from,
       subject,
-      body,
     });
-
-    let atLeastOneSuccessfulSend = false;
-    for (const recipient of to) {
-      try {
-        await transporter.sendMail({
-          from,
-          to: [recipient],
-          subject,
-          html: body,
-        });
-        atLeastOneSuccessfulSend = true;
-      } catch (err) {
-        const typedError = err as Error;
-        Log.error(`Error sending mail locally: ${typedError.message}`, {
-          stack: typedError.stack as any,
-        });
-      }
-    }
-
-    if (!atLeastOneSuccessfulSend) {
-      throw new Error(responses.email_delivery_failed_for_all_recipients);
-    }
   }
 }
 
@@ -105,17 +78,15 @@ export async function addNotification({
   console.log("addNotification", domain, entityId, entityAction, forUserIds, userId, entityTargetId);
   try {
     const jwtSecret = getJwtSecret();
-    const token = jwtUtils.generateToken(
-      {
-        service: "app",
-        user: {
-          domain,
-          userId,
-        },
+    const token = jwtUtils.generateToken({
+      user: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        domain: "test-domain-id"
       },
-      jwtSecret
-    );
-    const response = await fetch(`${queueServer}/job/notification`, {
+      service: "app"
+    }, jwtSecret);
+    const response = await fetch(`${queueServer}/api/job/notification`, {
       method: "POST",
       headers: {
         "content-type": "application/json",

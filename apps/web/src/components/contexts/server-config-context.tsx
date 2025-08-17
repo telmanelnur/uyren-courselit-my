@@ -23,8 +23,10 @@ const ServerConfigContext = createContext<ServerConfigContextType>({
   },
 });
 
-export const ServerConfigProvider = ({ children }: PropsWithChildren) => {
-  const [config, setConfig] = useState<ServerConfig>(defaultState.config);
+export const ServerConfigProvider = ({ children, initialConfig }: PropsWithChildren<{
+  initialConfig: ServerConfig;
+}>) => {
+  const [config, setConfig] = useState<ServerConfig>(initialConfig);
 
   return (
     <ServerConfigContext.Provider value={{ config, setConfig }}>

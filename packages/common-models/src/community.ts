@@ -1,6 +1,8 @@
 import { Media } from "./media";
 import { PaymentPlan } from "./payment-plan";
-import { TextEditorContent } from "./text-editor-content";
+// import { TextEditorContent } from "./text-editor-content";
+import { TextEditorContent } from "./custom/text-editor-content";
+
 
 export interface Community {
     communityId: string;

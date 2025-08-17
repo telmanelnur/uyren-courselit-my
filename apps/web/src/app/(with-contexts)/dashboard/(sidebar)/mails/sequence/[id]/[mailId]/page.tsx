@@ -17,11 +17,8 @@ import {
     PAGE_HEADER_EDIT_MAIL,
 } from "@/lib/ui/config/strings";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
-import { Email as EmailContent } from "@workspace/email-editor";
-import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
+// import { Email as EmailContent } from "@workspace/email-editor";
 import { Email } from "@workspace/common-models";
-import EmailViewer from "@/components/admin/mails/email-viewer";
-import { useSequence } from "@/hooks/use-sequence";
 
 export default function Page({
     params,
@@ -45,7 +42,7 @@ export default function Page({
     ];
     const [delay, setDelay] = useState<number>(0);
     const [subject, setSubject] = useState<string>("");
-    const [content, setContent] = useState<EmailContent | null>(null);
+    const [content, setContent] = useState<string | null>(null);
     const [email, setEmail] = useState<Email | null>(null);
     const [published, setPublished] = useState<"unpublished" | "published">(
         "unpublished",
@@ -220,6 +217,7 @@ export default function Page({
                     <Form className="flex flex-col gap-4 mb-8">
                         <div className="flex gap-8">
                             <FormField
+                                name="delay"
                                 type="number"
                                 min={0}
                                 value={delay}
@@ -256,6 +254,7 @@ export default function Page({
                             </div>
                         </div>
                         <FormField
+                            name="subject"
                             value={subject}
                             label={MAIL_SUBJECT_PLACEHOLDER}
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -263,10 +262,10 @@ export default function Page({
                             }
                         />
                     </Form>
-                    <EmailViewer
+                    {/* <EmailViewer
                         content={content}
                         emailEditorLink={`/dashboard/mail/sequence/${sequenceId}/${mailId}?redirectTo=/dashboard/mails/sequence/${sequenceId}/${mailId}`}
-                    />
+                    /> */}
                 </div>
             </div>
         </DashboardContent>

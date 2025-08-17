@@ -1,3 +1,5 @@
+"use client";
+
 import {
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,

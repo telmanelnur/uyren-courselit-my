@@ -1,18 +1,18 @@
 import constants from "@/config/constants";
 import { internal, responses } from "@/config/strings";
-import { hasCommunityPermission } from "@/lib/ui/lib/utils";
+import { getNextRoleForCommunityMember, getNextStatusForCommunityMember, hasCommunityPermission } from "@/lib/ui/lib/utils";
 import CommunityModel, { InternalCommunity } from "@/models/Community";
 import CommunityCommentModel from "@/models/CommunityComment";
 import CommunityPostModel from "@/models/CommunityPost";
 import CommunityReportModel, {
   InternalCommunityReport,
 } from "@/models/CommunityReport";
+import DomainModel from "@/models/Domain";
 import MembershipModel from "@/models/Membership";
 import PageModel from "@/models/Page";
 import PaymentPlanModel from "@/models/PaymentPlan";
 import { addNotification } from "@/server/lib/queue";
 import { getPaymentMethodFromSettings } from "@/server/services/payment";
-
 import {
   Community,
   CommunityMedia,
@@ -20,7 +20,9 @@ import {
   CommunityReport,
   CommunityReportType,
   Constants,
+  Membership,
   UIConstants,
+  User,
 } from "@workspace/common-models";
 import { checkPermission, generateUniqueId, slugify } from "@workspace/utils";
 import mongoose, { RootFilterQuery } from "mongoose";
@@ -40,28 +42,26 @@ import {
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
 import { paginate } from "../../core/utils";
+import { textEditorContentValidator } from "../../core/validators";
 import {
   checkEntityPermission,
   fetchEntity,
   getCommunityObjOrAssert,
+  getCommunityQuery,
   getMembership,
   getPlans,
 } from "./helpers";
+import UserModel from "@/models/User";
 
 // Schema definitions following standard patterns
 const CreateSchema = getFormDataSchema({
   name: z.string().min(1),
 });
 
-const BannerSchema = z.object({
-  type: z.enum(["doc"]),
-  content: z.any(),
-});
-
 const UpdateSchema = getFormDataSchema({
   name: z.string().min(2).optional(),
   description: z.string().optional(),
-  banner: BannerSchema.optional(),
+  banner: textEditorContentValidator().optional(),
   enabled: z.boolean().optional(),
   autoAcceptMembers: z.boolean().optional(),
   joiningReasonText: z.string().optional(),
@@ -220,6 +220,28 @@ async function formatCommunityReport(
     rejectionReason: report.rejectionReason,
   };
 }
+
+
+const hasActiveSubscription = async (
+  member: Membership,
+  ctx: MainContextType,
+) => {
+  if (!member.subscriptionId || !member.subscriptionMethod) {
+    return false;
+  }
+
+  const paymentMethod = await getPaymentMethodFromSettings(
+    ctx.domainData.domainObj.settings,
+    member.subscriptionMethod,
+  );
+  if (!paymentMethod) {
+    throw new ConflictException("Payment method not found");
+  }
+  const isSubscriptionActive = await paymentMethod.validateSubscription(
+    member.subscriptionId,
+  );
+  return isSubscriptionActive;
+};
 
 export const communityRouter = router({
   list: protectedProcedure
@@ -618,8 +640,12 @@ export const communityRouter = router({
         }
       }
 
+      const domain = await DomainModel.findById(ctx.domainData.domainObj._id);
+      if (!domain) {
+        throw new ConflictException("Domain not found");
+      }
       const paymentMethod = await getPaymentMethodFromSettings(
-        ctx.domainData.domainObj.settings
+        domain.settings
       );
       if (!paymentMethod && type !== Constants.PaymentPlanType.FREE) {
         throw new ConflictException(responses.payment_info_required);
@@ -1079,8 +1105,13 @@ export const communityRouter = router({
         }
       }
       if (member.subscriptionId) {
+        // Get fresh domain settings to ensure we have latest payment configuration
+        const domain = await DomainModel.findById(ctx.domainData.domainObj._id);
+        if (!domain) {
+          throw new ConflictException("Domain not found");
+        }
         const paymentMethod = await getPaymentMethodFromSettings(
-          ctx.domainData.domainObj.settings,
+          domain.settings,
           member.subscriptionMethod
         );
         await paymentMethod?.cancel(member.subscriptionId);
@@ -1108,4 +1139,278 @@ export const communityRouter = router({
         userId: ctx.user.userId,
       });
     }),
+
+  getMembers: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(
+      ListInputSchema.extend({
+        filter: z.object({
+          communityId: z.string().min(1, "Community ID is required"),
+          status: z.nativeEnum(Constants.MembershipStatus).optional(),
+        }),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const community = await CommunityModel.findOne(
+        getCommunityQuery(ctx as any, input.filter.communityId),
+      );
+      if (!community) {
+        throw new NotFoundException("Community not found");
+      }
+      const member = await getMembership(ctx, community.communityId);
+      if (!member || !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new AuthorizationException();
+      }
+      const query: RootFilterQuery<typeof MembershipModel> = {
+        domain: ctx.domainData.domainObj._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+      };
+      if (input.filter.status) {
+        query.status = input.filter.status;
+      }
+      const paginationMeta = paginate(input.pagination);
+      const orderBy = input.orderBy || {
+        field: "createdAt",
+        direction: "desc",
+      };
+      const sortObject: Record<string, 1 | -1> = {
+        [orderBy.field]: orderBy.direction === "asc" ? 1 : -1,
+      };
+      const [items, total] = await Promise.all([
+        MembershipModel.find(query)
+          .populate<{
+            user: {
+              userId: User['userId'];
+              name: User['name'];
+              email: User['email'];
+              avatar: User['avatar'];
+            }
+          }>({
+            path: 'user',
+            select: {
+              userId: 1,
+              name: 1,
+              email: 1,
+              avatar: 1,
+            }
+          })
+          .skip(paginationMeta.skip)
+          .limit(paginationMeta.take)
+          .sort(sortObject).lean(),
+        paginationMeta.includePaginationCount
+          ? MembershipModel.countDocuments(query)
+          : Promise.resolve(null),
+      ]);
+      return {
+        items: items.map((member) => ({
+          userId: member.userId,
+          status: member.status,
+          role: member.role,
+          joiningReason: member.joiningReason,
+          rejectionReason: member.rejectionReason,
+          subscriptionMethod: member.subscriptionMethod,
+          subscriptionId: member.subscriptionId,
+          user: {
+            userId: member.user.userId,
+            name: member.user.name,
+            email: member.user.email,
+            avatar: member.user.avatar,
+          }
+        })),
+        total,
+        meta: paginationMeta,
+      }
+    }),
+
+  updateMemberStatus:
+    protectedProcedure
+      .use(createDomainRequiredMiddleware())
+      .input(
+        getFormDataSchema({
+          communityId: z.string().min(1, "Community ID is required"),
+          userId: z.string().min(1, "User ID is required"),
+          rejectionReason: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.userId === input.data.userId) {
+          throw new Error(responses.action_not_allowed);
+        }
+
+        const community = await CommunityModel.findOne(
+          getCommunityQuery(ctx as any, input.data.communityId),
+        );
+
+        if (!community) {
+          throw new Error(responses.item_not_found);
+        }
+        const memberUser = await UserModel.findOne({
+          domain: ctx.domainData.domainObj._id,
+          userId: input.data.userId,
+        });
+        if (!memberUser) {
+          throw new NotFoundException("User not found");
+        }
+
+        const member = await getMembership(ctx, community.communityId);
+
+        if (!member || !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)) {
+          throw new Error(responses.item_not_found);
+        }
+
+        const targetMember = await MembershipModel.findOne({
+          domain: ctx.domainData.domainObj._id,
+          userId: input.data.userId,
+          entityId: community.communityId,
+          entityType: Constants.MembershipEntityType.COMMUNITY,
+        });
+
+        if (!targetMember) {
+          throw new Error(responses.item_not_found);
+        }
+
+        const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+          domain: ctx.domainData.domainObj._id,
+          entityId: community.communityId,
+          entityType: Constants.MembershipEntityType.COMMUNITY,
+          role: Constants.MembershipRole.MODERATE,
+          status: Constants.MembershipStatus.ACTIVE,
+          userId: { $ne: input.data.userId },
+        });
+
+        if (otherActiveModeratorsCount === 0) {
+          throw new Error(responses.action_not_allowed);
+        }
+
+        const nextStatus = getNextStatusForCommunityMember(
+          targetMember.status as CommunityMemberStatus,
+        );
+        if (nextStatus === Constants.MembershipStatus.REJECTED) {
+          if (!input.data.rejectionReason) {
+            throw new ConflictException(responses.rejection_reason_missing);
+          }
+          if (await hasActiveSubscription(targetMember, ctx as any)) {
+            throw new ConflictException(
+              responses.cannot_reject_member_with_active_subscription,
+            );
+          }
+          targetMember.rejectionReason = input.data.rejectionReason;
+        }
+
+        targetMember.status = nextStatus!;
+
+        if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
+          targetMember.rejectionReason = undefined;
+
+          await addNotification({
+            domain: ctx.domainData.domainObj._id.toString(),
+            entityId: community.communityId,
+            entityAction:
+              Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED,
+            forUserIds: [input.data.userId],
+            userId: ctx.user.userId,
+          });
+        }
+
+        await targetMember.save();
+
+        return {
+          ...targetMember,
+          user: {
+            userId: memberUser.userId,
+            name: memberUser.name,
+            email: memberUser.email,
+            avatar: memberUser.avatar,
+          }
+        };
+      }),
+
+  updateMemberRole:
+    protectedProcedure
+      .use(createDomainRequiredMiddleware())
+      .input(
+        getFormDataSchema({
+          communityId: z.string().min(1, "Community ID is required"),
+          userId: z.string().min(1, "User ID is required"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.userId === input.data.userId) {
+          throw new AuthorizationException();
+        }
+
+        const community = await CommunityModel.findOne(
+          getCommunityQuery(ctx as any, input.data.communityId),
+        );
+
+        if (!community) {
+          throw new NotFoundException("Community not found");
+        }
+
+        const memberUser = await UserModel.findOne({
+          domain: ctx.domainData.domainObj._id,
+          userId: input.data.userId,
+        });
+        if (!memberUser) {
+          throw new NotFoundException("User not found");
+        }
+
+        // const member = await MembershipModel.findOne<Membership>({
+        //     domain: ctx.subdomain._id,
+        //     userId,
+        //     entityId: communityId,
+        //     entityType: Constants.MembershipEntityType.COMMUNITY,
+        // });
+        const member = await getMembership(ctx, community.communityId);
+
+        if (!member || !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)) {
+          throw new Error(responses.item_not_found);
+        }
+
+        const targetMember = await MembershipModel.findOne({
+          domain: ctx.domainData.domainObj._id,
+          userId: input.data.userId,
+          entityId: community.communityId,
+          entityType: Constants.MembershipEntityType.COMMUNITY,
+        });
+
+        if (!targetMember) {
+          throw new NotFoundException("Member not found");
+        }
+
+        if (targetMember.status !== Constants.MembershipStatus.ACTIVE) {
+          throw new ConflictException(responses.cannot_change_role_inactive_member);
+        }
+
+        const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+          domain: ctx.domainData.domainObj._id,
+          entityId: community.communityId,
+          entityType: Constants.MembershipEntityType.COMMUNITY,
+          role: Constants.MembershipRole.MODERATE,
+          status: Constants.MembershipStatus.ACTIVE,
+          userId: { $ne: input.data.userId },
+        });
+
+        if (otherActiveModeratorsCount === 0) {
+          throw new AuthorizationException();
+        }
+
+        const nextRole = getNextRoleForCommunityMember(
+          targetMember.role,
+        );
+
+        targetMember.role = nextRole!;
+
+        await targetMember.save();
+        return {
+          ...targetMember.toObject(),
+          user: {
+            userId: memberUser.userId,
+            name: memberUser.name,
+            email: memberUser.email,
+            avatar: memberUser.avatar,
+          }
+        };
+      }),
 });

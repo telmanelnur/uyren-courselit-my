@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import constants from "../config/constants";
+import { createModel } from "@workspace/common-logic";
 
 const { severityError, severityInfo, severityWarn } = constants;
 
@@ -18,4 +19,6 @@ const LogSchema = new mongoose.Schema(
     },
 );
 
-export default mongoose.models.Log || mongoose.model("Log", LogSchema);
+const LogModel = createModel("Log", LogSchema);
+
+export default LogModel;

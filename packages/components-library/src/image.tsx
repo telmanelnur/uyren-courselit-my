@@ -77,7 +77,7 @@ export const Image = (props: ImgProps) => {
         sizes={sizes}
         // layout="fill"
         fill
-        // objectFit={objectFit}
+        objectFit={objectFit}
       />
     </div>
   );

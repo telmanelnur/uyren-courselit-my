@@ -11,5 +11,5 @@ export default interface Profile {
   permissions: string[];
   userId: string;
   subscribedToUpdates: boolean;
-  avatar: Partial<Media>;
+  avatar: Partial<Media> | null; // MY: union with null to avoid type errors
 }

@@ -34,6 +34,7 @@ import Breadcrumbs from "./breadcrumbs";
 import Popover from "./popover";
 import ScrollArea from "./scrollarea";
 import ComboBox from "./combo-box";
+import ComboBox2 from "./combo-box2";
 // import ContentPaddingSelector from "./content-padding-selector";
 // import PageBuilderSlider from "./page-builder-slider";
 import PageBuilderPropertyHeader from "./page-builder-property-header";
@@ -41,7 +42,7 @@ import PageBuilderPropertyHeader from "./page-builder-property-header";
 import Select from "./select";
 import getSymbolFromCurrency from "currency-symbol-map";
 import Tooltip from "./tooltip";
-// import DragAndDrop from "./drag-and-drop";
+import DragAndDrop from "./drag-and-drop";
 
 export { Button as Button2 } from "@workspace/ui/components/button";
 // export * from "./menu";
@@ -95,6 +96,9 @@ export {
   ComboBox,
   TextRenderer,
   Tooltip,
+  DragAndDrop,
+  ComboBox2,
 };
 
 export * from "./hooks/use-toast";
+export * from "./hooks/user-debounce";

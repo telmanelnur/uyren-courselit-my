@@ -137,6 +137,7 @@ export const productRouter = router({
                             domainId: ctx.domainData.domainObj._id,
                         })
                         : undefined;
+                console.log("paymentPlans", paymentPlans, course.paymentPlans);
                 products.push({
                     title: course.title,
                     slug: course.slug,
@@ -184,6 +185,81 @@ export const productRouter = router({
             //               ).count
             //             : undefined,
             // }));
+
+            return {
+                ...response,
+                items: products,
+            };
+        }),
+
+    publicList: protectedProcedure
+        .use(createDomainRequiredMiddleware())
+        .input(
+            ListInputSchema.extend({
+                filter: z
+                    .object({
+                        filterBy: z.array(z.nativeEnum(Constants.CourseType)).optional(),
+                        tags: z.array(z.string()).optional(),
+                        ids: z.array(z.string()).optional(),
+                    })
+                    .optional()
+                    .default({}),
+            })
+        )
+        .query(async ({ ctx, input }) => {
+            let query = getProductsQuery(
+                ctx as any,
+                input.filter.filterBy,
+                input.filter.tags,
+                input.filter.ids,
+                true,
+            );
+
+            if (input.search?.q) {
+                query.$or = [
+                    { title: { $regex: input.search.q, $options: 'i' } },
+                    { description: { $regex: input.search.q, $options: 'i' } },
+                    { tags: { $regex: input.search.q, $options: 'i' } }
+                ];
+            }
+
+            const response = await buildMongooseQuery(CourseModel, {
+                filter: query,
+                pagination: input.pagination,
+                orderBy: input.orderBy,
+            });
+
+            const products: (Pick<InternalCourse, "title" | "slug" | "description" | "type" | "creatorId" | "updatedAt" | "featuredImage" | "courseId" | "tags" | "published" | "isFeatured" | "groups" | "pageId" | "level" | "duration"> & {
+                paymentPlans: PaymentPlan[];
+                lessonsCount: number;
+            })[] = [];
+
+            for (const course of response.items) {
+                const paymentPlans = await getPlans({
+                    planIds: course.paymentPlans,
+                    domainId: ctx.domainData.domainObj._id,
+                });
+
+                products.push({
+                    title: course.title,
+                    slug: course.slug,
+                    description: course.description,
+                    type: course.type,
+                    creatorId: course.creatorId,
+                    updatedAt: course.updatedAt,
+                    featuredImage: course.featuredImage,
+                    courseId: course.courseId,
+                    tags: course.tags,
+                    published: course.published,
+                    isFeatured: course.isFeatured,
+                    groups: course.type !== constants.blog ? course.groups : [],
+                    pageId: course.type !== constants.blog ? course.pageId : undefined,
+                    paymentPlans: (paymentPlans || []) as PaymentPlan[],
+                    lessonsCount: course.lessons.length,
+                    level: course.level,
+                    duration: course.duration,
+                });
+            }
 
             return {
                 ...response,

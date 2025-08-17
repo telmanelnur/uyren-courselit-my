@@ -1,3 +1,5 @@
+"use client";
+
 import { Info } from "@workspace/icons";
 import {
   Select,
@@ -56,9 +58,7 @@ export default function CustomSelect({
           className={cn("w-full", disabled && "cursor-not-allowed opacity-50")}
           disabled={disabled}
         >
-          <SelectValue placeholder={placeholderMessage}>
-            {options.find((x) => x.value === value)?.label}
-          </SelectValue>
+          <SelectValue placeholder={placeholderMessage} />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>

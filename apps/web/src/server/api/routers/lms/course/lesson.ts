@@ -1,397 +1,286 @@
+import constants from "@/config/constants";
+import { responses } from "@/config/strings";
+import CourseModel from "@/models/Course";
+import LessonModel, { Lesson } from "@/models/Lesson";
+import { AssignmentModel, QuizModel } from "@/models/lms";
 import {
   AuthorizationException,
+  ConflictException,
   NotFoundException,
-  ResourceExistsException,
+  ValidationException,
 } from "@/server/api/core/exceptions";
-import { teacherProcedure } from "@/server/api/core/procedures";
-import { isAdmin } from "@/server/api/core/roles";
-import { getFormDataSchema, ListInputSchema } from "@/server/api/core/schema";
+import { checkOwnershipWithoutModel } from "@/server/api/core/permissions";
+import { createDomainRequiredMiddleware, createPermissionMiddleware, MainContextType, protectedProcedure, publicProcedure } from "@/server/api/core/procedures";
+import { getFormDataSchema } from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
-import { like, orderBy, paginate } from "@/server/api/core/utils";
-import {
-  documentIdValidator,
-  documentSlugValidator,
-  toSlug,
-} from "@/server/api/core/validators";
+import { mediaWrappedFieldValidator, textEditorContentValidator } from "@/server/api/core/validators";
+import { deleteMedia } from "@/server/services/media";
+import { Constants, UIConstants } from "@workspace/common-models";
+import { checkPermission } from "@workspace/utils";
 import { z } from "zod";
+import { getPrevNextCursor } from "./helpers";
 
-const CreateSchema = getFormDataSchema({
-  slug: documentSlugValidator().transform(toSlug),
-  title: z.string().min(1).max(255),
-  content: z.string().optional(),
-  videoUrl: z.string().optional(),
-  position: z.number().min(1).default(1),
-  isPublished: z.boolean().default(false),
-  chapterId: documentIdValidator(),
-});
+const { permissions } = UIConstants
 
-const UpdateSchema = getFormDataSchema({
-  slug: documentSlugValidator().transform(toSlug).optional(),
-  title: z.string().min(1).max(255).optional(),
-  content: z.string().optional(),
-  videoUrl: z.string().optional(),
-  position: z.number().min(1).optional(),
-  isPublished: z.boolean().optional(),
-}).extend({
-  id: documentIdValidator(),
-});
-
-// const ReorderLessonsSchema = z.object({
-//   chapterId: documentIdValidator(),
-//   lessons: z.array(
-//     z.object({
-//       id: documentIdValidator(),
-//       position: z.number(),
-//     })
-//   ),
-// });
-
-const ReorderLessonsSchema = z.object({
-  chapterId: documentIdValidator(),
-  lessons: z.array(
-    z.object({
-      id: documentIdValidator(),
-      position: z.number(),
-    }),
-  ),
-});
-
-// Helper functions
-async function assertLessonChapterCourseOwnerOrAdmin(
-  ctx: any,
-  chapterId: number,
-) {
-  const chapter = await ctx.prisma.chapter.findUnique({
-    where: { id: chapterId },
-    include: {
-      course: {
-        select: { ownerId: true },
-      },
-    },
+const getLessonOrThrow = async (
+  id: string,
+  ctx: MainContextType,
+) => {
+  const lesson = await LessonModel.findOne({
+    lessonId: id,
+    domain: ctx.domainData.domainObj._id,
   });
 
-  if (!chapter) throw new NotFoundException("Chapter", String(chapterId));
-
-  if (isAdmin(ctx.user)) return chapter;
-  if (chapter.course.ownerId !== ctx.user.id) {
-    throw new AuthorizationException("You are not the owner of this course");
+  if (!lesson) {
+    throw new NotFoundException("Lesson", id);
   }
-  return chapter;
-}
 
-async function ensureUniqueLessonSlug(
-  ctx: any,
-  slug: string,
-  excludeId?: number,
-) {
-  const existing = await ctx.prisma.lesson.findFirst({
-    where: { slug, ...(excludeId ? { id: { not: excludeId } } : {}) },
-    select: { id: true },
-  });
-  if (existing) throw new ResourceExistsException("Lesson", "slug", slug);
-}
+  if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
+    if (!checkOwnershipWithoutModel(lesson, ctx)) {
+      throw new NotFoundException("Lesson", id);
+    } else {
+      if (
+        !checkPermission(ctx.user.permissions, [
+          permissions.manageCourse,
+        ])
+      ) {
+        throw new AuthorizationException("You are not allowed to update this lesson");
+      }
+    }
+  }
 
-async function ensureUniqueLessonPosition(
-  ctx: any,
-  chapterId: number,
-  position: number,
-  excludeId?: number,
-) {
-  const existing = await ctx.prisma.lesson.findFirst({
-    where: {
-      chapterId,
-      position,
-      ...(excludeId ? { id: { not: excludeId } } : {}),
-    },
-    select: { id: true },
-  });
-  if (existing)
-    throw new ResourceExistsException("Lesson", "position", String(position));
+  return lesson;
+};
+type LessonValidatorProps = {
+  type?: Lesson["type"];
+  content?: Lesson["content"];
+  media?: Lesson["media"];
+};
+export const lessonValidator = (lessonData: LessonValidatorProps) => {
+  if (lessonData.content) {
+    validateTextContent(lessonData);
+  }
+  // validateMediaContent(lessonData);
+};
+function validateTextContent(lessonData: LessonValidatorProps) {
+  const content = lessonData.content;
+
+  if ([constants.text, constants.embed].includes(lessonData.type as any)) {
+    if (
+      lessonData.type === constants.text &&
+      content &&
+      typeof content === "object"
+    ) {
+      return;
+    }
+    // if (lessonData.type === constants.embed && content && content.value) {
+    //   return;
+    // }
+
+    throw new ValidationException(responses.content_cannot_be_null);
+  }
+
+  //   if (lessonData.type === quiz) {
+  //       if (content && content.questions) {
+  //           validateQuizContent(content.questions);
+  //       }
+  //   }
 }
+const updateLesson = async ({
+  lessonData,
+  ctx,
+}: {
+  lessonData: Partial<Pick<
+    Lesson,
+    | "title"
+    | "content"
+    | "media"
+    | "downloadable"
+    | "requiresEnrollment"
+    | "type"
+  >> & { lessonId: string },
+  ctx: MainContextType,
+}) => {
+  let lesson = await getLessonOrThrow(lessonData.lessonId, ctx);
+  lessonData.lessonId = lessonData.lessonId;
+
+  lessonData.type = lesson.type;
+  lessonValidator(lessonData as LessonValidatorProps);
+
+  for (const key of Object.keys(lessonData)) {
+    (lesson as any)[key] = (lessonData as any)[key];
+  }
+
+  lesson = await (lesson as any).save();
+  return lesson;
+};
 
 export const lessonRouter = router({
-  // Get all lessons for a chapter
-  list: teacherProcedure
-    .input(
-      ListInputSchema.extend({
-        filter: z.object({
-          chapterId: documentIdValidator(),
-          isPublished: z.boolean().optional(),
-        }),
-      }),
-    )
+  getById: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(z.object({
+      id: z.string().min(1),
+    }))
     .query(async ({ ctx, input }) => {
-      const filter = input.filter;
-      const q = input?.search?.q;
-      if (filter.chapterId) {
-        await assertLessonChapterCourseOwnerOrAdmin(ctx, filter.chapterId);
-      }
-      const where: any = {
-        chapterId: filter.chapterId,
-        ...(filter.isPublished !== undefined
-          ? { isPublished: filter.isPublished }
-          : {}),
-        ...(q
-          ? {
-              OR: [{ title: like(q) }, { slug: like(q) }, { content: like(q) }],
-            }
-          : {}),
-      };
-
-      const { skip, take } = paginate(input.pagination);
-      const ob = orderBy(
-        input.orderBy?.field || "position",
-        input.orderBy?.direction,
-      );
-
-      const [items, total] = await Promise.all([
-        ctx.prisma.lesson.findMany({
-          where,
-          skip,
-          take,
-          orderBy: ob,
-        }),
-        ctx.prisma.lesson.count({ where }),
-      ]);
-
-      return { items, total, meta: { skip, take } };
+      return getLessonOrThrow(input.id, ctx as MainContextType);
     }),
-
-  getById: teacherProcedure
-    .input(documentIdValidator())
-    .query(async ({ ctx, input }) => {
-      const row = await ctx.prisma.lesson.findFirst({
-        where: { id: input },
-        include: {
-          chapter: {
-            include: {
-              course: {
-                select: { id: true, title: true, ownerId: true },
-              },
-            },
-          },
-        },
-      });
-      if (!row) throw new NotFoundException("Lesson", String(input));
-      await assertLessonChapterCourseOwnerOrAdmin(ctx, row.chapterId);
-      return row;
-    }),
-
-  // Create new lesson
-  create: teacherProcedure
-    .input(CreateSchema)
+  create: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .use(createPermissionMiddleware([permissions.manageCourse]))
+    .input(getFormDataSchema({
+      title: z.string().min(1).max(100),
+      content: textEditorContentValidator(),
+      type: z.nativeEnum(Constants.LessonType),
+      downloadable: z.boolean(),
+      requiresEnrollment: z.boolean(),
+      media: mediaWrappedFieldValidator().optional(),
+      groupId: z.string().min(1),
+      courseId: z.string().min(1),
+    }))
     .mutation(async ({ ctx, input }) => {
-      const chapter = await ctx.prisma.chapter.findFirst({
-        where: { id: input.data.chapterId },
-        include: {
-          course: {
-            select: { ownerId: true },
-          },
-        },
+      lessonValidator(input.data);
+
+      const course = await CourseModel.findOne({
+        courseId: input.data.courseId,
+        domain: ctx.domainData.domainObj._id,
       });
-      if (!chapter) {
-        throw new NotFoundException("Chapter", String(input.data.chapterId));
-      }
-      await assertLessonChapterCourseOwnerOrAdmin(ctx, chapter.id);
-      await ensureUniqueLessonSlug(ctx, input.data.slug);
-      await ensureUniqueLessonPosition(ctx, chapter.id, input.data.position);
-      const lesson = await ctx.prisma.lesson.create({
-        data: input.data,
-        include: {
-          chapter: {
-            include: {
-              course: {
-                select: { id: true, title: true },
-              },
-            },
-          },
-        },
+      if (!course) throw new NotFoundException("Course", input.data.courseId);
+      if (course.isBlog) throw new ConflictException(responses.cannot_add_to_blogs); // TODO: refactor this
+      const group = course.groups.find(
+        (group) => group.groupId === input.data.groupId,
+      );
+      if (!group) throw new NotFoundException("Group", input.data.groupId);
+      const lesson = await LessonModel.create({
+        domain: ctx.domainData.domainObj._id,
+        title: input.data.title,
+        type: input.data.type,
+        content: input.data.content,
+        media: input.data.media,
+        downloadable: input.data.downloadable,
+        creatorId: ctx.user._id, // TODO: refactor this
+        courseId: course.courseId,
+        groupId: input.data.groupId,
+        requiresEnrollment: input.data.requiresEnrollment,
       });
+
+      course.lessons.push(lesson.lessonId);
+      group.lessonsOrder.push(lesson.lessonId);
+      await course.save();
+
       return lesson;
-    }),
 
-  // Update lesson
-  update: teacherProcedure
-    .input(UpdateSchema)
+    }),
+  update: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(getFormDataSchema({
+      title: z.string().min(1).max(100).optional(),
+      content: textEditorContentValidator().optional(),
+      type: z.nativeEnum(Constants.LessonType).optional(),
+      downloadable: z.boolean().optional(),
+      requiresEnrollment: z.boolean().optional(),
+      media: mediaWrappedFieldValidator().nullable().optional(),
+    }).extend({
+      id: z.string().min(1),
+    }))
     .mutation(async ({ ctx, input }) => {
-      const row = await ctx.prisma.lesson.findFirst({
-        where: { id: input.id },
-        include: {
-          chapter: {
-            include: {
-              course: {
-                select: { ownerId: true },
-              },
-            },
-          },
+      return updateLesson({
+        lessonData: {
+          title: input.data.title,
+          content: input.data.content,
+          type: input.data.type,
+          downloadable: input.data.downloadable,
+          requiresEnrollment: input.data.requiresEnrollment,
+          media: input.data.media as any,
+          lessonId: input.id,
         },
+        ctx: ctx as MainContextType,
       });
-      if (!row) {
-        throw new NotFoundException("Lesson", String(input.id));
+    }),
+  delete: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(z.object({
+      id: z.string().min(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const lesson = await getLessonOrThrow(input.id, ctx as any);
+      let course = await CourseModel.findOne({
+        domain: ctx.domainData.domainObj._id,
+      }).elemMatch("lessons", { $eq: lesson.lessonId });
+      if (!course) {
+        throw new NotFoundException("Course", lesson.courseId);
       }
-      await assertLessonChapterCourseOwnerOrAdmin(ctx, row.chapterId);
-      if (input.data.slug)
-        await ensureUniqueLessonSlug(ctx, input.data.slug, input.id);
-      if (
-        input.data.position !== undefined &&
-        input.data.position !== row.position
-      )
-        await ensureUniqueLessonPosition(
-          ctx,
-          row.chapterId,
-          input.data.position,
-          input.id,
-        );
 
-      return await ctx.prisma.lesson.update({
-        where: { id: input.id },
-        data: input.data,
-        include: {
-          chapter: {
-            include: {
-              course: {
-                select: { id: true, title: true },
-              },
-            },
-          },
-        },
+      course.lessons.splice(course.lessons.indexOf(lesson.lessonId), 1);
+      await course.save();
+
+      if (lesson.media?.mediaId) {
+        await deleteMedia(lesson.media.mediaId);
+      }
+
+      await LessonModel.deleteOne({
+        _id: lesson._id,
+        domain: ctx.domainData.domainObj._id,
       });
+      return true;
     }),
 
-  // Delete lesson
-  delete: teacherProcedure
-    .input(documentIdValidator())
-    .mutation(async ({ ctx, input }) => {
-      const row = await ctx.prisma.lesson.findFirst({
-        where: { id: input },
-        include: {
-          chapter: {
-            include: {
-              course: {
-                select: { ownerId: true },
-              },
-            },
-          },
-        },
+  searchAssignmentEntities: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
+    .input(z.object({
+      search: z.string().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { search } = input;
+      const assignments = await AssignmentModel.find({
+        domain: ctx.domainData.domainObj._id,
+        title: search ? { $regex: search, $options: "i" } : undefined
       });
-      if (!row) throw new NotFoundException("Lesson", String(input));
-      await assertLessonChapterCourseOwnerOrAdmin(ctx, row.chapterId);
-      await ctx.prisma.lesson.delete({
-        where: { id: row.id },
+      const quizzes = await QuizModel.find({
+        domain: ctx.domainData.domainObj._id,
+        title: search ? { $regex: search, $options: "i" } : undefined,
       });
-      return { success: true };
+      return {
+        assignments,
+        quizzes,
+      };
     }),
 
-  // // Reorder lessons within a chapter
-  // reorder: teacherProcedure
-  //   .input(
-  //     z.object({
-  //       chapterId: z.number(),
-  //       lessons: z.array(
-  //         z.object({
-  //           id: z.number(),
-  //           position: z.number(),
-  //         })
-  //       ),
-  //     })
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     // Verify chapter exists and course ownership
-  //     const chapter = await ctx.prisma.chapter.findFirst({
-  //       where: { id: input.chapterId },
-  //       include: {
-  //         course: {
-  //           select: { ownerId: true },
-  //         },
-  //       },
-  //     });
-
-  //     if (!chapter) {
-  //       throw new TRPCError({
-  //         code: "NOT_FOUND",
-  //         message: "Chapter not found",
-  //       });
-  //     }
-
-  //     if (chapter.course.ownerId !== ctx.user.id) {
-  //       throw new TRPCError({
-  //         code: "FORBIDDEN",
-  //         message: "Access denied to this chapter",
-  //       });
-  //     }
-
-  //     // Update all lesson positions in a transaction
-  //     await ctx.prisma.$transaction(
-  //       input.lessons.map((lesson) =>
-  //         ctx.prisma.lesson.update({
-  //           where: { id: lesson.id },
-  //           data: { position: lesson.position },
-  //         })
-  //       )
-  //     );
-
-  //     return { success: true };
-  //   }),
-
-  // Reorder lessons within a chapter
-  reorder: teacherProcedure
-    .input(ReorderLessonsSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Verify chapter exists and course ownership
-      await assertLessonChapterCourseOwnerOrAdmin(ctx, input.chapterId);
-
-      // Update all lesson positions in a transaction
-      await ctx.prisma.$transaction(
-        input.lessons.map((lesson) =>
-          ctx.prisma.lesson.update({
-            where: { id: lesson.id },
-            data: { position: lesson.position },
-          }),
-        ),
-      );
-
-      return { success: true };
+  publicGetById: publicProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(z.object({
+      courseId: z.string().min(1),
+      lessonId: z.string().min(1),
+    }))
+    .query(async ({ ctx, input }) => {
+      const course = await CourseModel.findOne({
+        courseId: input.courseId,
+        domain: ctx.domainData.domainObj._id,
+      });
+      if (!course) {
+        throw new NotFoundException("Course", input.lessonId);
+      }
+      const lesson = await LessonModel.findOne({
+        courseId: input.courseId,
+        lessonId: input.lessonId,
+        domain: ctx.domainData.domainObj._id,
+      });
+      if (!lesson) {
+        throw new NotFoundException("Lesson", input.lessonId);
+      }
+      const { nextLesson, prevLesson } = await getPrevNextCursor(lesson.courseId, ctx.domainData.domainObj._id, lesson.lessonId);
+      return {
+        lessonId: lesson.lessonId,
+        title: lesson.title,
+        type: lesson.type,
+        content: lesson.content,
+        media: lesson.media,
+        downloadable: lesson.downloadable,
+        requiresEnrollment: lesson.requiresEnrollment,
+        meta: {
+          nextLesson: nextLesson || null,
+          prevLesson: prevLesson || null,
+        }
+      };
     }),
-
-  // // Toggle lesson publish status
-  // togglePublish: teacherProcedure
-  //   .input(z.object({ id: z.number() }))
-  //   .mutation(async ({ ctx, input }) => {
-  //     // Verify lesson exists and course ownership
-  //     const existingLesson = await ctx.prisma.lesson.findFirst({
-  //       where: { id: input.id },
-  //       include: {
-  //         chapter: {
-  //           include: {
-  //             course: {
-  //               select: { ownerId: true },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     });
-
-  //     if (!existingLesson) {
-  //       throw new TRPCError({
-  //         code: "NOT_FOUND",
-  //         message: "Lesson not found",
-  //       });
-  //     }
-
-  //     if (existingLesson.chapter.course.ownerId !== ctx.user.id) {
-  //       throw new TRPCError({
-  //         code: "FORBIDDEN",
-  //         message: "Access denied to this lesson",
-  //       });
-  //     }
-
-  //     const lesson = await ctx.prisma.lesson.update({
-  //       where: { id: input.id },
-  //       data: {
-  //         isPublished: !existingLesson.isPublished,
-  //       },
-  //     });
-
-  //     return lesson;
-  //   }),
 });

@@ -1,8 +1,8 @@
 import { router } from "@/server/api/core/trpc";
-import { questionRouter } from "./question";
 import { quizRouter } from "./quiz";
+import { quizAttemptRouter } from "./quiz-attempt";
 
 export const quizModuleRouter = router({
   quiz: quizRouter,
-  question: questionRouter,
+  quizAttempt: quizAttemptRouter,
 });

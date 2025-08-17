@@ -52,17 +52,27 @@ export const mediaWrappedFieldValidator = (zod = z) => {
       mimeType: z.string(),
       size: z.number(),
       access: z.nativeEnum(MediaAccessType),
-      // thumbnail is an optional string
-      thumbnail: z.string().optional(),
+      thumbnail: z.string(),
       // caption is an optional string
       caption: z.string().optional(),
       // file is an optional string
       file: z.string().optional(),
-      // url is an optional string
-      url: z.string().optional(),
+      url: z.string(),
       // storageProvider must be one of 'local' or 'cloudinary'
       storageProvider: z.enum(["local", "cloudinary", "custom"]),
       domain: z.string().optional(),
       userId: z.string().optional(),
     })
+};
+
+export const textEditorContentValidator = (zod = z) => {
+  return zod.object({
+    type: z.enum(["doc"]),
+    content: z.string(),
+    assets: z.array(z.any()),
+    widgets: z.array(z.any()),
+    config: z.object({
+      editorType: z.enum(["tiptap"]),
+    }),
+  });
 };

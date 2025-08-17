@@ -1,3 +1,4 @@
+import { createModel } from "@workspace/common-logic";
 import { generateUniqueId } from "@workspace/utils";
 import mongoose from "mongoose";
 
@@ -26,4 +27,6 @@ const MailSchema = new mongoose.Schema<Mail>(
     },
 );
 
-export default mongoose.models.Mail || mongoose.model("Mail", MailSchema);
+const MailModel = createModel("Mail", MailSchema);
+
+export default MailModel;

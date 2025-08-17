@@ -7,12 +7,11 @@ import { getElementOverflowPosition } from "@workspace/text-editor/tiptap/lib/ti
 
 // --- Tiptap UI ---
 import type {
-  SuggestionMenuProps,
   SuggestionItem,
+  SuggestionMenuProps,
   SuggestionMenuRenderProps,
 } from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu"
-import { filterSuggestionItems } from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu"
-import { SuggestionMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu"
+import { filterSuggestionItems, SuggestionMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu"
 
 // --- Hooks ---
 import type { SlashMenuConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/use-slash-dropdown-menu"
@@ -20,13 +19,13 @@ import { useSlashDropdownMenu } from "@workspace/text-editor/tiptap/components/t
 
 // --- UI Primitives ---
 import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator"
 import {
   Card,
   CardBody,
   CardGroupLabel,
   CardItemGroup,
 } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card"
+import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator"
 
 import "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/slash-dropdown-menu.scss"
 
@@ -57,9 +56,10 @@ export const SlashDropdownMenu = (props: SlashDropdownMenuProps) => {
       decorationClass="tiptap-slash-decoration"
       decorationContent="Filter..."
       selector="tiptap-slash-dropdown-menu"
-      items={({ query, editor }) =>
-        filterSuggestionItems(getSlashMenuItems(editor), query)
-      }
+      items={({ query, editor }) => {
+        const items = filterSuggestionItems(getSlashMenuItems(editor), query)
+        return items
+      }}
       {...restProps}
     >
       {(props) => <List {...props} config={config} isDark={isDark} />}

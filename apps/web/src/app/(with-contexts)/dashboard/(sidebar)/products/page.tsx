@@ -1,44 +1,34 @@
 "use client";
-
 import DashboardContent from "@/components/admin/dashboard-content";
-import {
-    Constants,
-    Course,
-    CourseType,
-    UIConstants,
-} from "@workspace/common-models";
-import { capitalize } from "@workspace/utils";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { PaginationControls } from "@/components/public/pagination";
+import Resources from "@/components/resources";
+import { SkeletonCard } from "@/components/skeleton-card";
+import { useProducts } from "@/hooks/use-products";
 import {
     BTN_NEW_PRODUCT,
     MANAGE_COURSES_PAGE_HEADING,
 } from "@/lib/ui/config/strings";
-import Link from "next/link";
-import { useContext, useCallback, useMemo } from "react";
-import { Button } from "@workspace/ui/components/button";
+import { InternalCourse } from "@workspace/common-logic";
+import {
+    Constants,
+    CourseType,
+    UIConstants
+} from "@workspace/common-models";
 import {
     ContentCard,
     ContentCardContent,
-    ContentCardImage,
     ContentCardHeader,
+    ContentCardImage,
     getSymbolFromCurrency,
 } from "@workspace/components-library";
 import { Badge } from "@workspace/ui/components/badge";
-import {
-    Download,
-    BookOpen,
-    Users,
-    Eye,
-    EyeOff,
-    CheckCircle,
-    CircleDashed,
-} from "lucide-react";
-import { PaginationControls } from "@/components/public/pagination";
-import { useProducts } from "@/hooks/use-products";
+import { Button } from "@workspace/ui/components/button";
 import {
     Select,
-    SelectTrigger,
     SelectContent,
     SelectItem,
+    SelectTrigger,
     SelectValue,
 } from "@workspace/ui/components/select";
 import {
@@ -47,13 +37,23 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
-import { EmptyState } from "@/app/(with-contexts)/(with-layout)/products/empty-state";
-import Resources from "@/components/resources";
-import { SkeletonCard } from "@/components/skeleton-card";
-import { useSiteInfo } from "@/components/contexts/site-info-context";
-import { InternalCourse } from "@workspace/common-logic";
+import { cn } from "@workspace/ui/lib/utils";
+import { capitalize } from "@workspace/utils";
+import {
+    BookOpen,
+    CheckCircle,
+    CircleDashed,
+    Download,
+    Eye,
+    EyeOff,
+    Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo } from "react";
+
+import Image from "next/image";
+import { EmptyState } from "@/app/(with-contexts)/(with-layout)/courses/_components/empty-state";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -61,9 +61,11 @@ const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: MANAGE_COURSES_PAGE_HEADING, href: "#" }];
 
+
+
+
 function ProductCard({ product }: { product: InternalCourse }) {
     const { siteInfo } = useSiteInfo()
-
     return (
         <ContentCard href={`/dashboard/product/${product.courseId}`}>
             <ContentCardImage
@@ -160,7 +162,7 @@ export default function Page() {
     const router = useRouter();
 
     const filterArray = useMemo(
-        () => (filter === "all" ? undefined : [filter.toUpperCase()]),
+        () => (filter === "all" ? undefined : [filter]),
         [filter],
     );
 
@@ -239,15 +241,15 @@ export default function Page() {
                 <>
                     {totalPages > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {products.map((product: Course) => (
+                            {products.map((product) => (
                                 <ProductCard
                                     key={product.courseId}
-                                    product={product}
+                                    product={product as any}
                                 />
                             ))}
                         </div>
                     )}
-                    {totalPages === 0 && <EmptyState publicView={false} />}
+                    {totalPages === 0 && <EmptyState />}
                 </>
             )}
             {totalPages > 0 && (

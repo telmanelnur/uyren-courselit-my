@@ -6,6 +6,10 @@ import constants from "../config/constants";
 import { MediaSchema } from "./Media";
 const { text, video, audio, pdf, quiz, file, embed } = constants;
 
+export type EmbedUrlContent = {
+  value: string;
+}
+
 export interface Lesson {
   id: mongoose.Types.ObjectId;
   domain: mongoose.Types.ObjectId;
@@ -19,7 +23,7 @@ export interface Lesson {
     | typeof quiz
     | typeof file
     | typeof embed;
-  content?: Quiz | TextEditorContent | { value: string };
+  content: TextEditorContent | EmbedUrlContent;
   media?: Media;
   downloadable: boolean;
   creatorId: mongoose.Types.ObjectId;

@@ -1,163 +1,128 @@
 "use client";
 
-import { useContext, useState } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import DashboardContent from "@/components/admin/dashboard-content";
+import { useAddress } from "@/components/contexts/address-context";
+import useProduct from "@/hooks/use-product";
+import {
+  BTN_CONTINUE,
+  COURSE_CONTENT_HEADER,
+  MANAGE_COURSES_PAGE_HEADING,
+  NEW_SECTION_HEADER,
+  TOAST_TITLE_ERROR,
+} from "@/lib/ui/config/strings";
+import { truncate } from "@workspace/utils";
+import { trpc } from "@/utils/trpc";
+import { useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import Link from "next/link";
-import {
-    BTN_CONTINUE,
-    COURSE_CONTENT_HEADER,
-    MANAGE_COURSES_PAGE_HEADING,
-    NEW_SECTION_HEADER,
-    TOAST_TITLE_ERROR,
-} from "@/lib/ui/config/strings";
-import { AddressContext } from "@components/contexts";
-import useProduct from "@/hooks/use-product";
-import { truncate } from "@/lib/ui/lib/utils";
-import DashboardContent from "@/components/admin/dashboard-content";
-import { FetchBuilder } from "@workspace/utils";
-import { useToast } from "@workspace/components-library";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 export default function SectionPage() {
-    const { toast } = useToast();
-    const router = useRouter();
-    const params = useParams();
-    const searchParams = useSearchParams();
-    const productId = params.id as string;
-    //   const sectionId = searchParams.get("id")
-    //   const mode = searchParams.get("mode")
-    // const afterSectionId = searchParams.get("after");
-    const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const productId = params.id as string;
+  //   const sectionId = searchParams.get("id")
+  //   const mode = searchParams.get("mode")
+  // const afterSectionId = searchParams.get("after");
+  const [loading, setLoading] = useState(false);
 
-    const [sectionName, setSectionName] = useState("");
-    //   const [enableDrip, setEnableDrip] = useState(false)
-    //   const [dripType, setDripType] = useState<"date" | "days">("date")
-    //   const [notifyUsers, setNotifyUsers] = useState(false)
-    const [errors, setErrors] = useState<Record<string, string>>({});
-    const { address } = useAddress();
-    const { product } = useProduct(productId, address);
-    const breadcrumbs = [
-        { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
-        {
-            label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product/${productId}`,
+  const [sectionName, setSectionName] = useState("");
+  //   const [enableDrip, setEnableDrip] = useState(false)
+  //   const [dripType, setDripType] = useState<"date" | "days">("date")
+  //   const [notifyUsers, setNotifyUsers] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { address } = useAddress();
+  const { product } = useProduct(productId);
+  const breadcrumbs = [
+    { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
+    {
+      label: product ? truncate(product.title || "", 20) || "..." : "...",
+      href: `/dashboard/product/${productId}`,
+    },
+    {
+      label: COURSE_CONTENT_HEADER,
+      href: `/dashboard/product/${productId}/content`,
+    },
+    { label: NEW_SECTION_HEADER, href: "#" },
+  ];
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+
+    if (!sectionName.trim()) {
+      newErrors.sectionName = "Section name is required";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      createSection();
+    }
+  };
+
+  const addGroupMutation = trpc.lmsModule.courseModule.course.addGroup.useMutation();
+
+  const createSection = async () => {
+    try {
+      setLoading(true);
+      const result = await addGroupMutation.mutateAsync({
+        data: {
+          courseId: product!.courseId,
+          name: sectionName,
         },
-        {
-            label: COURSE_CONTENT_HEADER,
-            href: `/dashboard/product/${productId}/content`,
-        },
-        { label: NEW_SECTION_HEADER, href: "#" },
-    ];
+      });
+      if (result) {
+        router.replace(`/dashboard/product/${productId}/content`);
+      }
+    } catch (err: any) {
+      toast({
+        title: TOAST_TITLE_ERROR,
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        const newErrors: Record<string, string> = {};
+  return (
+    <DashboardContent breadcrumbs={breadcrumbs}>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-4xl font-semibold">
+            {NEW_SECTION_HEADER}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Add a new section to your course
+          </p>
+        </div>
 
-        if (!sectionName.trim()) {
-            newErrors.sectionName = "Section name is required";
-        }
+        <form onSubmit={handleSave} className="space-y-8">
+          <div className="space-y-4">
+            <Label htmlFor="name">Section Name</Label>
+            <Input
+              id="name"
+              placeholder="Enter section name"
+              value={sectionName}
+              onChange={(e) => setSectionName(e.target.value)}
+              className={
+                errors.sectionName ? "border-red-500" : ""
+              }
+            />
+            {errors.sectionName && (
+              <p className="text-sm text-red-500">
+                {errors.sectionName}
+              </p>
+            )}
+          </div>
 
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length === 0) {
-            createSection();
-        }
-    };
-
-    const createSection = async () => {
-        const query = `
-            mutation addGroup($courseId: String!, $name: String!) {
-                course: addGroup(id: $courseId, name: $name) {
-                    courseId,
-                    groups {
-                        id,
-                        name,
-                        rank,
-                        collapsed,
-                        drip {
-                            type,
-                            status,
-                            delayInMillis,
-                            dateInUTC,
-                            email {
-                                content {
-                                    content {
-                                        blockType,
-                                        settings
-                                    },
-                                    style,
-                                    meta
-                                },
-                                subject
-                                emailId
-                            }
-                        }
-                    }
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query,
-                variables: {
-                    courseId: product?.courseId,
-                    name: sectionName,
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            setLoading(true);
-            const response = await fetch.exec();
-            if (response.course) {
-                router.replace(`/dashboard/product/${productId}/content`);
-            }
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-4xl font-semibold">
-                        {NEW_SECTION_HEADER}
-                    </h1>
-                    <p className="text-muted-foreground mt-2">
-                        Add a new section to your course
-                    </p>
-                </div>
-
-                <form onSubmit={handleSave} className="space-y-8">
-                    <div className="space-y-4">
-                        <Label htmlFor="name">Section Name</Label>
-                        <Input
-                            id="name"
-                            placeholder="Enter section name"
-                            value={sectionName}
-                            onChange={(e) => setSectionName(e.target.value)}
-                            className={
-                                errors.sectionName ? "border-red-500" : ""
-                            }
-                        />
-                        {errors.sectionName && (
-                            <p className="text-sm text-red-500">
-                                {errors.sectionName}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* <Separator />
+          {/* <Separator />
 
           <div className="space-y-6">
             <div className="flex items-center gap-2">
@@ -245,20 +210,20 @@ export default function SectionPage() {
             )}
           </div> */}
 
-                    <div className="flex items-center justify-end gap-4">
-                        <Button variant="outline" asChild>
-                            <Link
-                                href={`/dashboard/product/${productId}/content`}
-                            >
-                                Cancel
-                            </Link>
-                        </Button>
-                        <Button type="submit" disabled={loading}>
-                            {BTN_CONTINUE}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </DashboardContent>
-    );
+          <div className="flex items-center justify-end gap-4">
+            <Button variant="outline" asChild>
+              <Link
+                href={`/dashboard/product/${productId}/content`}
+              >
+                Cancel
+              </Link>
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {BTN_CONTINUE}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </DashboardContent>
+  );
 }

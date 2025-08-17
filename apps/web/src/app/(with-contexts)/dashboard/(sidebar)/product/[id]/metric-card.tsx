@@ -1,11 +1,12 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@workspace/ui/components/card";
-import { Skeleton } from "@workspace/ui/components/skeleton";
 import { useActivities } from "@/hooks/use-activities";
+import { ActivityType } from "@workspace/common-models";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 
 interface MetricCardProps {
     title: string;
     icon: React.ReactNode;
-    type: string;
+    type: ActivityType;
     duration: string;
     entityId?: string;
 }

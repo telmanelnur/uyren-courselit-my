@@ -24,7 +24,6 @@ export type { EmailTemplate } from "./email-template";
 export type { Event } from "./event";
 export type { default as Group } from "./group";
 export * from "./invoice";
-export type { default as Lesson } from "./lesson";
 export type { LessonType } from "./lesson-type";
 export type { default as Link } from "./link";
 export type { Mail } from "./mail";
@@ -55,7 +54,6 @@ export type { ServerConfig } from "./server-config";
 export type { default as SiteInfo } from "./site-info";
 export type { default as State } from "./state";
 export type { default as WidgetsData } from "./state/widgets-data";
-export type { TextEditorContent } from "./text-editor-content";
 export type { Typeface } from "./typeface";
 export * as UIConstants from "./ui-constants";
 export type { default as User, ProviderData } from "./user";
@@ -69,3 +67,10 @@ export type { default as WidgetDefaultSettings } from "./widget-default-settings
 export type { default as WidgetInstance } from "./widget-instance";
 export type { default as WidgetMetadata } from "./widget-metadata";
 export type { default as WidgetProps } from "./widget-props";
+
+
+// export type { default as Lesson } from "./lesson";
+// export type { TextEditorContent } from "./text-editor-content";
+
+export type { default as Lesson } from "./custom/lesson";
+export type { TextEditorContent } from "./custom/text-editor-content";

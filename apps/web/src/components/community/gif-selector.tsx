@@ -21,8 +21,8 @@ export function GifSelector({ onGifSelect }: GifSelectorProps) {
     setLoading(true);
     try {
       const endpoint = searchTerm
-        ? `${address.backend}/api/gifs/search?q=${encodeURIComponent(searchTerm)}`
-        : `${address.backend}/api/gifs/trending`;
+        ? `${address.backend}/api/services/gifs/search?q=${encodeURIComponent(searchTerm)}`
+        : `${address.backend}/api/services/gifs/trending`;
 
       const response = await fetch(endpoint);
       const data = await response.json();

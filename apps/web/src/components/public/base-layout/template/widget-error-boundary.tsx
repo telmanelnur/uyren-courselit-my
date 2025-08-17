@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component, ErrorInfo, JSX, ReactNode } from "react";
 import { capitalize } from "@workspace/utils";
 
 interface Props {

@@ -5,11 +5,15 @@ import { SiteInfoProvider } from "@/components/contexts/site-info-context";
 import { ThemeProvider } from "@/components/contexts/theme-context";
 import { ThemeProvider as NextThemesProvider } from "@/components/next-theme-provider";
 import SessionWrapper from "@/components/providers/session-wrapper";
+import { getSiteInfo as getServerSiteInfo } from "@/server/lib/site-info";
 import { authOptions } from "@/lib/auth/options";
 import { Provider as NiceModalProvider } from "@workspace/components-library";
 import { getServerSession } from "next-auth";
 import React from "react";
 import { Toaster } from "sonner";
+import { getAddressFromHeaders } from "@/lib/ui/lib/utils";
+import { headers } from "next/headers";
+import { defaultState } from "@/components/contexts/default-state";
 
 export default async function Layout({
   children,
@@ -17,12 +21,17 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
+  const address = await getAddressFromHeaders(headers);
+  const siteInfo = await getServerSiteInfo();
   return (
     <SessionWrapper session={session}>
-      <AddressProvider>
-        <SiteInfoProvider>
+      <AddressProvider initialAddress={{
+        frontend: address,
+        backend: address,
+      }}>
+        <SiteInfoProvider initialSiteInfo={siteInfo!}>
           <ThemeProvider>
-            <ServerConfigProvider>
+            <ServerConfigProvider initialConfig={defaultState.config}>
               <NextThemesProvider
                 attribute="class"
                 defaultTheme="system"

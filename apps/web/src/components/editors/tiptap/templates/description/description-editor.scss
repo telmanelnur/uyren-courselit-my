@@ -1,0 +1,8 @@
+.description-editor-wrapper {
+    .content-editor-content {
+        height: unset;
+    }
+    .tiptap.ProseMirror.content-editor {
+        padding: 0;
+    }
+}

@@ -1,7 +1,7 @@
 import { Drip } from "./drip";
 
 export default interface Group {
-    id: string;
+    groupId: string;
     name: string;
     rank: number;
     collapsed: boolean;

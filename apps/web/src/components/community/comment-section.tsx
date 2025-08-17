@@ -134,6 +134,8 @@ export default function CommentSection({
     content: string,
     parentReplyId?: string
   ) => {
+    console.log("[handleCommentReply]", commentId, content, parentReplyId);
+    return;
     try {
       const response = await postCommentMutation.mutateAsync({
         data: {
@@ -365,7 +367,7 @@ export default function CommentSection({
             communityId={communityId}
             key={comment.commentId}
             membership={membership}
-            comment={comment}
+            comment={comment as any}
             onLike={(commentId: string, replyId?: string) => {
               //   if (replyId) {
               //     handleReplyLike(commentId, replyId);

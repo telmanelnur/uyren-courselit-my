@@ -1,8 +1,8 @@
 import { createModel } from "@workspace/common-logic";
 import {
-    Media,
-    Page as PublicPage,
-    WidgetInstance,
+  Media,
+  Page as PublicPage,
+  WidgetInstance,
 } from "@workspace/common-models";
 import mongoose from "mongoose";
 import constants from "../config/constants";

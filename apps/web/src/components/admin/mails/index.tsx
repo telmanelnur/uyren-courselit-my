@@ -1,151 +1,75 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
 import {
-    Address,
-    Constants,
-    Domain,
-    SequenceType,
-} from "@workspace/common-models";
-import {
-    AppDispatch,
-    AppState,
-    actionCreators,
-} from "@workspace/state-management";
-import {
-    BTN_NEW_MAIL,
-    PAGE_HEADER_ALL_MAILS,
     BROADCASTS,
-    SEQUENCES,
+    BTN_NEW_MAIL,
     BTN_NEW_SEQUENCE,
+    PAGE_HEADER_ALL_MAILS,
+    SEQUENCES,
     TOAST_TITLE_ERROR,
 } from "@/lib/ui/config/strings";
-import { FetchBuilder } from "@workspace/utils";
-import { useRouter } from "next/navigation";
-import { ThunkDispatch } from "redux-thunk";
+import { trpc } from "@/utils/trpc";
 import {
+    Constants,
+    Domain,
+    SequenceType
+} from "@workspace/common-models";
+import {
+    Button,
     // Button,
     Tabbs,
-    Card,
-    CardHeader,
-    CardDescription,
-    CardContent,
-    CardFooter,
-    CardTitle,
     useToast,
 } from "@workspace/components-library";
-import { AnyAction } from "redux";
+// import { Button } from "@workspace/ui/components/button";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@workspace/ui/components/card";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import RequestForm from "./request-form";
 import SequencesList from "./sequences-list";
-const { networkAction } = actionCreators;
-import { Button } from "@workspace/ui/components/button";
 
 interface MailsProps {
-    address: Address;
     selectedTab: typeof BROADCASTS | typeof SEQUENCES;
-    dispatch?: AppDispatch;
     loading: boolean;
 }
 
-type MailsTab = typeof BROADCASTS | typeof SEQUENCES;
-
 export default function Mails({
-    address,
-    dispatch,
     selectedTab,
-    loading,
 }: MailsProps) {
-    const [siteInfo, setSiteInfo] = useState<Domain>();
     const router = useRouter();
     const { toast } = useToast();
 
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
-
-    useEffect(() => {
-        const getSiteInfo = async () => {
-            const query = `
-            query {
-                siteInfo: getSiteInfo {
-                    quota {
-                        mail {
-                            daily,
-                            monthly
-                        }
-                    },
-                    settings {
-                        mailingAddress
-                    }
-                }
-            }`;
-
-            const fetcher = fetch.setPayload({ query }).build();
-
-            try {
-                dispatch && dispatch(networkAction(true));
-                const response = await fetcher.exec();
-                if (response.siteInfo) {
-                    setSiteInfo(response.siteInfo);
-                }
-            } catch (e: any) {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: e.message,
-                    variant: "destructive",
-                });
-            } finally {
-                dispatch && dispatch(networkAction(false));
-            }
-        };
-
-        getSiteInfo();
-    }, []);
+    const loadSettingsQuery = trpc.siteModule.siteInfo.getSiteInfo.useQuery();
+    const createSequenceMutation = trpc.mailModule.sequence.create.useMutation();
+    const siteInfo = loadSettingsQuery.data;
 
     const createSequence = async (type: SequenceType): Promise<void> => {
-        const mutation = `
-        mutation createSequence(
-            $type: SequenceType!
-        ) {
-            sequence: createSequence(type: $type) {
-                sequenceId
-            }
-        }
-    `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    type: type.toUpperCase(),
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
         try {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(true),
-                );
-            const response = await fetch.exec();
-            if (response.sequence && response.sequence.sequenceId) {
+            const response = await createSequenceMutation.mutateAsync({
+                data: {
+                    type: type,
+                },
+            });
+            if (response && response.sequenceId) {
                 router.push(
-                    `/dashboard/mails/${
-                        selectedTab === BROADCASTS ? "broadcast" : "sequence"
-                    }/${response.sequence.sequenceId}`,
+                    `/dashboard/mails/${selectedTab === BROADCASTS ? "broadcast" : "sequence"
+                    }/${response.sequenceId}`,
                 );
             }
-        } catch (err) {
+        } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(false),
-                );
         }
-    };
+    }
 
     const onPrimaryButtonClick = (): void => {
         if (selectedTab === BROADCASTS) {
@@ -182,10 +106,7 @@ export default function Mails({
                         </CardHeader>
                         <CardFooter>
                             <div className="w-[120px]">
-                                <Button
-                                    component="link"
-                                    href={`/dashboard/settings?tab=Mails`}
-                                >
+                                <Button component="button" href={`/dashboard/settings?tab=Mails`}>
                                     Go to settings
                                 </Button>
                             </div>
@@ -203,7 +124,7 @@ export default function Mails({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <RequestForm address={address} />
+                            <RequestForm />
                         </CardContent>
                     </Card>
                 )}
@@ -229,21 +150,15 @@ export default function Mails({
             <Tabbs
                 items={[BROADCASTS, SEQUENCES]}
                 value={selectedTab}
-                onChange={(tab: MailsTab) => {
+                onChange={(tab) => {
                     router.replace(`/dashboard/mails?tab=${tab}`);
                 }}
             >
                 <SequencesList
                     type={Constants.mailTypes[0] as SequenceType}
-                    address={address}
-                    loading={loading}
-                    dispatch={dispatch}
                 />
                 <SequencesList
                     type={Constants.mailTypes[1] as SequenceType}
-                    address={address}
-                    loading={loading}
-                    dispatch={dispatch}
                 />
             </Tabbs>
         </div>

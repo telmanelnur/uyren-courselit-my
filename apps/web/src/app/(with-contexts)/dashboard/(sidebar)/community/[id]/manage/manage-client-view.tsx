@@ -29,8 +29,6 @@ import {
     Image,
     Link,
     MediaSelector,
-    TextEditor,
-    TextEditorEmptyDoc,
     useToast,
 } from "@workspace/components-library";
 import {
@@ -77,8 +75,8 @@ export const ManageClientView = ({ id }: { id: string }) => {
   const [name, setName] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [autoAcceptMembers, setAutoAcceptMembers] = useState(false);
-  const [banner, setBanner] = useState(TextEditorEmptyDoc);
-  const [description, setDescription] = useState(TextEditorEmptyDoc);
+  const [banner, setBanner] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
   const [refresh, setRefresh] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
   const [joiningReasonText, setJoiningReasonText] = useState("");

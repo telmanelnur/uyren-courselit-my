@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import mongoose from "mongoose";
 import constants from "../config/constants";
+import { createModel } from "@workspace/common-logic";
 
 export interface DownloadLink {
     domain: mongoose.Types.ObjectId;
@@ -29,5 +30,6 @@ const DownloadLinkSchema = new mongoose.Schema<DownloadLink>({
     consumed: { type: Boolean, required: true, default: false },
 });
 
-export default mongoose.models.DownloadLink ||
-    mongoose.model("DownloadLink", DownloadLinkSchema);
+const DownloadLinkModel = createModel("DownloadLink", DownloadLinkSchema);
+
+export default DownloadLinkModel;

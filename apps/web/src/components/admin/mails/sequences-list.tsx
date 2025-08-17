@@ -1,23 +1,20 @@
 "use client";
 
+import { PaginationControls } from "@/components/public/pagination";
 import {
-    Address,
-    Constants,
-    Sequence,
-    SequenceType,
-} from "@workspace/common-models";
-import { Chip, Link, useToast } from "@workspace/components-library";
-import { AppDispatch } from "@workspace/state-management";
-import { networkAction } from "@workspace/state-management/dist/action-creators";
-import { FetchBuilder, capitalize } from "@workspace/utils";
-import {
-    TOAST_TITLE_ERROR,
+    MAIL_TABLE_HEADER_ENTRANTS,
     MAIL_TABLE_HEADER_STATUS,
     MAIL_TABLE_HEADER_SUBJECT,
-    MAIL_TABLE_HEADER_ENTRANTS,
+    TOAST_TITLE_ERROR,
 } from "@/lib/ui/config/strings";
-import { useEffect, useState } from "react";
-import { isDateInFuture } from "../../../lib/utils";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { trpc } from "@/utils/trpc";
+import {
+    SequenceStatus,
+    SequenceType
+} from "@workspace/common-models";
+import { Chip, Link, useToast } from "@workspace/components-library";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
     Table,
     TableBody,
@@ -26,130 +23,63 @@ import {
     TableHeader,
     TableRow,
 } from "@workspace/ui/components/table";
-import { PaginationControls } from "@components/public/pagination";
-import { Skeleton } from "@workspace/ui/components/skeleton";
+import { capitalize } from "@workspace/utils";
+import { useEffect, useState } from "react";
+import { isDateInFuture } from "../../../lib/utils";
+
+// Type guard functions for better type safety
+const isActiveStatus = (status: SequenceStatus): status is "active" => status === "active";
+const isDraftOrPausedStatus = (status: SequenceStatus): status is "draft" | "paused" =>
+    status === "draft" || status === "paused";
+const hasEmails = (emails: any[]): emails is [any, ...any[]] => emails.length > 0;
 
 interface SequencesListProps {
-    address: Address;
-    loading: boolean;
     type: SequenceType;
-    dispatch?: AppDispatch;
 }
 
+type SequenceItemType = GeneralRouterOutputs["mailModule"]["sequence"]["list"]["items"][number];
+
 const SequencesList = ({
-    address,
-    dispatch,
-    loading,
     type,
 }: SequencesListProps) => {
     const [page, setPage] = useState(1);
     const [count, setCount] = useState(0);
-    const [sequences, setSequences] = useState<
-        Pick<
-            Sequence,
-            "sequenceId" | "title" | "emails" | "status" | "entrantsCount"
-        >[]
-    >([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [sequences, setSequences] = useState<SequenceItemType[]>([]);
     const { toast } = useToast();
 
     const handlePageChange = (newPage: number) => {
         setPage(newPage);
     };
 
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
-
+    const loadSequencesQuery = trpc.mailModule.sequence.list.useQuery({
+        pagination: {
+            skip: (page - 1) * 10,
+            take: 10,
+        },
+        filter: {
+            type: type,
+        },
+    });
     useEffect(() => {
-        loadSequences();
-    }, [page]);
-
+        if (loadSequencesQuery.data) {
+            setSequences(loadSequencesQuery.data.items);
+            setCount(loadSequencesQuery.data.total!);
+        }
+    }, [loadSequencesQuery.data]);
     useEffect(() => {
-        loadSequenceCount();
-    }, []);
-
-    const loadSequences = async () => {
-        setIsLoading(true);
-        const query = `
-            query GetSequences($page: Int, $type: SequenceType!) {
-                broadcasts: getSequences(
-                    offset: $page,
-                    type: $type
-                ) {
-                    sequenceId
-                    emails {
-                        subject
-                        published
-                        delayInMillis
-                    }
-                    title
-                    status
-                    entrantsCount
-                },
-            }`;
-
-        const fetcher = fetch
-            .setPayload({
-                query,
-                variables: {
-                    page,
-                    type: type.toUpperCase(),
-                },
-            })
-            .build();
-
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetcher.exec();
-            if (response.broadcasts) {
-                setSequences(response.broadcasts);
-            }
-        } catch (e: any) {
+        if (loadSequencesQuery.error) {
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: e.message,
+                description: loadSequencesQuery.error.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-            setIsLoading(false);
         }
-    };
+    }, [loadSequencesQuery.error]);
 
-    const loadSequenceCount = async () => {
-        const query = `
-            query getSequenceCount($type: SequenceType) {
-                count: getSequenceCount(type: $type) 
-            }`;
-
-        const fetcher = fetch
-            .setPayload({
-                query,
-                variables: {
-                    type: type.toUpperCase(),
-                },
-            })
-            .build();
-
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetcher.exec();
-            if (response.count) {
-                setCount(response.count);
-            }
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-        }
-    };
 
     const totalPages = Math.ceil(count / 10); // 10 items per page
+
+    const isLoading = loadSequencesQuery.isLoading;
 
     return (
         <div className="space-y-4">
@@ -170,116 +100,106 @@ const SequencesList = ({
                 <TableBody>
                     {isLoading
                         ? Array.from({ length: 10 }).map((_, idx) => (
-                              <TableRow key={"skeleton-" + idx}>
-                                  <TableCell className="py-4">
-                                      <Skeleton className="h-5 w-40" />
-                                  </TableCell>
-                                  <TableCell className="py-4 text-right">
-                                      <Skeleton className="h-5 w-24 ml-auto" />
-                                  </TableCell>
-                                  {type === "sequence" && (
-                                      <TableCell className="py-4 text-right">
-                                          <Skeleton className="h-5 w-12 ml-auto" />
-                                      </TableCell>
-                                  )}
-                              </TableRow>
-                          ))
+                            <TableRow key={"skeleton-" + idx}>
+                                <TableCell className="py-4">
+                                    <Skeleton className="h-5 w-40" />
+                                </TableCell>
+                                <TableCell className="py-4 text-right">
+                                    <Skeleton className="h-5 w-24 ml-auto" />
+                                </TableCell>
+                                {type === "sequence" && (
+                                    <TableCell className="py-4 text-right">
+                                        <Skeleton className="h-5 w-12 ml-auto" />
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))
                         : sequences.map((broadcast) => (
-                              <TableRow key={broadcast.sequenceId}>
-                                  <TableCell className="py-4">
-                                      <Link
-                                          href={`/dashboard/mails/${type}/${broadcast.sequenceId}`}
-                                          className="flex"
-                                      >
-                                          {type === "broadcast" &&
-                                              (broadcast.emails[0].subject ===
-                                              " "
-                                                  ? "--"
-                                                  : broadcast.emails[0]
-                                                        .subject)}
-                                          {type === "sequence" &&
-                                              (broadcast.title === " "
-                                                  ? "Untitled Sequence"
-                                                  : broadcast.title)}
-                                      </Link>
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                      {type === "broadcast" && (
-                                          <>
-                                              {broadcast.status ===
-                                                  Constants.sequenceStatus[1] &&
-                                                  !isDateInFuture(
-                                                      new Date(
-                                                          broadcast.emails[0].delayInMillis,
-                                                      ),
-                                                  ) && (
-                                                      <Chip className="!bg-black text-white !border-black">
-                                                          Sent
-                                                      </Chip>
-                                                  )}
-                                              {broadcast.status ===
-                                                  Constants.sequenceStatus[1] &&
-                                                  isDateInFuture(
-                                                      new Date(
-                                                          broadcast.emails[0].delayInMillis,
-                                                      ),
-                                                  ) && <Chip>Scheduled</Chip>}
-                                              {[
-                                                  Constants.sequenceStatus[0],
-                                                  Constants.sequenceStatus[2],
-                                              ].includes(
-                                                  broadcast.status as
-                                                      | (typeof Constants.sequenceStatus)[0]
-                                                      | (typeof Constants.sequenceStatus)[2],
-                                              ) && <Chip>Draft</Chip>}
-                                          </>
-                                      )}
-                                      {type === "sequence" && (
-                                          <>
-                                              {[
-                                                  Constants.sequenceStatus[0],
-                                                  Constants.sequenceStatus[2],
-                                              ].includes(
-                                                  broadcast.status as
-                                                      | "draft"
-                                                      | "paused",
-                                              ) && (
-                                                  <Chip>
-                                                      {capitalize(
-                                                          broadcast.status,
-                                                      )}
-                                                  </Chip>
-                                              )}
-                                              {broadcast.status ===
-                                                  Constants
-                                                      .sequenceStatus[1] && (
-                                                  <Chip className="!bg-black text-white !border-black">
-                                                      {capitalize(
-                                                          broadcast.status,
-                                                      )}
-                                                  </Chip>
-                                              )}
-                                          </>
-                                      )}
-                                  </TableCell>
-                                  {type === "sequence" && (
-                                      <TableCell className="text-right">
-                                          {broadcast.entrantsCount}
-                                      </TableCell>
-                                  )}
-                              </TableRow>
-                          ))}
+                            <TableRow key={broadcast.sequenceId}>
+                                <TableCell className="py-4">
+                                    {
+                                        broadcast.emails.length === 0 ? (
+                                            <p>--</p>
+                                        ) : (
+                                            <Link
+                                                href={`/dashboard/mails/${type}/${broadcast.sequenceId}`}
+                                                className="flex"
+                                            >
+                                                {type === "broadcast" &&
+                                                    (broadcast.emails[0]!.subject ===
+                                                        " "
+                                                        ? "--"
+                                                        : broadcast.emails[0]!
+                                                            .subject)}
+                                                {type === "sequence" &&
+                                                    (broadcast.title === " "
+                                                        ? "Untitled Sequence"
+                                                        : broadcast.title)}
+                                            </Link>
+                                        )
+                                    }
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    {type === "broadcast" && (
+                                        <>
+                                            {isActiveStatus(broadcast.status) &&
+                                                hasEmails(broadcast.emails) &&
+                                                !isDateInFuture(
+                                                    new Date(
+                                                        broadcast.emails[0].delayInMillis,
+                                                    ),
+                                                ) && (
+                                                    <Chip className="!bg-black text-white !border-black">
+                                                        Sent
+                                                    </Chip>
+                                                )}
+                                            {isActiveStatus(broadcast.status) &&
+                                                hasEmails(broadcast.emails) &&
+                                                isDateInFuture(
+                                                    new Date(
+                                                        broadcast.emails[0].delayInMillis,
+                                                    ),
+                                                ) && <Chip>Scheduled</Chip>}
+                                            {isDraftOrPausedStatus(broadcast.status) && (
+                                                <Chip>Draft</Chip>
+                                            )}
+                                        </>
+                                    )}
+                                    {type === "sequence" && (
+                                        <>
+                                            {isDraftOrPausedStatus(broadcast.status) && (
+                                                <Chip>
+                                                    {capitalize(broadcast.status)}
+                                                </Chip>
+                                            )}
+                                            {isActiveStatus(broadcast.status) && (
+                                                <Chip className="!bg-black text-white !border-black">
+                                                    {capitalize(broadcast.status)}
+                                                </Chip>
+                                            )}
+                                        </>
+                                    )}
+                                </TableCell>
+                                {type === "sequence" && (
+                                    <TableCell className="text-right">
+                                        {broadcast.entrantsCount}
+                                    </TableCell>
+                                )}
+                            </TableRow>
+                        ))}
                 </TableBody>
             </Table>
-            {totalPages > 1 && (
-                <PaginationControls
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                    disabled={isLoading}
-                />
-            )}
-        </div>
+            {
+                totalPages > 1 && (
+                    <PaginationControls
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                        disabled={isLoading}
+                    />
+                )
+            }
+        </div >
     );
 };
 

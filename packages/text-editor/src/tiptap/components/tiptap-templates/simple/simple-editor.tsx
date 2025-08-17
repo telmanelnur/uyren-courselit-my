@@ -32,7 +32,7 @@ import "../../tiptap-node/horizontal-rule-node/horizontal-rule-node.scss"
 import "../../tiptap-node/list-node/list-node.scss"
 import "../../tiptap-node/image-node/image-node.scss"
 import "../../tiptap-node/heading-node/heading-node.scss"
-import "../../tiptap-node/paragraph-node/paragraph-node.scss"
+import "../../tiptap-node/paragraph-node/paragraph-node.scss" 
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "../../tiptap-ui/heading-dropdown-menu"

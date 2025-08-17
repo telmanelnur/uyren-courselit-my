@@ -1,14 +1,13 @@
 "use client";
 
-import { CheckCircle } from "lucide-react";
-import { Button } from "@workspace/ui/components/button";
-import Link from "next/link";
-import { PaymentVerificationStatus } from "./payment-verification-status";
-import { useSearchParams } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
-import { AddressContext } from "@components/contexts";
-import { FetchBuilder } from "@workspace/utils";
 import { InvoicesStatus } from "@workspace/common-models";
+import { Button } from "@workspace/ui/components/button";
+import { CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { PaymentVerificationStatus } from "./payment-verification-status";
+import { useAddress } from "@/components/contexts/address-context";
 
 export default function Page() {
     const params = useSearchParams();
@@ -20,21 +19,21 @@ export default function Page() {
 
     const verifyPayment = async () => {
         setPaymentStatus("pending"); // Hide check status again
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/payment/verify-new`)
-            .setHeaders({
-                "Content-Type": "application/json",
-            })
-            .setPayload(JSON.stringify({ id }))
-            .build();
-
         try {
             setLoading(true);
-            const response = await fetch.exec();
-            if (response.status) {
-                setPaymentStatus(response.status);
+            const response = await fetch(`${address.backend}/api/payment/verify-new`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id }),
+            });
+            const responseData = await response.json();
+            if (responseData.status) {
+                setPaymentStatus(responseData.status);
             }
         } catch (error) {
+            console.error(error);
         } finally {
             setLoading(false);
         }

@@ -9,6 +9,7 @@ import "./domain/notification/worker";
 
 // API Routes
 import { notificationRouter } from "@/api/routes/notifications";
+import { mailRouter } from "@/api/routes/mail";
 
 class QueueServer {
   private app: express.Application;
@@ -38,6 +39,9 @@ class QueueServer {
     
     // SSE Routes (directly under root for easier access)
     this.app.use("/", notificationRouter);
+    
+    // Mail routes
+    this.app.use("/", mailRouter);
 
     // Root endpoint
     this.app.get("/", (req, res) => {

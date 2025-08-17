@@ -3,13 +3,7 @@ import { Community } from "@workspace/common-models";
 import { useEffect, useState } from "react";
 
 export const useCommunity = (communityId?: string) => {
-  const [community, setCommunity] = useState<
-    | (Community & {
-        banner: any;
-        // joiningReasonText: string;
-      })
-    | null
-  >(null);
+  const [community, setCommunity] = useState<Community | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
 

@@ -1,17 +1,26 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
-import { Button } from "@workspace/ui/components/button";
-import { Label } from "@workspace/ui/components/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@workspace/ui/components/select";
-import { Textarea } from "@workspace/ui/components/textarea";
+    COMMUNITY_MEMBERSHIP_LIST_HEADER,
+    COMMUNITY_MEMBERSHIP_LIST_SUBHEADER,
+    TOAST_TITLE_ERROR,
+} from "@/lib/ui/config/strings";
+import { getNextStatusForCommunityMember } from "@/lib/ui/lib/utils";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { trpc } from "@/utils/trpc";
+import {
+    CommunityMemberStatus,
+    Constants
+} from "@workspace/common-models";
+import {
+    Link,
+    PaginatedTable,
+    Tooltip,
+    useToast,
+} from "@workspace/components-library";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
     Dialog,
     DialogContent,
@@ -20,6 +29,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@workspace/ui/components/dialog";
+import { Label } from "@workspace/ui/components/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@workspace/ui/components/select";
 import {
     Table,
     TableBody,
@@ -28,29 +45,13 @@ import {
     TableHeader,
     TableRow,
 } from "@workspace/ui/components/table";
-import { RotateCcw, Copy } from "lucide-react";
-import {
-    Badge,
-    Link,
-    PaginatedTable,
-    Tooltip,
-    useToast,
-} from "@workspace/components-library";
-import {
-    COMMUNITY_MEMBERSHIP_LIST_HEADER,
-    COMMUNITY_MEMBERSHIP_LIST_SUBHEADER,
-    TOAST_TITLE_ERROR,
-} from "@/lib/ui/config/strings";
-import { AddressContext, ProfileContext } from "@components/contexts";
-import { capitalize, FetchBuilder } from "@workspace/utils";
-import {
-    CommunityMemberStatus,
-    Constants,
-    Membership,
-    User,
-} from "@workspace/common-models";
-import { getNextStatusForCommunityMember, truncate } from "@/lib/ui/lib/utils";
+import { Textarea } from "@workspace/ui/components/textarea";
+import { capitalize, truncate } from "@workspace/utils";
+import { Copy, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAddress } from "../contexts/address-context";
+import { useProfile } from "../contexts/profile-context";
 
 interface MembershipRequest {
     id: string;
@@ -64,214 +65,156 @@ interface MembershipRequest {
 
 const itemsPerPage = 10;
 
-type Member = Pick<
-    Membership,
-    | "entityId"
-    | "status"
-    | "rejectionReason"
-    | "joiningReason"
-    | "subscriptionMethod"
-    | "subscriptionId"
-    | "role"
-> & {
-    user: Pick<User, "email" | "name" | "userId" | "avatar">;
-};
+type MemeberType = GeneralRouterOutputs["communityModule"]["community"]["getMembers"]["items"][number]
 
 export function MembershipList({ id }: { id: string }) {
     const [requests, setRequests] = useState<MembershipRequest[]>([]);
     const [filter, setFilter] = useState<"all" | CommunityMemberStatus>("all");
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedRequest, setSelectedMember] = useState<Member | null>(null);
+    const [selectedRequest, setSelectedMember] = useState<MemeberType | null>(null);
     const [rejectionReason, setRejectionReason] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [page, setPage] = useState(1);
     const [totalMembers, setTotalMembers] = useState(0);
-    const [members, setMembers] = useState<Member[]>([]);
+    const [members, setMembers] = useState<MemeberType[]>([]);
     const { address } = useAddress();
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
-    const { profile } = useContext(ProfileContext);
+    const { profile } = useProfile()
     const router = useRouter();
 
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
-
-    useEffect(() => {
-        loadMembers();
-    }, [page]);
-
-    useEffect(() => {
-        setPage(1);
-        setTotalMembers(0);
-        loadMembers();
-    }, [filter]);
-
-    const loadMembers = async () => {
-        const query = `
-            query ($communityId: String!, $page: Int, $limit: Int, $status: MembershipStatusType) {
-                members: getMembers(communityId: $communityId, page: $page, limit: $limit, status: $status) {
-                    user {
-                        userId
-                        name
-                        email
-                        avatar {
-                            mediaId
-                            thumbnail
-                        }
-                    }
-                    status
-                    rejectionReason
-                    joiningReason
-                    subscriptionMethod
-                    subscriptionId
-                    role
-                },
-                totalMembers: getMembersCount(communityId: $communityId, status: $status) 
-            }`;
-        try {
-            const fetchRequest = fetch
-                .setPayload({
-                    query,
-                    variables: {
-                        communityId: id,
-                        page,
-                        limit: itemsPerPage,
-                        status:
-                            filter === "all" ? undefined : filter.toUpperCase(),
-                    },
-                })
-                .build();
-            const response = await fetchRequest.exec();
-            if (response.members) {
-                setMembers(response.members);
-                setTotalMembers(response.totalMembers);
-            }
-        } catch (e) {
-            if (e.message === "Item not found") {
-                router.replace(`/dashboard/community/${id}`);
-            } else {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: e.message,
-                    variant: "destructive",
-                });
-            }
+    const loadMembersQuery = trpc.communityModule.community.getMembers.useQuery({
+        filter: {
+            communityId: id,
+            status: filter === "all" ? undefined : filter,
+        },
+        pagination: {
+            take: itemsPerPage,
+            skip: (page - 1) * itemsPerPage,
         }
-    };
+    }, {
+        enabled: !!id,
+    })
+
+    useEffect(() => {
+        if (loadMembersQuery.data) {
+            setMembers(loadMembersQuery.data.items);
+            setTotalMembers(loadMembersQuery.data.total || 0);
+        }
+    }, [loadMembersQuery.data]);
+
+    useEffect(() => {
+        if (loadMembersQuery.error) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: loadMembersQuery.error.message,
+                variant: "destructive",
+            });
+        }
+    }, [loadMembersQuery.error]);
+
+    const updateMemberStatusMutation = trpc.communityModule.community.updateMemberStatus.useMutation();
+    const updateMemberRoleMutation = trpc.communityModule.community.updateMemberRole.useMutation();
+
 
     const updateMemberStatus = async (userId: string) => {
-        setIsUpdating(true);
-        const query = `
-            mutation ($communityId: String!, $userId: String!, $rejectionReason: String) {
-                member: updateMemberStatus(communityId: $communityId, userId: $userId, rejectionReason: $rejectionReason) {
-                    user {
-                        userId
-                        name
-                        email
-                        avatar {
-                            mediaId
-                            thumbnail
-                        }
-                    }
-                    status
-                    rejectionReason
-                    joiningReason
-                    role
-                }
-            }`;
+        // const query = `
+        //     mutation ($communityId: String!, $userId: String!, $rejectionReason: String) {
+        //         member: updateMemberStatus(communityId: $communityId, userId: $userId, rejectionReason: $rejectionReason) {
+        //             user {
+        //                 userId
+        //                 name
+        //                 email
+        //                 avatar {
+        //                     mediaId
+        //                     thumbnail
+        //                 }
+        //             }
+        //             status
+        //             rejectionReason
+        //             joiningReason
+        //             role
+        //         }
+        //     }`;
         try {
-            const fetchRequest = fetch
-                .setPayload({
-                    query,
-                    variables: {
-                        communityId: id,
-                        userId,
-                        rejectionReason,
-                    },
-                })
-                .build();
-            const response = await fetchRequest.exec();
-            if (response.member) {
+            const response = await updateMemberStatusMutation.mutateAsync({
+                data: {
+                    communityId: id,
+                    userId,
+                    rejectionReason,
+                }
+            }) as any;
+            if (response) {
                 // replace the member in members
-                setMembers((members: Member[]) =>
+                setMembers((members) =>
                     members.map((member) =>
                         member.user.userId === userId
-                            ? response.member
+                            ? response
                             : member,
                     ),
                 );
             }
-        } catch (e) {
+        } catch (e: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: e.message,
                 variant: "destructive",
             });
-        } finally {
-            setIsUpdating(false);
         }
     };
 
     const updateMemberRole = async (userId: string) => {
-        setIsUpdating(true);
-        const query = `
-            mutation ($communityId: String!, $userId: String!) {
-                member: updateMemberRole(communityId: $communityId, userId: $userId) {
-                    user {
-                        userId
-                        name
-                        email
-                        avatar {
-                            mediaId
-                            thumbnail
-                        }
-                    }
-                    status
-                    rejectionReason
-                    joiningReason
-                    role
-                }
-            }`;
+        // const query = `
+        //     mutation ($communityId: String!, $userId: String!) {
+        //         member: updateMemberRole(communityId: $communityId, userId: $userId) {
+        //             user {
+        //                 userId
+        //                 name
+        //                 email
+        //                 avatar {
+        //                     mediaId
+        //                     thumbnail
+        //                 }
+        //             }
+        //             status
+        //             rejectionReason
+        //             joiningReason
+        //             role
+        //         }
+        //     }`;
         try {
-            const fetchRequest = fetch
-                .setPayload({
-                    query,
-                    variables: {
-                        communityId: id,
-                        userId,
-                    },
-                })
-                .build();
-            const response = await fetchRequest.exec();
-            if (response.member) {
-                setMembers((members: Member[]) =>
+            const response = await updateMemberRoleMutation.mutateAsync({
+                data: {
+                    communityId: id,
+                    userId,
+                }
+            }) as any;
+            if (response) {
+                setMembers((members) =>
                     members.map((member) =>
                         member.user.userId === userId
-                            ? response.member
+                            ? response
                             : member,
                     ),
                 );
             }
-        } catch (e) {
+        } catch (e: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: e.message,
                 variant: "destructive",
             });
-        } finally {
-            setIsUpdating(false);
         }
     };
 
-    const handleRoleChange = (member: Member) => {
+    const handleRoleChange = (member: MemeberType) => {
         setSelectedMember(member);
         updateMemberRole(member.user.userId);
     };
 
-    const handleStatusChange = (member: Member) => {
+    const handleStatusChange = (member: MemeberType) => {
         const nextStatus = getNextStatusForCommunityMember(
-            member.status.toLowerCase() as CommunityMemberStatus,
+            member.status as CommunityMemberStatus,
         );
         setSelectedMember(member);
         if (nextStatus === Constants.MembershipStatus.REJECTED) {
@@ -414,13 +357,13 @@ export function MembershipList({ id }: { id: string }) {
                                             <div className="flex items-center space-x-2">
                                                 <Badge
                                                     variant={
-                                                        member.status.toLowerCase() ===
-                                                        "pending"
-                                                            ? "success"
-                                                            : member.status.toLowerCase() ===
+                                                        member.status ===
+                                                            "pending"
+                                                            ? "default"
+                                                            : member.status===
                                                                 "active"
-                                                              ? "default"
-                                                              : "destructive"
+                                                                ? "default"
+                                                                : "destructive"
                                                     }
                                                 >
                                                     {member.status
@@ -430,23 +373,23 @@ export function MembershipList({ id }: { id: string }) {
                                                 </Badge>
                                                 {member.user.userId !==
                                                     profile.userId && (
-                                                    <Tooltip title="Change status">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                handleStatusChange(
-                                                                    member,
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                isUpdating
-                                                            }
-                                                        >
-                                                            <RotateCcw className="h-3 w-3" />{" "}
-                                                        </Button>
-                                                    </Tooltip>
-                                                )}
+                                                        <Tooltip title="Change status">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    handleStatusChange(
+                                                                        member,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isUpdating
+                                                                }
+                                                            >
+                                                                <RotateCcw className="h-3 w-3" />{" "}
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
@@ -456,23 +399,23 @@ export function MembershipList({ id }: { id: string }) {
                                                 </Badge>
                                                 {member.user.userId !==
                                                     profile.userId && (
-                                                    <Tooltip title="Change role">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                handleRoleChange(
-                                                                    member,
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                isUpdating
-                                                            }
-                                                        >
-                                                            <RotateCcw className="h-3 w-3" />
-                                                        </Button>
-                                                    </Tooltip>
-                                                )}
+                                                        <Tooltip title="Change role">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    handleRoleChange(
+                                                                        member,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isUpdating
+                                                                }
+                                                            >
+                                                                <RotateCcw className="h-3 w-3" />
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
                                             </div>
                                         </TableCell>
                                         <TableCell className="hidden lg:table-cell max-w-xs truncate">
@@ -488,9 +431,9 @@ export function MembershipList({ id }: { id: string }) {
                                                 >
                                                     {member.subscriptionId
                                                         ? truncate(
-                                                              member.subscriptionId,
-                                                              10,
-                                                          )
+                                                            member.subscriptionId,
+                                                            10,
+                                                        )
                                                         : "-"}
                                                 </Tooltip>
                                                 {member.subscriptionId && (
@@ -498,8 +441,9 @@ export function MembershipList({ id }: { id: string }) {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
+                                                            disabled={!member.subscriptionId}
                                                             onClick={() =>
-                                                                handleCopyToClipboard(
+                                                                member.subscriptionId && handleCopyToClipboard(
                                                                     member.subscriptionId,
                                                                 )
                                                             }

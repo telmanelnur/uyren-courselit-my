@@ -1,3 +1,4 @@
+import { createModel } from "@workspace/common-logic";
 import mongoose from "mongoose";
 
 export interface LessonEvaluation {
@@ -20,5 +21,6 @@ const LessonEvaluationSchema = new mongoose.Schema<LessonEvaluation>({
     passingGrade: { type: Number },
 });
 
-export default mongoose.models.LessonEvaluation ||
-    mongoose.model("LessonEvaluation", LessonEvaluationSchema);
+const LessonEvaluationModel = createModel("LessonEvaluation", LessonEvaluationSchema);
+
+export default LessonEvaluationModel;

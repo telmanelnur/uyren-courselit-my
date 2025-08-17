@@ -51,8 +51,10 @@ import {
   TOAST_TITLE_ERROR,
   TOAST_TITLE_SUCCESS,
 } from "@/lib/ui/config/strings";
+import { clearDomainManagerCache } from "@/server/actions/domain";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
+import { zodResolver } from "@hookform/resolvers/zod";
 import type { Address, Media, SiteInfo } from "@workspace/common-models";
 import { Profile, UIConstants } from "@workspace/common-models";
 import {
@@ -81,11 +83,13 @@ import {
 } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import { capitalize } from "@workspace/utils";
+import { capitalize, checkPermission } from "@workspace/utils";
 import { decode, encode } from "base-64";
-import { Copy, Info } from "lucide-react";
+import { Copy, Info, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 const {
   PAYMENT_METHOD_PAYPAL,
@@ -108,7 +112,8 @@ interface SettingsProps {
   | typeof SITE_SETTINGS_SECTION_PAYMENT
   | typeof SITE_MAILS_HEADER
   | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
-  | typeof SITE_APIKEYS_SETTING_HEADER;
+  | typeof SITE_APIKEYS_SETTING_HEADER
+  | "Domain Management";
 }
 
 type ApiKeyType =
@@ -127,39 +132,56 @@ const Settings = (props: SettingsProps) => {
     SITE_MAILS_HEADER,
     SITE_CUSTOMISATIONS_SETTING_HEADER,
     SITE_APIKEYS_SETTING_HEADER,
+    "Domain Management",
   ].includes(props.selectedTab)
     ? props.selectedTab
     : SITE_SETTINGS_SECTION_GENERAL;
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // props.dispatch(
-    //   newSiteInfoAvailable({
-    //     title: settings.title || "",
-    //     subtitle: settings.subtitle || "",
-    //     logo: settings.logo,
-    //     currencyISOCode: settings.currencyISOCode,
-    //     paymentMethod: settings.paymentMethod,
-    //     stripeKey: settings.stripeKey,
-    //     codeInjectionHead: settings.codeInjectionHead
-    //       ? encode(settings.codeInjectionHead)
-    //       : "",
-    //     codeInjectionBody: settings.codeInjectionBody
-    //       ? encode(settings.codeInjectionBody)
-    //       : "",
-    //     mailingAddress: settings.mailingAddress || "",
-    //     hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
-    //     razorpayKey: settings.razorpayKey,
-    //     lemonsqueezyStoreId: settings.lemonsqueezyStoreId,
-    //     lemonsqueezyOneTimeVariantId: settings.lemonsqueezyOneTimeVariantId,
-    //     lemonsqueezySubscriptionMonthlyVariantId:
-    //       settings.lemonsqueezySubscriptionMonthlyVariantId,
-    //     lemonsqueezySubscriptionYearlyVariantId:
-    //       settings.lemonsqueezySubscriptionYearlyVariantId,
-    //   })
-    // );
-  }, [settings]);
+  // Zod schemas for forms
+  const paymentSchema = z.object({
+    currencyISOCode: z.string().min(1, "Currency is required"),
+    paymentMethod: z
+      .enum([
+        PAYMENT_METHOD_STRIPE,
+        PAYMENT_METHOD_RAZORPAY,
+        PAYMENT_METHOD_LEMONSQUEEZY,
+        PAYMENT_METHOD_NONE,
+      ] as [
+          typeof PAYMENT_METHOD_STRIPE,
+          typeof PAYMENT_METHOD_RAZORPAY,
+          typeof PAYMENT_METHOD_LEMONSQUEEZY,
+          typeof PAYMENT_METHOD_NONE
+        ])
+      .optional(),
+  });
+
+  const stripeSchema = z.object({
+    stripeKey: z.string().min(1, "Publishable key is required"),
+    stripeSecret: z.string().min(1, "Secret key is required"),
+  });
+
+  type PaymentFormValues = z.infer<typeof paymentSchema>;
+  type StripeFormValues = z.infer<typeof stripeSchema>;
+
+  const paymentForm = useForm<PaymentFormValues>({
+    resolver: zodResolver(paymentSchema),
+    mode: "onChange",
+    defaultValues: {
+      currencyISOCode: "",
+      paymentMethod: PAYMENT_METHOD_NONE,
+    },
+  });
+
+  const stripeForm = useForm<StripeFormValues>({
+    resolver: zodResolver(stripeSchema),
+    mode: "onChange",
+    defaultValues: {
+      stripeKey: "",
+      stripeSecret: "",
+    },
+  });
 
   const loadSettingsQuery = trpc.siteModule.siteInfo.getSiteInfo.useQuery();
   const loadApiKeysQuery = trpc.siteModule.siteInfo.listApiKeys.useQuery();
@@ -167,6 +189,15 @@ const Settings = (props: SettingsProps) => {
   useEffect(() => {
     if (loadSettingsQuery.data) {
       setSettingsState(loadSettingsQuery.data.settings);
+      const s = loadSettingsQuery.data.settings;
+      paymentForm.reset({
+        currencyISOCode: (s.currencyISOCode || "").toUpperCase(),
+        paymentMethod: (s.paymentMethod as any) || PAYMENT_METHOD_NONE,
+      });
+      stripeForm.reset({
+        stripeKey: s.stripeKey || "",
+        stripeSecret: "",
+      });
     }
   }, [loadSettingsQuery.data]);
 
@@ -363,50 +394,41 @@ const Settings = (props: SettingsProps) => {
   const updatePaymentInfoMutation =
     trpc.siteModule.siteInfo.updatePaymentInfo.useMutation();
 
-  const handlePaymentSettingsSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-
+  const submitPaymentSettings = paymentForm.handleSubmit(async (values) => {
     try {
       const response = await updatePaymentInfoMutation.mutateAsync({
         data: {
-          currencyISOCode: newSettings.currencyISOCode,
-          paymentMethod: newSettings.paymentMethod,
-          stripeKey: newSettings.stripeKey,
-          stripeSecret: newSettings.stripeSecret,
-          //   razorpayKey: newSettings.razorpayKey,
-          //   razorpaySecret: newSettings.razorpaySecret,
-          //   razorpayWebhookSecret: newSettings.razorpayWebhookSecret,
-          //   lemonsqueezyKey: newSettings.lemonsqueezyKey,
-          //   lemonsqueezyStoreId: newSettings.lemonsqueezyStoreId,
-          //   lemonsqueezyWebhookSecret: newSettings.lemonsqueezyWebhookSecret,
-          //   lemonsqueezyOneTimeVariantId:
-          //     newSettings.lemonsqueezyOneTimeVariantId,
-          //   lemonsqueezySubscriptionMonthlyVariantId:
-          //     newSettings.lemonsqueezySubscriptionMonthlyVariantId,
-          //   lemonsqueezySubscriptionYearlyVariantId:
-          //     newSettings.lemonsqueezySubscriptionYearlyVariantId,
+          currencyISOCode: values.currencyISOCode,
+          paymentMethod: values.paymentMethod,
         },
       });
-      //   props.dispatch(networkAction(true));
       if (response.settings) {
         setSettingsState(response.settings);
-        toast({
-          title: TOAST_TITLE_SUCCESS,
-          description: APP_MESSAGE_SETTINGS_SAVED,
-        });
+        toast({ title: TOAST_TITLE_SUCCESS, description: APP_MESSAGE_SETTINGS_SAVED });
       }
     } catch (e: any) {
-      toast({
-        title: TOAST_TITLE_ERROR,
-        description: e.message,
-        variant: "destructive",
-      });
-    } finally {
-      //   props.dispatch(networkAction(false));
+      toast({ title: TOAST_TITLE_ERROR, description: e.message, variant: "destructive" });
     }
-  };
+  });
+
+  const submitStripeSettings = stripeForm.handleSubmit(async (values) => {
+    try {
+      const response = await updatePaymentInfoMutation.mutateAsync({
+        data: {
+          stripeKey: values.stripeKey,
+          stripeSecret: values.stripeSecret,
+        },
+      });
+      if (response.settings) {
+        setSettingsState(response.settings);
+        toast({ title: TOAST_TITLE_SUCCESS, description: APP_MESSAGE_SETTINGS_SAVED });
+        // Clear secret after submit for security
+        stripeForm.reset({ stripeKey: response.settings.stripeKey || "", stripeSecret: "" });
+      }
+    } catch (e: any) {
+      toast({ title: TOAST_TITLE_ERROR, description: e.message, variant: "destructive" });
+    }
+  });
 
   const getPaymentSettings = (getNewSettings = false) => ({
     currencyISOCode: getNewSettings
@@ -481,6 +503,7 @@ const Settings = (props: SettingsProps) => {
     SITE_MAILS_HEADER,
     SITE_CUSTOMISATIONS_SETTING_HEADER,
     SITE_APIKEYS_SETTING_HEADER,
+    "Domain Management",
   ];
 
   const copyToClipboard = (text: string) => {
@@ -600,97 +623,67 @@ const Settings = (props: SettingsProps) => {
           </div>
         </div>
         <div>
-          <Form
-            onSubmit={handlePaymentSettingsSubmit}
-            className="flex flex-col gap-4 pt-4 mb-8"
-          >
+          <Form onSubmit={submitPaymentSettings} className="flex flex-col gap-4 pt-4 mb-8">
             <div className="flex flex-col gap-2">
-              <Select
-                title={SITE_SETTINGS_CURRENCY}
-                options={currencies.map((currency) => ({
-                  label: currency.name,
-                  value: currency.isoCode,
-                }))}
-                value={newSettings.currencyISOCode?.toUpperCase() || ""}
-                onChange={(value) =>
-                  setNewSettings(
-                    Object.assign({}, newSettings, {
-                      currencyISOCode: value,
-                    })
-                  )
-                }
+              <Controller
+                control={paymentForm.control}
+                name="currencyISOCode"
+                render={({ field }) => (
+                  <Select
+                    title={SITE_SETTINGS_CURRENCY}
+                    options={currencies.map((currency) => ({
+                      label: currency.name,
+                      value: currency.isoCode,
+                    }))}
+                    value={field.value || ""}
+                    onChange={(value) => field.onChange(value)}
+                  />
+                )}
               />
-              {newSettings.paymentMethod === PAYMENT_METHOD_LEMONSQUEEZY && (
+              {paymentForm.watch("paymentMethod") === PAYMENT_METHOD_LEMONSQUEEZY && (
                 <p className="text-xs text-red-500">
-                  The currency selected will not be applied during checkout. Set
-                  your desired currency in your LemonSqueezy dashboard.
+                  The currency selected will not be applied during checkout. Set your desired
+                  currency in your LemonSqueezy dashboard.
                 </p>
               )}
             </div>
-            <Select
-              title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-              value={newSettings.paymentMethod || PAYMENT_METHOD_NONE}
-              options={[
-                {
-                  label: capitalize(PAYMENT_METHOD_STRIPE.toLowerCase()),
-                  value: PAYMENT_METHOD_STRIPE,
-                  disabled: currencies.some(
-                    (x) =>
-                      x.isoCode ===
-                      newSettings.currencyISOCode?.toUpperCase() && !x.stripe
-                  ),
-                },
-                {
-                  label: capitalize(PAYMENT_METHOD_RAZORPAY.toLowerCase()),
-                  value: PAYMENT_METHOD_RAZORPAY,
-                  disabled: currencies.some(
-                    (x) =>
-                      x.isoCode ===
-                      newSettings.currencyISOCode?.toUpperCase() &&
-                      !x.razorpay
-                  ),
-                },
-                {
-                  label: capitalize(PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase()),
-                  value: PAYMENT_METHOD_LEMONSQUEEZY,
-                  disabled: currencies.some(
-                    (x) =>
-                      x.isoCode ===
-                      newSettings.currencyISOCode?.toUpperCase() &&
-                      !x.lemonsqueezy
-                  ),
-                },
-              ]}
-              onChange={(value) =>
-                setNewSettings(
-                  Object.assign({}, newSettings, {
-                    paymentMethod: value,
-                  })
-                )
-              }
-              placeholderMessage={SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL}
-              disabled={!newSettings.currencyISOCode}
+            <Controller
+              control={paymentForm.control}
+              name="paymentMethod"
+              render={({ field }) => (
+                <Select
+                  title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                  value={field.value || PAYMENT_METHOD_NONE}
+                  options={[
+                    {
+                      label: capitalize(PAYMENT_METHOD_STRIPE.toLowerCase()),
+                      value: PAYMENT_METHOD_STRIPE,
+                      disabled: currencies.some(
+                        (x) => x.isoCode === paymentForm.getValues("currencyISOCode") && !x.stripe
+                      ),
+                    },
+                    {
+                      label: capitalize(PAYMENT_METHOD_RAZORPAY.toLowerCase()),
+                      value: PAYMENT_METHOD_RAZORPAY,
+                      disabled: currencies.some(
+                        (x) => x.isoCode === paymentForm.getValues("currencyISOCode") && !x.razorpay
+                      ),
+                    },
+                    {
+                      label: capitalize(PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase()),
+                      value: PAYMENT_METHOD_LEMONSQUEEZY,
+                      disabled: currencies.some(
+                        (x) =>
+                          x.isoCode === paymentForm.getValues("currencyISOCode") && !x.lemonsqueezy
+                      ),
+                    },
+                  ]}
+                  onChange={(value) => field.onChange(value)}
+                  placeholderMessage={SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL}
+                  disabled={!paymentForm.watch("currencyISOCode")}
+                />
+              )}
             />
-
-            {newSettings.paymentMethod === PAYMENT_METHOD_STRIPE && (
-              <>
-                <FormField
-                  label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
-                  name="stripeKey"
-                  value={newSettings.stripeKey || ""}
-                  onChange={onChangeData}
-                />
-                <FormField
-                  label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
-                  name="stripeSecret"
-                  type="password"
-                  value={newSettings.stripeSecret || ""}
-                  onChange={onChangeData}
-                  sx={{ mb: 2 }}
-                  autoComplete="off"
-                />
-              </>
-            )}
             {newSettings.paymentMethod === PAYMENT_METHOD_RAZORPAY && (
               <>
                 <FormField
@@ -781,18 +774,48 @@ const Settings = (props: SettingsProps) => {
               />
             )}
             <div>
-              <Button
-                type="submit"
-                value={BUTTON_SAVE}
-                disabled={
-                  JSON.stringify(getPaymentSettings()) ===
-                  JSON.stringify(getPaymentSettings(true))
-                }
-              >
+              <Button type="submit" value={BUTTON_SAVE} disabled={!paymentForm.formState.isDirty}>
                 {BUTTON_SAVE}
               </Button>
             </div>
           </Form>
+
+          {paymentForm.watch("paymentMethod") === PAYMENT_METHOD_STRIPE && (
+            <Form onSubmit={submitStripeSettings} className="flex flex-col gap-4 pt-2 mb-8">
+              <Controller
+                control={stripeForm.control}
+                name="stripeKey"
+                render={({ field }) => (
+                  <FormField
+                    label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
+                    name="stripeKey"
+                    value={field.value}
+                    onChange={(e: any) => field.onChange(e.target?.value ?? e)}
+                  />
+                )}
+              />
+              <Controller
+                control={stripeForm.control}
+                name="stripeSecret"
+                render={({ field }) => (
+                  <FormField
+                    label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
+                    name="stripeSecret"
+                    type="password"
+                    value={field.value}
+                    onChange={(e: any) => field.onChange(e.target?.value ?? e)}
+                    sx={{ mb: 2 }}
+                    autoComplete="off"
+                  />
+                )}
+              />
+              <div>
+                <Button type="submit" value={BUTTON_SAVE} disabled={!stripeForm.formState.isDirty}>
+                  {BUTTON_SAVE}
+                </Button>
+              </div>
+            </Form>
+          )}
           <Card>
             <CardHeader>
               <CardTitle>
@@ -800,6 +823,8 @@ const Settings = (props: SettingsProps) => {
               </CardTitle>
               <CardDescription className="flex items-center gap-2">
                 <Info className="h-4 w-4" />
+
+                {`${newSettings.stripeSecret}`}
                 <span>
                   {SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}{" "}
                   <a
@@ -879,7 +904,6 @@ const Settings = (props: SettingsProps) => {
             name="mailingAddress"
             value={newSettings.mailingAddress || ""}
             onChange={onChangeData}
-            multiline
             rows={5}
           />
           <p className="text-xs text-slate-500">
@@ -910,7 +934,6 @@ const Settings = (props: SettingsProps) => {
             name="codeInjectionHead"
             value={newSettings.codeInjectionHead || ""}
             onChange={onChangeData}
-            multiline
             rows={10}
           />
           <FormField
@@ -919,7 +942,6 @@ const Settings = (props: SettingsProps) => {
             name="codeInjectionBody"
             value={newSettings.codeInjectionBody || ""}
             onChange={onChangeData}
-            multiline
             rows={10}
           />
           <div>
@@ -992,6 +1014,55 @@ const Settings = (props: SettingsProps) => {
             ]}
           />
         </div>
+        {
+          checkPermission(props.profile.permissions, [UIConstants.permissions.manageSettings]) && (
+            <div className="flex flex-col gap-4 pt-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Domain Management</h2>
+              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cache Management</CardTitle>
+                  <CardDescription>
+                    Clear domain cache to refresh domain data and resolve any caching issues.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const result = await clearDomainManagerCache();
+                        if (result.success) {
+                          toast({
+                            title: TOAST_TITLE_SUCCESS,
+                            description: result.message,
+                          });
+                        } else {
+                          toast({
+                            title: TOAST_TITLE_ERROR,
+                            description: result.message,
+                            variant: "destructive",
+                          });
+                        }
+                      } catch (error: any) {
+                        toast({
+                          title: TOAST_TITLE_ERROR,
+                          description: error.message || "Failed to clear domain cache",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    disabled={networkAction}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Clear Domain Cache
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )
+        }
       </Tabbs>
     </div>
   );

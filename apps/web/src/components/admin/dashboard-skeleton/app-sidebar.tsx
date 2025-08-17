@@ -11,6 +11,8 @@ import {
   Target,
   Text,
   Users,
+  ClipboardList,
+  FileText,
 } from "lucide-react";
 
 import { NavMain } from "@/components/admin/dashboard-skeleton/nav-main";
@@ -68,7 +70,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Image
                     borderRadius={1}
-                    src={siteInfo.logo?.file || ""}
+                    src={siteInfo.logo?.url || ""}
                     width="w-[16px]"
                     height="h-[16px]"
                     alt="logo"
@@ -130,6 +132,24 @@ function getSidebarItems(
           path.startsWith("/dashboard/product"),
         items: [],
       });
+      navMainItems.push({
+        title: "LMS",
+        url: "/dashboard/lms",
+        icon: LibraryBig,
+        isActive: path.startsWith("/dashboard/lms"),
+        items: [
+          {
+            title: "Quizzes",
+            url: "/dashboard/lms/quizzes",
+            isActive: path === "/dashboard/lms/quizzes",
+          },
+          {
+            title: "Assignments",
+            url: "/dashboard/lms/assignments",
+            isActive: path === "/dashboard/lms/assignments",
+          },
+        ],
+      });
     }
     if (checkPermission(profile.permissions!, [permissions.manageCommunity])) {
       navMainItems.push({
@@ -138,16 +158,6 @@ function getSidebarItems(
         url: "/dashboard/communities",
         icon: MessageCircleHeart,
         isActive: path === "/dashboard/communities",
-        items: [],
-      });
-    }
-    if (checkPermission(profile.permissions!, [permissions.publishCourse])) {
-      navMainItems.push({
-        title: SIDEBAR_MENU_BLOGS,
-        url: "/dashboard/blogs",
-        icon: Text,
-        isActive:
-          path === "/dashboard/blogs" || path.startsWith("/dashboard/blog"),
         items: [],
       });
     }
@@ -249,15 +259,6 @@ function getSidebarItems(
       icon: LifeBuoy,
       isActive: path === "/dashboard/support",
     },
-
-    // MY
-    {
-      title: "Test Media",
-      url: "/dashboard/test-media-dropdown",
-      icon: Text,
-      isActive: path === "/dashboard/test-media-dropdown",
-    },
-    // ENDMY
   ];
   const navProjectItems = [
     {

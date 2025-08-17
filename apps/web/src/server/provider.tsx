@@ -14,11 +14,11 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
-        loggerLink({
-          enabled: (op) =>
-            process.env.NODE_ENV === "development" ||
-            (op.direction === "down" && op.result instanceof Error),
-        }),
+        // loggerLink({
+        //   enabled: (op) =>
+        //     process.env.NODE_ENV === "development" ||
+        //     (op.direction === "down" && op.result instanceof Error),
+        // }),
         // httpBatchStreamLink({
         //     transformer: SuperJSON,
         //     url: getBaseUrl() + "/api/trpc",
@@ -31,9 +31,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         //     // },
         // }),
 
-        loggerLink({
-          enabled: () => true,
-        }),
+
         httpBatchLink({
           url: getBaseUrl() + "/api/trpc",
           fetch: async (input, init?) => {

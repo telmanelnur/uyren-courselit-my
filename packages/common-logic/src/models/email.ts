@@ -28,13 +28,13 @@ import { generateUniqueId } from "@workspace/utils";
 //     { _id: false },
 // );
 
-// const EmailActionSchema = new mongoose.Schema(
-//     {
-//         type: { type: String, enum: Constants.emailActionTypes },
-//         data: { type: mongoose.Schema.Types.Mixed },
-//     },
-//     { _id: false },
-// );
+const EmailActionSchema = new mongoose.Schema(
+    {
+        type: { type: String, enum: Constants.emailActionTypes },
+        data: { type: mongoose.Schema.Types.Mixed },
+    },
+    { _id: false },
+);
 
 export const EmailContentSchema = new mongoose.Schema(
     {
@@ -51,5 +51,5 @@ export const EmailSchema = new mongoose.Schema<Email>({
     subject: { type: String, required: true },
     delayInMillis: { type: Number, required: true, default: 86400000 },
     published: { type: Boolean, required: true, default: false },
-    // action: EmailActionSchema,
+    action: EmailActionSchema,
 });

@@ -197,8 +197,7 @@ export default function UsersHub() {
                                                 <AvatarImage
                                                     src={
                                                         user.avatar
-                                                            ? user.avatar
-                                                                ?.file
+                                                            ? user.avatar.url
                                                             : "/courselit_backdrop_square.webp"
                                                     }
                                                 />

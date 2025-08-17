@@ -1,3 +1,4 @@
+import { createModel } from "@workspace/common-logic";
 import { Constants } from "@workspace/common-models";
 import mongoose, { Schema } from "mongoose";
 
@@ -27,5 +28,6 @@ const MailRequestStatusSchema: Schema = new Schema<MailRequestStatus>(
     },
 );
 
-export default mongoose.models.MailRequestStatus ||
-    mongoose.model("MailRequestStatus", MailRequestStatusSchema);
+const MailRequestStatusModel = createModel("MailRequestStatus", MailRequestStatusSchema);
+
+export default MailRequestStatusModel;

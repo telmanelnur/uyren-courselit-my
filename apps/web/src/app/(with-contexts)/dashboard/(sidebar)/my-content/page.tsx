@@ -13,7 +13,7 @@ import { Constants, MembershipEntityType } from "@workspace/common-models";
 import { Button } from "@workspace/ui/components/button";
 import { BookOpen, Users } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function ContentGrid({
   items,
@@ -48,27 +48,25 @@ export default function Page() {
   const address = useAddress();
   const { theme } = useTheme();
 
-  const {
-    data: userContent,
-    isLoading,
-    error,
-  } = trpc.userModule.userContent.getProtectedUserContent.useQuery(
+  const loadUserContentQuery = trpc.userModule.userContent.getProtectedUserContent.useQuery(
     // { address: address.backend, userId: profile?.id || "" },
     undefined
   );
 
-  // useEffect(() => {
-  //   if (userContent) {
-  //     setData(userContent);
-  //   }
-  // }, [userContent]);
+  useEffect(() => {
+    if (loadUserContentQuery.data) {
+      setData(loadUserContentQuery.data as unknown as ContentItem[]);
+    }
+  }, [loadUserContentQuery.data]);
 
   const courses = data.filter(
-    (item) => item.entityType.toLowerCase() === "course"
+    (item) => item.entityType === Constants.MembershipEntityType.COURSE
   );
   const communities = data.filter(
-    (item) => item.entityType.toLowerCase() === "community"
+    (item) => item.entityType === Constants.MembershipEntityType.COMMUNITY
   );
+
+  const isLoading = loadUserContentQuery.isLoading;
 
   const EmptyStateMessage = ({ type }: { type: MembershipEntityType }) => (
     <div className="text-center py-12">

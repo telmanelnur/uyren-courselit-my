@@ -71,7 +71,6 @@ const getTagsWithDetails = async (ctx: MainContextType) => {
     },
     { $sort: { count: -1 } },
   ]);
-
   return tagsWithUsersCount;
 };
 

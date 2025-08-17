@@ -79,7 +79,7 @@ function LessonSection({
             .setPayload({
                 query: mutation,
                 variables: {
-                    id: group.id,
+                    id: group.groupId,
                     courseId: course.courseId,
                     lessonsOrder,
                 },

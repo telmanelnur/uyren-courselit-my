@@ -13,15 +13,12 @@ import {
     FormMessage,
 } from "@workspace/ui/components/form";
 import Link from "next/link";
-import {
-    AddressContext,
-    ProfileContext,
-    ThemeContext,
-} from "@components/contexts";
 import { useToast } from "@workspace/components-library";
 import { TOAST_TITLE_ERROR } from "@/lib/ui/config/strings";
 import { signIn } from "next-auth/react";
-import { FetchBuilder } from "@workspace/utils";
+import { useAddress } from "@/components/contexts/address-context";
+import { useTheme } from "@/components/contexts/theme-context";
+import { useProfile } from "@/components/contexts/profile-context";
 
 const loginFormSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -37,7 +34,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onLoginComplete }: LoginFormProps) {
     const { address } = useAddress();
-    const { profile, setProfile } = useContext(ProfileContext);
+    const { profile } = useProfile();
     const [loginStep, setLoginStep] = useState<LoginStep>("email");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();

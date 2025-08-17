@@ -14,7 +14,7 @@ export default function MailHub() {
     const { profile } = useProfile();
     const searchParams = useSearchParams();
 
-    const tab = searchParams?.get("tab") || "Broadcasts";
+    const tab = (searchParams?.get("tab") as "Broadcasts" | "Sequences");
 
     const breadcrumbs = [{ label: tab, href: "#" }];
 

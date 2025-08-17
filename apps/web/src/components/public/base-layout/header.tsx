@@ -1,10 +1,10 @@
-import React from "react";
 import { IconButton } from "@workspace/components-library";
 import { Menu } from "@workspace/icons";
+import { useRouter } from "next/router";
 import SessionButton from "../session-button";
 import Branding from "./branding";
 import ExitCourseButton from "./exit-course-button";
-import { useRouter } from "next/router";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
 
 interface HeaderProps {
     onMenuClick?: (...args: any[]) => void;
@@ -13,6 +13,7 @@ interface HeaderProps {
 const Header = ({ onMenuClick }: HeaderProps) => {
     const router = useRouter();
     const currentCoursePathName = router.pathname;
+    const { siteInfo } = useSiteInfo();
 
     const coursePathName = [
         "/course/[slug]/[id]",
@@ -30,7 +31,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                     <Menu />
                 </IconButton>
             )}
-            <Branding />
+            <Branding siteInfo={siteInfo} />
             {coursePathName.includes(currentCoursePathName) ? (
                 <ExitCourseButton />
             ) : (

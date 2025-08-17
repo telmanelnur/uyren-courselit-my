@@ -1,26 +1,15 @@
 import { TOAST_TITLE_ERROR } from "@/lib/ui/config/strings";
+import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
-import { Address, Course, Lesson } from "@workspace/common-models";
 import { useToast } from "@workspace/components-library";
 import { useEffect, useState } from "react";
 
-export type ProductWithAdminProps = Partial<
-  Omit<Course, "paymentPlans"> &
-    Pick<Course, "paymentPlans"> & {
-      lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
-        { id: string }[];
-    }
->;
+type ProductWithAdminProps = GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getByCourseDetailed"];
 
 export default function useProduct(
   id: string,
-  address: Address
 ): { product: ProductWithAdminProps | undefined | null; loaded: boolean } {
-  const [product, setProduct] = useState<
-    ProductWithAdminProps | undefined | null
-  >();
   const { toast } = useToast();
-  const [, setHasError] = useState(false);
 
   const loadQuery =
     trpc.lmsModule.courseModule.course.getByCourseDetailed.useQuery({
@@ -28,19 +17,7 @@ export default function useProduct(
     });
 
   useEffect(() => {
-    if (loadQuery.data) {
-      const lessons = loadQuery.data.lessons;
-      setProduct({
-        ...loadQuery.data,
-        lessons: lessons as unknown as ProductWithAdminProps["lessons"],
-      });
-    }
-  }, [loadQuery.data]);
-
-  useEffect(() => {
     if (loadQuery.error) {
-      setHasError(true);
-      setProduct(null);
       toast({
         title: TOAST_TITLE_ERROR,
         description: loadQuery.error.message,
@@ -121,5 +98,5 @@ export default function useProduct(
   //     }
   // `;
 
-  return { product, loaded: loadQuery.isLoading };
+  return { product: loadQuery.data, loaded: !loadQuery.isLoading };
 }

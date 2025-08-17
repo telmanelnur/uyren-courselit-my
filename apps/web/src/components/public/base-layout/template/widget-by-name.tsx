@@ -1,6 +1,6 @@
 import React from "react";
-import widgets from "@/ui-config/widgets";
-import { COMPONENT_MISSING_SUFFIX } from "@/ui-config/strings";
+import widgets from "@/lib/ui/config/widgets";
+import { COMPONENT_MISSING_SUFFIX } from "@/lib/ui/config/strings";
 import WidgetErrorBoundary from "@/components/public/base-layout/template/widget-error-boundary";
 import { useTheme } from "next-themes";
 import { WidgetDefaultSettings, WidgetProps } from "@workspace/common-models";
@@ -8,8 +8,6 @@ import { WidgetDefaultSettings, WidgetProps } from "@workspace/common-models";
 const WidgetByName = ({
     id,
     name,
-    state,
-    dispatch,
     settings,
     pageData,
     editing = false,
@@ -24,8 +22,6 @@ const WidgetByName = ({
     const widgetProps: WidgetProps<WidgetDefaultSettings> = {
         name,
         settings,
-        state,
-        dispatch,
         id,
         pageData,
         editing,

@@ -13,7 +13,7 @@ import {
 } from "@/lib/ui/lib/utils";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
-import { CommunityPost, Constants, Media } from "@workspace/common-models";
+import { CommunityMedia, CommunityPost, Constants, Media, TextEditorContent } from "@workspace/common-models";
 import { PaginatedTable, useToast } from "@workspace/components-library";
 import {
   Avatar,
@@ -53,7 +53,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useAddress } from "../contexts/address-context";
 import { useProfile } from "../contexts/profile-context";
 import Banner from "./banner";
 import CommentSection from "./comment-section";
@@ -62,6 +61,7 @@ import { CommunityInfo } from "./info";
 import LoadingSkeleton from "./loading-skeleton";
 import MembershipStatus from "./membership-status";
 import { Comment as CommentType } from "./mock-data";
+import Image from "next/image";
 
 const itemsPerPage = 10;
 
@@ -191,12 +191,12 @@ export function CommunityForum({
       prevPosts.map((post) =>
         post.postId === postId
           ? {
-              ...post,
-              likesCount: post.hasLiked
-                ? post.likesCount - 1
-                : post.likesCount + 1,
-              hasLiked: !post.hasLiked,
-            }
+            ...post,
+            likesCount: post.hasLiked
+              ? post.likesCount - 1
+              : post.likesCount + 1,
+            hasLiked: !post.hasLiked,
+          }
           : post
       )
     );
@@ -233,14 +233,14 @@ export function CommunityForum({
     return comments.map((comment) =>
       comment.id === commentId
         ? {
-            ...comment,
-            likes: comment.hasLiked ? comment.likes - 1 : comment.likes + 1,
-            hasLiked: !comment.hasLiked,
-          }
+          ...comment,
+          likes: comment.hasLiked ? comment.likes - 1 : comment.likes + 1,
+          hasLiked: !comment.hasLiked,
+        }
         : {
-            ...comment,
-            replies: likeComment(comment.replies, commentId),
-          }
+          ...comment,
+          replies: likeComment(comment.replies, commentId),
+        }
     );
   };
 
@@ -273,29 +273,29 @@ export function CommunityForum({
     return comments.map((comment) =>
       comment.id === parentCommentId
         ? {
-            ...comment,
-            replies: [
-              ...comment.replies,
-              {
-                id: Date.now(),
-                author: "Current User",
-                avatar: "/placeholder.svg",
-                content,
-                likes: 0,
-                hasLiked: false,
-                time: "Just now",
-                replies: [],
-              },
-            ],
-          }
+          ...comment,
+          replies: [
+            ...comment.replies,
+            {
+              id: Date.now(),
+              author: "Current User",
+              avatar: "/placeholder.svg",
+              content,
+              likes: 0,
+              hasLiked: false,
+              time: "Just now",
+              replies: [],
+            },
+          ],
+        }
         : {
-            ...comment,
-            replies: addReplyToComment(
-              comment.replies,
-              parentCommentId,
-              content
-            ),
-          }
+          ...comment,
+          replies: addReplyToComment(
+            comment.replies,
+            parentCommentId,
+            content
+          ),
+        }
     );
   };
 
@@ -335,8 +335,8 @@ export function CommunityForum({
 
 
   const createPostMutation = trpc.communityModule.post.create.useMutation({
-    onSuccess: (data) => {
-      setPosts((prevPosts) => [transformPost(data), ...prevPosts]);
+    onSuccess: () => {
+      loadPostListQuery.refetch();
       toast({
         title: TOAST_TITLE_SUCCESS,
         description: "Post created successfully",
@@ -354,30 +354,14 @@ export function CommunityForum({
   const createPost = async (
     newPost: Pick<CommunityPost, "title" | "content" | "category">
   ) => {
-    try {
-      const response = await createPostMutation.mutateAsync({
-        data: {
-          title: newPost.title,
-          content: newPost.content,
-          category: newPost.category,
-          communityId: id!,
-        },
-      });
-      if (response) {
-        setPosts((prevPosts) => [transformPost(response), ...prevPosts]);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to add post",
-        });
-      }
-    } catch (err: any) {
-      toast({
-        title: TOAST_TITLE_ERROR,
-        description: err.message,
-        variant: "destructive",
-      });
-    }
+    await createPostMutation.mutateAsync({
+      data: {
+        title: newPost.title,
+        content: newPost.content,
+        category: newPost.category,
+        communityId: id!,
+      },
+    });
   };
 
   //   const uploadFile = async (file: File) => {
@@ -415,117 +399,117 @@ export function CommunityForum({
     }
   };
 
-  //   const renderMediaPreview = (
-  //     media: CommunityMedia,
-  //     options?: {
-  //       renderActualFile?: boolean;
-  //     }
-  //   ) => {
-  //     if (!media) return null;
+  const renderMediaPreview = (
+    media: CommunityMedia,
+    options?: {
+      renderActualFile?: boolean;
+    }
+  ) => {
+    if (!media) return null;
 
-  //     switch (media.type) {
-  //       case "image":
-  //         if (media.media) {
-  //           return (
-  //             <Image
-  //               src={
-  //                 options && options.renderActualFile
-  //                   ? media.media.file!
-  //                   : media.media.thumbnail
-  //               }
-  //               alt="Post media"
-  //               className="w-48 h-48 object-cover rounded-md"
-  //               width={96}
-  //               height={96}
-  //             />
-  //           );
-  //         } else {
-  //           return null;
-  //         }
-  //       case "gif":
-  //         return (
-  //           <img
-  //             src={media.url}
-  //             alt="GIF"
-  //             className="w-48 h-48 object-cover rounded-md"
-  //           />
-  //         );
-  //       case "video":
-  //         if (media.media) {
-  //           return (
-  //             <video
-  //               src={media.media.file}
-  //               poster={media.media.thumbnail}
-  //               className="h-48 aspect-video object-cover rounded-md"
-  //               controls
-  //             >
-  //               Your browser does not support the video tag.
-  //             </video>
-  //           );
-  //         } else {
-  //           return null;
-  //         }
-  //       case "youtube":
-  //         if (options && options.renderActualFile) {
-  //           return (
-  //             <iframe
-  //               width="100%"
-  //               height="100%"
-  //               src={media.url}
-  //               title="YouTube video player"
-  //               frameBorder="0"
-  //               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  //               allowFullScreen
-  //             ></iframe>
-  //           );
-  //         }
-  //         return (
-  //           <div className="relative w-full aspect-video">
-  //             <img
-  //               src={`https://img.youtube.com/vi/${media.url.split("/").pop()}/hqdefault.jpg`}
-  //               alt="YouTube thumbnail"
-  //               className="w-full h-full object-cover rounded-md"
-  //             />
-  //             <div className="absolute inset-0 flex items-center justify-center">
-  //               <svg
-  //                 xmlns="http://www.w3.org/2000/svg"
-  //                 viewBox="0 0 68 48"
-  //                 width="68"
-  //                 height="48"
-  //               >
-  //                 <path
-  //                   className="ytp-large-play-button-bg"
-  //                   fill="#f00"
-  //                   d="M.66,37.2C1.15,38.8,2.4,40,4,40.5c3.5,1,17,1,30,1s26.5,0,30-1c1.6-.5,2.85-1.7,3.34-3.3.9-3.5,1-11.5,1-15.5s-.1-12-1-15.5C62.85,1.7,61.6.5,60,.1,56.5-.9,43-.9,30-.9S3.5-.9,0,.1C-1.6.5-2.85,1.7-3.34,3.3c-.9,3.5-1,11.5-1,15.5s.1,12,1,15.5Z"
-  //                 />
-  //                 <path fill="#fff" d="M 45,24 27,14 27,34" />
-  //               </svg>
-  //             </div>
-  //           </div>
-  //         );
-  //       case "pdf":
-  //         if (options && options.renderActualFile) {
-  //           // embed pdf
-  //           return (
-  //             <iframe src={media.media?.file} className="w-full h-48"></iframe>
-  //           );
-  //         }
-  //         return (
-  //           <div className="w-36 h-48 rounded bg-red-500 flex flex-col justify-between">
-  //             <div>
-  //               <div className="p-1 mt-1 ml-1 rounded bg-gray-900 text-xs text-white inline-block">
-  //                 PDF
-  //               </div>
-  //             </div>
-  //             <div className="text-sm p-1 truncate text-white">
-  //               {media.media?.originalFileName}
-  //             </div>
-  //           </div>
-  //         );
-  //       default:
-  //         return null;
-  //     }
-  //   };
+    switch (media.type) {
+      case "image":
+        if (media.media) {
+          return (
+            <Image
+              src={
+                options && options.renderActualFile
+                  ? media.media.file!
+                  : media.media.thumbnail
+              }
+              alt="Post media"
+              className="w-48 h-48 object-cover rounded-md"
+              width={96}
+              height={96}
+            />
+          );
+        } else {
+          return null;
+        }
+      case "gif":
+        return (
+          <img
+            src={media.url}
+            alt="GIF"
+            className="w-48 h-48 object-cover rounded-md"
+          />
+        );
+      case "video":
+        if (media.media) {
+          return (
+            <video
+              src={media.media.file}
+              poster={media.media.thumbnail}
+              className="h-48 aspect-video object-cover rounded-md"
+              controls
+            >
+              Your browser does not support the video tag.
+            </video>
+          );
+        } else {
+          return null;
+        }
+      case "youtube":
+        if (options && options.renderActualFile) {
+          return (
+            <iframe
+              width="100%"
+              height="100%"
+              src={media.url}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          );
+        }
+        return (
+          <div className="relative w-full aspect-video">
+            <img
+              src={`https://img.youtube.com/vi/${media.url?.split("/").pop()}/hqdefault.jpg`}
+              alt="YouTube thumbnail"
+              className="w-full h-full object-cover rounded-md"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 68 48"
+                width="68"
+                height="48"
+              >
+                <path
+                  className="ytp-large-play-button-bg"
+                  fill="#f00"
+                  d="M.66,37.2C1.15,38.8,2.4,40,4,40.5c3.5,1,17,1,30,1s26.5,0,30-1c1.6-.5,2.85-1.7,3.34-3.3.9-3.5,1-11.5,1-15.5s-.1-12-1-15.5C62.85,1.7,61.6.5,60,.1,56.5-.9,43-.9,30-.9S3.5-.9,0,.1C-1.6.5-2.85,1.7-3.34,3.3c-.9,3.5-1,11.5-1,15.5s.1,12,1,15.5Z"
+                />
+                <path fill="#fff" d="M 45,24 27,14 27,34" />
+              </svg>
+            </div>
+          </div>
+        );
+      case "pdf":
+        if (options && options.renderActualFile) {
+          // embed pdf
+          return (
+            <iframe src={media.media?.file} className="w-full h-48"></iframe>
+          );
+        }
+        return (
+          <div className="w-36 h-48 rounded bg-red-500 flex flex-col justify-between">
+            <div>
+              <div className="p-1 mt-1 ml-1 rounded bg-gray-900 text-xs text-white inline-block">
+                PDF
+              </div>
+            </div>
+            <div className="text-sm p-1 truncate text-white">
+              {media.media?.originalFileName}
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   const handleDeletePost = (post: CommunityPostListItemType) => {
     setPostToDelete(post);
@@ -580,57 +564,11 @@ export function CommunityForum({
       },
     });
 
-  const updateBanner = async (json: Record<string, unknown>) => {
-    const query = `
-            mutation UpdateCommunity(
-                $id: String!
-                $banner: String 
-            ) {
-                community: updateCommunity(
-                    id: $id
-                    banner: $banner
-                ) {
-                    communityId
-                    name
-                    description
-                    enabled
-                    banner
-                    categories
-                    autoAcceptMembers
-                    joiningReasonText
-                    pageId
-                    paymentPlans {
-                        planId
-                        name
-                        type
-                        oneTimeAmount
-                        emiAmount
-                        emiTotalInstallments
-                        subscriptionMonthlyAmount
-                        subscriptionYearlyAmount
-                    }
-                    defaultPaymentPlan
-                    featuredImage {
-                        mediaId
-                        originalFileName
-                        mimeType
-                        size
-                        access
-                        file
-                        thumbnail
-                        caption
-                    }
-                    membersCount
-                }
-            }
-        `;
+  const updateBanner = async (content: TextEditorContent) => {
     updateCommunityMutation.mutate({
       communityId: id!,
       data: {
-        banner: {
-          type: json.type,
-          content: json.content,
-        } as any,
+        banner: content,
       },
     });
   };
@@ -662,24 +600,6 @@ export function CommunityForum({
 
   const confirmReportPost = async () => {
     if (postToReport && reportReason.trim()) {
-      const query = `
-                mutation ($communityId: String!, $contentId: String!, $type: CommunityReportContentType!, $reason: String!) {
-                    report: reportCommunityContent(communityId: $communityId, contentId: $contentId, type: $type, reason: $reason) {
-                        communityId
-                        reportId
-                        content {
-                            id
-                            content
-                        }
-                        type
-                        reason
-                        status
-                        rejectionReason
-                        createdAt
-                        updatedAt
-                    }
-                }
-            `;
       reportPostMutation.mutate({
         data: {
           communityId: id!,
@@ -779,7 +699,7 @@ export function CommunityForum({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {profile?.name &&
-          membership?.status.toLowerCase() ===
+            membership?.status.toLowerCase() ===
             Constants.MembershipStatus.ACTIVE ? (
             hasCommunityPermission(
               membership,
@@ -830,9 +750,9 @@ export function CommunityForum({
             canEdit={
               membership
                 ? hasCommunityPermission(
-                    membership,
-                    Constants.MembershipRole.MODERATE
-                  )
+                  membership,
+                  Constants.MembershipRole.MODERATE
+                )
                 : false
             }
             initialBannerText={community?.banner}
@@ -903,7 +823,7 @@ export function CommunityForum({
                           <p className="text-sm mb-4 line-clamp-3">
                             {post.content}
                           </p>
-                          {/* {post.media && (
+                          {post.media && (
                             <div className="flex gap-2 overflow-x-auto">
                               {post.media.map((media) => (
                                 <div
@@ -914,7 +834,7 @@ export function CommunityForum({
                                 </div>
                               ))}
                             </div>
-                          )} */}
+                          )}
                         </CardContent>
                         <CardFooter>
                           <div className="flex items-center gap-4">
@@ -941,11 +861,11 @@ export function CommunityForum({
                     </DialogTrigger>
                     <DialogContent
                       className="sm:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8"
-                      aria-describedby={undefined}
+                      aria-describedby={post.postId}
                     >
-                      {/* <VisuallyHidden>
-                        <DialogTitle>Post&apos; content</DialogTitle>
-                      </VisuallyHidden> */}
+                      {/* <VisuallyHidden> */}
+                      <DialogTitle>Post&apos; content</DialogTitle>
+                      {/* </VisuallyHidden> */}
                       <div className="grid gap-4">
                         <div className="flex items-center gap-2 justify-between">
                           <div className="flex items-center gap-2">
@@ -1015,13 +935,13 @@ export function CommunityForum({
                                 )) ||
                                 (profile &&
                                   post.user?.userId === profile?.userId)) && (
-                                <DropdownMenuItem
-                                  onClick={() => handleDeletePost(post)}
-                                >
-                                  <Trash className="h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              )}
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeletePost(post)}
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -1033,7 +953,7 @@ export function CommunityForum({
                             {post.content}
                           </p>
                         </div>
-                        {/* {post.media && (
+                        {post.media && (
                           <div className="flex gap-2 overflow-x-auto">
                             {post.media.map((media) => (
                               <div className="flex-shrink-0" key={media.title}>
@@ -1043,7 +963,7 @@ export function CommunityForum({
                               </div>
                             ))}
                           </div>
-                        )} */}
+                        )}
                         <div className="flex items-center gap-4">
                           <Button
                             variant="ghost"
@@ -1099,9 +1019,9 @@ export function CommunityForum({
                               prevPosts.map((p) =>
                                 p.postId === postId
                                   ? {
-                                      ...p,
-                                      commentsCount: count,
-                                    }
+                                    ...p,
+                                    commentsCount: count,
+                                  }
                                   : p
                               )
                             );

@@ -5,6 +5,8 @@
 // Templates
 export * from "./components/tiptap-templates/simple/simple-editor";
 export * from "./components/tiptap-templates/content/content-editor";
+export * from "./components/tiptap-templates/notion-content/notion-content-editor";
+export * from "./components/tiptap-templates/notion-like/notion-like-editor";
 export * from "./components/tiptap-templates/simple/theme-toggle";
 
 // UI Components
@@ -74,6 +76,7 @@ export { SuperscriptIcon } from "./components/tiptap-icons/superscript-icon";
 export { TrashIcon } from "./components/tiptap-icons/trash-icon";
 export { UnderlineIcon } from "./components/tiptap-icons/underline-icon";
 export { Undo2Icon } from "./components/tiptap-icons/undo2-icon";
+export { ImageIcon } from "./components/tiptap-icons/image-icon";
 
 
 // MY

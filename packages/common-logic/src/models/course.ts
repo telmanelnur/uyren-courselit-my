@@ -5,6 +5,7 @@ import {
     Course,
     type ProductAccessType,
     type Group,
+    type CourseTheme,
 } from "@workspace/common-models";
 import { MediaSchema } from "./media";
 // import { EmailSchema } from "./email";
@@ -21,6 +22,46 @@ export interface InternalCourse extends Omit<Course, "paymentPlans"> {
     customers: string[];
     paymentPlans: string[];
 }
+
+const GroupSchema = new mongoose.Schema<Group>({
+    name: { type: String, required: true },
+    groupId: { type: String, required: true, default: generateUniqueId },
+    rank: { type: Number, required: true },
+    collapsed: { type: Boolean, required: true, default: true },
+    lessonsOrder: { type: [String] },
+    drip: new mongoose.Schema<Group["drip"]>({
+        type: {
+            type: String,
+            required: true,
+            enum: Constants.dripType,
+        },
+        status: { type: Boolean, required: true, default: false },
+        delayInMillis: { type: Number },
+        dateInUTC: { type: Number },
+        // email: EmailSchema,
+    }),
+}, {
+    _id: false,
+});
+
+// CourseTheme Schema for mongoose
+const CourseThemeSchema = new mongoose.Schema<CourseTheme>({
+    stylesCss: { type: String, default: "" },
+    typography: {
+        fontFamily: { type: String },
+        fontSize: { type: String },
+        fontWeight: { type: String },
+        lineHeight: { type: String },
+        letterSpacing: { type: String },
+        textTransform: { type: String },
+        textDecoration: { type: String },
+        textOverflow: { type: String },
+        customFonts: [{ type: String }], // Array of font URLs
+    },
+}, {
+    // _id: false,
+});
+
 
 export const CourseSchema = new mongoose.Schema<InternalCourse>(
     {
@@ -49,38 +90,22 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
         published: { type: Boolean, required: true, default: false },
         tags: [{ type: String }],
         lessons: [String],
-        description: String,
+        description: { type: mongoose.Schema.Types.Mixed, default: {} },
         featuredImage: MediaSchema,
-        groups: [
-            {
-                name: { type: String, required: true },
-                _id: {
-                    type: String,
-                    required: true,
-                    default: generateUniqueId,
-                },
-                rank: { type: Number, required: true },
-                collapsed: { type: Boolean, required: true, default: true },
-                lessonsOrder: { type: [String] },
-                drip: new mongoose.Schema<Group["drip"]>({
-                    type: {
-                        type: String,
-                        required: true,
-                        enum: Constants.dripType,
-                    },
-                    status: { type: Boolean, required: true, default: false },
-                    delayInMillis: { type: Number },
-                    dateInUTC: { type: Number },
-                    // email: EmailSchema,
-                }),
-            },
-        ],
+        groups: [GroupSchema],
         sales: { type: Number, required: true, default: 0.0 },
         customers: [String],
         pageId: { type: String },
         paymentPlans: [String],
         defaultPaymentPlan: { type: String },
         leadMagnet: { type: Boolean, required: true, default: false },
+        level: {
+            type: String,
+            required: true,
+            enum: ["beginner", "intermediate", "advanced"]
+        },
+        duration: { type: Number, required: true },
+        // theme: { type: CourseThemeSchema }, // New theme field
     },
     {
         timestamps: true,
@@ -92,25 +117,3 @@ CourseSchema.index({
 });
 
 CourseSchema.index({ domain: 1, title: 1 }, { unique: true });
-
-CourseSchema.statics.paginatedFind = async function (
-    filter,
-    options: {
-        page?: number;
-        limit?: number;
-        sort?: number;
-    },
-) {
-    const page = options.page || 1;
-    const limit = options.limit || 10;
-    const sort = options.sort || -1;
-    const skip = (page - 1) * limit;
-
-    const docs = await this.find(filter)
-        .sort({ createdAt: sort })
-        .lean()
-        .skip(skip)
-        .limit(limit)
-        .exec();
-    return docs;
-};

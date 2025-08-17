@@ -1,20 +1,10 @@
-"use client";
+import CheckoutView from "./_components/checkout-view";
 
-import { ThemeContext } from "@components/contexts";
-import { Header1, Section } from "@workspace/page-primitives";
-import { useContext } from "react";
-import ProductCheckout from "./product";
 
-export default function CheckoutPage() {
-    const { theme } = useTheme();
+export default async function CheckoutPage() {
     return (
-        <Section theme={theme.theme}>
-            <div className="flex flex-col">
-                <Header1 theme={theme.theme} className="mb-8">
-                    Checkout
-                </Header1>
-                <ProductCheckout />
-            </div>
-        </Section>
-    );
+        <div className="bg-[rgb(var(--brand-background))]">
+            <CheckoutView />
+        </div>
+    )
 }

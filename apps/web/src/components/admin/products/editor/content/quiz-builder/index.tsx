@@ -1,19 +1,16 @@
-import React from "react";
-import { Section } from "@workspace/components-library";
-import { useEffect, useState } from "react";
+import { DEFAULT_PASSING_GRADE } from "@/lib/ui/config//constants";
 import {
     LESSON_QUIZ_ADD_QUESTION,
     LESSON_QUIZ_PASSING_GRADE_LABEL,
     LESSON_QUIZ_QUESTION_PLACEHOLDER,
-} from "../../../@/lib/ui/config/strings";
-import { QuestionBuilder } from "./question-builder";
+} from "@/lib/ui/config/strings";
 import { Question, Quiz } from "@workspace/common-models";
-import { DEFAULT_PASSING_GRADE } from "../../../@/lib/ui/config//constants";
-import { Form, FormField } from "@workspace/components-library";
-import { FormEvent } from "react";
+import { Form, FormField, Section } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import { Label } from "@workspace/ui/components/label";
 import { Switch } from "@workspace/ui/components/switch";
+import { useEffect, useState } from "react";
+import { QuestionBuilder } from "./question-builder";
 
 interface QuizBuilderProps {
     content: Partial<Quiz>;
@@ -53,32 +50,56 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
 
     const addNewOption = (index: number) => {
         const question = questions[index];
-        question.options = [
+        question && (question.options = [
             ...question.options,
             { text: "", correctAnswer: false },
-        ];
+        ]);
         setQuestions([...questions]);
     };
 
     const setCorrectAnswer =
         (questionIndex: number) => (index: number, checked: boolean) => {
-            questions[questionIndex].options[index].correctAnswer = checked;
+            const question = questions[questionIndex];
+            if (!question) {
+                throw new Error("Question not found");
+            };
+            const option = question.options[index];
+            if (!option) {
+                throw new Error("Option not found");
+            };
+            option.correctAnswer = checked;
             setQuestions([...questions]);
         };
 
     const setOptionText =
         (questionIndex: number) => (index: number, text: string) => {
-            questions[questionIndex].options[index].text = text;
+            const question = questions[questionIndex];
+            if (!question) {
+                throw new Error("Question not found");
+            };
+            const option = question.options[index];
+            if (!option) {
+                throw new Error("Option not found");
+            };
+            option.text = text;
             setQuestions([...questions]);
         };
 
     const setQuestionText = (index: number) => (text: string) => {
-        questions[index].text = text;
+        const question = questions[index];
+        if (!question) {
+            throw new Error("Question not found");
+        };
+        question.text = text;
         setQuestions([...questions]);
     };
 
     const removeOption = (questionIndex: number) => (index: number) => {
-        questions[questionIndex].options.splice(index, 1);
+        const question = questions[questionIndex];
+        if (!question) {
+            throw new Error("Question not found");
+        };
+        question.options.splice(index, 1);
         setQuestions([...questions]);
     };
 
@@ -91,9 +112,8 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
         setQuestions([
             ...questions,
             {
-                text: `${LESSON_QUIZ_QUESTION_PLACEHOLDER} #${
-                    questions.length + 1
-                }`,
+                text: `${LESSON_QUIZ_QUESTION_PLACEHOLDER} #${questions.length + 1
+                    }`,
                 options: [{ text: "", correctAnswer: false }],
             },
         ]);
@@ -119,7 +139,7 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
             <div>
                 <Button
                     variant="outline"
-                    onClick={(e: FormEvent<HTMLInputElement>) => {
+                    onClick={(e) => {
                         e.preventDefault();
                         addNewQuestion();
                     }}
@@ -146,10 +166,11 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                     />
                 </div>
                 <FormField
+                    name="passingGradePercentage"
                     type="number"
                     label={LESSON_QUIZ_PASSING_GRADE_LABEL}
                     value={passingGradePercentage}
-                    onChange={(e) =>
+                    onChange={(e: any) =>
                         setPassingGradePercentage(parseInt(e.target.value))
                     }
                     disabled={!passingGradeRequired}

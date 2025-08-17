@@ -1,3 +1,4 @@
+import { createModel } from "@workspace/common-logic";
 import { Constants, Invoice } from "@workspace/common-models";
 import { generateUniqueId } from "@workspace/utils";
 import mongoose from "mongoose";
@@ -33,5 +34,6 @@ const InvoiceSchema = new mongoose.Schema<InternalInvoice>(
     },
 );
 
-export default mongoose.models.Invoice ||
-    mongoose.model("Invoice", InvoiceSchema);
+const InvoiceModel = createModel("Invoice", InvoiceSchema);
+
+export default InvoiceModel;

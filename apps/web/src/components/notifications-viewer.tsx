@@ -1,35 +1,91 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import {
     Bell,
+    Check,
     ChevronLeft,
     ChevronRight,
     Inbox,
-    Check,
     TriangleAlert,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { useEffect, useState } from "react";
 
+import { trpc } from "@/utils/trpc";
 import { Button } from "@workspace/ui/components/button";
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@workspace/ui/components/card";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@workspace/ui/components/popover";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardFooter,
-    CardTitle,
-} from "@workspace/ui/components/card";
-import { Notification } from "@workspace/common-models";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useProfile } from "./contexts/profile-context";
 import { useServerConfig } from "./contexts/server-config-context";
-import { trpc } from "@/utils/trpc";
-import { toast } from "sonner";
+
+function useEventSourceWithRetry({
+    url,
+    onMessage,
+    maxRetries = 3,
+    delayMs = 3000,
+    enabled = true,
+}: {
+    url: string | null;
+    onMessage: (event: MessageEvent) => void;
+    maxRetries?: number;
+    delayMs?: number;
+    enabled?: boolean;
+}) {
+    useEffect(() => {
+        if (!enabled || !url) return;
+        let retries = 0;
+        let cancelled = false;
+        let es: EventSource | null = null;
+        let timeout: ReturnType<typeof setTimeout> | null = null;
+
+        const cleanup = () => {
+            if (es) {
+                es.close();
+                es = null;
+            }
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+        };
+
+        const connect = () => {
+            if (cancelled || !url) return;
+            es = new EventSource(url);
+            es.onmessage = onMessage;
+            es.onerror = () => {
+                if (es) es.close();
+                if (cancelled) return;
+                if (retries >= maxRetries) {
+                    toast.error(
+                        "Failed to connect to notifications stream. Please try again later.",
+                    );
+                    return;
+                }
+                retries += 1;
+                timeout = setTimeout(connect, delayMs);
+            };
+        };
+
+        connect();
+        return () => {
+            cancelled = true;
+            cleanup();
+        };
+    }, [url, onMessage, maxRetries, delayMs, enabled]);
+}
 
 const ITEMS_PER_PAGE = 10;
 
@@ -37,10 +93,12 @@ export function NotificationsViewer() {
     const [isOpen, setIsOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
+    const MAX_SSE_RETRIES = 1;
+    const SSE_RETRY_DELAY_MS = 3000;
 
     const router = useRouter();
     const { profile } = useProfile();
-    const config = useServerConfig();
+    const { config } = useServerConfig();
 
     // tRPC queries and mutations
     const {
@@ -73,32 +131,24 @@ export function NotificationsViewer() {
         setCurrentPage((prev) => Math.min(prev + 1, totalPages));
     const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
-    // SSE for real-time notifications
-    useEffect(() => {
-        if (!profile?.userId || !config.config.queueServer) {
-            return;
-        }
+    const sseUrl = profile?.userId && config.queueServer
+        ? `${config.queueServer}/sse/${profile.userId}`
+        : null;
 
-        const eventSource = new EventSource(
-            `${config.config.queueServer}/sse/${profile.userId}`,
-        );
-
-        eventSource.onmessage = async (event) => {
-            const notificationId = JSON.parse(event.data);
-            console.log(`[eventSource.onmessage] {notificationId: ${notificationId}}`);
+    useEventSourceWithRetry({
+        url: sseUrl,
+        maxRetries: MAX_SSE_RETRIES,
+        delayMs: SSE_RETRY_DELAY_MS,
+        enabled: !!sseUrl,
+        onMessage: () => {
             try {
-                // Just refetch the list when new notification arrives
                 refetchNotifications();
                 refetchUnreadCount();
             } catch (error) {
                 console.error("Error fetching new notification:", error);
             }
-        };
-
-        return () => {
-            eventSource.close();
-        };
-    }, [profile, config, refetchNotifications, refetchUnreadCount]);
+        },
+    });
 
     const markAllAsRead = async () => {
         try {
@@ -160,7 +210,7 @@ export function NotificationsViewer() {
                         )}
                     </CardHeader>
                     <CardContent className="p-0 max-h-96 overflow-y-auto">
-                        {!config.config.queueServer && (
+                        {!config.queueServer && (
                             <div className="p-2 bg-yellow-100 text-red-500 text-xs flex items-center">
                                 <TriangleAlert className="h-6 w-6 inline mr-2" />
                                 Queue configuration is missing. Realtime

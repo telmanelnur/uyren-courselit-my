@@ -37,7 +37,7 @@ import "@workspace/text-editor/tiptap/components/tiptap-node/image-node/image-no
 import "@workspace/text-editor/tiptap/components/tiptap-node/heading-node/heading-node.scss"
 import "@workspace/text-editor/tiptap/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
-// --- Tiptap UI ---
+// --- Tiptap UI --- 
 import { EmojiDropdownMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui/emoji-dropdown-menu"
 import { SlashDropdownMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu"
 import { DragContextMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui/drag-context-menu"
@@ -154,7 +154,7 @@ export function LoadingSpinner({ text = "Connecting..." }: { text?: string }) {
 /**
  * EditorContent component that renders the actual editor
  */
-export function EditorContentArea() {
+function EditorContentArea() {
   const { editor } = React.useContext(EditorContext)!
   const {
     aiGenerationIsLoading,
@@ -379,7 +379,7 @@ export function EditorContentArea() {
 /**
  * Component that creates and provides the editor instance
  */
-export function EditorProvider(props: EditorProviderProps) {
+function EditorProvider(props: EditorProviderProps) {
   const { placeholder = "Start writing..." } = props
 
   // Build extensions conditionally

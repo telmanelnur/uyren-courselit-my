@@ -1,12 +1,26 @@
 "use client";
 
-import { ChangeEvent, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import DashboardContent from "@/components/admin/dashboard-content";
+import EmailViewer from "@/components/admin/mails/email-viewer";
+import Resources from "@/components/resources";
+import useProduct from "@/hooks/use-product";
+import {
+    COURSE_CONTENT_HEADER,
+    EDIT_SECTION_HEADER,
+    LABEL_DRIP_EMAIL_SUBJECT,
+    MANAGE_COURSES_PAGE_HEADING,
+    TOAST_DESCRIPTION_CHANGES_SAVED,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
+} from "@/lib/ui/config/strings";
+import { truncate } from "@workspace/utils";
+import { trpc } from "@/utils/trpc";
+import { Constants, DripType, UIConstants } from "@workspace/common-models";
+import { Form, useToast } from "@workspace/components-library";
+import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import { Switch } from "@workspace/ui/components/switch";
-import { Separator } from "@workspace/ui/components/separator";
 import {
     Select,
     SelectContent,
@@ -14,34 +28,18 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@workspace/ui/components/select";
+import { Separator } from "@workspace/ui/components/separator";
+import { Switch } from "@workspace/ui/components/switch";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
-import { HelpCircle } from "lucide-react";
+import { AlertCircle, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@workspace/ui/components/alert";
-import {
-    COURSE_CONTENT_HEADER,
-    EDIT_SECTION_HEADER,
-    LABEL_DRIP_EMAIL_SUBJECT,
-    MANAGE_COURSES_PAGE_HEADING,
-    TOAST_DESCRIPTION_CHANGES_SAVED,
-    TOAST_TITLE_SUCCESS,
-} from "@/lib/ui/config/strings";
-import { truncate } from "@/lib/ui/lib/utils";
-import useProduct from "../../../../../../../../../hooks/use-product";
-import { AddressContext } from "@components/contexts";
-import DashboardContent from "@/components/admin/dashboard-content";
-import { Constants, DripType, UIConstants } from "@workspace/common-models";
-import { Form, useToast } from "@workspace/components-library";
-import { FetchBuilder } from "@workspace/utils";
-import Resources from "@components/resources";
-import EmailViewer from "@/components/admin/mails/email-viewer";
-import { defaultEmail, Email as EmailContent } from "@workspace/email-editor";
+import { useRouter } from "next/navigation";
+import { ChangeEvent, useEffect, useState } from "react";
 
 export default function SectionPage({
     params,
@@ -60,12 +58,10 @@ export default function SectionPage({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [delay, setDelay] = useState(0);
     const [date, setDate] = useState<number>();
-    const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
+    // const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
     const [emailSubject, setEmailSubject] = useState("");
     const [emailId, setEmailId] = useState("");
-    const { address } = useAddress();
-    const { product } = useProduct(productId, address);
-    const [loading, setLoading] = useState(false);
+    const { product } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
@@ -82,12 +78,12 @@ export default function SectionPage({
     useEffect(() => {
         if (sectionId && product && product.groups) {
             const group = product.groups.find(
-                (group) => group.id === sectionId,
+                (group) => group.groupId === sectionId,
             );
             if (group) {
                 const type = group.drip?.type
                     ? group.drip?.type ===
-                      Constants.dripType[0].split("-")[0].toUpperCase()
+                        Constants.dripType[0]!.split("-")[0]!.toUpperCase()
                         ? Constants.dripType[0]
                         : Constants.dripType[1]
                     : undefined;
@@ -106,41 +102,41 @@ export default function SectionPage({
                 }
                 setNotifyUsers(!!group.drip?.email);
                 setEmailId(group.drip?.email?.emailId || "");
-                setEmailContent(
-                    group.drip?.email?.content ||
-                        ({
-                            ...defaultEmail,
-                            content: [
-                                {
-                                    blockType: "text",
-                                    settings: {
-                                        content: "Hi {{ subscriber.name }},",
-                                    },
-                                },
-                                {
-                                    blockType: "text",
-                                    settings: {
-                                        content:
-                                            "A new section is now available in [{{product.title}}]({{product.url}})",
-                                    },
-                                },
-                                {
-                                    blockType: "text",
-                                    settings: {
-                                        content:
-                                            "{{address}}\n\n{{unsubscribe_link}}",
-                                        alignment: "center",
-                                        fontSize: "12px",
-                                        foregroundColor: "#64748b",
-                                    },
-                                },
-                            ],
-                        } as EmailContent),
-                );
-                setEmailSubject(
-                    group.drip?.email?.subject ||
-                        `A new section is now available in ${product.title}`,
-                );
+                // setEmailContent(
+                //     group.drip?.email?.content ||
+                //     ({
+                //         ...defaultEmail,
+                //         content: [
+                //             {
+                //                 blockType: "text",
+                //                 settings: {
+                //                     content: "Hi {{ subscriber.name }},",
+                //                 },
+                //             },
+                //             {
+                //                 blockType: "text",
+                //                 settings: {
+                //                     content:
+                //                         "A new section is now available in [{{product.title}}]({{product.url}})",
+                //                 },
+                //             },
+                //             {
+                //                 blockType: "text",
+                //                 settings: {
+                //                     content:
+                //                         "{{address}}\n\n{{unsubscribe_link}}",
+                //                     alignment: "center",
+                //                     fontSize: "12px",
+                //                     foregroundColor: "#64748b",
+                //                 },
+                //             },
+                //         ],
+                //     } as EmailContent),
+                // );
+                // setEmailSubject(
+                //     group.drip?.email?.subject ||
+                //     `A new section is now available in ${product.title}`,
+                // );
             }
         }
     }, [product]);
@@ -191,96 +187,105 @@ export default function SectionPage({
         // router.push(`/dashboard/product/${productId}/content`);
     };
 
+    const trpcUtils = trpc.useUtils()
+
+    const updateGroupMutation = trpc.lmsModule.courseModule.course.updateGroup.useMutation({
+        onSuccess: (response) => {
+            setEmailId(
+                response?.groups.find(
+                    (group) => group.groupId === sectionId,
+                )?.drip?.email?.emailId || "",
+            );
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: TOAST_DESCRIPTION_CHANGES_SAVED,
+            });
+
+            trpcUtils.lmsModule.courseModule.lesson.getById.invalidate()
+            trpcUtils.lmsModule.courseModule.course.getByCourseDetailed.invalidate()
+        },
+        onError: (error) => {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        },
+    });
     const updateGroup = async () => {
-        const query = ` 
-        mutation updateGroup($id: ID!, $courseId: String!, $name: String, $drip: DripInput) {
-            course: updateGroup(
-                id: $id,
-                courseId: $courseId,
-                name: $name,
-                drip: $drip 
-            ) {
-                courseId,
-                groups {
-                    id,
-                    name,
-                    rank,
-                    collapsed,
-                    drip {
-                        type,
-                        status,
-                        delayInMillis,
-                        dateInUTC,
-                        email {
-                            content {
-                                content {
-                                    blockType,
-                                    settings
-                                },
-                                style,
-                                meta
-                            },
-                            subject
-                            emailId
-                        }
-                    }
-                }
-            }
-        }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query,
-                variables: {
-                    id: sectionId,
-                    courseId: product?.courseId,
-                    name: sectionName,
-                    drip: dripType
-                        ? {
-                              status: enableDrip,
-                              type: dripType.toUpperCase().split("-")[0],
-                              delayInMillis: delay,
-                              dateInUTC: date,
-                              email: notifyUsers
-                                  ? {
-                                        subject: emailSubject,
-                                        content: JSON.stringify(emailContent),
-                                    }
-                                  : undefined,
-                          }
-                        : undefined,
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            setLoading(true);
-            const response = await fetch.exec();
-            if (response.course) {
-                // router.replace(
-                //     `/dashboard/product/${productId}/content`,
-                // );
-                setEmailId(
-                    response.course.groups.find(
-                        (group) => group.id === sectionId,
-                    )?.drip?.email?.emailId || "",
-                );
-                toast({
-                    title: TOAST_TITLE_SUCCESS,
-                    description: TOAST_DESCRIPTION_CHANGES_SAVED,
-                });
-            }
-        } catch (err: any) {
-            // toast({
-            //     title: TOAST_TITLE_ERROR,
-            //     description: err.message,
-            //     variant: "destructive",
-            // });
-        } finally {
-            setLoading(false);
-        }
+        // const query = ` 
+        // mutation updateGroup($id: ID!, $courseId: String!, $name: String, $drip: DripInput) {
+        //     course: updateGroup(
+        //         id: $id,
+        //         courseId: $courseId,
+        //         name: $name,
+        //         drip: $drip 
+        //     ) {
+        //         courseId,
+        //         groups {
+        //             id,
+        //             name,
+        //             rank,
+        //             collapsed,
+        //             drip {
+        //                 type,
+        //                 status,
+        //                 delayInMillis,
+        //                 dateInUTC,
+        //                 email {
+        //                     content {
+        //                         content {
+        //                             blockType,
+        //                             settings
+        //                         },
+        //                         style,
+        //                         meta
+        //                     },
+        //                     subject
+        //                     emailId
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // `;
+        // const fetch = new FetchBuilder()
+        //     .setUrl(`${address.backend}/api/graph`)
+        //     .setPayload({
+        //         query,
+        //         variables: {
+        //             id: sectionId,
+        //             courseId: product?.courseId,
+        //             name: sectionName,
+        //             drip: dripType
+        //                 ? {
+        //                       status: enableDrip,
+        //                       type: dripType.toUpperCase().split("-")[0],
+        //                       delayInMillis: delay,
+        //                       dateInUTC: date,
+        //                       email: notifyUsers
+        //                           ? {
+        //                                 subject: emailSubject,
+        //                                 content: JSON.stringify(emailContent),
+        //                             }
+        //                           : undefined,
+        //                   }
+        //                 : undefined,
+        //         },
+        //     })
+        //     .setIsGraphQLEndpoint(true)
+        //     .build();
+        await updateGroupMutation.mutateAsync({
+            data: {
+                groupId: sectionId,
+                courseId: product!.courseId,
+                name: sectionName,
+                // TODO: Add drip
+            },
+        });
     };
+
+    const loading = updateGroupMutation.isPending;
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
@@ -318,244 +323,245 @@ export default function SectionPage({
 
                     {product?.type?.toLowerCase() ===
                         UIConstants.COURSE_TYPE_COURSE && (
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-lg font-semibold">
-                                    Content Release
-                                </h2>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>
-                                                Control when this section
-                                                becomes available to students
-                                            </p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="enable-drip">
-                                        Scheduled Release
-                                    </Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Release content gradually to your
-                                        students
-                                    </p>
-                                </div>
-                                <Switch
-                                    id="enable-drip"
-                                    checked={enableDrip}
-                                    onCheckedChange={setEnableDrip}
-                                />
-                            </div>
-
-                            {enableDrip && (
-                                <div className="rounded-lg border p-4 space-y-6 animate-in fade-in-50">
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Release Type</Label>
-                                            <Select
-                                                value={dripType}
-                                                onValueChange={(
-                                                    value: DripType,
-                                                ) => setDripType(value)}
-                                            >
-                                                <SelectTrigger
-                                                    data-error="dripType"
-                                                    className={
-                                                        errors.dripType
-                                                            ? "border-red-500"
-                                                            : ""
-                                                    }
-                                                >
-                                                    <SelectValue placeholder="Select release type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem
-                                                        value={
-                                                            Constants
-                                                                .dripType[1]
-                                                        }
-                                                    >
-                                                        Release on specific date
-                                                    </SelectItem>
-                                                    <SelectItem
-                                                        value={
-                                                            Constants
-                                                                .dripType[0]
-                                                        }
-                                                    >
-                                                        Release days after
-                                                        previous section
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            {errors.dripType && (
-                                                <p className="text-sm text-red-500">
-                                                    {errors.dripType}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-lg font-semibold">
+                                        Content Release
+                                    </h2>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>
+                                                    Control when this section
+                                                    becomes available to students
                                                 </p>
-                                            )}
-                                        </div>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
 
-                                        {dripType === Constants.dripType[1] && (
-                                            <div className="space-y-2">
-                                                <Label htmlFor="releaseDate">
-                                                    Release Date & Time
-                                                </Label>
-                                                <Input
-                                                    id="releaseDate"
-                                                    data-error="releaseDate"
-                                                    type="datetime-local"
-                                                    className={
-                                                        errors.releaseDate
-                                                            ? "border-red-500"
-                                                            : ""
-                                                    }
-                                                    value={new Date(
-                                                        (date ||
-                                                            new Date().getTime()) -
-                                                            new Date().getTimezoneOffset() *
-                                                                60000,
-                                                    )
-                                                        .toISOString()
-                                                        .slice(0, 16)}
-                                                    min={
-                                                        !date
-                                                            ? new Date()
-                                                                  .toISOString()
-                                                                  .slice(0, 16)
-                                                            : undefined
-                                                    }
-                                                    onChange={(
-                                                        e: ChangeEvent<HTMLInputElement>,
-                                                    ) => {
-                                                        const selectedDate =
-                                                            new Date(
-                                                                e.target.value,
-                                                            );
-                                                        setDate(
-                                                            selectedDate.getTime(),
-                                                        );
-                                                    }}
-                                                />
-                                                {errors.releaseDate && (
-                                                    <p className="text-sm text-red-500">
-                                                        {errors.releaseDate}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <Label htmlFor="enable-drip">
+                                            Scheduled Release
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Release content gradually to your
+                                            students
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="enable-drip"
+                                        checked={enableDrip}
+                                        onCheckedChange={setEnableDrip}
+                                    />
+                                </div>
 
-                                        {dripType === Constants.dripType[0] && (
+                                {enableDrip && (
+                                    <div className="rounded-lg border p-4 space-y-6 animate-in fade-in-50">
+                                        <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="releaseDays">
-                                                    Days after previous section
-                                                </Label>
-                                                <div className="flex items-center space-x-2 max-w-[200px]">
-                                                    <Input
-                                                        id="releaseDays"
-                                                        data-error="releaseDays"
-                                                        type="number"
-                                                        min="1"
-                                                        placeholder="0"
+                                                <Label>Release Type</Label>
+                                                <Select
+                                                    value={dripType}
+                                                    onValueChange={(
+                                                        value: DripType,
+                                                    ) => setDripType(value)}
+                                                >
+                                                    <SelectTrigger
+                                                        data-error="dripType"
                                                         className={
-                                                            errors.releaseDays
+                                                            errors.dripType
                                                                 ? "border-red-500"
                                                                 : ""
                                                         }
-                                                        value={delay}
-                                                        onChange={(e) =>
-                                                            setDelay(
-                                                                +e.target.value,
-                                                            )
-                                                        }
-                                                    />
-                                                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                                        days
-                                                    </span>
-                                                </div>
-                                                {errors.releaseDays && (
+                                                    >
+                                                        <SelectValue placeholder="Select release type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem
+                                                            value={
+                                                                Constants
+                                                                    .dripType[1]
+                                                            }
+                                                        >
+                                                            Release on specific date
+                                                        </SelectItem>
+                                                        <SelectItem
+                                                            value={
+                                                                Constants
+                                                                    .dripType[0]
+                                                            }
+                                                        >
+                                                            Release days after
+                                                            previous section
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                {errors.dripType && (
                                                     <p className="text-sm text-red-500">
-                                                        {errors.releaseDays}
+                                                        {errors.dripType}
                                                     </p>
                                                 )}
                                             </div>
-                                        )}
-                                    </div>
 
-                                    <Separator />
+                                            {dripType === Constants.dripType[1] && (
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="releaseDate">
+                                                        Release Date & Time
+                                                    </Label>
+                                                    <Input
+                                                        id="releaseDate"
+                                                        data-error="releaseDate"
+                                                        type="datetime-local"
+                                                        className={
+                                                            errors.releaseDate
+                                                                ? "border-red-500"
+                                                                : ""
+                                                        }
+                                                        value={new Date(
+                                                            (date ||
+                                                                new Date().getTime()) -
+                                                            new Date().getTimezoneOffset() *
+                                                            60000,
+                                                        )
+                                                            .toISOString()
+                                                            .slice(0, 16)}
+                                                        min={
+                                                            !date
+                                                                ? new Date()
+                                                                    .toISOString()
+                                                                    .slice(0, 16)
+                                                                : undefined
+                                                        }
+                                                        onChange={(
+                                                            e: ChangeEvent<HTMLInputElement>,
+                                                        ) => {
+                                                            const selectedDate =
+                                                                new Date(
+                                                                    e.target.value,
+                                                                );
+                                                            setDate(
+                                                                selectedDate.getTime(),
+                                                            );
+                                                        }}
+                                                    />
+                                                    {errors.releaseDate && (
+                                                        <p className="text-sm text-red-500">
+                                                            {errors.releaseDate}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
 
-                                    <div className="space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <div className="space-y-0.5">
-                                                <Label htmlFor="notify-users">
-                                                    Email Notification
-                                                </Label>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Notify students when content
-                                                    becomes available
-                                                </p>
-                                            </div>
-                                            <Switch
-                                                id="notify-users"
-                                                checked={notifyUsers}
-                                                onCheckedChange={setNotifyUsers}
-                                            />
-                                        </div>
-
-                                        {
-                                            notifyUsers && (
-                                                <div className="space-y-4">
-                                                    <div className="space-y-2">
-                                                        <Label>
-                                                            {
-                                                                LABEL_DRIP_EMAIL_SUBJECT
-                                                            }
-                                                        </Label>
+                                            {dripType === Constants.dripType[0] && (
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="releaseDays">
+                                                        Days after previous section
+                                                    </Label>
+                                                    <div className="flex items-center space-x-2 max-w-[200px]">
                                                         <Input
-                                                            value={emailSubject}
+                                                            id="releaseDays"
+                                                            data-error="releaseDays"
+                                                            type="number"
+                                                            min="1"
+                                                            placeholder="0"
+                                                            className={
+                                                                errors.releaseDays
+                                                                    ? "border-red-500"
+                                                                    : ""
+                                                            }
+                                                            value={delay}
                                                             onChange={(e) =>
-                                                                setEmailSubject(
-                                                                    e.target
-                                                                        .value,
+                                                                setDelay(
+                                                                    +e.target.value,
                                                                 )
                                                             }
                                                         />
+                                                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                                            days
+                                                        </span>
                                                     </div>
-                                                    {!emailId && (
-                                                        <Alert>
-                                                            <AlertCircle className="h-4 w-4" />
-                                                            <AlertDescription>
-                                                                Please save the
-                                                                changes first to
-                                                                enable email
-                                                                editing
-                                                            </AlertDescription>
-                                                        </Alert>
+                                                    {errors.releaseDays && (
+                                                        <p className="text-sm text-red-500">
+                                                            {errors.releaseDays}
+                                                        </p>
                                                     )}
-                                                    <EmailViewer
-                                                        content={emailContent}
-                                                        emailEditorLink={
-                                                            emailId
-                                                                ? `/dashboard/mail/drip/${productId}/${sectionId}?redirectTo=/dashboard/product/${productId}/content/section/${sectionId}`
-                                                                : undefined
-                                                        }
-                                                    />
                                                 </div>
-                                            )
-                                            // <EmailEditor content={emailContent} setEmailContent={setEmailContent} subject={emailSubject} setEmailSubject={setEmailSubject} />
-                                        }
+                                            )}
+                                        </div>
+
+                                        <Separator />
+
+                                        <div className="space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <Label htmlFor="notify-users">
+                                                        Email Notification
+                                                    </Label>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Notify students when content
+                                                        becomes available
+                                                    </p>
+                                                </div>
+                                                <Switch
+                                                    id="notify-users"
+                                                    checked={notifyUsers}
+                                                    onCheckedChange={setNotifyUsers}
+                                                />
+                                            </div>
+
+                                            {
+                                                notifyUsers && (
+                                                    <div className="space-y-4">
+                                                        <div className="space-y-2">
+                                                            <Label>
+                                                                {
+                                                                    LABEL_DRIP_EMAIL_SUBJECT
+                                                                }
+                                                            </Label>
+                                                            <Input
+                                                                value={emailSubject}
+                                                                onChange={(e) =>
+                                                                    setEmailSubject(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                        {!emailId && (
+                                                            <Alert>
+                                                                <AlertCircle className="h-4 w-4" />
+                                                                <AlertDescription>
+                                                                    Please save the
+                                                                    changes first to
+                                                                    enable email
+                                                                    editing
+                                                                </AlertDescription>
+                                                            </Alert>
+                                                        )}
+                                                        EmailViewer
+                                                        {/* <EmailViewer
+                                                            content={emailContent}
+                                                            emailEditorLink={
+                                                                emailId
+                                                                    ? `/dashboard/mail/drip/${productId}/${sectionId}?redirectTo=/dashboard/product/${productId}/content/section/${sectionId}`
+                                                                    : undefined
+                                                            }
+                                                        /> */}
+                                                    </div>
+                                                )
+                                                // <EmailEditor content={emailContent} setEmailContent={setEmailContent} subject={emailSubject} setEmailSubject={setEmailSubject} />
+                                            }
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                )}
+                            </div>
+                        )}
 
                     <div className="flex items-center justify-end gap-4">
                         <Button variant="outline" asChild>

@@ -12,7 +12,7 @@ import {
     Breadcrumbs,
 } from "@workspace/components-library";
 import { Address } from "@workspace/common-models";
-import { truncate } from "@/lib/ui/lib/utils";
+import { truncate } from "@workspace/utils";
 
 interface Breadcrumb {
     text: string;

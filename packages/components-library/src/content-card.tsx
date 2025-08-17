@@ -1,6 +1,6 @@
 import { cn } from "@workspace/ui/lib/utils";
 import { Card, CardContent } from "@workspace/ui/components/card";
-import { JSX } from "react";
+import { JSX, ReactNode } from "react";
 import { Image } from "./image";
 import Link from "./link";
 
@@ -40,7 +40,7 @@ export function ContentCardHeader({
 }
 
 interface ContentCardContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: string | JSX.Element | (string | JSX.Element)[];
+  children: ReactNode;
   className?: string;
 }
 

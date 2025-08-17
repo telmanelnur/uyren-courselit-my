@@ -38,20 +38,33 @@ export const config = {
       secret: process.env.TRANSPORT_JWT_SECRET || "",
     },
   },
+
+  mail: {
+    host: process.env.SMTP_HOST || process.env.MAIL_HOST || "localhost",
+    port: Number(process.env.SMTP_PORT || process.env.MAIL_PORT) || 587,
+    secure: process.env.MAIL_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER || process.env.MAIL_USER || "",
+      pass: process.env.SMTP_PASSWORD || process.env.MAIL_PASS || "",
+    },
+    from: process.env.EMAIL_FROM || process.env.MAIL_FROM || `${process.env.SUPER_ADMIN_NAME || "CourseKit"} <noreply@coursekit.com>`,
+  },
 };
 
 
-// Simple validation
-if (!config.database.mongoUri) {
-  console.error("❌ MONGODB_URI is required");
+// Environment validation
+const requiredEnvVars = [
+  { key: "MONGODB_URI", value: config.database.mongoUri },
+  { key: "TRANSPORT_JWT_SECRET", value: config.transport.jwt.secret },
+];
+
+const missingVars = requiredEnvVars.filter(env => !env.value);
+
+if (missingVars.length > 0) {
+  console.error("❌ Missing required environment variables:");
+  missingVars.forEach(env => {
+    console.error(`   ${env.key}`);
+  });
+  console.error("\n💡 Create a .env file in the project root with these variables");
   process.exit(1);
 }
-
-if (!config.transport.jwt.secret) {
-  console.error("❌ TRANSPORT_JWT_SECRET is required");
-  process.exit(1);
-}
-
-// Helper functions
-export const isProduction = () => config.server.nodeEnv === "production";
-export const isDevelopment = () => config.server.nodeEnv === "development";

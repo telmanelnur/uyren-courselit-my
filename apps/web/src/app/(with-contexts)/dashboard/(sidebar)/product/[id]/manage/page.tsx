@@ -1,22 +1,13 @@
 "use client";
 
-import { FormEvent, useContext, useEffect, useState } from "react";
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import { Switch } from "@workspace/ui/components/switch";
-import { Separator } from "@workspace/ui/components/separator";
-import { Trash2 } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogClose,
-} from "@workspace/ui/components/dialog";
+import DashboardContent from "@/components/admin/dashboard-content";
+import PaymentPlanList from "@/components/admin/payments/payment-plan-list";
+import { useAddress } from "@/components/contexts/address-context";
+import { useProfile } from "@/components/contexts/profile-context";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
+import useProduct from "@/hooks/use-product";
+import { COURSE_TYPE_DOWNLOAD, MIMETYPE_IMAGE } from "@/lib/ui/config/constants";
 import {
     APP_MESSAGE_COURSE_DELETED,
     APP_MESSAGE_COURSE_SAVED,
@@ -25,183 +16,159 @@ import {
     COURSE_SETTINGS_CARD_HEADER,
     DANGER_ZONE_HEADER,
     MANAGE_COURSES_PAGE_HEADING,
-    PRICING_EMAIL,
-    PRICING_EMAIL_LABEL,
-    PRICING_EMAIL_SUBTITLE,
     PRICING_FREE,
     PRICING_FREE_LABEL,
     PRICING_FREE_SUBTITLE,
-    PRICING_PAID,
     PRICING_PAID_LABEL,
     PRICING_PAID_NO_PAYMENT_METHOD,
     PRICING_PAID_SUBTITLE,
     TOAST_TITLE_ERROR,
-    TOAST_TITLE_SUCCESS,
+    TOAST_TITLE_SUCCESS
 } from "@/lib/ui/config/strings";
-import DashboardContent from "@/components/admin/dashboard-content";
-import { redirect, useParams } from "next/navigation";
+import { truncate } from "@workspace/utils";
+import { trpc } from "@/utils/trpc";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
-    AddressContext,
-    ProfileContext,
-    SiteInfoContext,
-} from "@components/contexts";
-import { truncate } from "@/lib/ui/lib/utils";
+    Constants,
+    Media,
+    ProductPriceType,
+    Profile,
+    TextEditorContent
+} from "@workspace/common-models";
 import {
     getSymbolFromCurrency,
     MediaSelector,
-    TextEditor,
-    TextEditorEmptyDoc,
     useToast,
 } from "@workspace/components-library";
-import { FetchBuilder } from "@workspace/utils";
+import { ContentEditorRef } from "@workspace/text-editor/tiptap";
+import { Button } from "@workspace/ui/components/button";
 import {
-    Media,
-    PaymentPlanType,
-    ProductPriceType,
-    Profile,
-    Constants,
-} from "@workspace/common-models";
-import { COURSE_TYPE_DOWNLOAD, MIMETYPE_IMAGE } from "@ui-config/constants";
-import useProduct from "@/hooks/use-product";
-import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
-import PaymentPlanList from "@/components/admin/payments/payment-plan-list";
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@workspace/ui/components/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { Separator } from "@workspace/ui/components/separator";
+import { Switch } from "@workspace/ui/components/switch";
 import {
+    Tooltip,
+    TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-    TooltipContent,
-    Tooltip,
 } from "@workspace/ui/components/tooltip";
+import { Trash2 } from "lucide-react";
+import dynamic from "next/dynamic";
+import { redirect, useParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+
+const DescriptionEditor = dynamic(() =>
+    import("@/components/editors/tiptap/templates/description/description-editor").then((mod) => ({ default: mod.DescriptionEditor })),
+);
+
 const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
-const MUTATIONS = {
-    UPDATE_BASIC_DETAILS: `
-        mutation UpdateBasicDetails($courseId: String!, $title: String!, $description: String!) {
-            updateCourse(courseData: { id: $courseId, title: $title, description: $description }) {
-               courseId 
-            }
-        }
-    `,
-    UPDATE_PUBLISHED: `
-        mutation UpdatePublished($courseId: String!, $published: Boolean!) {
-            updateCourse(courseData: { id: $courseId, published: $published }) {
-                courseId
-            }
-        }
-    `,
-    UPDATE_PRIVACY: `
-        mutation UpdatePrivacy($courseId: String!, $privacy: CoursePrivacyType!) {
-            updateCourse(courseData: { id: $courseId, privacy: $privacy }) {
-                courseId
-            }
-        }
-    `,
-    UPDATE_FEATURED_IMAGE: `
-        mutation UpdateFeaturedImage($courseId: String!, $media: MediaInput) {
-            updateCourse(courseData: {
-                id: $courseId
-                featuredImage: $media
-            }) {
-                courseId
-            }
-        }
-    `,
-    // UPDATE_COST_TYPE: `
-    //     mutation UpdateCostType($courseId: String!, $costType: CostType!) {
-    //         updateCourse(courseData: { id: $courseId, costType: $costType }) {
-    //             courseId
-    //         }
-    //     }
-    // `,
-    // UPDATE_COST: `
-    //     mutation UpdateCost($courseId: String!, $cost: Float!) {
-    //         updateCourse(courseData: { id: $courseId, cost: $cost }) {
-    //             courseId
-    //         }
-    //     }
-    // `,
-    UPDATE_LEAD_MAGNET: `
-        mutation UpdateLeadMagnet($courseId: String!, $leadMagnet: Boolean!) {
-            updateCourse(courseData: { id: $courseId, leadMagnet: $leadMagnet }) {
-                courseId
-            }
-        }
-    `,
-};
 
-const updateCourse = async (query: string, variables: any, address: string) => {
-    const fetch = new FetchBuilder()
-        .setUrl(`${address}/api/graph`)
-        .setPayload({ query, variables })
-        .setIsGraphQLEndpoint(true)
-        .build();
+const productFormSchema = z.object({
+    title: z.string().min(1, "Name is required").max(255, "Name is too long"),
+    published: z.boolean(),
+    isPrivate: z.boolean(),
+    featuredImage: z.any().optional(),
+    costType: z.nativeEnum(Constants.ProductPriceType),
+    cost: z.number().min(0, "Cost must be non-negative"),
+    leadMagnet: z.boolean(),
+});
+type ProductFormData = z.infer<typeof productFormSchema>;
 
-    return await fetch.exec();
-};
+export default function Page() {
+    const { toast } = useToast();
+    const params = useParams<{
+        id: string;
+    }>();
+    const productId = params.id;
+    const { address } = useAddress();
+    const { product, loaded: productLoaded } = useProduct(productId);
+    const { profile } = useProfile();
+    const { siteInfo } = useSiteInfo();
+    const form = useForm<ProductFormData>({
+        resolver: zodResolver(productFormSchema),
+        defaultValues: {
+            title: "",
+            published: false,
+            isPrivate: false,
+            featuredImage: {},
+            costType: PRICING_FREE,
+            cost: 0,
+            leadMagnet: false,
+        },
+    });
 
-const withErrorHandling = async (
-    action: () => Promise<any>,
-    setLoading: (loading: boolean) => void,
-    toast: any,
-) => {
-    try {
-        setLoading(true);
-        const response = await action();
-        if (response?.updateCourse) {
+    const parseDescription = (desc: unknown): string => {
+        if (!desc) return "";
+        if (typeof desc === "string") {
+            try {
+                const parsed = JSON.parse(desc);
+                return typeof parsed === "string" ? parsed : desc;
+            } catch {
+                return desc;
+            }
+        }
+        return "";
+    };
+    const breadcrumbs = useMemo(() => {
+        return [
+            { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
+            {
+                label: product ? truncate(product.title || "", 20) || "..." : "...",
+                href: `/dashboard/product/${productId}`,
+            },
+            { label: COURSE_SETTINGS_CARD_HEADER, href: "#" },
+        ]
+    }, [product, productId]);
+
+
+
+    const updateProductMutation = trpc.lmsModule.courseModule.course.update.useMutation({
+        onSuccess: () => {
             toast({
                 title: TOAST_TITLE_SUCCESS,
                 description: APP_MESSAGE_COURSE_SAVED,
             });
-        }
-        return response;
-    } catch (err: any) {
-        toast({
-            title: TOAST_TITLE_ERROR,
-            description: err.message,
-            variant: "destructive",
-        });
-    } finally {
-        setLoading(false);
-    }
-};
-
-export default function SettingsPage() {
-    const { toast } = useToast();
-    const params = useParams();
-    const productId = params.id as string;
-    const [errors, setErrors] = useState({});
-    const { address } = useAddress();
-    const { product, loaded: productLoaded } = useProduct(productId, address);
-    const profile = useContext(ProfileContext);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState<{
-        name: string;
-        description: any;
-        isPublished: boolean;
-        isPrivate: boolean;
-        featuredImage: any;
-        costType: ProductPriceType;
-        cost: number;
-        leadMagnet: boolean;
-    }>({
-        name: "",
-        description: TextEditorEmptyDoc,
-        isPublished: false,
-        isPrivate: false,
-        featuredImage: {},
-        costType: PRICING_FREE,
-        cost: 0,
-        leadMagnet: false,
-    });
-    const breadcrumbs = [
-        { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
-        {
-            label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product/${productId}`,
         },
-        { label: COURSE_SETTINGS_CARD_HEADER, href: "#" },
-    ];
-    const [refresh, setRefresh] = useState(0);
-    const siteinfo = useContext(SiteInfoContext);
+        onError: (error) => {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        },
+    });
+
+    const deleteProductMutation = trpc.lmsModule.courseModule.course.delete.useMutation({
+        onSuccess: () => {
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: APP_MESSAGE_COURSE_DELETED,
+            });
+            redirect("/dashboard/products");
+        },
+        onError: (error) => {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        },
+    });
+
     const {
         paymentPlans,
         setPaymentPlans,
@@ -217,14 +184,11 @@ export default function SettingsPage() {
 
     useEffect(() => {
         if (product) {
-            setFormData({
-                name: product?.title || "",
-                description: product?.description
-                    ? JSON.parse(product.description)
-                    : TextEditorEmptyDoc,
-                isPublished: product?.published || false,
+            form.reset({
+                title: product?.title,
+                published: product?.published || false,
                 isPrivate:
-                    product?.privacy!.toUpperCase() === "UNLISTED" || false,
+                    product?.privacy === Constants.ProductAccessType.UNLISTED || false,
                 featuredImage:
                     product?.featuredImage || (null as string | null),
                 costType:
@@ -233,223 +197,159 @@ export default function SettingsPage() {
                 cost: product?.cost || 0,
                 leadMagnet: product?.leadMagnet || false,
             });
-            setRefresh(refresh + 1);
-            setPaymentPlans(product?.paymentPlans || []);
+            setPaymentPlans(product.attachedPaymentPlans || []);
             setDefaultPaymentPlan(product?.defaultPaymentPlan || "");
         }
-    }, [product]);
+    }, [product, form]);
 
     if (productLoaded && !product) {
         redirect("/dashboard/products");
     }
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
 
-    const handleUpdateField = async (field: string, value: any) => {
+    const watchedValues = form.watch();
+    const handleUpdateField = async (field: keyof ProductFormData, value: any) => {
         if (!product?.courseId) return;
 
-        const fieldConfig = {
-            isPublished: {
-                mutation: MUTATIONS.UPDATE_PUBLISHED,
-                variables: { published: value },
-            },
-            isPrivate: {
-                mutation: MUTATIONS.UPDATE_PRIVACY,
-                variables: { privacy: value ? "UNLISTED" : "PUBLIC" },
-            },
-            leadMagnet: {
-                mutation: MUTATIONS.UPDATE_LEAD_MAGNET,
-                variables: { leadMagnet: value },
-            },
-        }[field];
+        const data: any = {};
+        if (field === "isPrivate") {
+            data.privacy = value ? Constants.ProductAccessType.UNLISTED : Constants.ProductAccessType.PUBLIC;
+        } else {
+            data[field] = value;
+        }
 
-        if (!fieldConfig) return;
-
-        await withErrorHandling(
-            () =>
-                updateCourse(
-                    fieldConfig.mutation,
-                    { courseId: product.courseId, ...fieldConfig.variables },
-                    address.backend,
-                ),
-            setLoading,
-            toast,
-        );
+        try {
+            await updateProductMutation.mutateAsync({
+                courseId: product.courseId,
+                data,
+            });
+        } catch (error) {
+            console.error(`Error updating ${field}:`, error);
+        }
     };
-
-    const handleSwitchChange = async (name: string) => {
-        const newValue = !formData[name];
-        setFormData((prev) => ({ ...prev, [name]: newValue }));
+    const handleSwitchChange = async (name: keyof ProductFormData) => {
+        const currentValue = watchedValues[name] as boolean;
+        const newValue = !currentValue;
+        form.setValue(name, newValue);
         await handleUpdateField(name, newValue);
     };
 
-    const validateForm = () => {
-        const newErrors = {};
-        if (!formData.name.trim()) newErrors.name = "Name is required";
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (!validateForm() || !product?.courseId) return;
-
-        await withErrorHandling(
-            () =>
-                updateCourse(
-                    MUTATIONS.UPDATE_BASIC_DETAILS,
-                    {
-                        courseId: product.courseId,
-                        title: formData.name,
-                        description: JSON.stringify(formData.description),
-                    },
-                    address.backend,
-                ),
-            setLoading,
-            toast,
-        );
-    };
-
-    const saveFeaturedImage = async (media?: Media) => {
+    const [editorContent, setEditorContent] = useState<TextEditorContent>({
+        type: "doc",
+        content: "",
+        assets: [],
+        widgets: [],
+        config: {
+            editorType: "tiptap",
+        },
+    })
+    const onSubmit = async (data: ProductFormData) => {
         if (!product?.courseId) return;
 
-        await withErrorHandling(
-            () =>
-                updateCourse(
-                    MUTATIONS.UPDATE_FEATURED_IMAGE,
-                    {
-                        courseId: product.courseId,
-                        media: media || null,
-                    },
-                    address.backend,
-                ),
-            setLoading,
-            toast,
-        );
+        try {
+            await updateProductMutation.mutateAsync({
+                courseId: product.courseId,
+                data: {
+                    title: data.title,
+                    description: editorContent,
+                },
+            });
+        } catch (error) {
+            console.error("Error updating product:", error);
+        }
+    };
+    const saveFeaturedImage = async (media?: Media) => {
+        if (!product?.courseId) return;
+        try {
+            await updateProductMutation.mutateAsync({
+                courseId: product.courseId,
+                data: {
+                    featuredImage: media || null,
+                },
+            });
+            form.setValue("featuredImage", media || {});
+        } catch (error) {
+            console.error("Error updating featured image:", error);
+        }
     };
 
-    // const handleCostTypeChange = async (val: string) => {
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         costType: val as ProductPriceType,
-    //     }));
-
-    //     if (!product?.courseId) return;
-
-    //     await withErrorHandling(
-    //         () =>
-    //             updateCourse(
-    //                 MUTATIONS.UPDATE_COST_TYPE,
-    //                 {
-    //                     id: product.courseId,
-    //                     costType: val,
-    //                 },
-    //                 address.backend,
-    //             ),
-    //         setLoading,
-    //         toast,
-    //     );
-    // };
-
-    // const debouncedUpdateCost = useCallback(
-    //     debounce((value: number, productId: string) => {
-    //         withErrorHandling(
-    //             () =>
-    //                 updateCourse(
-    //                     MUTATIONS.UPDATE_COST,
-    //                     {
-    //                         id: productId,
-    //                         cost: value,
-    //                     },
-    //                     address.backend,
-    //                 ),
-    //             setLoading,
-    //             toast,
-    //         );
-    //     }, 1000), // 1 second delay
-    //     [address.backend, toast], // Dependencies
-    // );
-
-    // const handleCostChange = (value: number) => {
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         cost: value,
-    //     }));
-
-    //     if (!product?.courseId) return;
-    //     debouncedUpdateCost(value, product.courseId);
-    // };
-
-    const options: {
+    const options: Array<{
         label: string;
         value: string;
         sublabel: string;
         disabled?: boolean;
-    }[] = [
-        {
-            label: PRICING_FREE_LABEL,
-            value: PRICING_FREE.toUpperCase(),
-            sublabel: PRICING_FREE_SUBTITLE,
-        },
-        {
-            label: PRICING_PAID_LABEL,
-            value: PRICING_PAID.toUpperCase(),
-            sublabel: siteinfo.paymentMethod
-                ? PRICING_PAID_SUBTITLE
-                : PRICING_PAID_NO_PAYMENT_METHOD,
-            disabled: !siteinfo.paymentMethod,
-        },
-    ];
-    if (product?.type?.toLowerCase() === COURSE_TYPE_DOWNLOAD) {
-        options.splice(1, 0, {
-            label: PRICING_EMAIL_LABEL,
-            value: PRICING_EMAIL.toUpperCase(),
-            sublabel: PRICING_EMAIL_SUBTITLE,
-        });
-    }
+    }> = [
+            {
+                label: PRICING_FREE_LABEL,
+                value: "FREE",
+                sublabel: PRICING_FREE_SUBTITLE,
+            },
+            {
+                label: PRICING_PAID_LABEL,
+                value: "PAID",
+                sublabel: siteInfo.paymentMethod
+                    ? PRICING_PAID_SUBTITLE
+                    : PRICING_PAID_NO_PAYMENT_METHOD,
+                disabled: !siteInfo.paymentMethod,
+            },
+        ];
 
     const deleteProduct = async () => {
-        if (!product) return;
-
-        const query = `
-            mutation {
-                result: deleteCourse(id: "${product?.courseId}")
-            }
-        `;
-
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
+        if (!product?.courseId) return;
 
         try {
-            setLoading(true);
-            const response = await fetch.exec();
-
-            if (response.result) {
-                redirect("/dashboard/products");
-            }
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
-            toast({
-                title: TOAST_TITLE_SUCCESS,
-                description: APP_MESSAGE_COURSE_DELETED,
-            });
+            await deleteProductMutation.mutateAsync({ courseId: product.courseId });
+        } catch (error) {
+            console.error("Error deleting product:", error);
         }
     };
+    /* 
+// OLD GraphQL delete function - COMMENTED OUT
+const deleteProduct = async () => {
+    if (!product) return;
+
+    const query = `
+        mutation {
+            result: deleteCourse(id: "${product?.courseId}")
+        }
+    `;
+
+    const fetch = new FetchBuilder()
+        .setUrl(`${address.backend}/api/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+
+    try {
+        setLoading(true);
+        const response = await fetch.exec();
+
+        if (response.result) {
+            redirect("/dashboard/products");
+        }
+    } catch (err: any) {
+        toast({
+            title: TOAST_TITLE_ERROR,
+            description: err.message,
+            variant: "destructive",
+        });
+    } finally {
+        toast({
+            title: TOAST_TITLE_SUCCESS,
+            description: APP_MESSAGE_COURSE_DELETED,
+        });
+    }
+};
+*/
+
+    const loading = updateProductMutation.isPending;
+    const isSubmitting = form.formState.isSubmitting;
+
 
     if (!product) {
         return null;
     }
+
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
@@ -463,8 +363,9 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    <div className="space-y-4">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        {/* <div className="space-y-4">
                         <Label
                             htmlFor="name"
                             className="text-base font-semibold"
@@ -506,12 +407,52 @@ export default function SettingsPage() {
                             url={address.backend}
                             refresh={refresh}
                         />
-                    </div>
+                    </div> */}
 
-                    <Button type="submit" disabled={loading}>
-                        Save Changes
-                    </Button>
-                </form>
+                        <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-base font-semibold">
+                                        Title
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormItem>
+                            <FormLabel className="text-base font-semibold">
+                                Description
+                            </FormLabel>
+                            <FormControl>
+                                <DescriptionEditor
+                                    placeholder="Enter a description for your course..."
+                                    onEditor={(editor, meta) => {
+                                        if (meta.reason === "create") {
+                                            editor!.commands.setContent(editorContent.content);
+                                        }
+                                    }}
+                                    onChange={(content) => {
+                                        setEditorContent({
+                                            ...editorContent,
+                                            content: content,
+                                        });
+                                    }}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+
+                        <Button type="submit" disabled={isSubmitting || loading}>
+                            Save Changes
+                        </Button>
+                    </form>
+                </Form>
 
                 <Separator />
 
@@ -528,21 +469,17 @@ export default function SettingsPage() {
                     <MediaSelector
                         title=""
                         src={
-                            (formData.featuredImage &&
-                                formData.featuredImage.thumbnail) ||
+                            (watchedValues.featuredImage &&
+                                watchedValues.featuredImage.thumbnail) ||
                             ""
                         }
                         srcTitle={
-                            (formData.featuredImage &&
-                                formData.featuredImage.originalFileName) ||
+                            (watchedValues.featuredImage &&
+                                watchedValues.featuredImage.originalFileName) ||
                             ""
                         }
                         onSelection={(media?: Media) => {
-                            media &&
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    featuredImage: media,
-                                }));
+                            media && form.setValue("featuredImage", media);
                             saveFeaturedImage(media);
                         }}
                         mimeTypesToShow={[...MIMETYPE_IMAGE]}
@@ -551,15 +488,12 @@ export default function SettingsPage() {
                         profile={profile as Profile}
                         address={address}
                         mediaId={
-                            (formData.featuredImage &&
-                                formData.featuredImage.mediaId) ||
+                            (watchedValues.featuredImage &&
+                                watchedValues.featuredImage.mediaId) ||
                             ""
                         }
                         onRemove={() => {
-                            setFormData((prev) => ({
-                                ...prev,
-                                featuredImage: {},
-                            }));
+                            form.setValue("featuredImage", {});
                             saveFeaturedImage();
                         }}
                         type="course"
@@ -578,7 +512,7 @@ export default function SettingsPage() {
                     <PaymentPlanList
                         paymentPlans={paymentPlans.map((plan) => ({
                             ...plan,
-                            type: plan.type.toLowerCase() as PaymentPlanType,
+                            type: plan.type,
                         }))}
                         onPlanSubmit={async (values) => {
                             try {
@@ -608,10 +542,10 @@ export default function SettingsPage() {
                             paymentPlanType.EMI,
                         ]}
                         currencySymbol={getSymbolFromCurrency(
-                            siteinfo.currencyISOCode || "USD",
+                            siteInfo.currencyISOCode || "USD",
                         )}
                         currencyISOCode={
-                            siteinfo.currencyISOCode?.toUpperCase() || "USD"
+                            siteInfo.currencyISOCode?.toUpperCase() || "USD"
                         }
                         onDefaultPlanChanged={async (id) => {
                             try {
@@ -624,16 +558,13 @@ export default function SettingsPage() {
                             }
                         }}
                         defaultPaymentPlanId={defaultPaymentPlan}
-                        paymentMethod={siteinfo.paymentMethod}
+                        paymentMethod={siteInfo.paymentMethod}
                     />
                 </div>
 
-                {product?.type?.toLowerCase() === COURSE_TYPE_DOWNLOAD && (
+                {product?.type === COURSE_TYPE_DOWNLOAD && (
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                            {/* <Label className="text-base font-semibold">
-                            Lead Magnet
-                        </Label> */}
                             <Label
                                 className={`${paymentPlans.length !== 1 || !paymentPlans.some((plan) => plan.type === paymentPlanType.FREE) ? "text-muted-foreground" : ""} text-base font-semibold`}
                             >
@@ -649,7 +580,7 @@ export default function SettingsPage() {
                                 <TooltipTrigger asChild>
                                     <div>
                                         <Switch
-                                            checked={formData.leadMagnet}
+                                            checked={watchedValues.leadMagnet}
                                             disabled={
                                                 paymentPlans.length !== 1 ||
                                                 !paymentPlans.some(
@@ -728,16 +659,16 @@ export default function SettingsPage() {
                             </p>
                         </div>
                         <Switch
-                            checked={formData.isPublished}
+                            checked={watchedValues.published}
                             onCheckedChange={() =>
-                                handleSwitchChange("isPublished")
+                                handleSwitchChange("published")
                             }
                         />
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label
-                                className={`${!formData.isPublished ? "text-muted-foreground" : ""} text-base font-semibold`}
+                                className={`${!watchedValues.published ? "text-muted-foreground" : ""} text-base font-semibold`}
                             >
                                 Visibility
                             </Label>
@@ -746,11 +677,11 @@ export default function SettingsPage() {
                             </p>
                         </div>
                         <Switch
-                            checked={formData.isPrivate}
+                            checked={watchedValues.isPrivate}
                             onCheckedChange={() =>
                                 handleSwitchChange("isPrivate")
                             }
-                            disabled={!formData.isPublished}
+                            disabled={!watchedValues.published}
                         />
                     </div>
                 </div>

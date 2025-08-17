@@ -19,15 +19,18 @@ import {
   AuthorizationException,
   NotFoundException,
 } from "../../core/exceptions";
+import { MainContextType } from "../../core/procedures";
 
 const { MembershipEntityType: membershipEntityType } = Constants;
+
+const { permissions } = UIConstants;
 
 export async function fetchEntity(
   entityType: MembershipEntityType,
   entityId: string,
   domainId: string
 ) {
-  
+
 
   if (entityType === membershipEntityType.COURSE) {
     return await CourseModel.findOne({
@@ -50,14 +53,14 @@ export function checkEntityPermission(
 ) {
   if (entityType === membershipEntityType.COURSE) {
     if (
-      !checkPermission(userPermissions, [UIConstants.permissions.manageCourse])
+      !checkPermission(userPermissions, [permissions.manageCourse])
     ) {
       throw new AuthorizationException("Not authorized to manage courses");
     }
   } else if (entityType === membershipEntityType.COMMUNITY) {
     if (
       !checkPermission(userPermissions, [
-        UIConstants.permissions.manageCommunity,
+        permissions.manageCommunity,
       ])
     ) {
       throw new AuthorizationException("Not authorized to manage communities");
@@ -126,7 +129,7 @@ export async function checkDuplicatePaymentPlans(
   subscriptionMonthlyAmount?: number,
   subscriptionYearlyAmount?: number
 ) {
-  
+
 
   const existingPlansForEntity = await PaymentPlanModel.find({
     domain: domainId,
@@ -159,8 +162,6 @@ export async function checkDuplicatePaymentPlans(
 }
 
 export async function getInternalPaymentPlan(domainId: string) {
-  
-
   return await PaymentPlanModel.findOne({
     domain: domainId,
     internal: true,
@@ -171,7 +172,7 @@ export async function createInternalPaymentPlan(
   domainId: string,
   userId: string
 ) {
-  
+
 
   return await PaymentPlanModel.create({
     domain: domainId,
@@ -217,7 +218,7 @@ export const getCommunityObjOrAssert = async (
   };
   if (
     !checkPermission(ctx.user.permissions, [
-      UIConstants.permissions.manageCommunity,
+      permissions.manageCommunity,
     ])
   ) {
     query.enabled = true;
@@ -264,4 +265,16 @@ export async function toggleContentVisibility(
   } else {
     throw new Error("Invalid content type");
   }
+}
+
+export function getCommunityQuery(ctx: MainContextType, communityId: string) {
+  const query: RootFilterQuery<typeof CommunityModel> = {
+    domain: ctx.domainData.domainObj._id,
+    communityId,
+    deleted: false,
+  };
+  if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    query.enabled = true;
+  }
+  return query;
 }
