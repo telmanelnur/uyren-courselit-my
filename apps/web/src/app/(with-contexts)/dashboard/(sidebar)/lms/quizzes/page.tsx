@@ -7,6 +7,7 @@ import { useDataTable } from "@/components/admin/data-table/use-data-table";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useDebounce } from "@workspace/components-library";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
@@ -44,12 +45,6 @@ const columns: ColumnDef<any>[] = [
                 </div>
             );
         },
-        meta: {
-            label: "Title",
-            placeholder: "Search titles...",
-            variant: "text",
-        },
-        enableColumnFilter: true,
     },
     {
         accessorKey: "courseId",
@@ -61,11 +56,6 @@ const columns: ColumnDef<any>[] = [
                     {courseId || "No Course"}
                 </Badge>
             );
-        },
-        meta: {
-            label: "Course",
-            variant: "text",
-            placeholder: "Filter by course...",
         },
     },
     {
@@ -79,11 +69,6 @@ const columns: ColumnDef<any>[] = [
                     {questionIds?.length || 0}
                 </div>
             );
-        },
-        meta: {
-            label: "Questions",
-            variant: "number",
-            placeholder: "Filter by question count...",
         },
     },
     {
@@ -105,6 +90,7 @@ const columns: ColumnDef<any>[] = [
                 { label: "Draft", value: "false" },
             ],
         },
+        enableColumnFilter: true,
     },
     {
         accessorKey: "createdAt",
@@ -160,24 +146,19 @@ const columns: ColumnDef<any>[] = [
 ];
 
 export default function QuizzesPage() {
-    const searchParams = useSearchParams();
-    const page = parseInt(searchParams?.get("page") || "1");
-    const filter = searchParams?.get("filter") || "all";
     const router = useRouter();
 
-    const filterArray = useMemo(
-        () => (filter === "all" ? undefined : [filter]),
-        [filter],
-    );
 
+    const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearchQuery = useDebounce(searchQuery, 500);
     const [parsedData, setParsedData] = useState<Array<ItemType>>([]);
     const [parsedPageination, setParsedPagination] = useState({
         pageCount: 1,
     });
     const { table } = useDataTable({
         columns,
-        data: [],
-        pageCount: 0,
+        data: parsedData,
+        pageCount: parsedPageination.pageCount,
         enableGlobalFilter: true,
         initialState: {
             sorting: [{ id: "createdAt", desc: true }],
@@ -191,19 +172,20 @@ export default function QuizzesPage() {
                 take: tableState.pagination.pageSize,
             },
         };
+        // filters skiped
         if (tableState.sorting[0]) {
             parsed.orderBy = {
                 field: tableState.sorting[0].id as any,
                 direction: tableState.sorting[0].desc ? "desc" : "asc",
             };
         }
-        if (tableState.globalFilter) {
+        if (debouncedSearchQuery) {
             parsed.search = {
-                q: tableState.globalFilter as string,
+                q: debouncedSearchQuery,
             };
         }
         return parsed;
-    }, [tableState.sorting, tableState.pagination, tableState.columnFilters, tableState.globalFilter]);
+    }, [tableState.sorting, tableState.pagination, tableState.columnFilters, tableState.globalFilter, debouncedSearchQuery]);
     const loadListQuery = trpc.lmsModule.quizModule.quiz.list.useQuery(queryParams);
     useEffect(() => {
         if (!loadListQuery.data) return;
@@ -231,16 +213,18 @@ export default function QuizzesPage() {
                 </div>
 
                 <Card>
-                    <CardHeader>
-                        <h3 className="text-lg font-semibold">Advanced Quiz Management</h3>
-                        <p className="text-sm text-muted-foreground">
-                            Use the DataTable below for advanced filtering, sorting, and pagination
-                        </p>
-                    </CardHeader>
                     <CardContent>
-                        <DataTable table={table} >
-                            <DataTableToolbar table={table} />
-                        </DataTable>
+                        <div className="flex flex-col gap-2">
+                            <Input
+                                placeholder={"Search"}
+                                value={searchQuery}
+                                onChange={(event) => setSearchQuery(event.target.value)}
+                                className="h-8 w-40 lg:w-56"
+                            />
+                            <DataTable table={table} >
+                                <DataTableToolbar table={table} />
+                            </DataTable>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
