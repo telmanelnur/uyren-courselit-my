@@ -13,7 +13,7 @@ export interface IAssignment extends Document {
   instructions?: string;
   requirements: string[];
   attachments: string[];
-  isPublished: boolean;
+  status: "draft" | "published";
   allowLateSubmission: boolean;
   latePenalty: number;
   maxSubmissions: number;
@@ -33,92 +33,109 @@ const RubricCriterionSchema = new Schema({
   description: { type: String, trim: true }
 }, { _id: true });
 
-const AssignmentSchema = new Schema({
+const AssignmentSchema = new Schema<IAssignment>({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-  title: { 
-    type: String, 
-    required: true, 
-    trim: true, 
-    maxlength: 255 
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 255
   },
-  description: { 
-    type: String, 
-    trim: true, 
-    maxlength: 2000 
+  description: {
+    type: String,
+    trim: true,
+    maxlength: 2000
   },
-  courseId: { 
-    type: String, 
-    required: true, 
-    index: true 
+  courseId: {
+    type: String,
+    required: true,
+    index: true
   },
-  ownerId: { 
-    type: String, 
-    required: true, 
-    index: true 
+  ownerId: {
+    type: String,
+    required: true,
+    index: true
   },
-  assignmentType: { 
-    type: String, 
-    required: true, 
-    enum: ["essay", "project", "presentation", "file_upload", "peer_review"] 
+  assignmentType: {
+    type: String,
+    required: true,
+    enum: ["essay", "project", "presentation", "file_upload", "peer_review"]
   },
-  dueDate: { 
-    type: Date, 
-    index: true 
+  dueDate: {
+    type: Date,
+    index: true
   },
-  totalPoints: { 
-    type: Number, 
-    required: true, 
-    min: 1, 
-    default: 100 
+  totalPoints: {
+    type: Number,
+    required: true,
+    min: 1,
+    default: 100
   },
   instructions: { type: String, trim: true, maxlength: 5000 },
-  requirements: [{ 
-    type: String, 
-    trim: true, 
-    maxlength: 500 
+  requirements: [{
+    type: String,
+    trim: true,
+    maxlength: 500
   }],
-  attachments: [{ 
-    type: String, 
-    trim: true 
+  attachments: [{
+    type: String,
+    trim: true
   }],
-  isPublished: { 
-    type: Boolean, 
-    default: false 
+  status: {
+    type: String,
+    enum: ["draft", "published",],
+    default: "draft"
   },
-  allowLateSubmission: { 
-    type: Boolean, 
-    default: false 
+  allowLateSubmission: {
+    type: Boolean,
+    default: false
   },
-  latePenalty: { 
-    type: Number, 
-    min: 0, 
-    max: 100, 
-    default: 10 
+  latePenalty: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 10
   },
-  maxSubmissions: { 
-    type: Number, 
-    min: 1, 
-    default: 1 
+  maxSubmissions: {
+    type: Number,
+    min: 1,
+    default: 1
   },
   allowResubmission: { type: Boolean, default: false },
   peerReviewEnabled: { type: Boolean, default: false },
   rubric: [RubricCriterionSchema],
-  tags: [{ 
-    type: String, 
-    trim: true, 
-    maxlength: 50 
+  tags: [{
+    type: String,
+    trim: true,
+    maxlength: 50
   }],
-  category: { 
-    type: String, 
-    trim: true 
+  category: {
+    type: String,
+    trim: true
   },
   difficulty: { type: String, enum: ["easy", "medium", "hard"], default: "medium" },
 }, {
   timestamps: true
 });
 
-AssignmentSchema.index({ courseId: 1, isPublished: 1 });
-AssignmentSchema.index({ ownerId: 1, isPublished: 1 });
+AssignmentSchema.index({ courseId: 1, status: 1 });
+AssignmentSchema.index({ ownerId: 1, status: 1 });
 AssignmentSchema.index({ assignmentType: 1 });
+
+// Virtual populate for owner
+AssignmentSchema.virtual('owner', {
+  ref: 'User',
+  localField: 'ownerId',
+  foreignField: 'userId',
+  justOne: true,
+});
+
+// Virtual populate for course
+AssignmentSchema.virtual('course', {
+  ref: 'Course',
+  localField: 'courseId',
+  foreignField: 'courseId',
+  justOne: true,
+});
 
 export default createModel("Assignment", AssignmentSchema);

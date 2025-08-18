@@ -204,9 +204,9 @@ export default function Page({
                                     //     (email?.content?.meta?.previewText ||
                                     //         "") &&
                                     published ===
-                                        (email?.published
-                                            ? "published"
-                                            : "unpublished"))
+                                    (email?.published
+                                        ? "published"
+                                        : "unpublished"))
                             }
                         >
                             {BUTTON_SAVE}

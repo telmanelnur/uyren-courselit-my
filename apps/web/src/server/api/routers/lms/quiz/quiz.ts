@@ -1,12 +1,14 @@
-import { z } from "zod";
-import { router } from "@/server/api/core/trpc";
-import { protectedProcedure, createPermissionMiddleware, createDomainRequiredMiddleware } from "@/server/api/core/procedures";
-import { ListInputSchema } from "@/server/api/core/schema";
-import { checkPermission } from "@workspace/utils";
-import { NotFoundException, AuthorizationException } from "@/server/api/core/exceptions";
 import { QuizModel } from "@/models/lms";
+import { AuthorizationException, NotFoundException } from "@/server/api/core/exceptions";
+import { createDomainRequiredMiddleware, createPermissionMiddleware, protectedProcedure } from "@/server/api/core/procedures";
+import { getFormDataSchema, ListInputSchema } from "@/server/api/core/schema";
+import { router } from "@/server/api/core/trpc";
+import { documentIdValidator } from "@/server/api/core/validators";
+import { checkPermission } from "@workspace/utils";
+import { RootFilterQuery } from "mongoose";
+import { z } from "zod";
 
-const CreateSchema = z.object({
+const CreateSchema = getFormDataSchema({
   title: z.string().min(1).max(255),
   description: z.string().optional(),
   courseId: z.string().min(1),
@@ -17,13 +19,6 @@ const CreateSchema = z.object({
   showResults: z.boolean().default(false),
   isPublished: z.boolean().default(false),
   totalPoints: z.number().min(1).default(0),
-});
-
-const UpdateSchema = CreateSchema.partial();
-
-const QuizListInputSchema = ListInputSchema.extend({
-  courseId: z.string().optional(),
-  isPublished: z.boolean().optional(),
 });
 
 export const quizRouter = router({
@@ -43,16 +38,20 @@ export const quizRouter = router({
   update: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware(["manageAnyCourse"]))
-    .input(z.object({ id: z.string(), data: UpdateSchema }))
+    .input(getFormDataSchema(CreateSchema.shape["data"].partial().shape).extend({
+      id: documentIdValidator()
+    }))
     .mutation(async ({ ctx, input }) => {
-      const quiz = await QuizModel.findOne({ 
-        _id: input.id, 
-        domain: ctx.domainData.domainObj._id 
+      const quiz = await QuizModel.findOne({
+        _id: input.id,
+        domain: ctx.domainData.domainObj._id
       });
       if (!quiz) throw new NotFoundException("Quiz not found");
-
-      const updated = await QuizModel.findByIdAndUpdate(input.id, input.data, { new: true });
-      return updated;
+      Object.keys(input.data).forEach(key => {
+        (quiz as any)[key] = (input.data as any)[key];
+      });
+      await quiz.save();
+      return quiz;
     }),
 
   delete: protectedProcedure
@@ -60,9 +59,9 @@ export const quizRouter = router({
     .use(createPermissionMiddleware(["manageAnyCourse"]))
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      const quiz = await QuizModel.findOne({ 
-        _id: input, 
-        domain: ctx.domainData.domainObj._id 
+      const quiz = await QuizModel.findOne({
+        _id: input,
+        domain: ctx.domainData.domainObj._id
       });
       if (!quiz) throw new NotFoundException("Quiz not found");
 
@@ -72,49 +71,57 @@ export const quizRouter = router({
 
   getById: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.string())
+    .input(z.object({
+      id: documentIdValidator()
+    }))
     .query(async ({ ctx, input }) => {
-      const quiz = await QuizModel.findOne({ 
-        _id: input, 
-        domain: ctx.domainData.domainObj._id 
-      });
+      const quiz = await QuizModel.findOne({
+        _id: input.id,
+        domain: ctx.domainData.domainObj._id
+      })
+        .populate('owner', 'userId name email')
+        .populate('course', 'courseId title');
+      
       if (!quiz) throw new NotFoundException("Quiz not found");
 
-      const hasAccess = await checkPermission(ctx.user.permissions, ["manageAnyCourse"]);
-      if (!hasAccess && !quiz.isPublished) throw new AuthorizationException("No access");
-
+      const hasAccess = checkPermission(ctx.user.permissions, ["manageAnyCourse"]);
+      if (!hasAccess && quiz.status === "draft") throw new AuthorizationException("No access");
       return quiz;
     }),
 
   list: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(QuizListInputSchema)
+    .input(ListInputSchema.extend({
+      filter: z.object({
+        status: z.enum(["published", "draft"]).optional(),
+        courseId: z.string().optional(),
+      }).optional(),
+    }))
     .query(async ({ ctx, input }) => {
-      const { courseId, isPublished, ...listInput } = input;
-
-      const filter: any = { domain: ctx.domainData.domainObj._id };
-      if (courseId) filter.courseId = courseId;
-      if (isPublished !== undefined) filter.isPublished = isPublished;
-
-      const itemsPromise = QuizModel.find(filter)
-        .skip(listInput.pagination?.skip || 0)
-        .limit(listInput.pagination?.take || 20)
-        .sort(listInput.orderBy ? { [listInput.orderBy.field]: listInput.orderBy.direction === "asc" ? 1 : -1 } : { createdAt: -1 });
-
-      const includeCount = listInput.pagination?.includePaginationCount ?? true;
+      const query: RootFilterQuery<typeof QuizModel> = {
+        domain: ctx.domainData.domainObj._id,
+      };
+      if (input.filter?.status) query.status = input.filter.status;
+      if (input.filter?.courseId) query.courseId = input.filter.courseId;
+      const itemsPromise = QuizModel.find(query)
+        .populate('owner', 'userId name email')
+        .populate('course', 'courseId title')
+        .skip(input.pagination?.skip || 0)
+        .limit(input.pagination?.take || 20)
+        .sort(input.orderBy ? { [input.orderBy.field]: input.orderBy.direction === "asc" ? 1 : -1 } : { createdAt: -1 });
+      const includeCount = input.pagination?.includePaginationCount ?? true;
       const [items, total] = await Promise.all([
         itemsPromise,
-        includeCount ? QuizModel.countDocuments(filter) : Promise.resolve(0)
+        includeCount ? QuizModel.countDocuments(query) : Promise.resolve(0)
       ]);
-
-      return { 
-        items, 
+      return {
+        items,
         total,
-        meta: { 
-          total: includeCount ? total : undefined, 
-          skip: listInput.pagination?.skip || 0, 
-          take: listInput.pagination?.take || 20 
-        } 
+        meta: {
+          includePaginationCount: input.pagination?.includePaginationCount,
+          skip: input.pagination?.skip || 0,
+          take: input.pagination?.take || 20,
+        }
       };
     }),
 });

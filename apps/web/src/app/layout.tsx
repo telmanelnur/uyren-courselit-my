@@ -9,6 +9,8 @@ import { TRPCError } from "@trpc/server";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import NotFound from "./not-found";
+
+import "@/lib/global-client";
 // import "remirror/styles/all.css";
 import "@/styles/globals.css";
 

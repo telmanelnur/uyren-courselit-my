@@ -1,9 +1,11 @@
-import { z } from "zod";
-import { router } from "@/server/api/core/trpc";
-import { protectedProcedure, createPermissionMiddleware, createDomainRequiredMiddleware } from "@/server/api/core/procedures";
-import { ListInputSchema } from "@/server/api/core/schema";
-import { NotFoundException, AuthorizationException } from "@/server/api/core/exceptions";
 import { AssignmentModel } from "@/models/lms";
+import { AuthorizationException, NotFoundException } from "@/server/api/core/exceptions";
+import { createDomainRequiredMiddleware, createPermissionMiddleware, protectedProcedure } from "@/server/api/core/procedures";
+import { ListInputSchema } from "@/server/api/core/schema";
+import { router } from "@/server/api/core/trpc";
+import { checkPermission } from "@workspace/utils";
+import { RootFilterQuery } from "mongoose";
+import { z } from "zod";
 
 const CreateAssignmentSchema = z.object({
   title: z.string().min(1).max(255),
@@ -29,10 +31,7 @@ const CreateAssignmentSchema = z.object({
 
 const UpdateAssignmentSchema = CreateAssignmentSchema.partial();
 
-const AssignmentListInputSchema = ListInputSchema.extend({
-  courseId: z.string().optional(),
-  isPublished: z.boolean().optional(),
-});
+
 
 export const assignmentRouter = router({
   create: protectedProcedure
@@ -53,9 +52,9 @@ export const assignmentRouter = router({
     .use(createPermissionMiddleware(["manageAnyCourse"]))
     .input(z.object({ id: z.string(), data: UpdateAssignmentSchema }))
     .mutation(async ({ ctx, input }) => {
-      const assignment = await AssignmentModel.findOne({ 
-        _id: input.id, 
-        domain: ctx.domainData.domainObj._id 
+      const assignment = await AssignmentModel.findOne({
+        _id: input.id,
+        domain: ctx.domainData.domainObj._id
       });
       if (!assignment) throw new NotFoundException("Assignment not found");
 
@@ -68,9 +67,9 @@ export const assignmentRouter = router({
     .use(createPermissionMiddleware(["manageAnyCourse"]))
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      const assignment = await AssignmentModel.findOne({ 
-        _id: input, 
-        domain: ctx.domainData.domainObj._id 
+      const assignment = await AssignmentModel.findOne({
+        _id: input,
+        domain: ctx.domainData.domainObj._id
       });
       if (!assignment) throw new NotFoundException("Assignment not found");
       await AssignmentModel.findByIdAndDelete(input);
@@ -81,40 +80,63 @@ export const assignmentRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(z.string())
     .query(async ({ ctx, input }) => {
-      const assignment = await AssignmentModel.findOne({ 
-        _id: input, 
-        domain: ctx.domainData.domainObj._id 
-      });
+      const assignment = await AssignmentModel.findOne({
+        _id: input,
+        domain: ctx.domainData.domainObj._id
+      })
+        .populate('owner', 'userId name email')
+        .populate('course', 'courseId title');
+
       if (!assignment) throw new NotFoundException("Assignment not found");
-      if (!assignment.isPublished) {
-        throw new AuthorizationException("No access");
-      }
+
+      const hasAccess = checkPermission(ctx.user.permissions, ["manageAnyCourse"]);
+      if (!hasAccess && assignment.status === "draft") throw new AuthorizationException("No access");
+
       return assignment;
     }),
 
   list: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(AssignmentListInputSchema)
+    .input(ListInputSchema.extend({
+      filter: z.object({
+        courseId: z.string().optional(),
+        status: z.enum(["draft", "published",]).optional(),
+      }),
+    }))
     .query(async ({ ctx, input }) => {
-      const { courseId, isPublished, ...listInput } = input;
-      const filter: any = { domain: ctx.domainData.domainObj._id };
-      if (courseId) filter.courseId = courseId;
-      if (isPublished !== undefined) filter.isPublished = isPublished;
-      const itemsPromise = AssignmentModel.find(filter)
-        .skip(listInput.pagination?.skip || 0)
-        .limit(listInput.pagination?.take || 20)
-        .sort(listInput.orderBy ? { [listInput.orderBy.field]: listInput.orderBy.direction === "asc" ? 1 : -1 } : { createdAt: -1 });
-      const includeCount = listInput.pagination?.includePaginationCount ?? true;
+      const query: RootFilterQuery<typeof AssignmentModel> = {
+        domain: ctx.domainData.domainObj._id,
+        ...(input.filter?.courseId ? { courseId: input.filter.courseId } : {}),
+        ...(input.filter?.status ? { status: input.filter.status } : {}),
+      };
+      const includeCount = input.pagination?.includePaginationCount ?? true;
       const [items, total] = await Promise.all([
-        itemsPromise,
-        includeCount ? AssignmentModel.countDocuments(filter) : Promise.resolve(0)
+        AssignmentModel.find(query)
+          .populate<{
+            owner: {
+              userId: string;
+              email: string;
+            }
+          }>('owner', 'userId name email')
+          .populate<{
+            course: {
+              courseId: string;
+              title: string;
+            }
+          }>('course', 'courseId title')
+          .skip(input.pagination?.skip || 0)
+          .limit(input.pagination?.take || 20)
+          .sort(input.orderBy ? { [input.orderBy.field]: input.orderBy.direction === "asc" ? 1 : -1 } : { createdAt: -1 }),
+        includeCount ? AssignmentModel.countDocuments(query) : Promise.resolve(0)
       ]);
+
       return {
-        data: items,
+        items,
+        total,
         meta: {
-          total: includeCount ? total : undefined,
-          skip: listInput.pagination?.skip || 0,
-          take: listInput.pagination?.take || 20
+          includePaginationCount: input.pagination?.includePaginationCount,
+          skip: input.pagination?.skip || 0,
+          take: input.pagination?.take || 20,
         }
       };
     }),

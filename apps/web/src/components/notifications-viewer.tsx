@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useProfile } from "./contexts/profile-context";
 import { useServerConfig } from "./contexts/server-config-context";
+import { getGlobalAppClient } from "@/lib/global-client";
 
 function useEventSourceWithRetry({
     url,
@@ -44,6 +45,8 @@ function useEventSourceWithRetry({
     enabled?: boolean;
 }) {
     useEffect(() => {
+        const useNotificationsStream = getGlobalAppClient().getConfig("useNotificationsStream");
+        if (!useNotificationsStream) return;
         if (!enabled || !url) return;
         let retries = 0;
         let cancelled = false;

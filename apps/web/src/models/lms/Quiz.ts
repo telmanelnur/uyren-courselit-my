@@ -12,7 +12,7 @@ export interface IQuiz extends Document {
   passingScore: number;
   shuffleQuestions: boolean;
   showResults: boolean;
-  isPublished: boolean;
+  status: "draft" | "published";
   questionIds: string[];
   totalPoints: number;
   createdAt: Date;
@@ -30,14 +30,30 @@ const QuizSchema = new Schema<IQuiz>({
   passingScore: { type: Number, min: 0, max: 100, default: 60 },
   shuffleQuestions: { type: Boolean, default: true },
   showResults: { type: Boolean, default: false },
-  isPublished: { type: Boolean, default: false },
+  status: { type: String, required: true, enum: ["draft", "published",], default: "draft" },
   questionIds: [{ type: String }],
   totalPoints: { type: Number, min: 0, default: 0 },
 }, {
   timestamps: true,
 });
 
-QuizSchema.index({ ownerId: 1, isPublished: 1 });
-QuizSchema.index({ courseId: 1, isPublished: 1 });
+QuizSchema.index({ ownerId: 1, status: 1 });
+QuizSchema.index({ courseId: 1, status: 1 });
+
+// Virtual populate for owner
+QuizSchema.virtual('owner', {
+  ref: 'User',
+  localField: 'ownerId',
+  foreignField: 'userId',
+  justOne: true,
+});
+
+// Virtual populate for course
+QuizSchema.virtual('course', {
+  ref: 'Course',
+  localField: 'courseId',
+  foreignField: 'courseId',
+  justOne: true,
+});
 
 export default createModel("Quiz", QuizSchema);

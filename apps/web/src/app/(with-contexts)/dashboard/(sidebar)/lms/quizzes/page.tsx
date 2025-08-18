@@ -1,33 +1,32 @@
 "use client";
 
 import DashboardContent from "@/components/admin/dashboard-content";
-import { DataTable } from "@/components/admin/data-table/data-table";
-import { DataTableToolbar } from "@/components/admin/data-table/data-table-toolbar";
-import { useDataTable } from "@/components/admin/data-table/use-data-table";
+import { CreateButton } from "@/components/admin/layout/create-button";
+import HeaderTopbar from "@/components/admin/layout/header-topbar";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import { useDataTable } from "@/components/data-table/use-data-table";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useDebounce } from "@workspace/components-library";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table";
-import { Edit, Eye, FileQuestion, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, Eye, FileQuestion, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 
 const breadcrumbs = [{ label: "LMS", href: "#" }, { label: "Quizzes", href: "#" }];
 
-
 type ItemType = GeneralRouterOutputs["lmsModule"]["quizModule"]["quiz"]["list"]["items"][number];
 type QueryParams = Parameters<typeof trpc.lmsModule.quizModule.quiz.list.useQuery>[0];
 
 
-const columns: ColumnDef<any>[] = [
+const columns: ColumnDef<ItemType>[] = [
     {
         accessorKey: "title",
         header: "Quiz Title",
@@ -50,11 +49,25 @@ const columns: ColumnDef<any>[] = [
         accessorKey: "courseId",
         header: "Course",
         cell: ({ row }) => {
-            const courseId = row.getValue("courseId") as string;
+            const quiz = row.original;
+            const course = (quiz as any).course;
             return (
                 <Badge variant="outline">
-                    {courseId || "No Course"}
+                    {course?.title || quiz.courseId || "No Course"}
                 </Badge>
+            );
+        },
+    },
+    {
+        accessorKey: "ownerId",
+        header: "Owner",
+        cell: ({ row }) => {
+            const quiz = row.original;
+            const owner = (quiz as any).owner;
+            return (
+                <div className="text-sm text-muted-foreground">
+                    {owner?.name || owner?.email || quiz.ownerId || "Unknown"}
+                </div>
             );
         },
     },
@@ -72,13 +85,13 @@ const columns: ColumnDef<any>[] = [
         },
     },
     {
-        accessorKey: "isPublished",
+        accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
-            const isPublished = row.getValue("isPublished") as boolean;
+            const status = row.original.status;
             return (
-                <Badge variant={isPublished ? "default" : "secondary"}>
-                    {isPublished ? "Published" : "Draft"}
+                <Badge variant={status === "published" ? "default" : "secondary"}>
+                    {status === "published" ? "Published" : "Draft"}
                 </Badge>
             );
         },
@@ -86,8 +99,8 @@ const columns: ColumnDef<any>[] = [
             label: "Status",
             variant: "select",
             options: [
-                { label: "Published", value: "true" },
-                { label: "Draft", value: "false" },
+                { label: "Published", value: "published" },
+                { label: "Draft", value: "draft" },
             ],
         },
         enableColumnFilter: true,
@@ -145,10 +158,7 @@ const columns: ColumnDef<any>[] = [
     },
 ];
 
-export default function QuizzesPage() {
-    const router = useRouter();
-
-
+export default function Page() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 500);
     const [parsedData, setParsedData] = useState<Array<ItemType>>([]);
@@ -171,8 +181,14 @@ export default function QuizzesPage() {
                 skip: tableState.pagination.pageIndex * tableState.pagination.pageSize,
                 take: tableState.pagination.pageSize,
             },
+            filter: {
+                status: Array.isArray(
+                    tableState.columnFilters.find((filter) => filter.id === "status")?.value
+                )
+                    ? (tableState.columnFilters.find((filter) => filter.id === "status")?.value as string[])[0] as "published" | "draft"
+                    : undefined,
+            }
         };
-        // filters skiped
         if (tableState.sorting[0]) {
             parsed.orderBy = {
                 field: tableState.sorting[0].id as any,
@@ -195,23 +211,18 @@ export default function QuizzesPage() {
             pageCount: Math.ceil(loadListQuery.data.total / loadListQuery.data.meta.take),
         });
     }, [loadListQuery.data]);
-
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Quizzes</h1>
-                        <p className="text-muted-foreground">Manage quizzes and assessments</p>
-                    </div>
-                    <Button asChild>
-                        <Link href="/dashboard/lms/quizzes/create">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Quiz
-                        </Link>
-                    </Button>
-                </div>
-
+                <HeaderTopbar
+                    header={{
+                        title: "Quizzes",
+                        subtitle: "Manage quizzes and assessments"
+                    }}
+                    rightAction={
+                        <CreateButton href="/dashboard/lms/quizzes/new" />
+                    }
+                />
                 <Card>
                     <CardContent>
                         <div className="flex flex-col gap-2">
