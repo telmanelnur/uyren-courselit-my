@@ -14,6 +14,7 @@ import { AssignmentProvider, useAssignmentContext } from "./assignment-context"
 import AssignmentSettings from "./assignment-settings"
 import AssignmentSubmissions from "./assignment-submissions"
 import AssignmentGrading from "./assignment-grading"
+import { BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models"
 
 interface AssignmentClientWrapperProps {
     initialMode: FormMode;
@@ -78,9 +79,9 @@ function AssignmentContent() {
                                         disabled={!assignment || updateMutation.isPending || mode === "create"}
                                         className="flex items-center gap-2"
                                     >
-                                        {assignment?.status === "draft" && "Draft"}
-                                        {assignment?.status === "published" && "Published"}
-                                        {assignment?.status === "archived" && "Archived"}
+                                        {assignment?.status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT && "Draft"}
+                                        {assignment?.status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED && "Published"}
+                                        {assignment?.status === BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED && "Archived"}
                                         {!assignment?.status && "Draft"}
                                         <ChevronDown className="h-4 w-4" />
                                     </Button>

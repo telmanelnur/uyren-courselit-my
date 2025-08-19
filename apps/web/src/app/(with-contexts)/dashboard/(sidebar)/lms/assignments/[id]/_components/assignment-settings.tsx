@@ -54,9 +54,9 @@ export default function AssignmentSettings() {
             course: undefined as any,
             instructions: "",
             totalPoints: 100,
+            availableFrom: undefined,
             dueDate: undefined,
             assignmentType: "project",
-            availableFrom: undefined,
             allowLateSubmission: false,
         }
     })
@@ -122,6 +122,7 @@ export default function AssignmentSettings() {
                 course: assignment.course ? { key: assignment.course.courseId, title: assignment.course.title } : undefined,
                 instructions: assignment.instructions || "",
                 totalPoints: assignment.totalPoints || 100,
+                availableFrom: assignment.availableFrom ? new Date(assignment.availableFrom) : undefined,
                 dueDate: assignment.dueDate ? new Date(assignment.dueDate) : undefined,
                 assignmentType: assignment.assignmentType || "project",
                 allowLateSubmission: assignment.allowLateSubmission || false,

@@ -1,7 +1,19 @@
 import { createModel } from "@workspace/common-logic";
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface IQuizAttempt extends Document {
+export type IQuizAttemptStatus = "in_progress" | "completed" | "abandoned" | "graded"; 
+export type IQuizAttemptAnswer = {
+  questionId: string;
+  answer: any;
+  isCorrect?: boolean;
+  score?: number;
+  feedback?: string;
+  timeSpent?: number;
+  gradedAt?: Date;
+  gradedBy?: string;
+}
+
+export interface IQuizAttempt {
   quizId: string;
   userId: string;
   domain: mongoose.Types.ObjectId;
@@ -62,4 +74,18 @@ const QuizAttemptSchema = new Schema<IQuizAttempt>({
 QuizAttemptSchema.index({ quizId: 1, userId: 1, status: 1 });
 QuizAttemptSchema.index({ userId: 1, status: 1 });
 
-export default createModel<IQuizAttempt>("QuizAttempt", QuizAttemptSchema);
+QuizAttemptSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: 'userId',
+  justOne: true,
+});
+
+QuizAttemptSchema.virtual('quiz', {
+  ref: 'Quiz',
+  localField: 'quizId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+export default createModel("QuizAttempt", QuizAttemptSchema);

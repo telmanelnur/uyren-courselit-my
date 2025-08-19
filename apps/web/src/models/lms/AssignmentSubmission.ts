@@ -1,7 +1,7 @@
 import { createModel } from "@workspace/common-logic";
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface IAssignmentSubmission extends Document {
+export interface IAssignmentSubmission {
   assignmentId: string;
   userId: string;
   domain: mongoose.Types.ObjectId;

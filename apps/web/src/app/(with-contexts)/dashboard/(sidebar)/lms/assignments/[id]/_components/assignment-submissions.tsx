@@ -7,7 +7,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
-import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@workspace/ui/components/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { Bot, Clock, Download, FileText, Loader2, MessageSquare, MoreHorizontal, Star, Users } from "lucide-react"
 import { useState } from "react"
 import { useAssignmentContext } from "./assignment-context"
@@ -21,7 +21,7 @@ export default function AssignmentSubmissions() {
 
     const submissionsQuery = trpc.lmsModule.assignmentModule.assignmentSubmission.listSubmissions.useQuery({
         filter: {
-            assignmentId: assignment?._id,
+            assignmentId: assignment?._id?.toString(),
         },
         pagination: {
             take: 50,

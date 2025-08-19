@@ -1,64 +1,126 @@
 import { BaseQuestionProvider } from "./BaseQuestionProvider";
+import { IQuestion, ShortAnswerQuestion } from "@/models/lms/Question";
+import { QuestionAnswer } from "./BaseQuestionProvider";
+import { MainContextType } from "@/server/api/core/procedures";
+import { z } from "zod";
 
-export class ShortAnswerProvider extends BaseQuestionProvider {
+// Short answer specific schema
+const shortAnswerSchema = z.object({
+  correctAnswers: z.array(z.string().min(1, "Answer cannot be empty")).min(1, "Correct answer is required"),
+  settings: z.object({
+    // caseSensitive: z.boolean().optional(),
+    // partialMatch: z.boolean().optional(),
+    // minAnswerLength: z.number().min(1).optional(),
+    // maxAnswerLength: z.number().max(1000).optional(),
+  }).optional(),
+});
+
+export class ShortAnswerProvider extends BaseQuestionProvider<ShortAnswerQuestion> {
   readonly type = "short_answer";
   readonly displayName = "Short Answer";
   readonly description = "Text-based answer with flexible matching";
 
-  protected validateSpecificFields(question: any): string[] {
+  protected getSpecificValidationSchema(): z.ZodObject<z.ZodRawShape> {
+    return shortAnswerSchema;
+  }
+
+  protected validateAnswerSpecific(answer: QuestionAnswer, question: ShortAnswerQuestion): string[] {
     const errors: string[] = [];
 
-    if (!question.correctAnswers || question.correctAnswers.length === 0) {
-      errors.push("Correct answer is required");
+    if (!Array.isArray(answer)) {
+      errors.push("Answer must be an array of strings");
+      return errors;
     }
 
-    // Validate that correct answers have content
-    if (question.correctAnswers) {
-      question.correctAnswers.forEach((answer: any, index: number) => {
-        if (!answer || answer.toString().trim().length === 0) {
-          errors.push(`Correct answer ${index + 1} cannot be empty`);
-        }
-      });
+    if (answer.length === 0) {
+      errors.push("Answer cannot be empty");
+      return errors;
     }
+
+    // Validate each answer in the array
+    answer.forEach((ans, index) => {
+      if (typeof ans !== "string") {
+        errors.push(`Answer ${index + 1} must be a string`);
+        return;
+      }
+
+      if (!ans || ans.trim().length === 0) {
+        errors.push(`Answer ${index + 1} cannot be empty`);
+        return;
+      }
+
+      const minLength = question.settings?.minAnswerLength || 1;
+      const maxLength = question.settings?.maxAnswerLength || 500;
+
+      if (ans.length < minLength) {
+        errors.push(`Answer ${index + 1} must be at least ${minLength} characters long`);
+      }
+
+      if (ans.length > maxLength) {
+        errors.push(`Answer ${index + 1} must be no more than ${maxLength} characters long`);
+      }
+    });
 
     return errors;
   }
 
-  protected isAnswerCorrect(answer: any, question: any): boolean {
-    if (!answer || !question.correctAnswers) return false;
-    return question.correctAnswers.some((correct: any) => correct === answer);
+  protected normalizeAnswer(answer: QuestionAnswer, _question: ShortAnswerQuestion) {
+    return answer;
   }
 
-  getDefaultSettings(): any {
+  isAnswerCorrect(answer: QuestionAnswer, question: ShortAnswerQuestion): boolean {
+    if (!Array.isArray(answer) || answer.length === 0 || !question.correctAnswers) return false;
+    
+    const caseSensitive = question.settings?.caseSensitive ?? false;
+    const partialMatch = question.settings?.partialMatch ?? true;
+
+    return answer.some((ans) => {
+      const answerStr = ans.trim();
+      
+      return question.correctAnswers!.some((correct: string) => {
+        const correctStr = correct.trim();
+        
+        if (caseSensitive) {
+          return partialMatch ? answerStr.includes(correctStr) : answerStr === correctStr;
+        } else {
+          const answerLower = answerStr.toLowerCase();
+          const correctLower = correctStr.toLowerCase();
+          return partialMatch ? answerLower.includes(correctLower) : answerLower === correctLower;
+        }
+      });
+    });
+  }
+
+  getDefaultSettings(): Record<string, unknown> {
     return {
       ...super.getDefaultSettings(),
-      shuffleOptions: false, // Short answer doesn't have options to shuffle
-      caseSensitive: false,
-      partialMatch: true,
-      minAnswerLength: 1,
-      maxAnswerLength: 500
+      // shuffleOptions: false, // Short answer doesn't have options to shuffle
+      // caseSensitive: false,
+      // partialMatch: true,
+      // minAnswerLength: 1,
+      // maxAnswerLength: 500
     };
   }
 
   // Override to add short answer specific validation
-  getValidatedData(questionData: any, courseId: string, teacherId: string): any {
+  getValidatedData(questionData: Partial<ShortAnswerQuestion>, ctx: MainContextType): Partial<ShortAnswerQuestion> {
     // Ensure correct answers are properly formatted
     if (questionData.correctAnswers) {
       questionData.correctAnswers = questionData.correctAnswers
-        .filter((answer: any) => answer && answer.toString().trim().length > 0)
-        .map((answer: any) => answer.toString().trim());
+        .filter((answer: unknown) => answer && String(answer).trim().length > 0)
+        .map((answer: unknown) => String(answer).trim());
     }
 
-    return super.getValidatedData(questionData, courseId, teacherId);
+    return super.getValidatedData(questionData, ctx);
   }
 
   // Process short answer for display
-  processQuestionForDisplay(question: any, hideAnswers: boolean = true): any {
-    const processed = { ...question.toObject?.() ?? question };
+  processQuestionForDisplay(question: ShortAnswerQuestion, hideAnswers: boolean = true): Partial<ShortAnswerQuestion> {
+    const processed = super.processQuestionForDisplay(question, hideAnswers);
     
     if (hideAnswers) {
-      delete processed.correctAnswers;
-      delete processed.explanation;
+      delete (processed as Record<string, unknown>).correctAnswers;
+      delete (processed as Record<string, unknown>).explanation;
     }
     
     return processed;

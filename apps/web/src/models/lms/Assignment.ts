@@ -1,19 +1,21 @@
 import { createModel } from "@workspace/common-logic";
+import { BasicPublicationStatus, BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models";
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface IAssignment extends Document {
+export interface IAssignment {
   title: string;
   description?: string;
   courseId: string;
   ownerId: string;
   domain: mongoose.Types.ObjectId;
   assignmentType: "essay" | "project" | "presentation" | "file_upload" | "peer_review";
+  availableFrom?: Date;
   dueDate?: Date;
   totalPoints: number;
   instructions?: string;
   requirements: string[];
   attachments: string[];
-  status: "draft" | "published" | "archived";
+  status: BasicPublicationStatus;
   allowLateSubmission: boolean;
   latePenalty: number;
   maxSubmissions: number;
@@ -61,6 +63,10 @@ const AssignmentSchema = new Schema<IAssignment>({
     required: true,
     enum: ["essay", "project", "presentation", "file_upload", "peer_review"]
   },
+  availableFrom: {
+    type: Date,
+    index: true
+  },
   dueDate: {
     type: Date,
     index: true
@@ -83,8 +89,11 @@ const AssignmentSchema = new Schema<IAssignment>({
   }],
   status: {
     type: String,
-    enum: ["draft", "published", "archived"],
-    default: "draft"
+    enum: [
+      BASIC_PUBLICATION_STATUS_TYPE.DRAFT,
+      BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
+      BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED,
+    ],
   },
   allowLateSubmission: {
     type: Boolean,

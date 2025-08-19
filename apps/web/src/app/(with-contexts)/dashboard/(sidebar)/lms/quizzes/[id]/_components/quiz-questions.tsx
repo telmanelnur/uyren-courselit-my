@@ -193,7 +193,7 @@ export default function QuizQuestions() {
                                         <TableCell>
                                             <div className="space-y-1">
                                                 <div className="font-medium">
-                                                    {index + 1}. {question.text?.substring(0, 50)}...
+                                                    {question.text?.substring(0, 50)}...
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -486,16 +486,15 @@ function EditQuestionDialog({
                                 </FormItem>
                             )}
                         />
-                        {options.length > 2 && (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeOption(index)}
-                            >
-                                <X className="h-3 w-3" />
-                            </Button>
-                        )}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            disabled={options.length <= 2}
+                            onClick={() => removeOption(index)}
+                        >
+                            <X className="h-3 w-3" />
+                        </Button>
                     </div>
                 ))}
             </div>
@@ -531,16 +530,15 @@ function EditQuestionDialog({
                                 </FormItem>
                             )}
                         />
-                        {correctAnswers.length > 1 && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => removeCorrectAnswer(index)}
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
-                        )}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            disabled={correctAnswers.length <= 1}
+                            onClick={() => removeCorrectAnswer(index)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </div>
                 ))}
             </div>
@@ -571,10 +569,7 @@ function EditQuestionDialog({
             <DialogContent className="sm:max-w-[600px] h-[600px] flex flex-col">
                 <ScrollArea className="w-full h-full px-3">
                     <DialogHeader className="flex-shrink-0">
-                        <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isEdit ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                            <DialogTitle>{isEdit ? "Edit Question" : "Add New Question"}</DialogTitle>
-                        </div>
+                        <DialogTitle>{isEdit ? "Edit Question" : "Add New Question"}</DialogTitle>
                         <DialogDescription>
                             {isEdit ? "Update the question details below." : "Create a new question for this quiz. Type-specific options can be configured after creation."}
                         </DialogDescription>
@@ -582,9 +577,6 @@ function EditQuestionDialog({
 
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1">
-                            {
-                                JSON.stringify(form.formState.errors)
-                            }
                             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 border-t border-b border-border/50">
                                 <FormField
                                     control={form.control}
@@ -676,7 +668,7 @@ function EditQuestionDialog({
                                 {renderTypeSpecificFields()}
                             </div>
 
-                            <DialogFooter className="flex-shrink-0 border-t pt-4 bg-muted/30">
+                            <DialogFooter className="pt-4">
                                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                                     Cancel
                                 </Button>

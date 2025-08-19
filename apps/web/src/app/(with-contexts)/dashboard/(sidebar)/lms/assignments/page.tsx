@@ -189,7 +189,7 @@ export default function Page() {
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href={`/dashboard/lms/assignments/${obj.id}/edit`}>
+                                    <Link href={`/dashboard/lms/assignments/${obj.id}`}>
                                         <Edit className="h-4 w-4 mr-2" />
                                         Edit Assignment
                                     </Link>

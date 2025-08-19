@@ -1,7 +1,8 @@
 import { createModel } from "@workspace/common-logic";
+import { BASIC_PUBLICATION_STATUS_TYPE, type BasicPublicationStatus } from "@workspace/common-models";
 import mongoose, { Document, Schema } from "mongoose";
 
-export interface IQuiz extends Document {
+export interface IQuiz {
   title: string;
   description?: string;
   courseId: string;
@@ -12,7 +13,7 @@ export interface IQuiz extends Document {
   passingScore: number;
   shuffleQuestions: boolean;
   showResults: boolean;
-  status: "draft" | "published" | "archived";
+  status: BasicPublicationStatus;
   questionIds: mongoose.Types.ObjectId[];
   totalPoints: number;
   createdAt: Date;
@@ -30,7 +31,16 @@ const QuizSchema = new Schema<IQuiz>({
   passingScore: { type: Number, min: 0, max: 100, default: 60 },
   shuffleQuestions: { type: Boolean, default: true },
   showResults: { type: Boolean, default: false },
-  status: { type: String, required: true, enum: ["draft", "published", "archived"], default: "draft" },
+  status: {
+    type: String,
+    required: true,
+    enum: [
+      BASIC_PUBLICATION_STATUS_TYPE.DRAFT,
+      BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
+      BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED,
+    ],
+    // default: BASIC_PUBLICATION_STATUS_TYPE.DRAFT
+  },
   questionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
   totalPoints: { type: Number, min: 0, default: 0 },
 }, {

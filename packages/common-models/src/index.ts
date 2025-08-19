@@ -67,6 +67,8 @@ export type { default as WidgetDefaultSettings } from "./widget-default-settings
 export type { default as WidgetInstance } from "./widget-instance";
 export type { default as WidgetMetadata } from "./widget-metadata";
 export type { default as WidgetProps } from "./widget-props";
+export type { BasicPublicationStatus } from "./publication-status";
+export { BASIC_PUBLICATION_STATUS_TYPE } from "./publication-status";
 
 
 // export type { default as Lesson } from "./lesson";

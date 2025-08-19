@@ -1,106 +1,111 @@
-import { BaseQuestionProvider } from "./BaseQuestionProvider";
+import { BaseQuestionProvider, baseQuestionSchema } from "./BaseQuestionProvider";
+import { IQuestion, MultipleChoiceQuestion } from "@/models/lms/Question";
+import { QuestionAnswer } from "./BaseQuestionProvider";
+import { MainContextType } from "@/server/api/core/procedures";
+import { z } from "zod";
 
-export class MultipleChoiceProvider extends BaseQuestionProvider {
+// Multiple choice specific schema
+const multipleChoiceSchema = z.object({
+  options: z.array(z.object({
+    text: z.string().min(1, "Option text is required"),
+    isCorrect: z.boolean(),
+    order: z.number().optional(),
+  })).min(2, "Multiple choice questions must have at least 2 options"),
+  correctAnswers: z.array(z.string()).min(1, "Correct answer is required").optional(),
+  settings: z.object({
+    // allowMultipleAnswers: z.boolean().optional(),
+    // shuffleOptions: z.boolean().optional(),
+    // minOptions: z.number().min(2).optional(),
+    // maxOptions: z.number().max(6).optional(),
+  }).optional(),
+});
+
+export class MultipleChoiceProvider extends BaseQuestionProvider<MultipleChoiceQuestion> {
   readonly type = "multiple_choice";
   readonly displayName = "Multiple Choice";
   readonly description = "Single correct answer from multiple options";
 
-  protected validateSpecificFields(question: any): string[] {
+  protected getSpecificValidationSchema(): z.ZodObject<z.ZodRawShape> {
+    return multipleChoiceSchema;
+  }
+
+  protected validateAnswerSpecific(answer: QuestionAnswer, question: MultipleChoiceQuestion): string[] {
     const errors: string[] = [];
-
-    if (!question.options || question.options.length < 2) {
-      errors.push("Multiple choice questions must have at least 2 options");
+    if (!Array.isArray(answer)) {
+      errors.push("Answer must be an array of strings");
+      return errors;
     }
-
-    if (!question.correctAnswers || question.correctAnswers.length === 0) {
-      errors.push("Correct answer is required");
+    if (answer.length === 0) {
+      errors.push("Answer cannot be empty");
+      return errors;
     }
-
-    // Check that at least one option is marked as correct
-    const hasCorrectOption = question.options?.some((opt: any) => opt.isCorrect);
-    if (!hasCorrectOption) {
-      errors.push("At least one option must be marked as correct");
-    }
-
-    // Validate that options have text
-    if (question.options) {
-      question.options.forEach((opt: any, index: number) => {
-        if (!opt.text || opt.text.trim().length === 0) {
-          errors.push(`Option ${index + 1} must have text`);
-        }
-      });
-    }
-
+    answer.forEach((ans, index) => {
+      if (typeof ans !== "string") {
+        errors.push(`Answer ${index + 1} must be a string`);
+      }
+    });
     return errors;
   }
 
-  protected isAnswerCorrect(answer: any, question: any): boolean {
-    if (!answer || !question.correctAnswers) return false;
-    
-    const correctAnswers: string[] = Array.isArray(question.correctAnswers)
-      ? question.correctAnswers
-      : [question.correctAnswers];
-
-    if (typeof answer === "string") {
-      return correctAnswers.includes(answer);
-    }
-    if (Array.isArray(answer)) {
-      // Strict matching of answers when multiple are allowed (settings.allowMultipleAnswers)
-      const allowMultiple = Boolean(question.settings?.allowMultipleAnswers);
-      if (!allowMultiple) return false;
-      const sortedA = [...answer].sort();
-      const sortedB = [...correctAnswers].sort();
-      return sortedA.length === sortedB.length && sortedA.every((v, i) => v === sortedB[i]);
-    }
-    return false;
+  protected normalizeAnswer(answer: QuestionAnswer, _question: MultipleChoiceQuestion) {
+    return answer;
   }
 
-  getDefaultSettings(): any {
+  isAnswerCorrect(answer: QuestionAnswer, question: MultipleChoiceQuestion): boolean {
+    if (!Array.isArray(answer) || answer.length === 0 || !question.correctAnswers) return false;
+    
+    const correctAnswers = question.correctAnswers;
+
+    const sortedA = [...answer].sort();
+    const sortedB = [...correctAnswers].sort();
+    return sortedA.length === sortedB.length && sortedA.every((v, i) => v === sortedB[i]);
+  }
+
+  getDefaultSettings(): Record<string, unknown> {
     return {
       ...super.getDefaultSettings(),
-      shuffleOptions: true,
-      allowMultipleAnswers: false,
-      minOptions: 2,
-      maxOptions: 6
+      // shuffleOptions: true,
+      // allowMultipleAnswers: false,
+      // minOptions: 2,
+      // maxOptions: 6
     };
   }
 
   // Override to add multiple choice specific validation
-  getValidatedData(questionData: any, courseId: string, teacherId: string): any {
+  getValidatedData(questionData: Partial<MultipleChoiceQuestion>, ctx: MainContextType): Partial<MultipleChoiceQuestion> {
+    console.log("questionData", questionData);
     // Ensure options are properly formatted
     if (questionData.options) {
       questionData.options = questionData.options
-        .filter((opt: any) => opt.text && opt.text.trim().length > 0)
-        .map((opt: any) => ({
+        .filter((opt) => opt.text && opt.text.trim().length > 0)
+        .map((opt) => ({
           text: opt.text.trim(),
           isCorrect: Boolean(opt.isCorrect),
-          explanation: opt.explanation || ""
+          order: opt.order || 0
         }));
     }
 
     // Extract correct answers from options if not provided
     if (!questionData.correctAnswers && questionData.options) {
       questionData.correctAnswers = questionData.options
-        .filter((opt: any) => opt.isCorrect)
-        .map((opt: any) => opt.text);
+        .filter((opt) => opt.isCorrect)
+        .map((opt) => opt.text);
     }
 
-    return super.getValidatedData(questionData, courseId, teacherId);
+    return super.getValidatedData(questionData, ctx);
   }
 
   // Hide correctness flags for students
-  processQuestionForDisplay(question: any, hideAnswers: boolean = true): any {
-    const processed = { ...question.toObject?.() ?? question };
-    if (hideAnswers) {
-      delete processed.correctAnswers;
-      delete processed.explanation;
-      if (processed.options) {
-        processed.options = processed.options.map((opt: any) => {
-          const { isCorrect, explanation, ...rest } = opt;
-          return rest;
-        });
-      }
-    }
+  processQuestionForDisplay(question: MultipleChoiceQuestion, hideAnswers: boolean = true): Partial<MultipleChoiceQuestion> {
+    const processed = super.processQuestionForDisplay(question, hideAnswers);
+    
+    // if (hideAnswers && processed.options) {
+    //   processed.options = processed.options.map((opt) => {
+    //     const { isCorrect, ...rest } = opt;
+    //     return rest as { _id?: string; text: string; order?: number };
+    //   });
+    // }
+    
     return processed;
   }
 }

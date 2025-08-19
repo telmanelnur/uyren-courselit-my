@@ -113,18 +113,18 @@ const ComboBox2 = <T extends object>({
                         {multiple
                             ? Array.isArray(value) && value.length > 0
                                 ? value.map(renderText).join(", ")
-                                : `Select ${title}`
+                                : `${title}`
                             : value
                                 ? renderText(value as T)
-                                : `Select ${title}`}
+                                : `${title}`}
                     </div>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="PopoverContent p-0">
+            <PopoverContent className="PopoverContent p-0" align="start">
                 <Command shouldFilter={false}>
                     <CommandInput
-                        placeholder={`Search ${title}...`}
+                        placeholder={`Search...`}
                         value={search}
                         onValueChange={setSearch}
                     />

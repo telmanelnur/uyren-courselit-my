@@ -1,20 +1,16 @@
+import { IQuestion } from "@/models/lms/Question";
+import { QuestionAnswer } from "./BaseQuestionProvider";
 import { MultipleChoiceProvider } from "./MultipleChoiceProvider";
 import { ShortAnswerProvider } from "./ShortAnswerProvider";
-import { TrueFalseProvider } from "./TrueFalseProvider";
 
 export class QuestionProviderFactory {
-  private static providers = new Map<string, any>([
-    ["multiple_choice", new MultipleChoiceProvider()],
-    ["short_answer", new ShortAnswerProvider()],
-    ["true_false", new TrueFalseProvider()],
-  ]);
+  private static providers = {
+    multiple_choice: new MultipleChoiceProvider(),
+    short_answer: new ShortAnswerProvider(),
+  };
 
-  static getProvider(type: string) {
-    return this.providers.get(type);
-  }
-
-  static getSupportedTypes(): string[] {
-    return Array.from(this.providers.keys());
+  static getProvider(type: keyof typeof this.providers) {
+    return this.providers[type];
   }
 
   static validateQuestion(question: any): { isValid: boolean; errors: string[] } {
@@ -22,35 +18,34 @@ export class QuestionProviderFactory {
     if (!provider) {
       return { isValid: false, errors: [`Unsupported question type: ${question.type}`] };
     }
-    
     return provider.validateQuestion(question);
   }
 
-  static calculateScore(type: string, answer: any, question: any): number {
+  static calculateScore(type: keyof typeof this.providers, answer: QuestionAnswer, question: any): number {
     const provider = this.getProvider(type);
     if (!provider) return 0;
-    
+
     return provider.calculateScore(answer, question);
   }
 
-  static processQuestionForDisplay(type: string, question: any, hideAnswers: boolean = true): any {
+  static processQuestionForDisplay(type: keyof typeof this.providers, question: any, hideAnswers: boolean = true): Partial<any> {
     const provider = this.getProvider(type);
     if (!provider) return question;
-    
+
     return provider.processQuestionForDisplay(question, hideAnswers);
   }
 
-  static getDefaultSettings(type: string): any {
+  static getDefaultSettings(type: keyof typeof this.providers): Record<string, any> {
     const provider = this.getProvider(type);
     if (!provider) return {};
-    
+
     return provider.getDefaultSettings();
   }
 
-  static getQuestionMetadata(type: string): any {
+  static getQuestionMetadata(type: keyof typeof this.providers): { type: string; displayName: string; description: string } | null {
     const provider = this.getProvider(type);
     if (!provider) return null;
-    
+
     return {
       type: provider.type,
       displayName: provider.displayName,

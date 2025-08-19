@@ -1,4 +1,4 @@
-import { createModel } from "@workspace/common-logic";
+import { createModel } from "@workspace/common-logic"; 
 import mongoose, { Document, Schema } from "mongoose";
 
 export type QuestionType = "multiple_choice" | "short_answer";

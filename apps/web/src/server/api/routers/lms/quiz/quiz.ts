@@ -1,10 +1,11 @@
 import { QuizModel } from "@/models/lms";
+import { QuestionModel } from "@/models/lms";
 import { AuthorizationException, NotFoundException, ValidationException } from "@/server/api/core/exceptions";
 import { createDomainRequiredMiddleware, createPermissionMiddleware, protectedProcedure } from "@/server/api/core/procedures";
 import { getFormDataSchema, ListInputSchema } from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
 import { documentIdValidator } from "@/server/api/core/validators";
-import { UIConstants } from "@workspace/common-models";
+import { UIConstants, BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { RootFilterQuery } from "mongoose";
 import { z } from "zod";
@@ -50,7 +51,7 @@ export const quizRouter = router({
       shuffleQuestions: z.boolean().optional(),
       showResults: z.boolean().optional(),
       totalPoints: z.number().min(1).optional(),
-      status: z.enum(["draft", "published", "archived"]).optional(),
+      status: z.nativeEnum(BASIC_PUBLICATION_STATUS_TYPE).optional(),
     }).extend({
       id: documentIdValidator()
     }))
@@ -82,7 +83,7 @@ export const quizRouter = router({
 
       quiz.status = "archived";
       await quiz.save();
-      
+
       return { success: true };
     }),
 
@@ -129,14 +130,14 @@ export const quizRouter = router({
       if (!quiz) throw new NotFoundException("Quiz not found");
       const hasAccess = checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]);
       if (!hasAccess && quiz.status === "draft") throw new AuthorizationException("No access");
-      return quiz;
+      return {...quiz};
     }),
 
   list: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .input(ListInputSchema.extend({
       filter: z.object({
-        status: z.enum(["published", "draft", "archived"]).optional(),
+        status: z.nativeEnum(BASIC_PUBLICATION_STATUS_TYPE).optional(),
         courseId: z.string().optional(),
       }).optional(),
     }))
@@ -170,4 +171,89 @@ export const quizRouter = router({
         }
       };
     }),
+
+  publicGetByQuizId: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(z.object({
+      quizId: documentIdValidator()
+    }))
+    .query(async ({ ctx, input }) => {
+      const quiz = await QuizModel.findOne({
+        _id: input.quizId,
+        domain: ctx.domainData.domainObj._id,
+        status: BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED
+      })
+        .populate<{
+          owner: {
+            userId: string;
+            name: string;
+            email: string;
+          };
+        }>('owner', 'userId name email')
+        .populate<{
+          course: {
+            courseId: string;
+            title: string;
+          };
+        }>('course', 'courseId title')
+        .lean();
+      if (!quiz) throw new NotFoundException("Quiz not found");
+      return quiz;
+    }),
+
+  publicGetByQuizIdWithQuestions: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(z.object({
+      quizId: documentIdValidator()
+    }))
+    .query(async ({ ctx, input }) => {
+      const quiz = await QuizModel.findOne({
+        _id: input.quizId,
+        domain: ctx.domainData.domainObj._id,
+        status: BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED
+      })
+        .populate<{
+          owner: {
+            userId: string;
+            name: string;
+            email: string;
+          };
+        }>('owner', 'userId name email')
+        .populate<{
+          course: {
+            courseId: string;
+            title: string;
+          };
+        }>('course', 'courseId title')
+        .lean();
+      
+      if (!quiz) throw new NotFoundException("Quiz not found");
+
+      // Fetch questions for this quiz
+      const questions = await QuestionModel.find({ 
+        _id: { $in: quiz.questionIds },
+        domain: ctx.domainData.domainObj._id,
+      }).lean();
+
+      // Process questions to remove sensitive information
+      const processedQuestions = questions.map((question: any) => {
+        const processed = { ...question };
+        // Remove correct answers and other sensitive data
+        delete processed.correctAnswers;
+        delete processed.explanation;
+        if (processed.options) {
+          processed.options = processed.options.map((opt: any) => {
+            const { isCorrect, ...rest } = opt;
+            return rest;
+          });
+        }
+        return processed;
+      });
+
+      return {
+        ...quiz,
+        questions: processedQuestions
+      };
+    }),
+
 });

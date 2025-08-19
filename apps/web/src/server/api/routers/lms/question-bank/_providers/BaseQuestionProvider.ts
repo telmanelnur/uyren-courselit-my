@@ -1,104 +1,181 @@
-export abstract class BaseQuestionProvider {
-  abstract readonly type: string;
-  abstract readonly displayName: string;
-  abstract readonly description: string;
+import { IQuestion } from "@/models/lms/Question";
+import { MainContextType } from "@/server/api/core/procedures";
+import { z } from "zod";
 
-  // Common validation logic
-  validateQuestion(question: any): { isValid: boolean; errors: string[] } {
+// Base question schema
+export const baseQuestionSchema = z.object({
+  text: z.string().min(1, "Question text is required"),
+  points: z.number().min(1, "Points must be at least 1"),
+  explanation: z.string().optional(),
+});
+
+// Answer types - only string array
+export type QuestionAnswer = string[];
+
+// Answer validation result
+export interface AnswerValidationResult {
+  isValid: boolean;
+  errors: string[];
+  normalizedAnswer?: QuestionAnswer;
+}
+
+// Answer scoring result
+export interface AnswerScoringResult {
+  isCorrect: boolean;
+  score: number;
+  feedback: string;
+  partialCredit?: number;
+}
+
+export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
+  abstract readonly type: T['type'];
+  abstract readonly description: string;
+  abstract readonly displayName: string;
+
+  // Abstract method for specific validation schema
+  protected abstract getSpecificValidationSchema(): z.ZodObject<z.ZodRawShape>;
+
+  // Abstract method for answer-specific validation
+  protected abstract validateAnswerSpecific(answer: QuestionAnswer, question: T): string[];
+
+  // Abstract method for answer normalization
+  protected abstract normalizeAnswer(answer: QuestionAnswer, question: T): QuestionAnswer;
+
+  // Abstract method for answer validation - must be public to implement interface
+  abstract isAnswerCorrect(answer: QuestionAnswer, question: T): boolean;
+
+  // Common validation logic using Zod
+  validateQuestion(question: Partial<T>): { isValid: boolean; errors: string[] } {
+    try {
+      const baseSchema = baseQuestionSchema.partial();
+      const specificSchema = this.getSpecificValidationSchema();
+      const fullSchema = baseSchema.merge(specificSchema);
+
+      fullSchema.parse(question);
+      return { isValid: true, errors: [] };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return {
+          isValid: false,
+          errors: error.errors.map(e => e.message)
+        };
+      }
+      return {
+        isValid: false,
+        errors: ["Validation failed"]
+      };
+    }
+  }
+
+  // Default answer validation - can be overridden
+  validateAnswer(answer: QuestionAnswer, question: T): AnswerValidationResult {
     const errors: string[] = [];
 
-    if (!question.text || question.text.trim().length === 0) {
-      errors.push("Question text is required");
-    }
-
-    if (!question.points || question.points < 1) {
-      errors.push("Points must be at least 1");
-    }
-
-    if (!question.courseId) {
-      errors.push("Course ID is required");
-    }
-
-    if (!question.teacherId) {
-      errors.push("Teacher ID is required");
+    if (answer === undefined || answer === null) {
+      errors.push("Answer is required");
+      return { isValid: false, errors };
     }
 
     // Call specific validation
-    const specificErrors = this.validateSpecificFields(question);
+    const specificErrors = this.validateAnswerSpecific(answer, question);
     errors.push(...specificErrors);
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
+      normalizedAnswer: errors.length === 0 ? this.normalizeAnswer(answer, question) : undefined
     };
   }
 
-  // Abstract method for specific validation
-  protected abstract validateSpecificFields(question: any): string[];
+  // Get validated and prepared data for model operations
+  getValidatedData(questionData: Partial<T>, ctx: MainContextType): Partial<T> {
+    try {
+      const baseSchema = baseQuestionSchema.partial();
+      const specificSchema = this.getSpecificValidationSchema();
+      const fullSchema = baseSchema.merge(specificSchema);
 
-  // New method: Get validated and prepared data for model operations
-  getValidatedData(questionData: any, courseId: string, teacherId: string): any {
-    // Prepare the data with required fields
-    const preparedData = {
-      ...questionData,
-      courseId,
-      teacherId,
-    };
+      // Add required fields from context
+      const dataWithRequired = {
+        ...questionData,
+        courseId: ctx.domainData.domainObj._id.toString(),
+        teacherId: ctx.user._id.toString(),
+      };
 
-    // Validate the prepared data
-    const validation = this.validateQuestion(preparedData);
-    if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+      // Validate the data
+      const validatedData = fullSchema.parse(dataWithRequired);
+
+      // Get default settings and merge with validated data
+      const defaultSettings = this.getDefaultSettings();
+
+      return {
+        ...defaultSettings,
+        ...validatedData,
+      } as Partial<T>;
+    } catch (error) {
+      console.log("error", error);
+      if (error instanceof z.ZodError) {
+        throw new Error(`Validation failed: ${error.errors.map(e => e.message).join(", ")}`);
+      }
+      throw new Error("Validation failed");
     }
-
-    // Get default settings and merge with validated data
-    const defaultSettings = this.getDefaultSettings();
-    
-    return {
-      ...defaultSettings,
-      ...preparedData,
-    };
   }
 
-  // New method: Validate and prepare data for updates
-  getValidatedUpdateData(existingQuestion: any, updateData: any): any {
-    // Merge existing data with update data
-    const mergedData = { ...existingQuestion.toObject(), ...updateData };
-    
-    // Validate the merged data
-    const validation = this.validateQuestion(mergedData);
-    if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
-    }
+  // Validate and prepare data for updates
+  getValidatedUpdateData(existingQuestion: T, updateData: Partial<T>): Partial<T> {
+    try {
+      const baseSchema = baseQuestionSchema.partial();
+      const specificSchema = this.getSpecificValidationSchema();
+      const fullSchema = baseSchema.merge(specificSchema.partial());
 
-    return mergedData;
+      // Merge existing data with update data
+      const mergedData = { ...existingQuestion, ...updateData };
+
+      // Validate the merged data
+      const validatedData = fullSchema.parse(mergedData);
+
+      return validatedData as Partial<T>;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new Error(`Validation failed: ${error.errors.map(e => e.message).join(", ")}`);
+      }
+      throw new Error("Validation failed");
+    }
   }
 
   // Common scoring logic
-  calculateScore(answer: any, question: any): number {
+  calculateScore(answer: QuestionAnswer, question: T): number {
     if (!answer || !question) return 0;
-    
+
     const isCorrect = this.isAnswerCorrect(answer, question);
     return isCorrect ? question.points : 0;
   }
 
-  // Abstract method for answer validation
-  protected abstract isAnswerCorrect(answer: any, question: any): boolean;
+  // Get scoring result with feedback
+  getScoringResult(answer: QuestionAnswer, question: T): AnswerScoringResult {
+    const isCorrect = this.isAnswerCorrect(answer, question);
+    const score = this.calculateScore(answer, question);
+
+    return {
+      isCorrect,
+      score,
+      feedback: isCorrect ? "Correct!" : "Incorrect",
+    };
+  }
 
   // Common display processing
-  processQuestionForDisplay(question: any, hideAnswers: boolean = true): any {
-    const processed = { ...question.toObject?.() ?? question };
-    
+  processQuestionForDisplay(question: T, hideAnswers: boolean = true): Partial<T> {
+    const processed = { ...question };
+
     if (hideAnswers) {
-      delete processed.correctAnswer;
-      delete processed.explanation;
+      delete (processed).correctAnswers;
+      delete (processed).explanation;
     }
-    
+
     return processed;
   }
 
   // Get default settings for question type
-  getDefaultSettings(): any {
+  getDefaultSettings(): Record<string, unknown> {
     return {
       points: 1,
       shuffleOptions: true

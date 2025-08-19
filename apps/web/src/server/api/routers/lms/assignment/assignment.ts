@@ -4,7 +4,7 @@ import { createDomainRequiredMiddleware, createPermissionMiddleware, protectedPr
 import { getFormDataSchema, ListInputSchema } from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
 import { documentIdValidator } from "@/server/api/core/validators";
-import { UIConstants } from "@workspace/common-models";
+import { UIConstants, BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { RootFilterQuery } from "mongoose";
 import { z } from "zod";
@@ -70,7 +70,7 @@ export const assignmentRouter = router({
       tags: z.array(z.string()).optional(),
       category: z.string().optional(),
       difficulty: z.enum(["easy", "medium", "hard"]).optional(),
-      status: z.enum(["draft", "published", "archived"]).optional(),
+      status: z.nativeEnum(BASIC_PUBLICATION_STATUS_TYPE).optional(),
       submissionFormat: z.enum(["file_upload", "text", "url", "mixed"]).optional(),
       availableFrom: z.date().optional(),
     }).extend({
@@ -153,12 +153,10 @@ export const assignmentRouter = router({
       if (!assignment) throw new NotFoundException("Assignment not found");
 
       const hasAccess = checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]);
-      if (!hasAccess && assignment.status === "draft") throw new AuthorizationException("No access");
+      if (!hasAccess && assignment.status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT) throw new AuthorizationException("No access");
 
       return {
         ...assignment,
-        id: assignment._id.toString(),
-        _id: undefined,
       };
     }),
 

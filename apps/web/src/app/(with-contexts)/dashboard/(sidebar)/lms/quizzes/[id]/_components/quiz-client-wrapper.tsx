@@ -13,6 +13,7 @@ import { ChevronDown } from "lucide-react"
 import { QuizProvider, useQuizContext } from "./quiz-context"
 import QuizQuestions from "./quiz-questions"
 import QuizSettings from "./quiz-settings"
+import QuizSubmissions from "./quiz-submissions"
 
 interface QuizClientWrapperProps {
     initialMode: FormMode;
@@ -119,6 +120,12 @@ function QuizContent() {
                             Questions
                             {/* ({questions.length}) */}
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="submissions"
+                            disabled={mode === "create"}
+                        >
+                            Submissions
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="settings" className="space-y-6">
@@ -131,6 +138,16 @@ function QuizContent() {
                         ) : (
                             <div className="text-center py-8 text-muted-foreground">
                                 Save the quiz first to add questions.
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="submissions" className="space-y-6">
+                        {mode === "edit" ? (
+                            <QuizSubmissions />
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                                Save the quiz first to view submissions.
                             </div>
                         )}
                     </TabsContent>
