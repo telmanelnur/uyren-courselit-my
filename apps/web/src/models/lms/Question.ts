@@ -1,5 +1,5 @@
 import { createModel } from "@workspace/common-logic";
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
 export type QuestionType = "multiple_choice" | "short_answer";
 
@@ -9,7 +9,6 @@ export interface BaseQuestion {
   type: QuestionType;
   points: number;
   explanation?: string;
-  courseId: string;
   teacherId: string;
   domain: mongoose.Types.ObjectId;
   settings?: Record<string, any>;
@@ -28,33 +27,32 @@ export interface ShortAnswerQuestion extends BaseQuestion {
   correctAnswers?: string[];
 }
 
-export type GeneralQuestion = MultipleChoiceQuestion | ShortAnswerQuestion;
-
-export interface IQuestion extends Document, Omit<GeneralQuestion, "_id"> {}
+export type IQuestion = MultipleChoiceQuestion | ShortAnswerQuestion;
 
 const OptionSchema = new Schema({
   text: { type: String, required: true, trim: true, maxlength: 500 },
   isCorrect: { type: Boolean, default: false },
   order: { type: Number, default: 0 }
-}, { _id: true });
+});
 
-const QuestionSchema = new Schema({
+const QuestionSchema = new Schema<IQuestion>({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   text: { type: String, required: true, trim: true, maxlength: 2000 },
   type: { type: String, required: true, enum: ["multiple_choice", "short_answer"] },
   points: { type: Number, required: true, min: 1, max: 100, default: 1 },
   explanation: { type: String, trim: true, maxlength: 2000 },
-  courseId: { type: String, required: true, index: true },
   teacherId: { type: String, required: true, index: true },
   settings: { type: Schema.Types.Mixed },
 
   // Multiple choice
-  options: { type: [OptionSchema], default: undefined },
+  options: { type: [OptionSchema], default: [] },
   correctAnswers: [{ type: String, trim: true }],
-  
+
 }, {
   timestamps: true
 });
 
 
-export default createModel<IQuestion>("Question", QuestionSchema);
+const QuestionModel = createModel("Question", QuestionSchema);
+
+export default QuestionModel;

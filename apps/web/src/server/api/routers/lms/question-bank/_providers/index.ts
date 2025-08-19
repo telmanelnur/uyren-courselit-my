@@ -1,10 +1,12 @@
 import { MultipleChoiceProvider } from "./MultipleChoiceProvider";
 import { ShortAnswerProvider } from "./ShortAnswerProvider";
+import { TrueFalseProvider } from "./TrueFalseProvider";
 
 export class QuestionProviderFactory {
   private static providers = new Map<string, any>([
     ["multiple_choice", new MultipleChoiceProvider()],
     ["short_answer", new ShortAnswerProvider()],
+    ["true_false", new TrueFalseProvider()],
   ]);
 
   static getProvider(type: string) {

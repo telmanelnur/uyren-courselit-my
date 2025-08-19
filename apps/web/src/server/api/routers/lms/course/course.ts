@@ -402,7 +402,7 @@ export const courseRouter = router({
         CourseModel.find(query as any)
           .skip(paginationMeta.skip)
           .limit(paginationMeta.take)
-          .sort(sortObject),
+          .sort(sortObject).lean(),
         paginationMeta.includePaginationCount
           ? CourseModel.countDocuments(query as any)
           : Promise.resolve(null),

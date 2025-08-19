@@ -1,9 +1,12 @@
-import { z } from "zod";
-import { router } from "@/server/api/core/trpc";
-import { protectedProcedure, createPermissionMiddleware, createDomainRequiredMiddleware } from "@/server/api/core/procedures";
-import { ListInputSchema } from "@/server/api/core/schema";
-import { NotFoundException, AuthorizationException } from "@/server/api/core/exceptions";
 import { QuizAttemptModel } from "@/models/lms";
+import { AuthorizationException, NotFoundException } from "@/server/api/core/exceptions";
+import { createDomainRequiredMiddleware, createPermissionMiddleware, protectedProcedure } from "@/server/api/core/procedures";
+import { ListInputSchema } from "@/server/api/core/schema";
+import { router } from "@/server/api/core/trpc";
+import { UIConstants } from "@workspace/common-models";
+import { z } from "zod";
+
+const { permissions } = UIConstants
 
 const CreateQuizAttemptSchema = z.object({
   quizId: z.string(),
@@ -40,9 +43,9 @@ export const quizAttemptRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(z.object({ id: z.string(), data: UpdateQuizAttemptSchema }))
     .mutation(async ({ ctx, input }) => {
-      const attempt = await QuizAttemptModel.findOne({ 
-        _id: input.id, 
-        domain: ctx.domainData.domainObj._id 
+      const attempt = await QuizAttemptModel.findOne({
+        _id: input.id,
+        domain: ctx.domainData.domainObj._id
       });
       if (!attempt) throw new NotFoundException("Quiz attempt not found");
       if (attempt.userId.toString() !== ctx.user._id.toString()) {
@@ -54,12 +57,12 @@ export const quizAttemptRouter = router({
 
   delete: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .use(createPermissionMiddleware(["manageAnyCourse"]))
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
-      const attempt = await QuizAttemptModel.findOne({ 
-        _id: input, 
-        domain: ctx.domainData.domainObj._id 
+      const attempt = await QuizAttemptModel.findOne({
+        _id: input,
+        domain: ctx.domainData.domainObj._id
       });
       if (!attempt) throw new NotFoundException("Quiz attempt not found");
       await QuizAttemptModel.findByIdAndDelete(input);
@@ -70,9 +73,9 @@ export const quizAttemptRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(z.string())
     .query(async ({ ctx, input }) => {
-      const attempt = await QuizAttemptModel.findOne({ 
-        _id: input, 
-        domain: ctx.domainData.domainObj._id 
+      const attempt = await QuizAttemptModel.findOne({
+        _id: input,
+        domain: ctx.domainData.domainObj._id
       });
       if (!attempt) throw new NotFoundException("Quiz attempt not found");
       if (attempt.userId.toString() !== ctx.user._id.toString()) {
@@ -103,13 +106,13 @@ export const quizAttemptRouter = router({
         includeCount ? QuizAttemptModel.countDocuments(filter) : Promise.resolve(0)
       ]);
 
-      return { 
-        data: items, 
-        meta: { 
-          total: includeCount ? total : undefined, 
-          skip: listInput.pagination?.skip || 0, 
-          take: listInput.pagination?.take || 20 
-        } 
+      return {
+        data: items,
+        meta: {
+          total: includeCount ? total : undefined,
+          skip: listInput.pagination?.skip || 0,
+          take: listInput.pagination?.take || 20
+        }
       };
     }),
 });

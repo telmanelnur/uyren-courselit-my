@@ -8,183 +8,21 @@ import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { useDataTable } from "@/components/data-table/use-data-table";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
-import { ColumnDef } from "@tanstack/react-table";
+import { type ColumnDef } from "@tanstack/react-table";
 import { useDebounce } from "@workspace/components-library";
-import { Card } from "@workspace/text-editor/tiptap";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { CardContent } from "@workspace/ui/components/card";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
-import { Edit, Eye, FileText, MoreHorizontal, Trash2 } from "lucide-react";
+import { Edit, Eye, FileText, MoreHorizontal, Trash2, Archive } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-
-
-// function AssignmentCard({ assignment }: { assignment: any }) {
-//     return (
-//         <ContentCard href={`/dashboard/lms/assignments/${assignment.id}`}>
-//             <ContentCardImage
-//                 src={assignment.featuredImage?.url || "/courselit_backdrop_square.webp"}
-//                 alt={assignment.title}
-//             />
-//             <ContentCardContent>
-//                 <ContentCardHeader>{assignment.title || "Untitled Assignment"}</ContentCardHeader>
-//                 <div className="flex items-center justify-between gap-2 mb-4">
-//                     <Badge variant="outline">
-//                         <FileText className="h-4 w-4 mr-1" />
-//                         Assignment
-//                     </Badge>
-//                 </div>
-//                 <div className="space-y-2 text-sm text-muted-foreground">
-//                     <div className="flex items-center gap-2">
-//                         <Calendar className="h-4 w-4" />
-//                         <span>Due: {assignment.dueDate || "No due date"}</span>
-//                     </div>
-//                     <div className="flex items-center gap-2">
-//                         <Users className="h-4 w-4" />
-//                         <span>{assignment.submissionsCount || 0} submissions</span>
-//                     </div>
-//                 </div>
-//             </ContentCardContent>
-//         </ContentCard>
-//     );
-// }
-
-// function SkeletonGrid() {
-//     return (
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-//             {[...Array(6)].map((_, index) => (
-//                 <SkeletonCard key={index} />
-//             ))}
-//         </div>
-//     );
-// }
-
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const breadcrumbs = [{ label: "LMS", href: "#" }, { label: "Assignments", href: "#" }];
 
-type ItemType = GeneralRouterOutputs["lmsModule"]["assignment"]["list"]["items"][number];
-type QueryParams = Parameters<typeof trpc.lmsModule.assignment.list.useQuery>[0];
-
-const columns: ColumnDef<ItemType>[] = [
-    {
-        accessorKey: "title",
-        header: "Assignment Title",
-        cell: ({ row }) => {
-            const obj = row.original;
-            return (
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded flex items-center justify-center">
-                        <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                        <div className="font-medium">{obj.title}</div>
-                        <div className="text-sm text-muted-foreground">{obj.description}</div>
-                    </div>
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: "courseId",
-        header: "Course",
-        cell: ({ row }) => {
-            const assignment = row.original;
-            const course = (assignment as any).course;
-            return (
-                <Badge variant="outline">
-                    {course?.title || assignment.courseId || "No Course"}
-                </Badge>
-            );
-        },
-    },
-    {
-        accessorKey: "ownerId",
-        header: "Owner",
-        cell: ({ row }) => {
-            const assignment = row.original;
-            const owner = (assignment as any).owner;
-            return (
-                <div className="text-sm text-muted-foreground">
-                    {owner?.name || owner?.email || assignment.ownerId || "Unknown"}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => {
-            const status = row.original.status;
-            return (
-                <Badge variant={status === "published" ? "default" : "secondary"}>
-                    {status === "published" ? "Published" : "Draft"}
-                </Badge>
-            );
-        },
-        meta: {
-            label: "Status",
-            variant: "select",
-            options: [
-                { label: "Published", value: "published" },
-                { label: "Draft", value: "draft" },
-            ],
-        },
-        enableColumnFilter: true,
-    },
-    {
-        accessorKey: "createdAt",
-        header: "Created",
-        cell: ({ row }) => {
-            const date = row.getValue("createdAt") as string;
-            return (
-                <div className="text-sm text-muted-foreground">
-                    {new Date(date).toLocaleDateString()}
-                </div>
-            );
-        },
-        meta: {
-            label: "Created Date",
-            variant: "date",
-        },
-    },
-    {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-            const obj = row.original;
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/lms/assignments/${obj._id}`}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/lms/assignments/${obj._id}/edit`}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Assignment
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Assignment
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
-        },
-    },
-];
+type ItemType = GeneralRouterOutputs["lmsModule"]["assignmentModule"]["assignment"]["list"]["items"][number];
+type QueryParams = Parameters<typeof trpc.lmsModule.assignmentModule.assignment.list.useQuery>[0];
 
 export default function Page() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -193,6 +31,186 @@ export default function Page() {
     const [parsedPageination, setParsedPagination] = useState({
         pageCount: 1,
     });
+
+    const archiveMutation = trpc.lmsModule.assignmentModule.assignment.archive.useMutation({
+        onSuccess: () => {
+            // Refetch the data to update the list
+            loadListQuery.refetch();
+        },
+    });
+
+    const handleArchive = useCallback((assignment: ItemType) => {
+        if(confirm("Are you sure you want to archive this assignment?")) {
+            archiveMutation.mutate(assignment.id);
+        }
+    }, [archiveMutation]);
+
+    const columns: ColumnDef<ItemType>[] = useMemo(() => {
+        return [
+            {
+                accessorKey: "title",
+                header: "Assignment Title",
+                cell: ({ row }) => {
+                    const obj = row.original;
+                    return (
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded flex items-center justify-center">
+                                <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                                <div className="font-medium">{obj.title}</div>
+                                <div className="text-sm text-muted-foreground">{obj.description}</div>
+                            </div>
+                        </div>
+                    );
+                },
+            },
+            {
+                accessorKey: "courseId",
+                header: "Course",
+                cell: ({ row }) => {
+                    const assignment = row.original;
+                    const course = (assignment as any).course;
+                    return (
+                        <Badge variant="outline">
+                            {course?.title || assignment.courseId || "No Course"}
+                        </Badge>
+                    );
+                },
+            },
+            {
+                accessorKey: "ownerId",
+                header: "Owner",
+                cell: ({ row }) => {
+                    const assignment = row.original;
+                    const owner = (assignment as any).owner;
+                    return (
+                        <div className="text-sm text-muted-foreground">
+                            {owner?.name || owner?.email || assignment.ownerId || "Unknown"}
+                        </div>
+                    );
+                },
+            },
+            {
+                accessorKey: "assignmentType",
+                header: "Type",
+                cell: ({ row }) => {
+                    const assignmentType = row.getValue("assignmentType") as string;
+                    return (
+                        <div className="flex items-center gap-1">
+                            <FileText className="h-3 w-3 text-muted-foreground" />
+                            {assignmentType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Unknown"}
+                        </div>
+                    );
+                },
+            },
+            {
+                accessorKey: "status",
+                header: "Status",
+                cell: ({ row }) => {
+                    const status = row.original.status;
+                    const getStatusVariant = (status: string) => {
+                        switch (status) {
+                            case "published":
+                                return "default";
+                            case "draft":
+                                return "secondary";
+                            case "archived":
+                                return "destructive";
+                            default:
+                                return "secondary";
+                        }
+                    };
+
+                    const getStatusLabel = (status: string) => {
+                        switch (status) {
+                            case "published":
+                                return "Published";
+                            case "draft":
+                                return "Draft";
+                            case "archived":
+                                return "Archived";
+                            default:
+                                return "Unknown";
+                        }
+                    };
+
+                    return (
+                        <Badge variant={getStatusVariant(status)}>
+                            {getStatusLabel(status)}
+                        </Badge>
+                    );
+                },
+                meta: {
+                    label: "Status",
+                    variant: "select",
+                    options: [
+                        { label: "Published", value: "published" },
+                        { label: "Draft", value: "draft" },
+                        { label: "Archived", value: "archived" },
+                    ],
+                },
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: "createdAt",
+                header: "Created",
+                cell: ({ row }) => {
+                    const date = row.getValue("createdAt") as string;
+                    return (
+                        <div className="text-sm text-muted-foreground">
+                            {new Date(date).toLocaleDateString()}
+                        </div>
+                    );
+                },
+                meta: {
+                    label: "Created Date",
+                    variant: "date",
+                },
+            },
+            {
+                id: "actions",
+                header: "Actions",
+                cell: ({ row }) => {
+                    const obj = row.original;
+                    return (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/dashboard/lms/assignments/${obj.id}`}>
+                                        <Eye className="h-4 w-4 mr-2" />
+                                        View Details
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/dashboard/lms/assignments/${obj.id}/edit`}>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit Assignment
+                                    </Link>
+                                </DropdownMenuItem>
+                                {obj.status !== "archived" && (
+                                    <DropdownMenuItem
+                                        onClick={() => handleArchive(obj)}
+                                        className="text-orange-600"
+                                    >
+                                        <Archive className="h-4 w-4 mr-2" />
+                                        Archive Assignment
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    );
+                },
+            },
+        ];
+    }, [handleArchive]);
+
     const { table } = useDataTable({
         columns,
         data: parsedData,
@@ -213,7 +231,7 @@ export default function Page() {
                 status: Array.isArray(
                     tableState.columnFilters.find((filter) => filter.id === "status")?.value
                 )
-                    ? (tableState.columnFilters.find((filter) => filter.id === "status")?.value as string[])[0] as "published" | "draft"
+                    ? (tableState.columnFilters.find((filter) => filter.id === "status")?.value as string[])[0] as "published" | "draft" | "archived"
                     : undefined,
             }
         };
@@ -230,7 +248,9 @@ export default function Page() {
         }
         return parsed;
     }, [tableState.sorting, tableState.pagination, tableState.columnFilters, tableState.globalFilter, debouncedSearchQuery]);
-    const loadListQuery = trpc.lmsModule.assignment.list.useQuery(queryParams);
+    
+    const loadListQuery = trpc.lmsModule.assignmentModule.assignment.list.useQuery(queryParams);
+    
     useEffect(() => {
         if (!loadListQuery.data) return;
         const parsed = loadListQuery.data.items || [];
@@ -239,6 +259,7 @@ export default function Page() {
             pageCount: Math.ceil(loadListQuery.data.total / loadListQuery.data.meta.take),
         });
     }, [loadListQuery.data]);
+    
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4">

@@ -76,7 +76,7 @@ const AssignmentSelectNiceDialog = NiceModal.create(
             const data: SelectItemType[] = [];
             response.assignments.forEach((assignment) => {
                 data.push({
-                    key: assignment.assignmentId,
+                    key: assignment.id,
                     title: assignment.title,
                     type: "assignment",
                 })

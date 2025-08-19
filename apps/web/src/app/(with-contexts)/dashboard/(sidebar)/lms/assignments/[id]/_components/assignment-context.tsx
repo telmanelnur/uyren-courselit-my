@@ -1,25 +1,25 @@
 "use client"
 
 import { FormMode } from "@/components/admin/layout/types"
-import { IQuiz } from "@/models/lms"
+import { IAssignment } from "@/models/lms"
 import { GeneralRouterOutputs } from "@/server/api/types"
 import { trpc } from "@/utils/trpc"
 import { useToast } from "@workspace/components-library"
 import { createContext, ReactNode, useContext, useEffect, useState } from "react"
 
-type QuizType = GeneralRouterOutputs["lmsModule"]["quizModule"]["quiz"]["getById"]
+type AssignmentType = GeneralRouterOutputs["lmsModule"]["assignmentModule"]["assignment"]["getById"]
 
-interface QuizContextType {
-    initialData: IQuiz;
-    quiz: QuizType | null;
+interface AssignmentContextType {
+    initialData: IAssignment;
+    assignment: AssignmentType | null;
     mode: FormMode
-    loadDetailQuery: ReturnType<typeof trpc.lmsModule.quizModule.quiz.getById.useQuery>
-    updateMutation: ReturnType<typeof trpc.lmsModule.quizModule.quiz.update.useMutation>
+    loadDetailQuery: ReturnType<typeof trpc.lmsModule.assignmentModule.assignment.getById.useQuery>
+    updateMutation: ReturnType<typeof trpc.lmsModule.assignmentModule.assignment.update.useMutation>
 }
 
-const QuizContext = createContext<QuizContextType>({
+const AssignmentContext = createContext<AssignmentContextType>({
     initialData: null as any,
-    quiz: null,
+    assignment: null,
     mode: "create",
     loadDetailQuery: (() => {
         throw new Error("loadDetailQuery is not implemented")
@@ -29,18 +29,18 @@ const QuizContext = createContext<QuizContextType>({
     }) as any,
 })
 
-interface QuizProviderProps {
+interface AssignmentProviderProps {
     children: ReactNode;
     initialData?: any;
     initialMode: FormMode;
 }
 
-export function QuizProvider({ children, initialMode, initialData }: QuizProviderProps) {
+export function AssignmentProvider({ children, initialMode, initialData }: AssignmentProviderProps) {
     const { toast } = useToast()
     const [mode] = useState<FormMode>(initialMode)
-    const [quiz, setQuiz] = useState<QuizType | null>(null)
+    const [assignment, setAssignment] = useState<AssignmentType | null>(initialData || null)
 
-    const loadDetailQuery = trpc.lmsModule.quizModule.quiz.getById.useQuery(
+    const loadDetailQuery = trpc.lmsModule.assignmentModule.assignment.getById.useQuery(
         {
             id: initialData?._id!,
         },
@@ -48,12 +48,12 @@ export function QuizProvider({ children, initialMode, initialData }: QuizProvide
             enabled: mode === "edit" && !!initialData?._id,
         }
     )
-    const updateMutation = trpc.lmsModule.quizModule.quiz.update.useMutation({
+    const updateMutation = trpc.lmsModule.assignmentModule.assignment.update.useMutation({
         onSuccess: (response) => {
-            setQuiz(response as any)
+            setAssignment(response as any)
             toast({
                 title: "Success",
-                description: "Quiz status updated successfully",
+                description: "Assignment status updated successfully",
             })
         },
         onError: (error) => {
@@ -66,26 +66,26 @@ export function QuizProvider({ children, initialMode, initialData }: QuizProvide
     })
     useEffect(() => {
         if (loadDetailQuery.data) {
-            setQuiz(loadDetailQuery.data)
+            setAssignment(loadDetailQuery.data)
         }
     }, [loadDetailQuery.data])
     return (
-        <QuizContext.Provider value={{
+        <AssignmentContext.Provider value={{
             initialData,
             mode,
-            quiz,
+            assignment,
             loadDetailQuery,
             updateMutation,
         }}>
             {children}
-        </QuizContext.Provider>
+        </AssignmentContext.Provider>
     )
 }
 
-export function useQuizContext() {
-    const context = useContext(QuizContext)
+export function useAssignmentContext() {
+    const context = useContext(AssignmentContext)
     if (context === undefined) {
-        throw new Error('useQuizContext must be used within a QuizProvider')
+        throw new Error('useAssignmentContext must be used within a AssignmentProvider')
     }
     return context
 }

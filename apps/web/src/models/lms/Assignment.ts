@@ -13,7 +13,7 @@ export interface IAssignment extends Document {
   instructions?: string;
   requirements: string[];
   attachments: string[];
-  status: "draft" | "published";
+  status: "draft" | "published" | "archived";
   allowLateSubmission: boolean;
   latePenalty: number;
   maxSubmissions: number;
@@ -83,7 +83,7 @@ const AssignmentSchema = new Schema<IAssignment>({
   }],
   status: {
     type: String,
-    enum: ["draft", "published",],
+    enum: ["draft", "published", "archived"],
     default: "draft"
   },
   allowLateSubmission: {

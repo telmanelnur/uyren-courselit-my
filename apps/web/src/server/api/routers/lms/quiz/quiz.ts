@@ -1,9 +1,10 @@
 import { QuizModel } from "@/models/lms";
-import { AuthorizationException, NotFoundException } from "@/server/api/core/exceptions";
+import { AuthorizationException, NotFoundException, ValidationException } from "@/server/api/core/exceptions";
 import { createDomainRequiredMiddleware, createPermissionMiddleware, protectedProcedure } from "@/server/api/core/procedures";
 import { getFormDataSchema, ListInputSchema } from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
 import { documentIdValidator } from "@/server/api/core/validators";
+import { UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { RootFilterQuery } from "mongoose";
 import { z } from "zod";
@@ -17,18 +18,19 @@ const CreateSchema = getFormDataSchema({
   passingScore: z.number().min(0).max(100).default(60),
   shuffleQuestions: z.boolean().default(true),
   showResults: z.boolean().default(false),
-  isPublished: z.boolean().default(false),
   totalPoints: z.number().min(1).default(0),
 });
+
+const { permissions } = UIConstants;
 
 export const quizRouter = router({
   create: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .use(createPermissionMiddleware(["manageAnyCourse"]))
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
     .input(CreateSchema)
     .mutation(async ({ ctx, input }) => {
       const quiz = await QuizModel.create({
-        ...input,
+        ...input.data,
         domain: ctx.domainData.domainObj._id,
         ownerId: ctx.user._id,
       });
@@ -37,8 +39,19 @@ export const quizRouter = router({
 
   update: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .use(createPermissionMiddleware(["manageAnyCourse"]))
-    .input(getFormDataSchema(CreateSchema.shape["data"].partial().shape).extend({
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
+    .input(getFormDataSchema({
+      title: z.string().min(1).max(255).optional(),
+      description: z.string().optional(),
+      courseId: z.string().min(1).optional(),
+      timeLimit: z.number().min(1).optional(),
+      maxAttempts: z.number().min(1).max(10).optional(),
+      passingScore: z.number().min(0).max(100).optional(),
+      shuffleQuestions: z.boolean().optional(),
+      showResults: z.boolean().optional(),
+      totalPoints: z.number().min(1).optional(),
+      status: z.enum(["draft", "published", "archived"]).optional(),
+    }).extend({
       id: documentIdValidator()
     }))
     .mutation(async ({ ctx, input }) => {
@@ -50,13 +63,32 @@ export const quizRouter = router({
       Object.keys(input.data).forEach(key => {
         (quiz as any)[key] = (input.data as any)[key];
       });
+      const json = (await quiz.save()).toObject() as any;
+      return {
+        ...json,
+      };
+    }),
+
+  archive: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      const quiz = await QuizModel.findOne({
+        _id: input,
+        domain: ctx.domainData.domainObj._id
+      });
+      if (!quiz) throw new NotFoundException("Quiz not found");
+
+      quiz.status = "archived";
       await quiz.save();
-      return quiz;
+      
+      return { success: true };
     }),
 
   delete: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .use(createPermissionMiddleware(["manageAnyCourse"]))
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
     .input(z.string())
     .mutation(async ({ ctx, input }) => {
       const quiz = await QuizModel.findOne({
@@ -79,12 +111,23 @@ export const quizRouter = router({
         _id: input.id,
         domain: ctx.domainData.domainObj._id
       })
-        .populate('owner', 'userId name email')
-        .populate('course', 'courseId title');
-      
-      if (!quiz) throw new NotFoundException("Quiz not found");
+        .populate<{
+          owner: {
+            userId: string;
+            name: string;
+            email: string;
+          };
+        }>('owner', 'userId name email')
+        .populate<{
+          course: {
+            courseId: string;
+            title: string;
+          };
+        }>('course', 'courseId title')
+        .lean();
 
-      const hasAccess = checkPermission(ctx.user.permissions, ["manageAnyCourse"]);
+      if (!quiz) throw new NotFoundException("Quiz not found");
+      const hasAccess = checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]);
       if (!hasAccess && quiz.status === "draft") throw new AuthorizationException("No access");
       return quiz;
     }),
@@ -93,7 +136,7 @@ export const quizRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(ListInputSchema.extend({
       filter: z.object({
-        status: z.enum(["published", "draft"]).optional(),
+        status: z.enum(["published", "draft", "archived"]).optional(),
         courseId: z.string().optional(),
       }).optional(),
     }))
@@ -103,19 +146,22 @@ export const quizRouter = router({
       };
       if (input.filter?.status) query.status = input.filter.status;
       if (input.filter?.courseId) query.courseId = input.filter.courseId;
-      const itemsPromise = QuizModel.find(query)
-        .populate('owner', 'userId name email')
-        .populate('course', 'courseId title')
-        .skip(input.pagination?.skip || 0)
-        .limit(input.pagination?.take || 20)
-        .sort(input.orderBy ? { [input.orderBy.field]: input.orderBy.direction === "asc" ? 1 : -1 } : { createdAt: -1 });
       const includeCount = input.pagination?.includePaginationCount ?? true;
       const [items, total] = await Promise.all([
-        itemsPromise,
+        QuizModel.find(query)
+
+          .populate('owner', 'userId name email')
+          .populate('course', 'courseId title')
+          .skip(input.pagination?.skip || 0)
+          .limit(input.pagination?.take || 20)
+          .sort(input.orderBy ? { [input.orderBy.field]: input.orderBy.direction === "asc" ? 1 : -1 } : { createdAt: -1 })
+          .lean(),
         includeCount ? QuizModel.countDocuments(query) : Promise.resolve(0)
       ]);
       return {
-        items,
+        items: items.map(item => ({
+          ...item,
+        })),
         total,
         meta: {
           includePaginationCount: input.pagination?.includePaginationCount,

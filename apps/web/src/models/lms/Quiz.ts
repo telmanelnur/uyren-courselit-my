@@ -12,8 +12,8 @@ export interface IQuiz extends Document {
   passingScore: number;
   shuffleQuestions: boolean;
   showResults: boolean;
-  status: "draft" | "published";
-  questionIds: string[];
+  status: "draft" | "published" | "archived";
+  questionIds: mongoose.Types.ObjectId[];
   totalPoints: number;
   createdAt: Date;
   updatedAt: Date;
@@ -30,8 +30,8 @@ const QuizSchema = new Schema<IQuiz>({
   passingScore: { type: Number, min: 0, max: 100, default: 60 },
   shuffleQuestions: { type: Boolean, default: true },
   showResults: { type: Boolean, default: false },
-  status: { type: String, required: true, enum: ["draft", "published",], default: "draft" },
-  questionIds: [{ type: String }],
+  status: { type: String, required: true, enum: ["draft", "published", "archived"], default: "draft" },
+  questionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
   totalPoints: { type: Number, min: 0, default: 0 },
 }, {
   timestamps: true,

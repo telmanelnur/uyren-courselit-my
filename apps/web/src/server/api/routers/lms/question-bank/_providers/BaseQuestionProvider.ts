@@ -36,6 +36,44 @@ export abstract class BaseQuestionProvider {
   // Abstract method for specific validation
   protected abstract validateSpecificFields(question: any): string[];
 
+  // New method: Get validated and prepared data for model operations
+  getValidatedData(questionData: any, courseId: string, teacherId: string): any {
+    // Prepare the data with required fields
+    const preparedData = {
+      ...questionData,
+      courseId,
+      teacherId,
+    };
+
+    // Validate the prepared data
+    const validation = this.validateQuestion(preparedData);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+    }
+
+    // Get default settings and merge with validated data
+    const defaultSettings = this.getDefaultSettings();
+    
+    return {
+      ...defaultSettings,
+      ...preparedData,
+    };
+  }
+
+  // New method: Validate and prepare data for updates
+  getValidatedUpdateData(existingQuestion: any, updateData: any): any {
+    // Merge existing data with update data
+    const mergedData = { ...existingQuestion.toObject(), ...updateData };
+    
+    // Validate the merged data
+    const validation = this.validateQuestion(mergedData);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+    }
+
+    return mergedData;
+  }
+
   // Common scoring logic
   calculateScore(answer: any, question: any): number {
     if (!answer || !question) return 0;
@@ -49,7 +87,7 @@ export abstract class BaseQuestionProvider {
 
   // Common display processing
   processQuestionForDisplay(question: any, hideAnswers: boolean = true): any {
-    const processed = { ...question.toObject() };
+    const processed = { ...question.toObject?.() ?? question };
     
     if (hideAnswers) {
       delete processed.correctAnswer;

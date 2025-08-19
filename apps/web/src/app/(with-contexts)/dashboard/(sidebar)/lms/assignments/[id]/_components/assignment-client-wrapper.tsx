@@ -10,21 +10,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/componen
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
 import { useCallback, useMemo } from "react"
 import { ChevronDown } from "lucide-react"
-import { QuizProvider, useQuizContext } from "./quiz-context"
-import QuizQuestions from "./quiz-questions"
-import QuizSettings from "./quiz-settings"
+import { AssignmentProvider, useAssignmentContext } from "./assignment-context"
+import AssignmentSettings from "./assignment-settings"
+import AssignmentSubmissions from "./assignment-submissions"
+import AssignmentGrading from "./assignment-grading"
 
-interface QuizClientWrapperProps {
+interface AssignmentClientWrapperProps {
     initialMode: FormMode;
-    initialQuizData?: any
+    initialAssignmentData?: any
 }
 
-function QuizContent() {
+function AssignmentContent() {
     const {
         mode,
-        quiz,
+        assignment,
         updateMutation,
-    } = useQuizContext()
+    } = useAssignmentContext()
 
     const { toast } = useToast()
     const breadcrumbs = useMemo(() => [
@@ -33,27 +34,27 @@ function QuizContent() {
             href: `/dashboard/lms`,
         },
         {
-            label: "Quizzes",
-            href: "/dashboard/lms/quizzes",
+            label: "Assignments",
+            href: "/dashboard/lms/assignments",
         },
         {
-            label: mode === "create" ? "New Quiz" : "Edit Quiz",
+            label: mode === "create" ? "New Assignment" : "Edit Assignment",
             href: "#",
         }
     ], [mode])
 
     const handleStatusChange = useCallback(async (newStatus: "draft" | "published" | "archived") => {
-        if (!quiz?._id) return;
+        if (!assignment?._id) return;
 
         try {
             await updateMutation.mutateAsync({
-                id: `${quiz._id}`,
+                id: `${assignment._id}`,
                 data: { status: newStatus }
             });
         } catch (error) {
             // Error handling is done in the mutation
         }
-    }, [quiz])
+    }, [assignment?._id, updateMutation])
 
     return (
         <DashboardContent
@@ -63,10 +64,10 @@ function QuizContent() {
                 <HeaderTopbar
                     backLink={true}
                     header={{
-                        title: mode === "create" ? "New Quiz" : "Edit Quiz",
+                        title: mode === "create" ? "New Assignment" : "Edit Assignment",
                         subtitle: mode === "create"
-                            ? "Build a new quiz with questions and settings"
-                            : "Edit quiz settings and questions"
+                            ? "Create a new assignment with detailed configuration"
+                            : "Edit assignment settings and manage submissions"
                     }}
                     rightAction={
                         <div className="flex items-center gap-2">
@@ -74,32 +75,32 @@ function QuizContent() {
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        disabled={!quiz || updateMutation.isPending || mode === "create"}
+                                        disabled={!assignment || updateMutation.isPending || mode === "create"}
                                         className="flex items-center gap-2"
                                     >
-                                        {quiz?.status === "draft" && "Draft"}
-                                        {quiz?.status === "published" && "Published"}
-                                        {quiz?.status === "archived" && "Archived"}
-                                        {!quiz && "Draft"}
+                                        {assignment?.status === "draft" && "Draft"}
+                                        {assignment?.status === "published" && "Published"}
+                                        {assignment?.status === "archived" && "Archived"}
+                                        {!assignment?.status && "Draft"}
                                         <ChevronDown className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem
                                         onClick={() => handleStatusChange("draft")}
-                                        disabled={quiz?.status === "draft"}
+                                        disabled={assignment?.status === "draft"}
                                     >
                                         Draft
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() => handleStatusChange("published")}
-                                        disabled={quiz?.status === "published"}
+                                        disabled={assignment?.status === "published"}
                                     >
                                         Published
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() => handleStatusChange("archived")}
-                                        disabled={quiz?.status === "archived"}
+                                        disabled={assignment?.status === "archived"}
                                     >
                                         Archived
                                     </DropdownMenuItem>
@@ -111,26 +112,41 @@ function QuizContent() {
 
                 <Tabs defaultValue="settings" className="space-y-6">
                     <TabsList>
-                        <TabsTrigger value="settings">Quiz Settings</TabsTrigger>
+                        <TabsTrigger value="settings">Basic Information</TabsTrigger>
                         <TabsTrigger
-                            value="questions"
+                            value="submissions"
                             disabled={mode === "create"}
                         >
-                            Questions
-                            {/* ({questions.length}) */}
+                            Submissions
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="grading"
+                            disabled={mode === "create"}
+                        >
+                            Grading
                         </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="settings" className="space-y-6">
-                        <QuizSettings />
+                        <AssignmentSettings />
                     </TabsContent>
 
-                    <TabsContent value="questions" className="space-y-6">
+                    <TabsContent value="submissions" className="space-y-6">
                         {mode === "edit" ? (
-                            <QuizQuestions />
+                            <AssignmentSubmissions />
                         ) : (
                             <div className="text-center py-8 text-muted-foreground">
-                                Save the quiz first to add questions.
+                                Save the assignment first to manage submissions.
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="grading" className="space-y-6">
+                        {mode === "edit" ? (
+                            <AssignmentGrading />
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                                Save the assignment first to configure grading.
                             </div>
                         )}
                     </TabsContent>
@@ -140,13 +156,13 @@ function QuizContent() {
     )
 }
 
-export default function QuizClientWrapper({ initialMode, initialQuizData }: QuizClientWrapperProps) {
+export default function AssignmentClientWrapper({ initialMode, initialAssignmentData }: AssignmentClientWrapperProps) {
     return (
-        <QuizProvider
+        <AssignmentProvider
             initialMode={initialMode}
-            initialData={initialQuizData}
+            initialData={initialAssignmentData}
         >
-            <QuizContent />
-        </QuizProvider>
+            <AssignmentContent />
+        </AssignmentProvider>
     )
 }

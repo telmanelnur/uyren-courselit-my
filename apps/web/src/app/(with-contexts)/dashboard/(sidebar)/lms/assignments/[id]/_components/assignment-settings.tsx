@@ -7,67 +7,67 @@ import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form"
 import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { Switch } from "@workspace/ui/components/switch"
 import { Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import z from "zod"
-import { useQuizContext } from "./quiz-context"
+import { useAssignmentContext } from "./assignment-context"
 
-const QuizSettingsSchema = z.object({
+const AssignmentSettingsSchema = z.object({
     title: z.string().min(1).max(255),
     description: z.string().optional(),
     course: z.object({
         key: z.string(),
         title: z.string(),
     }, { required_error: "Please select a course" }),
-    timeLimit: z.number().min(1).optional(),
-    maxAttempts: z.number().min(1).max(10),
-    passingScore: z.number().min(0).max(100),
-    shuffleQuestions: z.boolean(),
-    showResults: z.boolean(),
+    instructions: z.string().optional(),
     totalPoints: z.number().min(1),
+    dueDate: z.date().optional(),
+    assignmentType: z.enum(["essay", "project", "presentation", "file_upload", "peer_review"]),
+    availableFrom: z.date().optional(),
+    allowLateSubmission: z.boolean(),
 });
 
-type QuizSettingsFormDataType = z.infer<typeof QuizSettingsSchema>
+type AssignmentSettingsFormDataType = z.infer<typeof AssignmentSettingsSchema>
 type CourseSelectItemType = {
     key: string;
     title: string;
 };
 
-export default function QuizSettings() {
+export default function AssignmentSettings() {
     const {
-        quiz,
+        assignment,
         mode,
-    } = useQuizContext()
+    } = useAssignmentContext()
 
     const router = useRouter()
     const { toast } = useToast()
-    const form = useForm<QuizSettingsFormDataType>({
-        resolver: zodResolver(QuizSettingsSchema),
+    const form = useForm<AssignmentSettingsFormDataType>({
+        resolver: zodResolver(AssignmentSettingsSchema),
         defaultValues: {
             title: "",
             description: "",
             course: undefined as any,
-            timeLimit: 30,
-            passingScore: 70,
-            maxAttempts: 3,
-            shuffleQuestions: true,
-            showResults: false,
-            totalPoints: 0,
+            instructions: "",
+            totalPoints: 100,
+            dueDate: undefined,
+            assignmentType: "project",
+            availableFrom: undefined,
+            allowLateSubmission: false,
         }
     })
 
-    const createMutation = trpc.lmsModule.quizModule.quiz.create.useMutation({
+    const createMutation = trpc.lmsModule.assignmentModule.assignment.create.useMutation({
         onSuccess: (response) => {
             toast({
                 title: "Success",
-                description: "Quiz created successfully",
+                description: "Assignment created successfully",
             })
-            router.push(`/dashboard/lms/quizzes/${response.id}`)
+            router.push(`/dashboard/lms/assignments/${response._id}`)
         },
         onError: (error) => {
             toast({
@@ -77,11 +77,11 @@ export default function QuizSettings() {
             })
         },
     });
-    const updateMutation = trpc.lmsModule.quizModule.quiz.update.useMutation({
+    const updateMutation = trpc.lmsModule.assignmentModule.assignment.update.useMutation({
         onSuccess: () => {
             toast({
                 title: "Success",
-                description: "Quiz updated successfully",
+                description: "Assignment updated successfully",
             })
         },
         onError: (error) => {
@@ -93,40 +93,41 @@ export default function QuizSettings() {
         },
     });
 
-    const handleSubmit = useCallback(async (data: QuizSettingsFormDataType) => {
+    const handleSubmit = useCallback(async (data: AssignmentSettingsFormDataType) => {
         // Transform the data to match the API expectations
         const transformedData = {
             ...data,
             courseId: data.course?.key || "", // Extract just the key for API
             course: undefined,
+            // Add any additional transformations needed
         };
+
         if (mode === "create") {
             await createMutation.mutateAsync({
                 data: transformedData
             })
-        } else if (mode === "edit" && quiz) {
+        } else if (mode === "edit" && assignment) {
             await updateMutation.mutateAsync({
-                id: `${quiz._id}`,
+                id: `${assignment._id}`,
                 data: transformedData
             })
         }
-    }, [mode])
+    }, [mode, assignment, createMutation, updateMutation])
 
     useEffect(() => {
-        if (quiz && mode === "edit") {
+        if (assignment && mode === "edit") {
             form.reset({
-                title: quiz.title || "",
-                description: quiz.description || "",
-                course: quiz.course ? { key: quiz.course.courseId, title: quiz.course.title } : undefined,
-                timeLimit: quiz.timeLimit || 30,
-                passingScore: quiz.passingScore || 70,
-                maxAttempts: quiz.maxAttempts || 3,
-                shuffleQuestions: quiz.shuffleQuestions ?? true,
-                showResults: quiz.showResults ?? false,
-                totalPoints: quiz.totalPoints || 0,
-            })
+                title: assignment.title || "",
+                description: assignment.description || "",
+                course: assignment.course ? { key: assignment.course.courseId, title: assignment.course.title } : undefined,
+                instructions: assignment.instructions || "",
+                totalPoints: assignment.totalPoints || 100,
+                dueDate: assignment.dueDate ? new Date(assignment.dueDate) : undefined,
+                assignmentType: assignment.assignmentType || "project",
+                allowLateSubmission: assignment.allowLateSubmission || false,
+            });
         }
-    }, [quiz, form.reset]);
+    }, [assignment, form.reset, mode]);
 
     const trpcUtils = trpc.useUtils();
     const fetchCourses = useCallback(async (search: string) => {
@@ -147,10 +148,8 @@ export default function QuizSettings() {
 
     const isSaving = createMutation.isPending || updateMutation.isPending;
     const isSubmitting = form.formState.isSubmitting;
-
     return (
         <div className="space-y-6">
-            {/* NEW FORM IMPLEMENTATION WITH Form COMPONENTS */}
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                     <div className="flex justify-end">
@@ -171,11 +170,11 @@ export default function QuizSettings() {
                                     name="title"
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col">
-                                            <FormLabel>Quiz Title</FormLabel>
+                                            <FormLabel>Assignment Title</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     {...field}
-                                                    placeholder="Enter quiz title"
+                                                    placeholder="Enter assignment title"
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -191,7 +190,7 @@ export default function QuizSettings() {
                                             <FormControl>
                                                 <Textarea
                                                     {...field}
-                                                    placeholder="Enter quiz description"
+                                                    placeholder="Enter assignment description"
                                                     rows={3}
                                                 />
                                             </FormControl>
@@ -204,7 +203,7 @@ export default function QuizSettings() {
                                     name="course"
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col">
-                                            <FormLabel>Course</FormLabel>
+                                            <FormLabel>Associated Course</FormLabel>
                                             <FormControl>
                                                 <ComboBox2<CourseSelectItemType>
                                                     title="Select a course"
@@ -220,87 +219,107 @@ export default function QuizSettings() {
                                         </FormItem>
                                     )}
                                 />
+                                <FormField
+                                    control={form.control}
+                                    name="instructions"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>Instructions</FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    {...field}
+                                                    placeholder="Enter detailed instructions for students"
+                                                    rows={4}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader>
-                                <CardTitle>Quiz Configuration (New Form)</CardTitle>
+                                <CardTitle>Assignment Configuration</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <FormField
                                         control={form.control}
-                                        name="timeLimit"
-                                        render={({ field }) => (
-                                            <FormItem className="flex flex-col">
-                                                <FormLabel>Time Limit (minutes)</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="number"
-                                                        {...field}
-                                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="passingScore"
-                                        render={({ field }) => (
-                                            <FormItem className="flex flex-col">
-                                                <FormLabel>Passing Score (%)</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="number"
-                                                        {...field}
-                                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <div className="grid sm:grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="maxAttempts"
-                                        render={({ field }) => (
-                                            <FormItem className="flex flex-col">
-                                                <FormLabel>Max Attempts</FormLabel>
-                                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="1">1 Attempt</SelectItem>
-                                                        <SelectItem value="2">2 Attempts</SelectItem>
-                                                        <SelectItem value="3">3 Attempts</SelectItem>
-                                                        <SelectItem value="-1">Unlimited</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
                                         name="totalPoints"
                                         render={({ field }) => (
                                             <FormItem className="flex flex-col">
-                                                <FormLabel>Total Points</FormLabel>
+                                                <FormLabel>Maximum Points</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="number"
                                                         {...field}
                                                         onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                                    // readOnly
-                                                    // className="bg-muted"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="assignmentType"
+                                        render={({ field }) => {
+                                            return (
+                                                <FormItem className="flex flex-col">
+                                                    <FormLabel>Assignment Type</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={"essay"}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="essay">Essay</SelectItem>
+                                                            <SelectItem value="project">Project</SelectItem>
+                                                            <SelectItem value="presentation">Presentation</SelectItem>
+                                                            <SelectItem value="file_upload">File Upload</SelectItem>
+                                                            <SelectItem value="peer_review">Peer Review</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            );
+                                        }}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="dueDate"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-col">
+                                                <FormLabel>Due Date</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        {...field}
+                                                        type="datetime-local"
+                                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="availableFrom"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-col">
+                                                <FormLabel>Available From</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="datetime-local"
+                                                        {...field}
+                                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -308,6 +327,26 @@ export default function QuizSettings() {
                                         )}
                                     />
                                 </div>
+                                <FormField
+                                    control={form.control}
+                                    name="allowLateSubmission"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-base">Allow Late Submissions</FormLabel>
+                                                <div className="text-sm text-muted-foreground">
+                                                    Students can submit after due date
+                                                </div>
+                                            </div>
+                                            <FormControl>
+                                                <Switch
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
                             </CardContent>
                         </Card>
                     </div>

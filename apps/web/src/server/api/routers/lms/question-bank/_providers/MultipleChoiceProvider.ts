@@ -22,6 +22,15 @@ export class MultipleChoiceProvider extends BaseQuestionProvider {
       errors.push("At least one option must be marked as correct");
     }
 
+    // Validate that options have text
+    if (question.options) {
+      question.options.forEach((opt: any, index: number) => {
+        if (!opt.text || opt.text.trim().length === 0) {
+          errors.push(`Option ${index + 1} must have text`);
+        }
+      });
+    }
+
     return errors;
   }
 
@@ -49,8 +58,34 @@ export class MultipleChoiceProvider extends BaseQuestionProvider {
   getDefaultSettings(): any {
     return {
       ...super.getDefaultSettings(),
-      shuffleOptions: true
+      shuffleOptions: true,
+      allowMultipleAnswers: false,
+      minOptions: 2,
+      maxOptions: 6
     };
+  }
+
+  // Override to add multiple choice specific validation
+  getValidatedData(questionData: any, courseId: string, teacherId: string): any {
+    // Ensure options are properly formatted
+    if (questionData.options) {
+      questionData.options = questionData.options
+        .filter((opt: any) => opt.text && opt.text.trim().length > 0)
+        .map((opt: any) => ({
+          text: opt.text.trim(),
+          isCorrect: Boolean(opt.isCorrect),
+          explanation: opt.explanation || ""
+        }));
+    }
+
+    // Extract correct answers from options if not provided
+    if (!questionData.correctAnswers && questionData.options) {
+      questionData.correctAnswers = questionData.options
+        .filter((opt: any) => opt.isCorrect)
+        .map((opt: any) => opt.text);
+    }
+
+    return super.getValidatedData(questionData, courseId, teacherId);
   }
 
   // Hide correctness flags for students

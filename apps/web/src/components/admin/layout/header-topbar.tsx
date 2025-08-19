@@ -1,7 +1,9 @@
+"use client";
+
 import { Button } from "@workspace/ui/components/button";
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { ReactNode, useCallback } from "react";
 
 
 type HeaderProps = {
@@ -14,14 +16,18 @@ type HeaderProps = {
 }
 
 const HeaderTopbar = (props: HeaderProps) => {
+    const router = useRouter();
+    const handleBack = useCallback(() => {
+        if (props.backLink) {
+            router.back();
+        }
+    }, [props.backLink]);
     return (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {
                 props.backLink && (
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link href="/dashboard/lms/quizzes">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
+                    <Button variant="ghost" size="icon" onClick={handleBack}>
+                        <ArrowLeft className="h-4 w-4" />
                     </Button>
                 )
             }

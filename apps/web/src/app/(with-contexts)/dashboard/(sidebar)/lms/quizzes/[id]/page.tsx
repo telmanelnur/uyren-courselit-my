@@ -10,7 +10,9 @@ async function getQuizData(id: string) {
     try {
         await connectToDatabase()
         const quiz = await QuizModel.findById(id).lean()
-        return quiz ? JSON.parse(JSON.stringify(quiz)) : null
+        return quiz ? JSON.parse(JSON.stringify({
+            ...quiz,
+        })) : null
     } catch (error) {
         console.error("Error fetching quiz:", error)
         return null
@@ -29,7 +31,6 @@ export default async function EditQuizPage(props: {
     return (
         <QuizClientWrapper
             initialMode={initialMode}
-            quizId={quizId}
             initialQuizData={initialQuizData}
         />
     )
