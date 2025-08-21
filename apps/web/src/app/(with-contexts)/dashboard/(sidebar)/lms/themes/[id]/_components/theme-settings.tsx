@@ -99,7 +99,7 @@ export default function ThemeSettings() {
     }, [theme, mode]);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-2">
             <Card>
                 <CardHeader>
                     <CardTitle>Theme Information</CardTitle>
@@ -124,22 +124,6 @@ export default function ThemeSettings() {
                             placeholder="Enter theme description..."
                             rows={3}
                         />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
-                        <div className="flex items-center space-x-2">
-                            <select
-                                id="status"
-                                value={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value={BASIC_PUBLICATION_STATUS_TYPE.DRAFT}>Draft</option>
-                                <option value={BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED}>Published</option>
-                                <option value={BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED}>Archived</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div className="pt-4">

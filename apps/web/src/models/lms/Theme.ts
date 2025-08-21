@@ -8,7 +8,6 @@ export interface ITheme {
     ownerId: string;
     domain: mongoose.Types.ObjectId;
     status: BasicPublicationStatus;
-    stylesCss: string;
     assets: ThemeAsset[];
     createdAt: Date;
     updatedAt: Date;
@@ -17,6 +16,7 @@ export interface ITheme {
 export interface ThemeAsset {
     assetType: "stylesheet" | "font" | "script" | "image";
     url: string;
+    content?: string;
     preload?: boolean;
     async?: boolean;
     defer?: boolean;
@@ -37,6 +37,7 @@ const ThemeAssetSchema = new Schema<ThemeAsset>({
         enum: ["stylesheet", "font", "script", "image"]
     },
     url: { type: String, required: true },
+    content: { type: String },
     preload: { type: Boolean, default: false },
     async: { type: Boolean, default: false },
     defer: { type: Boolean, default: false },
@@ -48,7 +49,7 @@ const ThemeAssetSchema = new Schema<ThemeAsset>({
     mimeType: { type: String },
     name: { type: String },
     description: { type: String },
-}, { _id: false });
+});
 
 const ThemeSchema = new Schema<ITheme>({
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -65,7 +66,7 @@ const ThemeSchema = new Schema<ITheme>({
         ],
         // default: BASIC_PUBLICATION_STATUS_TYPE.DRAFT
     },
-    stylesCss: { type: String, required: true, default: "" },
+
     assets: [ThemeAssetSchema],
 }, {
     timestamps: true,

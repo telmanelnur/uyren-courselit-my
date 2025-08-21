@@ -16,7 +16,6 @@ export function AssignmentLinkNodeComponent({ node, updateAttributes }: NodeView
         entityId: string
     }
 }) {
-    console.log("node", node)
     const { label, entityId } = node.attrs.data
 
     const handleSelectDialog = useCallback(() => {
@@ -48,8 +47,7 @@ type SelectItemType = {
 
 
 const AssignmentSelectNiceDialog = NiceModal.create(
-    (args: any) => {
-        console.log("args", args)
+    (_: any) => {
         const { visible, hide, resolve, } = NiceModal.useModal()
 
         const handleClose = () => {

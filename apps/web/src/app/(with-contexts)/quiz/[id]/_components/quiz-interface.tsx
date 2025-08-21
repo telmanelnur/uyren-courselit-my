@@ -30,7 +30,6 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
   const [score, setScore] = useState<number | null>(null)
   const [attemptId, setAttemptId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
   const loadQuizQuery = trpc.lmsModule.quizModule.quiz.publicGetByQuizIdWithQuestions.useQuery(
@@ -56,14 +55,17 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
 
   const questions = quiz?.questions || []
   const currentQuestion = questions[currentQuestionIndex]
-  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0
+  const answeredQuestions = Object.keys(answers).length
+  const progress = questions.length > 0 ? (answeredQuestions / questions.length) * 100 : 0
 
   // Restore answers from existing attempt
   useEffect(() => {
     if (currentAttempt && currentAttempt.answers && currentAttempt.answers.length > 0) {
       const restoredAnswers: Record<string, string | string[]> = {}
       currentAttempt.answers.forEach((answer: any) => {
-        restoredAnswers[answer.questionId] = answer.answer
+        if (answer.answer !== undefined && answer.answer !== null) {
+          restoredAnswers[answer.questionId] = answer.answer
+        }
       })
       setAnswers(restoredAnswers)
       setAttemptId(currentAttempt._id.toString())
@@ -100,35 +102,14 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
     }
   }, [quiz?._id, attemptId, currentAttempt])
 
-  const saveCurrentAnswers = useCallback(async () => {
-    if (!attemptId || Object.keys(answers).length === 0) return
-
-    setIsSaving(true)
-    try {
-      const answerSubmissions = Object.entries(answers).map(([questionId, answer]) => ({
-        questionId,
-        answer
-      }))
-
-      const result = await submitPartialAnswers(attemptId, answerSubmissions)
-      if (!result.success) {
-        console.warn("Failed to save partial answers:", result.message)
-      }
-    } catch (error) {
-      console.error("Error saving partial answers:", error)
-    } finally {
-      setIsSaving(false)
-    }
-  }, [attemptId, answers])
-
-  const handleAnswerChange = (questionId: string, answer: string | string[]) => {
+  const handleAnswerChange = useCallback((questionId: string, answer: string | string[]) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: answer
     }))
-  }
+  }, [])
 
-  const handleMultipleChoiceChange = (questionId: string, optionId: string, checked: boolean) => {
+  const handleMultipleChoiceChange = useCallback((questionId: string, optionId: string, checked: boolean) => {
     const currentAnswers = answers[questionId] as string[] || []
     
     if (checked) {
@@ -140,41 +121,69 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
       // Remove option if selected
       handleAnswerChange(questionId, currentAnswers.filter(id => id !== optionId))
     }
-  }
+  }, [answers, handleAnswerChange])
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     if (currentQuestionIndex < questions.length - 1) {
-      await saveCurrentAnswers()
+      // Save current answer before moving to next
+      if (attemptId && currentQuestion && answers[currentQuestion._id] !== undefined) {
+        try {
+          await submitPartialAnswers(attemptId, [{
+            questionId: currentQuestion._id,
+            answer: answers[currentQuestion._id]
+          }])
+        } catch (error) {
+          console.warn("Failed to save answer:", error)
+        }
+      }
       setCurrentQuestionIndex(prev => prev + 1)
     }
-  }
+  }, [currentQuestionIndex, questions.length, attemptId, currentQuestion, answers])
 
-  const handlePrevious = async () => {
+  const handlePrevious = useCallback(async () => {
     if (currentQuestionIndex > 0) {
-      await saveCurrentAnswers()
+      // Save current answer before moving to previous
+      if (attemptId && currentQuestion && answers[currentQuestion._id] !== undefined) {
+        try {
+          await submitPartialAnswers(attemptId, [{
+            questionId: currentQuestion._id,
+            answer: answers[currentQuestion._id]
+          }])
+        } catch (error) {
+          console.warn("Failed to save answer:", error)
+        }
+      }
       setCurrentQuestionIndex(prev => prev - 1)
     }
-  }
+  }, [currentQuestionIndex, attemptId, currentQuestion, answers])
 
-  const handleQuestionNavigation = async (questionIndex: number) => {
+  const handleQuestionNavigation = useCallback(async (questionIndex: number) => {
     if (questionIndex !== currentQuestionIndex) {
-      await saveCurrentAnswers()
+      // Save current answer before navigating to different question
+      if (attemptId && currentQuestion && answers[currentQuestion._id] !== undefined) {
+        try {
+          await submitPartialAnswers(attemptId, [{
+            questionId: currentQuestion._id,
+            answer: answers[currentQuestion._id]
+          }])
+        } catch (error) {
+          console.warn("Failed to save answer:", error)
+        }
+      }
       setCurrentQuestionIndex(questionIndex)
     }
-  }
+  }, [currentQuestionIndex, attemptId, currentQuestion, answers])
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!attemptId) return
 
     setIsLoading(true)
     try {
-      const answerSubmissions = Object.entries(answers).map(([questionId, answer]) => ({
+      // Submit with auto-grading disabled for final submission
+      const result = await submitQuizAttempt(attemptId, Object.entries(answers).map(([questionId, answer]) => ({
         questionId,
         answer
-      }))
-
-      // Submit with auto-grading disabled for final submission
-      const result = await submitQuizAttempt(attemptId, answerSubmissions, false)
+      })), false)
 
       if (result.success) {
         setScore(result.percentageScore || 0)
@@ -199,9 +208,9 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [attemptId, answers, toast])
 
-  const renderQuestion = (question: any) => {
+  const renderQuestion = useCallback((question: any) => {
     if (question.type === "multiple_choice") {
       const currentAnswers = answers[question._id] as string[] || []
       
@@ -231,18 +240,21 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
     if (question.type === "short_answer") {
       return (
         <div className="space-y-2">
-          <Input
+          <input
+            type="text"
             placeholder="Enter your answer..."
             value={answers[question._id] as string || ""}
             onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-            className="text-base"
+            autoComplete="off"
+            spellCheck="false"
+            className="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
           />
         </div>
       )
     }
 
     return null
-  }
+  }, [answers, handleAnswerChange, handleMultipleChoiceChange])
 
   const QuizWrapper = ({ children }: { children: React.ReactNode }) => (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -365,7 +377,7 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
             </div>
             <Progress value={progress} className="mt-4" />
             <div className="text-sm text-gray-600 mt-2">
-              Question {currentQuestionIndex + 1} of {questions.length}
+              Question {currentQuestionIndex + 1} of {questions.length} • {answeredQuestions} answered
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -387,14 +399,12 @@ export default function QuizInterface({ initialQuiz }: QuizInterfaceProps) {
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
-                    disabled={currentQuestionIndex === 0}
                   >
                     Previous
                   </Button>
 
                   <Button 
                     onClick={handleNext}
-                    disabled={currentQuestionIndex === questions.length - 1}
                   >
                     Next
                   </Button>

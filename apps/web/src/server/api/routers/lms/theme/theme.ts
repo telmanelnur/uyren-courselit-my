@@ -23,10 +23,10 @@ export const themeRouter = router({
                 BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
                 BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED,
             ]).default(BASIC_PUBLICATION_STATUS_TYPE.DRAFT),
-            stylesCss: z.string().default(""),
             assets: z.array(z.object({
                 assetType: z.enum(["stylesheet", "font", "script", "image"]),
                 url: z.string().url(),
+                content: z.string().optional(),
                 preload: z.boolean().optional(),
                 async: z.boolean().optional(),
                 defer: z.boolean().optional(),
@@ -60,10 +60,10 @@ export const themeRouter = router({
                 BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
                 BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED,
             ]).optional(),
-            stylesCss: z.string().optional(),
             assets: z.array(z.object({
                 assetType: z.enum(["stylesheet", "font", "script", "image"]),
-                url: z.string().url(),
+                url: z.string(),
+                content: z.string().optional(),
                 preload: z.boolean().optional(),
                 async: z.boolean().optional(),
                 defer: z.boolean().optional(),
@@ -109,10 +109,29 @@ export const themeRouter = router({
             return { success: true };
         }),
 
+    listAssets: protectedProcedure
+        .use(createDomainRequiredMiddleware())
+        .use(createPermissionMiddleware([permissions.manageAnyCourse]))
+        .input(z.object({
+            themeId: documentIdValidator()
+        }))
+        .query(async ({ ctx, input }) => {
+            const theme = await ThemeModel.findOne({
+                _id: input.themeId,
+                domain: ctx.domainData.domainObj._id
+            }).lean();
 
+            if (!theme) throw new NotFoundException("Theme not found");
+            
+            return {
+                assets: theme.assets || [],
+                themeId: theme._id
+            };
+        }),
 
     getById: protectedProcedure
         .use(createDomainRequiredMiddleware())
+        .use(createPermissionMiddleware([permissions.manageAnyCourse]))
         .input(z.object({
             id: documentIdValidator()
         }))
@@ -130,6 +149,7 @@ export const themeRouter = router({
 
     list: protectedProcedure
         .use(createDomainRequiredMiddleware())
+        .use(createPermissionMiddleware([permissions.manageAnyCourse]))
         .input(ListInputSchema.extend({
             filter: z.object({
                 status: z.enum([

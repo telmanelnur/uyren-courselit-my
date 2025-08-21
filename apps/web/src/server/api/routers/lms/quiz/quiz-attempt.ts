@@ -80,6 +80,7 @@ export const quizAttemptRouter = router({
 
   getById: protectedProcedure
     .use(createDomainRequiredMiddleware())
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
     .input(z.object({
       id: documentIdValidator()
     }))
@@ -105,9 +106,6 @@ export const quizAttemptRouter = router({
         .lean();
 
       if (!attempt) throw new NotFoundException("Quiz attempt not found");
-      if (attempt.userId.toString() !== ctx.user._id.toString()) {
-        throw new AuthorizationException("No access to this attempt");
-      }
       return attempt;
     }),
 

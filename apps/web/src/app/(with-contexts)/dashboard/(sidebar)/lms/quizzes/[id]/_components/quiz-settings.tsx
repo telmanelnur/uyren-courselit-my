@@ -10,7 +10,7 @@ import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
 import { Textarea } from "@workspace/ui/components/textarea"
-import { Save } from "lucide-react"
+import { Save, Copy, Link } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -148,12 +148,49 @@ export default function QuizSettings() {
     const isSaving = createMutation.isPending || updateMutation.isPending;
     const isSubmitting = form.formState.isSubmitting;
 
+    const handleCopyLink = useCallback(async () => {
+        if (!quiz?._id) return;
+        
+        const quizUrl = `${window.location.origin}/quiz/${quiz._id}`;
+        
+        try {
+            await navigator.clipboard.writeText(quizUrl);
+            toast({
+                title: "Link Copied",
+                description: "Quiz link copied to clipboard",
+            });
+        } catch (error) {
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = quizUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            
+            toast({
+                title: "Link Copied",
+                description: "Quiz link copied to clipboard",
+            });
+        }
+    }, [quiz?._id, toast]);
+
     return (
         <div className="space-y-6">
             {/* NEW FORM IMPLEMENTATION WITH Form COMPONENTS */}
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            disabled={mode === "create" || !quiz?._id}
+                            onClick={handleCopyLink}
+                            className="flex items-center gap-2"
+                        >
+                            <Link className="h-4 w-4" />
+                            Copy Link
+                        </Button>
                         <Button type="submit" disabled={isSaving || isSubmitting}>
                             <Save className="h-4 w-4 mr-2" />
                             {isSaving || isSubmitting ? "Saving..." : "Save Settings"}

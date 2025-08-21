@@ -57,7 +57,7 @@ function ThemeContent() {
         <DashboardContent
             breadcrumbs={breadcrumbs}
         >
-            <div className="flex flex-col gap-6">
+            <div className="flex-1 flex flex-col gap-6">
                 <HeaderTopbar
                     backLink={true}
                     header={{
@@ -107,8 +107,8 @@ function ThemeContent() {
                     }
                 />
 
-                <Tabs defaultValue="settings" className="space-y-6">
-                    <TabsList>
+                <Tabs defaultValue="settings" className="flex-1">
+                    <TabsList >
                         <TabsTrigger value="settings">Theme Settings</TabsTrigger>
                         <TabsTrigger
                             value="code"

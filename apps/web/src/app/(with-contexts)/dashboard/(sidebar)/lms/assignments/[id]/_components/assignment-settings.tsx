@@ -248,49 +248,22 @@ export default function AssignmentSettings() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <FormField
                                         control={form.control}
-                                        name="totalPoints"
+                                        name="availableFrom"
                                         render={({ field }) => (
                                             <FormItem className="flex flex-col">
-                                                <FormLabel>Maximum Points</FormLabel>
+                                                <FormLabel>Available From</FormLabel>
                                                 <FormControl>
                                                     <Input
-                                                        type="number"
+                                                        type="datetime-local"
                                                         {...field}
-                                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-                                    <FormField
-                                        control={form.control}
-                                        name="assignmentType"
-                                        render={({ field }) => {
-                                            return (
-                                                <FormItem className="flex flex-col">
-                                                    <FormLabel>Assignment Type</FormLabel>
-                                                    <Select onValueChange={field.onChange} value={"essay"}>
-                                                        <FormControl>
-                                                            <SelectTrigger className="w-full">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="essay">Essay</SelectItem>
-                                                            <SelectItem value="project">Project</SelectItem>
-                                                            <SelectItem value="presentation">Presentation</SelectItem>
-                                                            <SelectItem value="file_upload">File Upload</SelectItem>
-                                                            <SelectItem value="peer_review">Peer Review</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            );
-                                        }}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
                                     <FormField
                                         control={form.control}
                                         name="dueDate"
@@ -309,25 +282,33 @@ export default function AssignmentSettings() {
                                             </FormItem>
                                         )}
                                     />
-                                    <FormField
-                                        control={form.control}
-                                        name="availableFrom"
-                                        render={({ field }) => (
+                                </div>
+                                <FormField
+                                    control={form.control}
+                                    name="assignmentType"
+                                    render={({ field }) => {
+                                        return (
                                             <FormItem className="flex flex-col">
-                                                <FormLabel>Available From</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="datetime-local"
-                                                        {...field}
-                                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
-                                                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
-                                                    />
-                                                </FormControl>
+                                                <FormLabel>Assignment Type</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="essay">Essay</SelectItem>
+                                                        <SelectItem value="project">Project</SelectItem>
+                                                        <SelectItem value="presentation">Presentation</SelectItem>
+                                                        <SelectItem value="file_upload">File Upload</SelectItem>
+                                                        <SelectItem value="peer_review">Peer Review</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                                 <FormMessage />
                                             </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                        );
+                                    }}
+                                />
                                 <FormField
                                     control={form.control}
                                     name="allowLateSubmission"

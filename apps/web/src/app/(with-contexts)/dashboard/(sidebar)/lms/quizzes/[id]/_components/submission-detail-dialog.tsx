@@ -11,7 +11,7 @@ import { ScrollArea } from "@workspace/ui/components/scroll-area"
 import { Separator } from "@workspace/ui/components/separator"
 import { CheckCircle, Clock, FileQuestion, User, XCircle } from "lucide-react"
 
-type QuizAttemptType = GeneralRouterOutputs["lmsModule"]["quizModule"]["quizAttempt"]["list"]["items"][number]
+type QuizAttemptType = GeneralRouterOutputs["lmsModule"]["quizModule"]["quizAttempt"]["getById"]
 
 interface SubmissionDetailDialogProps {
     control: ReturnType<typeof useDialogControl<QuizAttemptType>>
@@ -49,89 +49,32 @@ export default function SubmissionDetailDialog({
                         <DialogTitle className="flex items-center gap-2">
                             <FileQuestion className="h-5 w-5" />
                             Submission Details
-                            <div className="ml-auto flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">Score:</span>
-                                    <span className="font-bold text-lg">
-                                        {submission.score || 0}/{totalPoints}
-                                    </span>
-                                </div>
-                                <Badge 
-                                    variant={passed ? "default" : "destructive"}
-                                    className="text-sm px-3 py-1"
-                                >
-                                    {percentage}%
-                                </Badge>
-                                <Badge 
-                                    variant={passed ? "default" : "secondary"}
-                                    className="text-sm px-3 py-1"
-                                >
-                                    {passed ? "PASSED" : "FAILED"}
-                                </Badge>
-                            </div>
                         </DialogTitle>
-                        <DialogDescription className="flex items-center gap-4">
-                            <span>Review the student's quiz submission and answers</span>
-                            <Separator orientation="vertical" className="h-4" />
-                            <span className="text-sm">
-                                Passing Score: {quizData?.passingScore || 60}%
-                            </span>
+                        <DialogDescription>
+                            {submission.user?.name || submission.user?.email || submission.userId || "Unknown Student"}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-                        {/* Submission Summary */}
+                        {/* Simple User Info */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">Submission Summary</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="space-y-2">
-                                        <div className="text-sm text-muted-foreground">Student</div>
-                                        <div className="flex items-center gap-2">
-                                            <User className="h-4 w-4" />
-                                            <span className="font-medium">
-                                                {submission.user?.name || submission.user?.email || submission.userId || "Unknown"}
-                                            </span>
-                                        </div>
+                            <CardContent className="p-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-5 w-5 text-muted-foreground" />
+                                        <span className="font-medium">
+                                            {submission.user?.name || submission.user?.email || submission.userId || "Unknown"}
+                                        </span>
                                     </div>
-                                    
-                                    <div className="space-y-2">
-                                        <div className="text-sm text-muted-foreground">Score</div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium text-lg">
-                                                {submission.score || 0}/{totalPoints}
-                                            </span>
-                                            <Badge variant={passed ? "default" : "secondary"}>
-                                                {percentage}%
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                        <div className="text-sm text-muted-foreground">Status</div>
-                                        <Badge 
-                                            variant={
-                                                submission.status === "completed" || submission.status === "graded" ? "default" :
-                                                    submission.status === "in_progress" ? "secondary" : "destructive"
-                                            }
-                                        >
-                                            {submission.status === "completed" ? "Completed" :
-                                                submission.status === "graded" ? "Graded" :
-                                                    submission.status === "in_progress" ? "In Progress" : "Abandoned"}
+                                    <Separator orientation="vertical" className="h-6" />
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm text-muted-foreground">Score:</span>
+                                        <span className="font-bold text-lg">
+                                            {submission.score || 0}/{totalPoints}
+                                        </span>
+                                        <Badge variant={passed ? "default" : "destructive"}>
+                                            {percentage}%
                                         </Badge>
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                        <div className="text-sm text-muted-foreground">Time Spent</div>
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="h-4 w-4" />
-                                            {submission.timeSpent ?
-                                                `${Math.floor(submission.timeSpent / 60)}m ${submission.timeSpent % 60}s` :
-                                                "N/A"
-                                            }
-                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
@@ -143,7 +86,7 @@ export default function SubmissionDetailDialog({
                                 <CardTitle className="text-lg">Questions & Answers</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-8">
+                                <div className="space-y-6">
                                     {quizData?.questionIds?.map((questionId, index) => {
                                         const question = questions.find(q => q._id?.toString() === questionId?.toString())
                                         if (!question) return null
@@ -245,13 +188,13 @@ export default function SubmissionDetailDialog({
                                                                                                 }
                                                                                                 "{ans}"
                                                                                             </div>
-                                                                                            )
-                                                                                        })
-                                                                                    ) : (
-                                                                                        <div className="text-sm text-blue-700 dark:text-blue-300">
-                                                                                            "{answer.answer}"
-                                                                                        </div>
-                                                                                    )}
+                                                                                        )
+                                                                                    })
+                                                                                ) : (
+                                                                                    <div className="text-sm text-blue-700 dark:text-blue-300">
+                                                                                        "{answer.answer}"
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         )}
                                                                     </div>

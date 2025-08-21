@@ -5,11 +5,22 @@ import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Badge } from "@workspace/ui/components/badge";
-import { Upload, Plus, Trash2, FileText, Code, Image, FileCode, ALargeSmall } from "lucide-react";
+import { Upload, Plus, Trash2, FileText, Code, Image, FileCode, ALargeSmall, MoreVertical, Type, ImageIcon } from "lucide-react";
 import { useThemeContext } from "./theme-context";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { trpc } from "@/utils/trpc";
-import { useToast } from "@workspace/components-library";
+import { DeleteConfirmNiceDialog, NiceModal, useToast } from "@workspace/components-library";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import { Separator } from "@workspace/ui/components/separator";
+import { ResizablePanel, ResizableHandle, ResizablePanelGroup } from "@workspace/ui/components/resizable";
+import { Edit, Search } from "@workspace/icons";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
+import { cn } from "@workspace/ui/lib/utils";
+import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 // Simple Monaco-like editor component (you can replace this with actual Monaco editor)
 function MonacoEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
@@ -28,35 +39,64 @@ function MonacoEditor({ value, onChange }: { value: string; onChange: (value: st
     );
 }
 
+const defaultLayout = [20, 32, 48];
+
+type AssetType = {
+    _id: string;
+    assetType: "stylesheet" | "font" | "script" | "image";
+    url: string;
+    content?: string;
+    preload?: boolean;
+    async?: boolean;
+    defer?: boolean;
+    media?: string;
+    crossorigin?: string;
+    integrity?: string;
+    rel?: string;
+    sizes?: string;
+    mimeType?: string;
+    name?: string;
+    description?: string;
+}
+
+const assetSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    assetType: z.enum(["stylesheet", "font", "script", "image"]),
+    url: z.string().min(1, "URL is required"),
+    content: z.string().optional(),
+    preload: z.boolean().optional(),
+    async: z.boolean().optional(),
+    defer: z.boolean().optional(),
+    media: z.string().optional(),
+    crossorigin: z.string().optional(),
+    integrity: z.string().optional(),
+    rel: z.string().optional(),
+    sizes: z.string().optional(),
+    mimeType: z.string().optional(),
+    description: z.string().optional(),
+});
+
+const newAssetSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    assetType: z.enum(["stylesheet", "font", "script", "image"]),
+});
+
+type AssetFormData = z.infer<typeof assetSchema>;
+type NewAssetFormData = z.infer<typeof newAssetSchema>;
+
 export default function ThemeCodeEditor() {
     const { theme } = useThemeContext();
-    
-    const [stylesCss, setStylesCss] = useState("");
-    const [assets, setAssets] = useState<Array<{
-        assetType: "stylesheet" | "font" | "script" | "image";
-        url: string;
-        preload?: boolean;
-        async?: boolean;
-        defer?: boolean;
-        media?: string;
-        crossorigin?: string;
-        integrity?: string;
-        rel?: string;
-        sizes?: string;
-        mimeType?: string;
-        name?: string;
-        description?: string;
-    }>>([]);
+    const utils = trpc.useUtils();
 
-    const [newAsset, setNewAsset] = useState({
-        assetType: "stylesheet" as const,
-        url: "",
-        name: "",
-        description: "",
-        preload: false,
-    });
+    const [selectedAsset, setSelectedAsset] = useState<AssetType | null>(null);
 
     const { toast } = useToast();
+
+    // Query to fetch theme assets
+    const { data: assetsData, isLoading } = trpc.lmsModule.themeModule.theme.listAssets.useQuery(
+        { themeId: theme?._id?.toString() || "" },
+        { enabled: !!theme?._id }
+    );
 
     const updateMutation = trpc.lmsModule.themeModule.theme.update.useMutation({
         onSuccess: () => {
@@ -64,6 +104,7 @@ export default function ThemeCodeEditor() {
                 title: "Success",
                 description: "Theme updated successfully",
             });
+            utils.lmsModule.themeModule.theme.listAssets.invalidate({ themeId: theme?._id?.toString() || "" });
         },
         onError: (error) => {
             toast({
@@ -74,237 +115,419 @@ export default function ThemeCodeEditor() {
         },
     });
 
-    useEffect(() => {
-        if (theme) {
-            setStylesCss(theme.stylesCss || "");
-            setAssets(theme.assets || []);
-        }
-    }, [theme]);
-
-    const handleSaveCSS = () => {
-        if (!theme?._id) return;
-        
-        updateMutation.mutate({
-            id: `${theme._id}`,
-            data: { stylesCss },
-        });
-    };
-
-    const handleAddAsset = () => {
-        if (!newAsset.url.trim()) return;
-        
-        const asset = {
-            ...newAsset,
-            rel: newAsset.assetType === "stylesheet" ? "stylesheet" : undefined,
-        };
-        
-        setAssets([...assets, asset]);
-        setNewAsset({
-            assetType: "stylesheet",
-            url: "",
-            name: "",
-            description: "",
-            preload: false,
-        });
-    };
-
-    const handleRemoveAsset = (index: number) => {
-        setAssets(assets.filter((_, i) => i !== index));
-    };
+    // Map assets with proper _id handling
+    const assets = useMemo(() => {
+        if (!assetsData?.assets) return [];
+        return assetsData.assets.map((asset, index) => ({
+            ...asset,
+            _id: (asset as any)._id?.toString() || `temp-${Date.now()}-${index}`
+        }));
+    }, [assetsData?.assets]);
 
     const handleSaveAssets = () => {
         if (!theme?._id) return;
-        
+
         updateMutation.mutate({
             id: `${theme._id}`,
             data: { assets },
         });
     };
 
-    const getAssetIcon = (assetType: string) => {
-        switch (assetType) {
-            case "stylesheet":
-                return <FileCode className="h-4 w-4" />;
-            case "font":
-                return <ALargeSmall className="h-4 w-4" />;
-            case "script":
-                return <Code className="h-4 w-4" />;
-            case "image":
-                return <Image className="h-4 w-4" />;
-            default:
-                return <FileText className="h-4 w-4" />;
-        }
+    const handleAddAsset = (asset: AssetType) => {
+        if (!theme?._id) return;
+        
+        const updatedAssets = [...assets, asset];
+        updateMutation.mutate({
+            id: theme._id.toString(),
+            data: { assets: updatedAssets }
+        });
+    };
+
+    const handleRemoveAsset = (index: number) => {
+        if (!theme?._id) return;
+        
+        const updatedAssets = assets.filter((_, i) => i !== index);
+        updateMutation.mutate({
+            id: theme._id.toString(),
+            data: { assets: updatedAssets }
+        });
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Assets Explorer */}
-            <div className="lg:col-span-1 space-y-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Assets Explorer
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {/* Add New Asset */}
-                        <div className="space-y-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md">
-                            <div className="space-y-2">
-                                <Label>Asset Type</Label>
-                                <select
-                                    value={newAsset.assetType}
-                                    onChange={(e) => setNewAsset({ ...newAsset, assetType: e.target.value as any })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="stylesheet">Stylesheet</option>
-                                    <option value="font">Font</option>
-                                    <option value="script">Script</option>
-                                    <option value="image">Image</option>
-                                </select>
-                            </div>
+        <ResizablePanelGroup
+            direction="horizontal"
+            onLayout={(sizes: number[]) => {
+                document.cookie = `react-resizable-panels:layout:mail=${JSON.stringify(
+                    sizes
+                )}`
+            }}
+            className="h-full max-h-[800px] items-stretch border-1"
+        >
+            <ResizablePanel defaultSize={defaultLayout[1]} minSize={15}>
+                <Tabs defaultValue="all">
+                    <TabsContent value="all" className="m-0">
+                        <MailList 
+                            assets={assets} 
+                            onAddAsset={handleAddAsset} 
+                            onSelectAsset={setSelectedAsset}
+                            onDeleteAsset={handleRemoveAsset}
+                            isLoading={isLoading}
+                        />
+                    </TabsContent>
+                    <TabsContent value="unread" className="m-0">
+                        {/* <MailList items={mails.filter((item) => !item.read)} /> */}
+                    </TabsContent>
+                </Tabs>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
+                <AssetEditor selectedAsset={selectedAsset} onSave={handleSaveAssets} />
+            </ResizablePanel>
+        </ResizablePanelGroup>
+    );
+}
 
-                            <div className="space-y-2">
-                                <Label>URL *</Label>
-                                <Input
-                                    value={newAsset.url}
-                                    onChange={(e) => setNewAsset({ ...newAsset, url: e.target.value })}
-                                    placeholder="https://example.com/asset.css"
-                                />
-                            </div>
 
-                            <div className="space-y-2">
-                                <Label>Name</Label>
-                                <Input
-                                    value={newAsset.name}
-                                    onChange={(e) => setNewAsset({ ...newAsset, name: e.target.value })}
-                                    placeholder="Asset name"
-                                />
-                            </div>
+const getAssetIcon = (type: string) => {
+    switch (type) {
+        case "stylesheet":
+            return <FileText className="h-4 w-4" />
+        case "script":
+            return <Code className="h-4 w-4" />
+        case "font":
+            return <Type className="h-4 w-4" />
+        case "image":
+            return <ImageIcon className="h-4 w-4" />
+        default:
+            return <FileText className="h-4 w-4" />
+    }
+}
 
-                            <div className="space-y-2">
-                                <Label>Description</Label>
-                                <Input
-                                    value={newAsset.description}
-                                    onChange={(e) => setNewAsset({ ...newAsset, description: e.target.value })}
-                                    placeholder="Asset description"
-                                />
-                            </div>
+const getAssetTypeColor = (type: string) => {
+    switch (type) {
+        case "stylesheet":
+            return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+        case "script":
+            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+        case "font":
+            return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+        case "image":
+            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+        default:
+            return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+    }
+}
 
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    id="preload"
-                                    checked={newAsset.preload}
-                                    onChange={(e) => setNewAsset({ ...newAsset, preload: e.target.checked })}
-                                    className="rounded border-gray-300"
-                                />
-                                <Label htmlFor="preload" className="text-sm">Preload</Label>
-                            </div>
+interface MailListProps {
+    assets: AssetType[]
+    onAddAsset: (asset: AssetType) => void
+    onSelectAsset: (asset: AssetType | null) => void
+    onDeleteAsset: (index: number) => void
+    isLoading: boolean
+}
 
-                            <Button onClick={handleAddAsset} className="w-full" size="sm">
+function MailList({ assets, onAddAsset, onSelectAsset, onDeleteAsset, isLoading }: MailListProps) {
+    const [createAssetOpen, setCreateAssetOpen] = useState(false);
+    
+    const form = useForm<NewAssetFormData>({
+        resolver: zodResolver(newAssetSchema),
+        defaultValues: {
+            name: "",
+            assetType: "stylesheet",
+        },
+    });
+
+    const detectAssetType = useCallback((filename: string) => {
+        const ext = filename.toLowerCase().split('.').pop()
+        if (ext === 'css' || ext === 'scss' || ext === 'sass') return 'stylesheet'
+        if (ext === 'js' || ext === 'ts' || ext === 'jsx' || ext === 'tsx') return 'script'
+        if (ext === 'woff' || ext === 'woff2' || ext === 'ttf' || ext === 'otf' || ext === 'eot') return 'font'
+        if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'svg' || ext === 'webp') return 'image'
+        return 'stylesheet'
+    }, [])
+
+    const onSubmit = (data: NewAssetFormData) => {
+        // Generate default URL based on filename
+        const defaultUrl = `/${data.name}`
+        
+        const asset: AssetType = {
+            _id: Date.now().toString(),
+            assetType: data.assetType,
+            url: defaultUrl,
+            name: data.name,
+            description: "",
+            content: "",
+            rel: data.assetType === "stylesheet" ? "stylesheet" : undefined,
+        }
+        
+        onAddAsset(asset)
+        
+        // Reset form
+        form.reset()
+        setCreateAssetOpen(false)
+    }
+
+    const handleNameChange = useCallback((name: string) => {
+        const assetType = detectAssetType(name)
+        form.setValue("assetType", assetType)
+    }, [detectAssetType, form])
+
+    const handleEditAsset = useCallback((asset: AssetType) => {
+        onSelectAsset(asset)
+        console.log("[v0] Editing asset:", asset.name)
+    }, [onSelectAsset])
+
+    const handleDeleteAsset = useCallback((asset: AssetType) => {
+        NiceModal.show(DeleteConfirmNiceDialog, {
+            title: "Delete Asset",
+            message: `Are you sure you want to delete "${asset.name}"? This action cannot be undone.`,
+            data: asset,
+        }).then((result) => {
+            if (result.reason === "confirm") {
+                const index = assets.findIndex(a => a._id === asset._id);
+                if (index !== -1) {
+                    onDeleteAsset(index);
+                }
+            }
+        })
+    }, [assets, onDeleteAsset])
+
+    return (
+        <>
+            <div className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">Theme Assets</h2>
+                    <DropdownMenu open={createAssetOpen} onOpenChange={setCreateAssetOpen}>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="sm">
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Asset
                             </Button>
-                        </div>
-
-                        {/* Assets List */}
-                        <div className="space-y-2">
-                            <Label>Current Assets ({assets.length})</Label>
-                            {assets.length === 0 ? (
-                                <div className="text-sm text-muted-foreground text-center py-4">
-                                    No assets added yet
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64 p-4">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                                <div>
+                                    <Label htmlFor="asset-name" className="text-sm font-medium">Filename</Label>
+                                    <Input
+                                        id="asset-name"
+                                        placeholder="style.css"
+                                        {...form.register("name")}
+                                        onChange={(e) => {
+                                            form.setValue("name", e.target.value)
+                                            handleNameChange(e.target.value)
+                                        }}
+                                        className="mt-1"
+                                    />
+                                    {form.formState.errors.name && (
+                                        <p className="text-xs text-red-500 mt-1">{form.formState.errors.name.message}</p>
+                                    )}
                                 </div>
-                            ) : (
-                                <div className="space-y-2 max-h-64 overflow-y-auto">
-                                    {assets.map((asset, index) => (
-                                        <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-md">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    {getAssetIcon(asset.assetType)}
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-sm font-medium truncate">
-                                                            {asset.name || asset.url}
-                                                        </div>
-                                                        <div className="text-xs text-muted-foreground truncate">
-                                                            {asset.url}
-                                                        </div>
-                                                        {asset.description && (
-                                                            <div className="text-xs text-muted-foreground mt-1">
-                                                                {asset.description}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleRemoveAsset(index)}
-                                                    className="text-red-600 hover:text-red-700"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <Badge variant="outline" className="text-xs">
-                                                    {asset.assetType}
-                                                </Badge>
-                                                {asset.preload && (
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        Preload
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="flex gap-2 pt-2">
+                                    <Button type="submit" size="sm" className="flex-1" disabled={form.formState.isSubmitting}>
+                                        Create
+                                    </Button>
+                                    <Button type="button" size="sm" variant="outline" onClick={() => setCreateAssetOpen(false)}>
+                                        Cancel
+                                    </Button>
                                 </div>
-                            )}
-                        </div>
-
-                        {assets.length > 0 && (
-                            <Button onClick={handleSaveAssets} className="w-full" variant="outline">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Save Assets
-                            </Button>
-                        )}
-                    </CardContent>
-                </Card>
+                            </form>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
-            {/* Code Editor */}
-            <div className="lg:col-span-2 space-y-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Code className="h-5 w-5" />
-                                CSS Code Editor
-                            </div>
-                            <Button onClick={handleSaveCSS} variant="outline" size="sm">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Save CSS
-                            </Button>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <MonacoEditor
-                            value={stylesCss}
-                            onChange={setStylesCss}
-                        />
-                    </CardContent>
-                </Card>
+            <ScrollArea className="flex-1">
+                <div className="p-2 space-y-1">
+                    {assets.map((item) => (
+                        <div
+                            key={item._id}
+                            className="p-3 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
+                            onClick={() => onSelectAsset(item)}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">{getAssetIcon(item.assetType)}</div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="text-sm font-medium truncate">{item.name}</p>
+                                        <Badge variant="secondary" className={`text-xs ${getAssetTypeColor(item.assetType)}`}>
+                                            {item.assetType}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>CSS Preview</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-sm text-muted-foreground">
-                            <p>CSS preview functionality will be implemented here to show how the theme looks when applied.</p>
-                            <p className="mt-2">Current CSS length: {stylesCss.length} characters</p>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="flex-shrink-0"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleEditAsset(item)}>
+                                            <Edit className="h-4 w-4 mr-2" />
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => handleDeleteAsset(item)}
+                                            className="text-destructive focus:text-destructive"
+                                        >
+                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    ))}
+                </div>
+            </ScrollArea>
+        </>
+    )
+}
+
+interface AssetEditorProps {
+    selectedAsset: AssetType | null;
+    onSave: () => void;
+}
+
+function AssetEditor({ selectedAsset, onSave }: AssetEditorProps) {
+    const [activeTab, setActiveTab] = useState<"properties" | "code">("properties");
+
+    const form = useForm<AssetFormData>({
+        resolver: zodResolver(assetSchema),
+        defaultValues: {
+            name: "",
+            assetType: "stylesheet",
+            url: "",
+            content: "",
+            description: "",
+        },
+    });
+
+    useEffect(() => {
+        if (selectedAsset) {
+            form.reset({
+                name: selectedAsset.name || "",
+                assetType: selectedAsset.assetType,
+                url: selectedAsset.url || "",
+                content: selectedAsset.content || "",
+                description: selectedAsset.description || "",
+                preload: selectedAsset.preload,
+                async: selectedAsset.async,
+                defer: selectedAsset.defer,
+                media: selectedAsset.media,
+                crossorigin: selectedAsset.crossorigin,
+                integrity: selectedAsset.integrity,
+                rel: selectedAsset.rel,
+                sizes: selectedAsset.sizes,
+                mimeType: selectedAsset.mimeType,
+            });
+        }
+    }, [selectedAsset, form]);
+
+    const onSubmit = (data: AssetFormData) => {
+        if (selectedAsset) {
+            Object.assign(selectedAsset, data);
+            onSave();
+        }
+    };
+
+    if (!selectedAsset) {
+        return (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p>Select an asset to edit</p>
+            </div>
+        );
+    }
+
+    const isCodeAsset = selectedAsset.assetType === "stylesheet" || selectedAsset.assetType === "script";
+
+    return (
+        <div className="h-full flex flex-col">
+            <div className="p-4 border-b">
+                <h3 className="text-lg font-semibold">{selectedAsset.name}</h3>
+                <p className="text-sm text-muted-foreground">{selectedAsset.description}</p>
+            </div>
+            
+            <div className="flex-1 p-4">
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "properties" | "code")}>
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="properties">Properties</TabsTrigger>
+                        <TabsTrigger value="code" disabled={!isCodeAsset}>Code Editor</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="properties" className="mt-4">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <div>
+                                <Label htmlFor="name" className="text-sm font-medium">Name</Label>
+                                <Input 
+                                    id="name"
+                                    {...form.register("name")}
+                                    className="mt-1" 
+                                />
+                                {form.formState.errors.name && (
+                                    <p className="text-xs text-red-500 mt-1">{form.formState.errors.name.message}</p>
+                                )}
+                            </div>
+                            <div>
+                                <Label className="text-sm font-medium">Type</Label>
+                                <Badge variant="secondary" className={getAssetTypeColor(form.watch("assetType"))}>
+                                    {form.watch("assetType")}
+                                </Badge>
+                            </div>
+                            <div>
+                                <Label htmlFor="url" className="text-sm font-medium">URL</Label>
+                                <Input 
+                                    id="url"
+                                    {...form.register("url")}
+                                    className="mt-1" 
+                                />
+                                {form.formState.errors.url && (
+                                    <p className="text-xs text-red-500 mt-1">{form.formState.errors.url.message}</p>
+                                )}
+                            </div>
+                            <div>
+                                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                                <Input 
+                                    id="description"
+                                    {...form.register("description")}
+                                    className="mt-1" 
+                                />
+                            </div>
+                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                Save Changes
+                            </Button>
+                        </form>
+                    </TabsContent>
+                    
+                    <TabsContent value="code" className="mt-4">
+                        {isCodeAsset ? (
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <div>
+                                    <Label htmlFor="content" className="text-sm font-medium">Content</Label>
+                                    <textarea
+                                        id="content"
+                                        {...form.register("content")}
+                                        className="w-full h-64 p-3 font-mono text-sm border border-input rounded-md resize-none"
+                                        placeholder={`Enter your ${selectedAsset.assetType === "stylesheet" ? "CSS" : "JavaScript"} code here`}
+                                    />
+                                </div>
+                                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                    Save Changes
+                                </Button>
+                            </form>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-8">
+                                <p>Code editing is only available for stylesheet and script assets</p>
+                            </div>
+                        )}
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );

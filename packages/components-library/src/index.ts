@@ -55,6 +55,7 @@ export * from "./skeleton-card";
 export * from "./image";
 // export * from "./vertical-padding-selector";
 // export * from "./max-width-selector";
+export * from "./delete-confirm-nice-dialog";
 
 export {
   AdminWidgetPanel,

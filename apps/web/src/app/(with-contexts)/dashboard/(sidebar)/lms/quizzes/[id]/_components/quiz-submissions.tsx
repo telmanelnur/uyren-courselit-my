@@ -11,10 +11,11 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
-import { Calendar, Clock, Download, Eye, FileQuestion, MoreHorizontal, User } from "lucide-react"
+import { Calendar, Clock, Eye, FileQuestion, MoreHorizontal, Trash2, User } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useQuizContext } from "./quiz-context"
 import SubmissionDetailDialog from "./submission-detail-dialog"
+import { DeleteConfirmNiceDialog, NiceModal, useToast } from "@workspace/components-library"
 
 type QuizAttemptType = GeneralRouterOutputs["lmsModule"]["quizModule"]["quizAttempt"]["list"]["items"][number]
 
@@ -24,14 +25,51 @@ export default function QuizSubmissions() {
     const [parsedPagination, setParsedPagination] = useState({ pageCount: 0 })
 
     const submissionDialog = useDialogControl<QuizAttemptType>()
+    const { toast } = useToast()
+    const trpcUtils = trpc.useUtils()
+    const deleteSubmissionMutation = trpc.lmsModule.quizModule.quizAttempt.delete.useMutation({
+        onSuccess: () => {
+            trpcUtils.lmsModule.quizModule.quizAttempt.list.invalidate()
+            toast({
+                title: "Submission Deleted",
+                description: "Student submission has been deleted successfully",
+            })
+        },
+    });
 
-    const handleViewSubmission = useCallback((submission: QuizAttemptType) => {
-        submissionDialog.open(submission)
-    }, [submissionDialog])
+    const handleViewSubmission = useCallback(async (submission: QuizAttemptType) => {
+        try {
+            // Fetch detailed submission data by ID
+            const detailedSubmission = await trpcUtils.lmsModule.quizModule.quizAttempt.getById.fetch({
+                id: submission._id.toString()
+            });
+            
+            if (detailedSubmission) {
+                submissionDialog.open(detailedSubmission);
+            }
+        } catch (error) {
+            console.error("Failed to fetch submission details:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load submission details",
+                variant: "destructive",
+            });
+        }
+    }, [submissionDialog, trpcUtils, toast])
 
-    const handleDownloadSubmission = useCallback((submission: QuizAttemptType) => {
-        console.log("Download submission:", submission)
-    }, [])
+    const handleDeleteSubmission = useCallback((submission: QuizAttemptType) => {
+        NiceModal.show(DeleteConfirmNiceDialog, {
+            title: "Delete Submission",
+            message: `Are you sure you want to delete the submission for "${submission.user?.name || submission.user?.email || 'Unknown Student'}"? This action cannot be undone.`,
+            data: submission,
+        }).then((result) => {
+            if (result.reason === "confirm") {
+                const obj = result.data as QuizAttemptType
+                deleteSubmissionMutation.mutate(obj._id.toString())
+            }
+        })
+    }, [toast, deleteSubmissionMutation])
+
     const columns: ColumnDef<QuizAttemptType>[] = useMemo(() => {
         return [
             {
@@ -61,7 +99,7 @@ export default function QuizSubmissions() {
                 header: "Score",
                 cell: ({ row }) => {
                     const attempt = row.original;
-                    const totalPoints = quiz?.totalPoints || 100; // You might want to get this from quiz data
+                    const totalPoints = quiz?.totalPoints || 100;
                     return (
                         <div className="flex items-center gap-2">
                             <span className="font-medium">
@@ -177,9 +215,12 @@ export default function QuizSubmissions() {
                                     <Eye className="h-4 w-4 mr-2" />
                                     View Submission
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownloadSubmission(attempt)}>
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Download
+                                <DropdownMenuItem
+                                    onClick={() => handleDeleteSubmission(attempt)}
+                                    className="text-destructive focus:text-destructive"
+                                >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -187,7 +228,7 @@ export default function QuizSubmissions() {
                 },
             },
         ];
-    }, [quiz?.totalPoints, handleViewSubmission, handleDownloadSubmission]);
+    }, [quiz?.totalPoints, handleViewSubmission, handleDeleteSubmission]);
 
     const { table } = useDataTable({
         columns,
