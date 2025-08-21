@@ -148,6 +148,11 @@ function getSidebarItems(
             url: "/dashboard/lms/assignments",
             isActive: path === "/dashboard/lms/assignments",
           },
+          {
+            title: "Themes",
+            url: "/dashboard/lms/themes",
+            isActive: path === "/dashboard/lms/themes",
+          },
         ],
       });
     }

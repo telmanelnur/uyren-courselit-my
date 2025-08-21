@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/componen
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
 import { useCallback, useMemo } from "react"
 import { ChevronDown } from "lucide-react"
+import { BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models"
 import { QuizProvider, useQuizContext } from "./quiz-context"
 import QuizQuestions from "./quiz-questions"
 import QuizSettings from "./quiz-settings"
@@ -78,29 +79,29 @@ function QuizContent() {
                                         disabled={!quiz || updateMutation.isPending || mode === "create"}
                                         className="flex items-center gap-2"
                                     >
-                                        {quiz?.status === "draft" && "Draft"}
-                                        {quiz?.status === "published" && "Published"}
-                                        {quiz?.status === "archived" && "Archived"}
+                                        {quiz?.status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT && "Draft"}
+                                        {quiz?.status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED && "Published"}
+                                        {quiz?.status === BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED && "Archived"}
                                         {!quiz && "Draft"}
                                         <ChevronDown className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem
-                                        onClick={() => handleStatusChange("draft")}
-                                        disabled={quiz?.status === "draft"}
+                                        onClick={() => handleStatusChange(BASIC_PUBLICATION_STATUS_TYPE.DRAFT)}
+                                        disabled={quiz?.status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT}
                                     >
                                         Draft
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => handleStatusChange("published")}
-                                        disabled={quiz?.status === "published"}
+                                        onClick={() => handleStatusChange(BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED)}
+                                        disabled={quiz?.status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED}
                                     >
                                         Published
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => handleStatusChange("archived")}
-                                        disabled={quiz?.status === "archived"}
+                                        onClick={() => handleStatusChange(BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED)}
+                                        disabled={quiz?.status === BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED}
                                     >
                                         Archived
                                     </DropdownMenuItem>

@@ -4,6 +4,7 @@ import { courseModuleRouter } from "./course";
 import { productRouter } from "./product";
 import { questionBankModuleRouter } from "./question-bank";
 import { quizModuleRouter } from "./quiz";
+import { themeModuleRouter } from "./theme";
 
 export const lmsModuleRouter = router({
   courseModule: courseModuleRouter,
@@ -11,4 +12,5 @@ export const lmsModuleRouter = router({
   quizModule: quizModuleRouter,
   assignmentModule: assignmentModuleRouter,
   questionBankModule: questionBankModuleRouter,
+  themeModule: themeModuleRouter,
 });

@@ -88,20 +88,20 @@ function AssignmentContent() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem
-                                        onClick={() => handleStatusChange("draft")}
-                                        disabled={assignment?.status === "draft"}
+                                        onClick={() => handleStatusChange(BASIC_PUBLICATION_STATUS_TYPE.DRAFT)}
+                                        disabled={assignment?.status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT}
                                     >
                                         Draft
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => handleStatusChange("published")}
-                                        disabled={assignment?.status === "published"}
+                                        onClick={() => handleStatusChange(BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED)}
+                                        disabled={assignment?.status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED}
                                     >
                                         Published
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => handleStatusChange("archived")}
-                                        disabled={assignment?.status === "archived"}
+                                        onClick={() => handleStatusChange(BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED)}
+                                        disabled={assignment?.status === BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED}
                                     >
                                         Archived
                                     </DropdownMenuItem>
