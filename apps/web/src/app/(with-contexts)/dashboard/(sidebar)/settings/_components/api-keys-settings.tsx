@@ -19,30 +19,27 @@ import {
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { useState } from "react";
-import Link from "next/link";
 import Resources from "@/components/resources";
+import { useSettingsContext } from "./settings-context";
+import NewApiKeyDialog from "./new-api-key-dialog";
 
 type ApiKeyType = GeneralRouterOutputs["siteModule"]["siteInfo"]["listApiKeys"][number] & {
     createdAt: string;
 };
 
-interface ApiKeysSettingsProps {
-    apikeys: ApiKeyType[];
-    loading: boolean;
-    onApiKeyRemoved: () => void;
-}
-
-export default function ApiKeysSettings({ apikeys, loading, onApiKeyRemoved }: ApiKeysSettingsProps) {
+export default function ApiKeysSettings() {
+    const { loadSettingsQuery } = useSettingsContext();
     const { toast } = useToast();
     const [apikeyPage, setApikeyPage] = useState(1);
 
+    const loadApiKeysQuery = trpc.siteModule.siteInfo.listApiKeys.useQuery();
     const removeApiKeyMutation = trpc.siteModule.siteInfo.removeApiKey.useMutation({
         onSuccess: () => {
             toast({
                 title: TOAST_TITLE_SUCCESS,
                 description: "API key removed successfully",
             });
-            onApiKeyRemoved();
+            loadApiKeysQuery.refetch();
         },
         onError: (error: any) => {
             toast({
@@ -65,15 +62,21 @@ export default function ApiKeysSettings({ apikeys, loading, onApiKeyRemoved }: A
         }
     };
 
+    const handleApiKeyCreated = () => {
+        loadApiKeysQuery.refetch();
+    };
+
     const isRemoving = removeApiKeyMutation.isPending;
+    const isLoading = loadSettingsQuery.isLoading;
+    const isDisabled = isLoading || isRemoving;
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold">{APIKEY_EXISTING_HEADER}</h2>
-                <Link href="/dashboard/settings/apikeys/new">
-                    <Button>{APIKEY_NEW_BUTTON}</Button>
-                </Link>
+                <NewApiKeyDialog onSuccess={handleApiKeyCreated}>
+                    <Button disabled={isDisabled}>{APIKEY_NEW_BUTTON}</Button>
+                </NewApiKeyDialog>
             </div>
 
             <Table>
@@ -85,14 +88,14 @@ export default function ApiKeysSettings({ apikeys, loading, onApiKeyRemoved }: A
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {apikeys.map((item) => (
+                    {loadApiKeysQuery.data?.map((item) => (
                         <TableRow key={item.name}>
                             <TableCell className="py-4">{item.name}</TableCell>
                             <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                             <TableCell className="text-right">
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" disabled={isRemoving}>
+                                        <Button variant="outline" disabled={isDisabled}>
                                             {APIKEY_REMOVE_BTN}
                                         </Button>
                                     </DialogTrigger>
@@ -107,7 +110,7 @@ export default function ApiKeysSettings({ apikeys, loading, onApiKeyRemoved }: A
                                             <Button
                                                 variant="destructive"
                                                 onClick={() => removeApiKey(item.keyId)}
-                                                disabled={isRemoving}
+                                                disabled={isDisabled}
                                             >
                                                 {isRemoving ? "Removing..." : APIKEY_REMOVE_BTN}
                                             </Button>

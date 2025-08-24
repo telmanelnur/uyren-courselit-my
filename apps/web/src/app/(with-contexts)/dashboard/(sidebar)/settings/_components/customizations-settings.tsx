@@ -9,13 +9,13 @@ import {
   SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
   BUTTON_SAVE,
   APP_MESSAGE_SETTINGS_SAVED,
-  TOAST_TITLE_SUCCESS,
-  TOAST_TITLE_ERROR
+  TOAST_TITLE_SUCCESS
 } from "@/lib/ui/config/strings";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { trpc } from "@/utils/trpc";
+import { useSettingsContext } from "./settings-context";
 
 const customizationsSettingsSchema = z.object({
   codeInjectionHead: z.string().optional(),
@@ -24,38 +24,26 @@ const customizationsSettingsSchema = z.object({
 
 type CustomizationsSettingsFormData = z.infer<typeof customizationsSettingsSchema>;
 
-interface CustomizationsSettingsProps {
-  settings: any;
-  onSettingsUpdate: (settings: any) => void;
-}
-
-export default function CustomizationsSettings({ settings, onSettingsUpdate }: CustomizationsSettingsProps) {
+export default function CustomizationsSettings() {
+  const { settings, updateSettingsMutation, loadSettingsQuery } = useSettingsContext();
   const { toast } = useToast();
 
   const form = useForm<CustomizationsSettingsFormData>({
     resolver: zodResolver(customizationsSettingsSchema),
     defaultValues: {
-      codeInjectionHead: settings.codeInjectionHead || "",
-      codeInjectionBody: settings.codeInjectionBody || "",
+      codeInjectionHead: "",
+      codeInjectionBody: "",
     },
   });
 
-  const updateSettingsMutation = trpc.siteModule.siteInfo.updateSiteInfo.useMutation({
-    onSuccess: () => {
-      toast({
-        title: TOAST_TITLE_SUCCESS,
-        description: APP_MESSAGE_SETTINGS_SAVED,
+  useEffect(() => {
+    if (settings) {
+      form.reset({
+        codeInjectionHead: settings.codeInjectionHead || "",
+        codeInjectionBody: settings.codeInjectionBody || "",
       });
-      onSettingsUpdate(form.getValues());
-    },
-    onError: (error: any) => {
-      toast({
-        title: TOAST_TITLE_ERROR,
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+    }
+  }, [settings, form]);
 
   const onSubmit = async (data: CustomizationsSettingsFormData) => {
     try {
@@ -65,6 +53,10 @@ export default function CustomizationsSettings({ settings, onSettingsUpdate }: C
           codeInjectionBody: data.codeInjectionBody,
         },
       });
+      toast({
+        title: TOAST_TITLE_SUCCESS,
+        description: APP_MESSAGE_SETTINGS_SAVED,
+      });
     } catch (error) {
       // Error handling is done in the mutation
     }
@@ -72,6 +64,8 @@ export default function CustomizationsSettings({ settings, onSettingsUpdate }: C
 
   const isSubmitting = form.formState.isSubmitting;
   const isSaving = updateSettingsMutation.isPending;
+  const isLoading = loadSettingsQuery.isLoading;
+  const isDisabled = isLoading || isSaving || isSubmitting;
 
   return (
     <div className="space-y-6">
@@ -89,6 +83,7 @@ export default function CustomizationsSettings({ settings, onSettingsUpdate }: C
                     rows={10}
                     placeholder="Enter HTML code to inject in the head section..."
                     className="font-mono text-sm"
+                    disabled={isDisabled}
                   />
                 </FormControl>
               </FormItem>
@@ -107,6 +102,7 @@ export default function CustomizationsSettings({ settings, onSettingsUpdate }: C
                     rows={10}
                     placeholder="Enter HTML code to inject in the body section..."
                     className="font-mono text-sm"
+                    disabled={isDisabled}
                   />
                 </FormControl>
               </FormItem>
@@ -115,7 +111,7 @@ export default function CustomizationsSettings({ settings, onSettingsUpdate }: C
 
           <Button
             type="submit"
-            disabled={isSaving || isSubmitting}
+            disabled={isDisabled}
             className="w-full sm:w-auto"
           >
             {isSaving || isSubmitting ? "Saving..." : BUTTON_SAVE}

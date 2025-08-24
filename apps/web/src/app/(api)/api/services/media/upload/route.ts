@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
       file: media.file,
       url: media.url,
       storageProvider: "cloudinary",
+      metadata: media.metadata,
     });
 
     await mediaRecord.save();

@@ -24,6 +24,7 @@ const GlobalMediaSchema = new mongoose.Schema<Exmbed>({
     storageProvider: { type: String, required: true, },
     userId: { type: String, required: false },
     domain: { type: mongoose.Schema.Types.ObjectId, ref: "Domain", required: true },
+    metadata: { type: mongoose.Schema.Types.Mixed, required: false },
 }, {
     timestamps: true,
 });

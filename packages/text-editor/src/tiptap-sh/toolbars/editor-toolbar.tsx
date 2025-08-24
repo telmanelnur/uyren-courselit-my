@@ -18,11 +18,16 @@ import { OrderedListToolbar } from "./ordered-list";
 import { HorizontalRuleToolbar } from "./horizontal-rule";
 import { AlignmentTooolbar } from "./alignment";
 import { ImagePlaceholderToolbar } from "./image-placeholder-toolbar";
+import { MediaDropdownToolbar } from "./media-dropdown-toolbar";
 import { ColorHighlightToolbar } from "./color-and-highlight";
 import { SearchAndReplaceToolbar } from "./search-and-replace-toolbar";
 import { CodeBlockToolbar } from "./code-block";
 
-export const EditorToolbar = ({ editor }: { editor: Editor }) => {
+export const EditorToolbar = ({ 
+  editor
+}: { 
+  editor: Editor;
+}) => {
   return (
     <div className="sticky top-0 z-20 w-full border-b bg-background hidden sm:block">
       <ToolbarProvider editor={editor}>
@@ -61,6 +66,7 @@ export const EditorToolbar = ({ editor }: { editor: Editor }) => {
                 <Separator orientation="vertical" className="mx-1 h-7" />
 
                 {/* Media & Styling Group */}
+                <MediaDropdownToolbar />
                 <ImagePlaceholderToolbar />
                 <ColorHighlightToolbar />
                 <Separator orientation="vertical" className="mx-1 h-7" />

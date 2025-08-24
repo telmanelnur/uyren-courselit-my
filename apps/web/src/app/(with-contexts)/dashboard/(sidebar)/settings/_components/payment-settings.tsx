@@ -29,9 +29,10 @@ import { useToast } from "@workspace/components-library";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
 import { capitalize } from "@workspace/utils";
 import { Copy, Info } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useSettingsContext } from "./settings-context";
 
 const {
   PAYMENT_METHOD_STRIPE,
@@ -50,38 +51,17 @@ const stripeSchema = z.object({
 type PaymentFormData = z.infer<typeof paymentSchema>;
 type StripeFormData = z.infer<typeof stripeSchema>;
 
-interface PaymentSettingsProps {
-  settings: any;
-  onSettingsUpdate: (settings: any) => void;
-}
-
-export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentSettingsProps) {
+export default function PaymentSettings() {
+  const { settings, loadSettingsQuery } = useSettingsContext();
   const { toast } = useToast();
   const [newSettings, setNewSettings] = useState(settings);
 
-  const paymentForm = useForm<PaymentFormData>({
-    resolver: zodResolver(paymentSchema),
-    defaultValues: {
-      currencyISOCode: (settings.currencyISOCode || "").toUpperCase(),
-      paymentMethod: PAYMENT_METHOD_STRIPE,
-    },
-  });
-
-  const stripeForm = useForm<StripeFormData>({
-    resolver: zodResolver(stripeSchema),
-    defaultValues: {
-      stripeKey: settings.stripeKey || "",
-      stripeSecret: "",
-    },
-  });
-
-  const updateSettingsMutation = trpc.siteModule.siteInfo.updatePaymentInfo.useMutation({
+  const updatePaymentMutation = trpc.siteModule.siteInfo.updatePaymentInfo.useMutation({
     onSuccess: () => {
       toast({
         title: TOAST_TITLE_SUCCESS,
         description: APP_MESSAGE_SETTINGS_SAVED,
       });
-      onSettingsUpdate(newSettings);
     },
     onError: (error: any) => {
       toast({
@@ -92,9 +72,39 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
     },
   });
 
+  const paymentForm = useForm<PaymentFormData>({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      currencyISOCode: "",
+      paymentMethod: PAYMENT_METHOD_STRIPE,
+    },
+  });
+
+  const stripeForm = useForm<StripeFormData>({
+    resolver: zodResolver(stripeSchema),
+    defaultValues: {
+      stripeKey: "",
+      stripeSecret: "",
+    },
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setNewSettings(settings);
+      paymentForm.reset({
+        currencyISOCode: (settings.currencyISOCode || "").toUpperCase(),
+        paymentMethod: PAYMENT_METHOD_STRIPE,
+      });
+      stripeForm.reset({
+        stripeKey: settings.stripeKey || "",
+        stripeSecret: "",
+      });
+    }
+  }, [settings, paymentForm, stripeForm]);
+
   const onSubmitPayment = async (data: PaymentFormData) => {
     try {
-      await updateSettingsMutation.mutateAsync({
+      await updatePaymentMutation.mutateAsync({
         data: {
           currencyISOCode: data.currencyISOCode,
           paymentMethod: data.paymentMethod,
@@ -107,7 +117,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
 
   const onSubmitStripe = async (data: StripeFormData) => {
     try {
-      await updateSettingsMutation.mutateAsync({
+      await updatePaymentMutation.mutateAsync({
         data: {
           stripeKey: data.stripeKey,
           stripeSecret: data.stripeSecret,
@@ -126,7 +136,9 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
     });
   };
 
-  const isSaving = updateSettingsMutation.isPending;
+  const isSaving = updatePaymentMutation.isPending;
+  const isLoading = loadSettingsQuery.isLoading;
+  const isDisabled = isLoading || isSaving;
 
   return (
     <div className="space-y-8">
@@ -138,7 +150,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{SITE_SETTINGS_CURRENCY}</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value} onValueChange={field.onChange} disabled={isDisabled}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
@@ -175,18 +187,15 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
             )}
           />
 
-
-
           <Button 
             type="submit" 
-            disabled={!paymentForm.formState.isDirty || isSaving}
+            disabled={!paymentForm.formState.isDirty || isDisabled}
             className="w-full sm:w-auto"
           >
             {isSaving ? "Saving..." : BUTTON_SAVE}
           </Button>
         </form>
       </Form>
-
 
       {/* Stripe Settings */}
       <div>
@@ -200,7 +209,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
                 <FormItem>
                   <FormLabel>{SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} disabled={isDisabled} />
                   </FormControl>
                 </FormItem>
               )}
@@ -216,6 +225,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
                       {...field}
                       type="password"
                       autoComplete="off"
+                      disabled={isDisabled}
                     />
                   </FormControl>
                 </FormItem>
@@ -223,7 +233,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
             />
             <Button 
               type="submit" 
-              disabled={!stripeForm.formState.isDirty || isSaving}
+              disabled={!stripeForm.formState.isDirty || isDisabled}
               className="w-full sm:w-auto"
             >
               {isSaving ? "Saving..." : BUTTON_SAVE}
@@ -259,6 +269,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
               <Input
                 readOnly
                 value={`${window.location.origin}/api/payment/webhook`}
+                disabled={isDisabled}
               />
               <Button
                 variant="outline"
@@ -266,6 +277,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
                 onClick={() =>
                   copyToClipboard(`${window.location.origin}/api/payment/webhook`)
                 }
+                disabled={isDisabled}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -280,6 +292,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
               <Input
                 readOnly
                 value={`${window.location.origin}/api/payment/webhook-old`}
+                disabled={isDisabled}
               />
               <Button
                 variant="outline"
@@ -287,6 +300,7 @@ export default function PaymentSettings({ settings, onSettingsUpdate }: PaymentS
                 onClick={() =>
                   copyToClipboard(`${window.location.origin}/api/payment/webhook-old`)
                 }
+                disabled={isDisabled}
               >
                 <Copy className="h-4 w-4" />
               </Button>

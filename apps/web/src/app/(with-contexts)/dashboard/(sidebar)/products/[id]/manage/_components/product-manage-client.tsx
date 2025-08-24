@@ -239,17 +239,17 @@ export default function ProductManageClient({ product }: ProductManageClientProp
                             <FormControl>
                                 <DescriptionEditor
                                     placeholder="Enter a description for your product..."
-                                    // onEditor={(editor, meta) => {
-                                    //     if (meta.reason === "create") {
-                                    //         editor!.commands.setContent(editorContent.content);
-                                    //     }
-                                    // }}
-                                    // onChange={(content) => {
-                                    //     setEditorContent({
-                                    //         ...editorContent,
-                                    //         content: content,
-                                    //     });
-                                    // }}
+                                    onEditor={(editor, meta) => {
+                                        if (meta.reason === "create") {
+                                            editor!.commands.setContent(editorContent.content);
+                                        }
+                                    }}
+                                    onChange={(content) => {
+                                        setEditorContent({
+                                            ...editorContent,
+                                            content: content,
+                                        });
+                                    }}
                                 />
                             </FormControl>
                             <FormMessage />

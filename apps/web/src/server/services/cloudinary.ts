@@ -46,7 +46,6 @@ export class CloudinaryService {
         uploadResult = await new Promise((resolve, reject) => {
           cloudinary.uploader.upload_stream(
             {
-              public_id: publicId,
               resource_type: "auto",
               folder: `courselit/${type}`,
               transformation: [
@@ -85,7 +84,7 @@ export class CloudinaryService {
       // Create Media object
       const media: Media = {
         url: uploadResult.secure_url,
-        mediaId: uploadResult.public_id,
+        mediaId: mediaId,
         originalFileName: file instanceof File ? file.name : "uploaded_file",
         mimeType: file instanceof File ? file.type : this.getMimeTypeFromFormat(uploadResult.format),
         size: uploadResult.bytes,
@@ -101,6 +100,9 @@ export class CloudinaryService {
           : uploadResult.secure_url,
         caption: caption || "",
         storageProvider: "cloudinary",
+        metadata: {
+          public_id: uploadResult.public_id,
+        }
       };
 
       return media;

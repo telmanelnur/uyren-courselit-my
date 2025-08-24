@@ -339,7 +339,9 @@ export const siteInfoRouter = router({
         ctx.domainData.domainObj._id,
         exclusionProjection
       );
-
+      if (!domain) {
+        throw new NotFoundException("Domain", "current");
+      }
       return domain;
     }),
 

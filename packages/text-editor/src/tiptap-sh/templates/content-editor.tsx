@@ -18,10 +18,11 @@ import { TipTapFloatingMenu } from "../extensions/floating-menu";
 import { FloatingToolbar } from "../extensions/floating-toolbar";
 import { ImageExtension } from "../extensions/image";
 import { ImagePlaceholder } from "../extensions/image-placeholder";
+import { MediaViewExtension } from "../extensions/media-view";
 import SearchAndReplace from "../extensions/search-and-replace";
-import "../styles/tiptap.css";
 import { EditorToolbar } from "../toolbars/editor-toolbar";
 
+import "../styles/tiptap.css";
 
 export type ContentEditorProps = {
   initialContent?: string;
@@ -44,7 +45,6 @@ export function ContentEditor({
   className,
   extensions = [],
 }: ContentEditorProps) {
-
   const allExtensions = useMemo(() => {
     const defaultExtensions = [
       StarterKit.configure({
@@ -71,7 +71,6 @@ export function ContentEditor({
             case "detailsSummary":
               return "Section title";
             case "codeBlock":
-              // never show the placeholder when editing code
               return "";
             default:
               return placeholder || "Write, type '/' for commands";
@@ -93,6 +92,7 @@ export function ContentEditor({
       }),
       ImageExtension,
       ImagePlaceholder,
+      MediaViewExtension,
       SearchAndReplace,
       Typography,
     ];

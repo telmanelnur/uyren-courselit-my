@@ -64,7 +64,7 @@ const MediaBrowserContent: React.FC<{
       if (selectedFileType !== "all") {
         query.mimeType = selectedFileType;
       }
-      const url = "/api/media?" + new URLSearchParams(query);
+      const url = "/api/services/media?" + new URLSearchParams(query);
       const response = await fetch(url);
       const result = await response.json();
 
@@ -294,7 +294,7 @@ const FileUploadTab: React.FC<{
 
           xhr.onerror = () => reject(new Error('Upload failed'));
 
-          xhr.open('POST', `/api/media/upload?storageType=cloudinary`);
+          xhr.open('POST', `/api/services/media/upload?storageType=cloudinary`);
           xhr.send(formData);
         });
 

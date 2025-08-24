@@ -9,13 +9,13 @@ import {
   SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
   BUTTON_SAVE,
   APP_MESSAGE_SETTINGS_SAVED,
-  TOAST_TITLE_SUCCESS,
-  TOAST_TITLE_ERROR
+  TOAST_TITLE_SUCCESS
 } from "@/lib/ui/config/strings";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { trpc } from "@/utils/trpc";
+import { useSettingsContext } from "./settings-context";
 
 const mailsSettingsSchema = z.object({
   mailingAddress: z.string().optional(),
@@ -23,37 +23,24 @@ const mailsSettingsSchema = z.object({
 
 type MailsSettingsFormData = z.infer<typeof mailsSettingsSchema>;
 
-interface MailsSettingsProps {
-  settings: any;
-  onSettingsUpdate: (settings: any) => void;
-}
-
-export default function MailsSettings({ settings, onSettingsUpdate }: MailsSettingsProps) {
+export default function MailsSettings() {
+  const { settings, updateSettingsMutation, loadSettingsQuery } = useSettingsContext();
   const { toast } = useToast();
 
   const form = useForm<MailsSettingsFormData>({
     resolver: zodResolver(mailsSettingsSchema),
     defaultValues: {
-      mailingAddress: settings.mailingAddress || "",
+      mailingAddress: "",
     },
   });
 
-  const updateSettingsMutation = trpc.siteModule.siteInfo.updateSiteInfo.useMutation({
-    onSuccess: () => {
-      toast({
-        title: TOAST_TITLE_SUCCESS,
-        description: APP_MESSAGE_SETTINGS_SAVED,
+  useEffect(() => {
+    if (settings) {
+      form.reset({
+        mailingAddress: settings.mailingAddress || "",
       });
-      onSettingsUpdate(form.getValues());
-    },
-    onError: (error: any) => {
-      toast({
-        title: TOAST_TITLE_ERROR,
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+    }
+  }, [settings, form]);
 
   const onSubmit = async (data: MailsSettingsFormData) => {
     try {
@@ -62,6 +49,10 @@ export default function MailsSettings({ settings, onSettingsUpdate }: MailsSetti
           mailingAddress: data.mailingAddress,
         },
       });
+      toast({
+        title: TOAST_TITLE_SUCCESS,
+        description: APP_MESSAGE_SETTINGS_SAVED,
+      });
     } catch (error) {
       // Error handling is done in the mutation
     }
@@ -69,6 +60,8 @@ export default function MailsSettings({ settings, onSettingsUpdate }: MailsSetti
 
   const isSubmitting = form.formState.isSubmitting;
   const isSaving = updateSettingsMutation.isPending;
+  const isLoading = loadSettingsQuery.isLoading;
+  const isDisabled = isLoading || isSaving || isSubmitting;
 
   return (
     <div className="space-y-6">
@@ -85,6 +78,7 @@ export default function MailsSettings({ settings, onSettingsUpdate }: MailsSetti
                     {...field}
                     rows={5}
                     placeholder="Enter mailing address..."
+                    disabled={isDisabled}
                   />
                 </FormControl>
               </FormItem>
@@ -97,7 +91,7 @@ export default function MailsSettings({ settings, onSettingsUpdate }: MailsSetti
 
           <Button
             type="submit"
-            disabled={isSaving || isSubmitting}
+            disabled={isDisabled}
             className="w-full sm:w-auto"
           >
             {isSaving || isSubmitting ? "Saving..." : BUTTON_SAVE}

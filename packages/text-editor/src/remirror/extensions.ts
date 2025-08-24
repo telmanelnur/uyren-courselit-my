@@ -45,7 +45,7 @@ interface FileWithProgress {
 }
 
 async function getPresignedUrl(url: string) {
-    const response = await fetch(`${url}/api/media/presigned`, {
+    const response = await fetch(`${url}/api/services/media/presigned`, {
         method: "GET",
     });
     const data = await response.json();

@@ -11,20 +11,21 @@ import {
     SITE_SETTINGS_LOGO,
     SITE_SETTINGS_SUBTITLE,
     SITE_SETTINGS_TITLE,
-    TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS
 } from "@/lib/ui/config/strings";
-import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Media, Profile } from "@workspace/common-models";
+import { Media } from "@workspace/common-models";
 import { MediaSelector, useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import { Checkbox } from "@workspace/ui/components/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useSettingsContext } from "./settings-context";
+import { useProfile } from "@/components/contexts/profile-context";
+import { useAddress } from "@/components/contexts/address-context";
 
 const generalSettingsSchema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -34,42 +35,32 @@ const generalSettingsSchema = z.object({
 
 type GeneralSettingsFormData = z.infer<typeof generalSettingsSchema>;
 
-interface GeneralSettingsProps {
-    settings: any;
-    profile: Profile;
-    address: any;
-    onSettingsUpdate: (settings: any) => void;
-}
-
-export default function GeneralSettings({ settings, profile, address, onSettingsUpdate }: GeneralSettingsProps) {
+export default function GeneralSettings() {
+    const { settings, updateSettingsMutation, loadSettingsQuery } = useSettingsContext();
+    const { profile } = useProfile();
+    const { address } = useAddress();
     const { toast } = useToast();
-    const [logo, setLogo] = useState(settings.logo || {});
+    const [logo, setLogo] = useState<Media | null>(null);
 
     const form = useForm<GeneralSettingsFormData>({
         resolver: zodResolver(generalSettingsSchema),
         defaultValues: {
-            title: settings.title || "",
-            subtitle: settings.subtitle || "",
-            hideCourseLitBranding: settings.hideCourseLitBranding || false,
+            title: "",
+            subtitle: "",
+            hideCourseLitBranding: false,
         },
     });
 
-    const updateSettingsMutation = trpc.siteModule.siteInfo.updateSiteInfo.useMutation({
-        onSuccess: () => {
-            toast({
-                title: TOAST_TITLE_SUCCESS,
-                description: APP_MESSAGE_SETTINGS_SAVED,
+    useEffect(() => {
+        if (settings) {
+            form.reset({
+                title: settings.title || "",
+                subtitle: settings.subtitle || "",
+                hideCourseLitBranding: settings.hideCourseLitBranding || false,
             });
-            onSettingsUpdate(form.getValues());
-        },
-        onError: (error: any) => {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: error.message,
-                variant: "destructive",
-            });
-        },
-    });
+            setLogo(settings.logo || null);
+        }
+    }, [settings, form]);
 
     const onSubmit = async (data: GeneralSettingsFormData) => {
         try {
@@ -79,6 +70,10 @@ export default function GeneralSettings({ settings, profile, address, onSettings
                     subtitle: data.subtitle,
                     hideCourseLitBranding: data.hideCourseLitBranding,
                 },
+            });
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: APP_MESSAGE_SETTINGS_SAVED,
             });
         } catch (error) {
             // Error handling is done in the mutation
@@ -92,18 +87,20 @@ export default function GeneralSettings({ settings, profile, address, onSettings
                     logo: media || null,
                 },
             });
-            if (media) {
-                setLogo(media);
-            } else {
-                setLogo({});
-            }
+            setLogo(media || null);
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: APP_MESSAGE_SETTINGS_SAVED,
+            });
         } catch (error) {
-            console.error("Error updating logo:", error);
+            // Error handling is done in the mutation
         }
     };
 
     const isSubmitting = form.formState.isSubmitting;
     const isSaving = updateSettingsMutation.isPending;
+    const isLoading = loadSettingsQuery.isLoading;
+    const isDisabled = isLoading || isSaving || isSubmitting;
 
     return (
         <div className="space-y-8">
@@ -116,7 +113,7 @@ export default function GeneralSettings({ settings, profile, address, onSettings
                             <FormItem>
                                 <FormLabel>{SITE_SETTINGS_TITLE}</FormLabel>
                                 <FormControl>
-                                    <Input {...field} required />
+                                    <Input {...field} required disabled={isDisabled} />
                                 </FormControl>
                             </FormItem>
                         )}
@@ -129,7 +126,7 @@ export default function GeneralSettings({ settings, profile, address, onSettings
                             <FormItem>
                                 <FormLabel>{SITE_SETTINGS_SUBTITLE}</FormLabel>
                                 <FormControl>
-                                    <Input {...field} />
+                                    <Input {...field} disabled={isDisabled} />
                                 </FormControl>
                             </FormItem>
                         )}
@@ -153,7 +150,7 @@ export default function GeneralSettings({ settings, profile, address, onSettings
                                         <Checkbox
                                             checked={field.value}
                                             onCheckedChange={field.onChange}
-                                            disabled={isSaving}
+                                            disabled={isDisabled}
                                         />
                                     </FormControl>
                                 </div>
@@ -163,7 +160,7 @@ export default function GeneralSettings({ settings, profile, address, onSettings
 
                     <Button
                         type="submit"
-                        disabled={isSaving || isSubmitting}
+                        disabled={isDisabled}
                         className="w-full sm:w-auto"
                     >
                         {isSaving || isSubmitting ? "Saving..." : BUTTON_SAVE}
@@ -195,6 +192,7 @@ export default function GeneralSettings({ settings, profile, address, onSettings
                     mediaId={logo?.mediaId || ""}
                     onRemove={() => saveLogo()}
                     type="domain"
+                    disabled={isDisabled}
                 />
             </div>
         </div>

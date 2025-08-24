@@ -147,7 +147,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
         reject(new Error("Network error during upload"));
       });
 
-      xhr.open("POST", `${address.backend}/api/media/upload?storageType=cloudinary`);
+      xhr.open("POST", `${address.backend}/api/services/media/upload?storageType=cloudinary`);
       xhr.send(formData);
     });
   };
@@ -185,7 +185,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     try {
       setUploading(true);
       const response = await fetch(
-        `${address.backend}/api/media/${props.mediaId}?storageType=cloudinary`,
+        `${address.backend}/api/services/media/${props.mediaId}?storageType=cloudinary`,
         {
           method: "DELETE",
           headers: {

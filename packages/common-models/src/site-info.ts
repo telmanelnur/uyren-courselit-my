@@ -4,7 +4,7 @@ import { PaymentMethod } from "./payment-method";
 export default interface SiteInfo {
     title?: string;
     subtitle?: string;
-    logo?: Partial<Media>;
+    logo?: Media;
     currencyISOCode?: string;
     paymentMethod?: PaymentMethod;
     stripeKey?: string;
