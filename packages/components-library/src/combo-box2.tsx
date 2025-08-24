@@ -5,7 +5,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@workspace/ui/components/command";
 import { cn } from "@workspace/ui/lib/utils";
-import { Check, ChevronsUpDown, LoaderIcon } from "lucide-react";
+import { Check, ChevronsUpDown, LoaderIcon, Plus, Edit } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "./hooks/user-debounce";
 
@@ -19,6 +19,11 @@ interface Props<T extends object> {
     renderText: (value: T) => string;
     // onChange?: (value: T | T[]) => void;
     searchFn: (search: string, offset: number, size: number) => Promise<T[]>;
+    // New props for creation and editing
+    onCreateClick?: () => void;
+    onEditClick?: (item: T) => void;
+    showCreateButton?: boolean;
+    showEditButton?: boolean;
 }
 
 type PropsMultiple<T extends object> = Props<T> & {
@@ -43,6 +48,10 @@ const ComboBox2 = <T extends object>({
     renderText,
     onChange,
     searchFn,
+    onCreateClick,
+    onEditClick,
+    showCreateButton = false,
+    showEditButton = false,
 }: PropsMultiple<T> | PropsSingle<T>) => {
     const [search, setSearch] = useState<string>("");
     const [options, setOptions] = useState<T[]>([]);
@@ -94,6 +103,14 @@ const ComboBox2 = <T extends object>({
         }
     }, [multiple, value, valueKey, onChange]);
 
+    const handleCreateClick = useCallback(() => {
+        onCreateClick?.();
+    }, [onCreateClick]);
+
+    const handleEditClick = useCallback((item: T) => {
+        onEditClick?.(item);
+    }, [onEditClick]);
+
     useEffect(() => {
         getOptions();
     }, [getOptions]);
@@ -131,6 +148,20 @@ const ComboBox2 = <T extends object>({
                     <CommandList>
                         <CommandEmpty>No item found.</CommandEmpty>
                         <CommandGroup className="max-h-60 overflow-y-auto">
+                            {/* Create button */}
+                            {showCreateButton && onCreateClick && (
+                                <PopoverClose asChild>
+                                    <CommandItem
+                                        onSelect={handleCreateClick}
+                                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Create New
+                                    </CommandItem>
+                                </PopoverClose>
+                            )}
+                            
+                            {/* Options list */}
                             <PopoverClose asChild>
                                 <div>
                                     {options.map((option) => (
@@ -138,25 +169,44 @@ const ComboBox2 = <T extends object>({
                                             value={String(option[valueKey])}
                                             key={String(option[valueKey])}
                                             onSelect={() => handleSelect(option)}
+                                            className="flex items-center justify-between"
                                         >
-                                            <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    multiple
-                                                        ? Array.isArray(value) &&
-                                                          value.some(v => v[valueKey] === option[valueKey])
-                                                            ? "opacity-100"
-                                                            : "opacity-0"
-                                                        : option[valueKey] === (value as T)?.[valueKey]
-                                                            ? "opacity-100"
-                                                            : "opacity-0"
-                                                )}
-                                            />
-                                            {renderText(option)}
+                                            <div className="flex items-center">
+                                                <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        multiple
+                                                            ? Array.isArray(value) &&
+                                                              value.some(v => v[valueKey] === option[valueKey])
+                                                                ? "opacity-100"
+                                                                : "opacity-0"
+                                                            : option[valueKey] === (value as T)?.[valueKey]
+                                                                ? "opacity-100"
+                                                                : "opacity-0"
+                                                    )}
+                                                />
+                                                {renderText(option)}
+                                            </div>
+                                            
+                                            {/* Edit button */}
+                                            {showEditButton && onEditClick && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 w-6 p-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEditClick(option);
+                                                    }}
+                                                >
+                                                    <Edit className="h-3 w-3" />
+                                                </Button>
+                                            )}
                                         </CommandItem>
                                     ))}
                                 </div>
                             </PopoverClose>
+                            
                             {canLoadMore && (
                                 <CommandItem asChild>
                                     <Button

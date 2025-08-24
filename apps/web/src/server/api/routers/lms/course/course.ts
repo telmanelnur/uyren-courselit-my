@@ -316,6 +316,8 @@ const setupCourse = async ({
     creatorName: ctx.user.name,
     slug: slugify(title.toLowerCase()),
     type: type,
+    duration: 0,
+    level: "beginner",
     // pageId: page.pageId,
   });
   await addGroup({

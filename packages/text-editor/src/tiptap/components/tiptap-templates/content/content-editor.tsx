@@ -13,6 +13,8 @@ import { TextAlign } from "@tiptap/extension-text-align"
 import { Typography } from "@tiptap/extension-typography"
 import { Selection } from "@tiptap/extensions"
 import { StarterKit } from "@tiptap/starter-kit"
+import { BubbleMenu } from "@tiptap/extension-bubble-menu"
+import { FloatingMenu } from "@tiptap/extension-floating-menu"
 
 // --- UI Primitives ---
 import { Button } from "../../tiptap-ui-primitive/button"
@@ -196,7 +198,8 @@ export type ContentEditorProps = {
   }) => void;
   placeholder?: string;
   editable?: boolean;
-  className?: ReturnType<typeof cn>
+  className?: ReturnType<typeof cn>;
+  extensions?: any[];
 }
 
 export function ContentEditor({
@@ -206,6 +209,7 @@ export function ContentEditor({
   placeholder,
   editable = true,
   className,
+  extensions = [],
 }: ContentEditorProps) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
@@ -213,6 +217,33 @@ export function ContentEditor({
     "main" | "highlighter" | "link"
   >("main")
   const toolbarRef = React.useRef<HTMLDivElement>(null)
+
+  const defaultExtensions = [
+    StarterKit.configure({
+      horizontalRule: false,
+      link: {
+        openOnClick: false,
+        enableClickSelection: true,
+      },
+    }),
+    HorizontalRule,
+    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    Highlight.configure({ multicolor: true }),
+    Image,
+    Typography,
+    Superscript,
+    Subscript,
+    Selection,
+    VideoNodeExtension,
+    BubbleMenu.configure({
+      element: null,
+    }),
+    FloatingMenu.configure({
+      element: null,
+    }),
+  ]
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -227,26 +258,7 @@ export function ContentEditor({
         "aria-label": placeholder || "Main content area, start typing to enter text.",
       },
     },
-    extensions: [
-      StarterKit.configure({
-        horizontalRule: false,
-        link: {
-          openOnClick: false,
-          enableClickSelection: true,
-        },
-      }),
-      HorizontalRule,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Highlight.configure({ multicolor: true }),
-      Image,
-      Typography,
-      Superscript,
-      Subscript,
-      Selection,
-      VideoNodeExtension,
-    ],
+    extensions: [...defaultExtensions, ...extensions],
     content: initialContent,
     editable,
     onUpdate: ({ editor }) => {

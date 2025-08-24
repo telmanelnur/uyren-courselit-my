@@ -2,7 +2,12 @@
     .content-editor-content {
         height: unset;
     }
-    .tiptap.ProseMirror.content-editor {
-        padding: 0;
+
+    .tiptap.ProseMirror {
+        min-height: unset;
+
+        &.content-editor {
+            padding: 0;
+        }
     }
 }

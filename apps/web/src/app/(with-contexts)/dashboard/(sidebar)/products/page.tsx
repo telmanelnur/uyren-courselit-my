@@ -4,11 +4,14 @@ import { useSiteInfo } from "@/components/contexts/site-info-context";
 import { PaginationControls } from "@/components/public/pagination";
 import Resources from "@/components/resources";
 import { SkeletonCard } from "@/components/skeleton-card";
+import { useDialogControl } from "@/hooks/use-dialog-control";
 import { useProducts } from "@/hooks/use-products";
 import {
     BTN_NEW_PRODUCT,
     MANAGE_COURSES_PAGE_HEADING,
 } from "@/lib/ui/config/strings";
+import { trpc } from "@/utils/trpc";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { InternalCourse } from "@workspace/common-logic";
 import {
     Constants,
@@ -21,9 +24,13 @@ import {
     ContentCardHeader,
     ContentCardImage,
     getSymbolFromCurrency,
+    useToast,
 } from "@workspace/components-library";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@workspace/ui/components/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
 import {
     Select,
     SelectContent,
@@ -37,7 +44,6 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@workspace/ui/components/tooltip";
-import { cn } from "@workspace/ui/lib/utils";
 import { capitalize } from "@workspace/utils";
 import {
     BookOpen,
@@ -46,13 +52,14 @@ import {
     Download,
     Eye,
     EyeOff,
+    Plus,
     Users,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
 
-import Image from "next/image";
 import { EmptyState } from "@/app/(with-contexts)/(with-layout)/courses/_components/empty-state";
 
 const ITEMS_PER_PAGE = 9;
@@ -61,13 +68,20 @@ const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: MANAGE_COURSES_PAGE_HEADING, href: "#" }];
 
+const ProductSchema = z.object({
+    title: z.string().min(1, "Title is required").max(255, "Title must be less than 255 characters"),
+    type: z.enum([Constants.CourseType.COURSE, Constants.CourseType.DOWNLOAD]),
+});
+
+type ProductFormDataType = z.infer<typeof ProductSchema>;
+
 
 
 
 function ProductCard({ product }: { product: InternalCourse }) {
     const { siteInfo } = useSiteInfo()
     return (
-        <ContentCard href={`/dashboard/product/${product.courseId}`}>
+        <ContentCard href={`/dashboard/products/${product.courseId}`}>
             <ContentCardImage
                 src={product.featuredImage?.url || "/courselit_backdrop_square.webp"}
                 alt={product.title}
@@ -152,6 +166,137 @@ function SkeletonGrid() {
     );
 }
 
+function CreateProductDialog() {
+    const { toast } = useToast();
+    const router = useRouter();
+    const dialogControl = useDialogControl();
+
+    const form = useForm<ProductFormDataType>({
+        resolver: zodResolver(ProductSchema),
+        defaultValues: {
+            title: "",
+            type: Constants.CourseType.COURSE,
+        }
+    });
+
+    const createCourseMutation = trpc.lmsModule.courseModule.course.create.useMutation({
+        onSuccess: (response) => {
+            toast({
+                title: "Success",
+                description: "Product created successfully",
+            });
+            dialogControl.close();
+            router.push(`/dashboard/products/${response.courseId}`);
+        },
+        onError: (err: any) => {
+            toast({
+                title: "Error",
+                description: err.message,
+                variant: "destructive",
+            });
+        },
+    });
+
+    const handleSubmit = async (data: ProductFormDataType) => {
+        try {
+            await createCourseMutation.mutateAsync({
+                data: {
+                    title: data.title,
+                    type: data.type,
+                },
+            });
+        } catch (error) {
+            // Error handling is done in the mutation
+        }
+    };
+
+    const isSubmitting = form.formState.isSubmitting;
+    const isSaving = createCourseMutation.isPending;
+
+    return (
+        <Dialog open={dialogControl.visible} onOpenChange={dialogControl.setVisible}>
+            <DialogTrigger asChild>
+                <Button onClick={() => dialogControl.open()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {BTN_NEW_PRODUCT}
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Create New Product</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Title</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            {...field}
+                                            placeholder="Enter product title"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="type"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Type</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value} >
+                                        <FormControl className="w-full">
+                                            <SelectTrigger>
+                                                <SelectValue>
+                                                    {
+                                                        field.value === Constants.CourseType.COURSE ? "Course" : "Download"
+                                                    }
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value={Constants.CourseType.COURSE}>
+                                                <div>
+                                                    <div className="font-medium">Course</div>
+                                                    <div className="text-sm text-muted-foreground">Interactive learning experience</div>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value={Constants.CourseType.DOWNLOAD}>
+                                                <div>
+                                                    <div className="font-medium">Download</div>
+                                                    <div className="text-sm text-muted-foreground">Digital file or resource</div>
+                                                </div>
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <div className="flex justify-end gap-2 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={dialogControl.close}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isSaving || isSubmitting}>
+                                {isSaving || isSubmitting ? "Creating..." : "Create Product"}
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function Page() {
     const searchParams = useSearchParams();
     const page = parseInt(searchParams?.get("page") || "1");
@@ -210,9 +355,7 @@ export default function Page() {
                     {MANAGE_COURSES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href={`/dashboard/products/new`}>
-                        <Button>{BTN_NEW_PRODUCT}</Button>
-                    </Link>
+                    <CreateProductDialog />
                 </div>
             </div>
             {totalPages > 0 && (

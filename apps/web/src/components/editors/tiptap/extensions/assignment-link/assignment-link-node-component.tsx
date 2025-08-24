@@ -110,6 +110,20 @@ const AssignmentSelectNiceDialog = NiceModal.create(
                             renderText={(book) => `${book.title}`}
                             onChange={updateTags}
                             multiple={false}
+                            showCreateButton={true}
+                            showEditButton={true}
+                            onCreateClick={() => {
+                                // Navigate to assignment creation page
+                                window.open('/dashboard/lms/assignments/new', '_blank');
+                            }}
+                            onEditClick={(item) => {
+                                // Navigate to assignment/quiz edit page based on type
+                                if (item.type === 'assignment') {
+                                    window.open(`/dashboard/lms/assignments/${item.key}`, '_blank');
+                                } else if (item.type === 'quiz') {
+                                    window.open(`/dashboard/lms/quizzes/${item.key}`, '_blank');
+                                }
+                            }}
                         />
                     </DialogDescription>
                 </DialogContent>

@@ -353,13 +353,6 @@ export const ManageClientView = ({ id }: { id: string }) => {
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center justify-between mb-8">
             <h1 className="text-4xl font-semibold ">{COMMUNITY_SETTINGS}</h1>
             <div className="flex gap-2">
-              <Link
-                href={`/dashboard/page/${pageId}?redirectTo=/dashboard/community/${id}/manage`}
-              >
-                <Button variant="outline" className="">
-                  <Edit className="w-4 h-4" /> Edit page
-                </Button>
-              </Link>
               <Link href={`/dashboard/community/${id}/manage/memberships`}>
                 <Button variant="outline" className="">
                   <Users className="w-4 h-4" /> Memberships

@@ -16,103 +16,148 @@ import {
 } from "@/lib/ui/config/strings";
 import { capitalize } from "@/lib/ui/lib/utils";
 import { trpc } from "@/utils/trpc";
-import { CourseType } from "@workspace/common-models";
-import {
-    Button,
-    Form,
-    FormField,
-    Link,
-    Select,
-    useToast,
-} from "@workspace/components-library";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@workspace/components-library";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
 
+const ProductSchema = z.object({
+    title: z.string().min(1, "Title is required").max(255, "Title must be less than 255 characters"),
+    type: z.enum([COURSE_TYPE_COURSE, COURSE_TYPE_DOWNLOAD]),
+});
+
+type ProductFormDataType = z.infer<typeof ProductSchema>;
 
 export function NewProduct() {
-    const [title, setTitle] = useState("");
-    const [type, setType] = useState<CourseType>(COURSE_TYPE_COURSE);
     const router = useRouter();
     const { toast } = useToast();
 
-    const createCourseMutation = trpc.lmsModule.courseModule.course.create.useMutation();
+    const form = useForm<ProductFormDataType>({
+        resolver: zodResolver(ProductSchema),
+        defaultValues: {
+            title: "",
+            type: COURSE_TYPE_COURSE,
+        }
+    });
 
-    const createCourse = async (e: FormEvent) => {
-        e.preventDefault();
-        try {
-            const response = await createCourseMutation.mutateAsync({
-                data: {
-                    title,
-                    type,
-                },
+    const createCourseMutation = trpc.lmsModule.courseModule.course.create.useMutation({
+        onSuccess: (response) => {
+            toast({
+                title: "Success",
+                description: "Product created successfully",
             });
-            if (response) {
-                router.replace(
-                    `/dashboard/product/${response.courseId}`,
-                );
-            }
-        } catch (err: any) {
+            router.replace(`/dashboard/product/${response.courseId}`);
+        },
+        onError: (err: any) => {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: err.message,
                 variant: "destructive",
             });
+        },
+    });
+
+    const handleSubmit = async (data: ProductFormDataType) => {
+        try {
+            await createCourseMutation.mutateAsync({
+                data: {
+                    title: data.title,
+                    type: data.type,
+                },
+            });
+        } catch (error) {
+            // Error handling is done in the mutation
         }
     };
 
-    const loading = createCourseMutation.isPending;
+    const isSubmitting = form.formState.isSubmitting;
+    const isSaving = createCourseMutation.isPending;
 
     return (
-        <div className="flex flex-col">
+        <div className="space-y-6">
             <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">
                     {BTN_NEW_PRODUCT}
                 </h1>
-                <Form onSubmit={createCourse} className="flex flex-col gap-4">
-                    <FormField
-                        required
-                        label="Title"
-                        name="title"
-                        value={title}
-                        onChange={(e: any) => setTitle(e.target.value)}
-                        placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
-                    />
-                    <Select
-                        title={FORM_NEW_PRODUCT_TYPE}
-                        value={type}
-                        onChange={(e) => setType(e)}
-                        options={[
-                            {
-                                label: capitalize(COURSE_TYPE_COURSE),
-                                value: COURSE_TYPE_COURSE,
-                                sublabel: FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
-                            },
-                            {
-                                label: capitalize(COURSE_TYPE_DOWNLOAD),
-                                value: COURSE_TYPE_DOWNLOAD,
-                                sublabel:
-                                    FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
-                            },
-                        ]}
-                    />
-                    <div className="flex gap-2">
-                        <Button
-                            disabled={
-                                !title ||
-                                !type ||
-                                (!!title && !!type && loading)
-                            }
-                            onClick={createCourse}
-                            sx={{ mr: 1 }}
-                        >
-                            {BTN_CONTINUE}
-                        </Button>
-                        <Link href="/dashboard/products">
-                            <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
-                        </Link>
-                    </div>
-                </Form>
             </div>
+
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => router.push("/dashboard/products")}
+                        >
+                            {BUTTON_CANCEL_TEXT}
+                        </Button>
+                        <Button type="submit" disabled={isSaving || isSubmitting}>
+                            {isSaving || isSubmitting ? "Creating..." : BTN_CONTINUE}
+                        </Button>
+                    </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Product Information</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="title"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Title</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="type"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>{FORM_NEW_PRODUCT_TYPE}</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value={COURSE_TYPE_COURSE}>
+                                                    <div>
+                                                        <div className="font-medium">{capitalize(COURSE_TYPE_COURSE)}</div>
+                                                        {/* <div className="text-sm text-muted-foreground">{FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE}</div> */}
+                                                    </div>
+                                                </SelectItem>
+                                                <SelectItem value={COURSE_TYPE_DOWNLOAD}>
+                                                    <div>
+                                                        <div className="font-medium">{capitalize(COURSE_TYPE_DOWNLOAD)}</div>
+                                                        {/* <div className="text-sm text-muted-foreground">{FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE}</div> */}
+                                                    </div>
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </CardContent>
+                    </Card>
+                </form>
+            </Form>
         </div>
     );
 }

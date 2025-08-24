@@ -251,6 +251,16 @@ export default function QuizSettings() {
                                                     renderText={(item) => item.title}
                                                     onChange={field.onChange}
                                                     multiple={false}
+                                                    showCreateButton={true}
+                                                    showEditButton={true}
+                                                    onCreateClick={() => {
+                                                        // Navigate to course creation page
+                                                        router.push('/dashboard/products/new');
+                                                    }}
+                                                    onEditClick={(item) => {
+                                                        // Navigate to course edit page
+                                                        router.push(`/dashboard/product/${item.key}`);
+                                                    }}
                                                 />
                                             </FormControl>
                                             <FormMessage />
