@@ -15,7 +15,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
-import { Edit, Eye, FileQuestion, MoreHorizontal, Trash2, Archive } from "lucide-react";
+import { Archive, Edit, FileQuestion, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -34,20 +34,17 @@ export default function Page() {
     const [parsedPageination, setParsedPagination] = useState({
         pageCount: 1,
     });
-
     const archiveMutation = trpc.lmsModule.quizModule.quiz.archive.useMutation({
         onSuccess: () => {
             // Refetch the data to update the list
             loadListQuery.refetch();
         },
     });
-
     const handleArchive = useCallback((quiz: ItemType) => {
         if(confirm("Are you sure you want to archive this quiz?")) {
             archiveMutation.mutate(`${quiz._id}`);
         }
     }, [archiveMutation]);
-
     const columns: ColumnDef<ItemType>[] = useMemo(() => {
         return [
             {
@@ -207,8 +204,6 @@ export default function Page() {
             },
         ];
     }, [handleArchive]);
-
-
     const { table } = useDataTable({
         columns,
         data: parsedData,

@@ -1,7 +1,18 @@
 // lib/mongodb.js
 import mongoose, { ConnectOptions } from "mongoose";
 
-let cached = global.mongoose;
+// Define the type for the cached mongoose connection
+interface CachedMongoose {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+// Extend the global type to include mongoose
+declare global {
+  var mongoose: CachedMongoose | undefined;
+}
+
+let cached: CachedMongoose = global.mongoose!;
 
 if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };

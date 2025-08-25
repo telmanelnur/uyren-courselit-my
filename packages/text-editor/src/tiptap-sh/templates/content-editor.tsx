@@ -10,19 +10,19 @@ import TextAlign from "@tiptap/extension-text-align";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
-import { Editor, EditorContent, useEditor } from "@tiptap/react";
+import { AnyExtension, Editor, EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { cn } from "@workspace/ui/lib/utils";
 import { useMemo } from "react";
 import { TipTapFloatingMenu } from "../extensions/floating-menu";
 import { FloatingToolbar } from "../extensions/floating-toolbar";
-import { ImageExtension } from "../extensions/image";
-import { ImagePlaceholder } from "../extensions/image-placeholder";
 import { MediaViewExtension } from "../extensions/media-view";
+import { MyContentExtension } from "../extensions/my-content";
 import SearchAndReplace from "../extensions/search-and-replace";
 import { EditorToolbar } from "../toolbars/editor-toolbar";
 
 import "../styles/tiptap.css";
+import { SlashMenuConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu";
 
 export type ContentEditorProps = {
   initialContent?: string;
@@ -33,8 +33,11 @@ export type ContentEditorProps = {
   placeholder?: string;
   editable?: boolean;
   className?: ReturnType<typeof cn>;
-  extensions?: any[];
+  extraExtensions?: AnyExtension[]
+  extraSlashMenuConfig?: SlashMenuConfig
 }
+
+export type ContentEditorRef = Editor;
 
 export function ContentEditor({
   initialContent,
@@ -43,7 +46,7 @@ export function ContentEditor({
   placeholder,
   editable = true,
   className,
-  extensions = [],
+  extraExtensions = [],
 }: ContentEditorProps) {
   const allExtensions = useMemo(() => {
     const defaultExtensions = [
@@ -61,6 +64,8 @@ export function ContentEditor({
         heading: {
           levels: [1, 2, 3, 4],
         },
+        link: false,
+        underline: false,
       }),
       Placeholder.configure({
         emptyNodeClass: "is-editor-empty",
@@ -90,15 +95,14 @@ export function ContentEditor({
       Highlight.configure({
         multicolor: true,
       }),
-      ImageExtension,
-      ImagePlaceholder,
       MediaViewExtension,
+      MyContentExtension,
       SearchAndReplace,
       Typography,
     ];
-    return [...defaultExtensions, ...extensions]
+    return [...defaultExtensions, ...extraExtensions]
   },
-    [extensions, placeholder]
+    [extraExtensions, placeholder]
   )
 
   const editor = useEditor({
@@ -143,7 +147,7 @@ export function ContentEditor({
       <TipTapFloatingMenu editor={editor} />
       <EditorContent
         editor={editor}
-        className="content-editor-content w-full min-w-full cursor-text sm:p-6"
+        className="content-editor-content w-full min-w-full cursor-text sm:p-3"
       />
     </div>
   );

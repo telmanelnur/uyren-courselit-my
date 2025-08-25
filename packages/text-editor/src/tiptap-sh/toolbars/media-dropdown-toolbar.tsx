@@ -18,10 +18,14 @@ import {
   VideoIcon,
   FileTextIcon,
   Plus,
+  Volume2,
 } from "lucide-react";
 import { useToolbar } from "./toolbar-provider";
 import { cn } from "@workspace/ui/lib/utils";
 import { MediaBrowserNiceDialog, NiceModal } from "@workspace/components-library";
+import { TextEditorContent } from "@workspace/common-models";
+
+type AssetType = TextEditorContent["assets"][number];
 
 export function MediaDropdownToolbar({ 
   className
@@ -40,38 +44,12 @@ export function MediaDropdownToolbar({
       });
       
       if (result.reason === "submit" && editor) {
-        const mediaOptions = {
-          attrs: {
-            src: result.data.url,
-            alt: result.data.caption || result.data.originalFileName,
-            title: result.data.caption || result.data.originalFileName,
-            width: "100%",
-            height: null,
-            align: "center",
-            controls: true,
-            autoplay: false,
-            loop: false,
-            muted: false,
-            poster: null,
-          },
-          obj: {
-            type: fileType === "image/" ? "image" : 
-                  fileType === "video/" ? "video" : 
-                  fileType === "audio/" ? "audio" : 
-                  fileType === "application/pdf" ? "pdf" : "file",
-            caption: result.data.caption || "",
-            aspectRatio: null,
-            assetId: generateUniqueId(),
-            originalFileName: result.data.originalFileName,
-            mimeType: result.data.mimeType,
-            fileSize: result.data.size,
-            uploadDate: new Date().toISOString(),
-            embedCode: null,
-            embedType: null,
-          }
+        const asset: AssetType = {
+          url: result.data.url,
+          caption: result.data.caption || result.data.originalFileName || "",
+          media: result.data
         };
-
-        editor.chain().focus().setMediaView(mediaOptions).run();
+        editor.chain().focus().setMediaView(asset).run();
       }
       
       setIsOpen(false);
@@ -122,7 +100,7 @@ export function MediaDropdownToolbar({
           Video
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => openMediaDialog("audio/")}>
-          <FileTextIcon className="h-4 w-4 mr-2" />
+          <Volume2 className="h-4 w-4 mr-2" />
           Audio
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => openMediaDialog("application/pdf")}>

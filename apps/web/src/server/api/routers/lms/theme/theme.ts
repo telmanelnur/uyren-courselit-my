@@ -163,7 +163,7 @@ export const themeRouter = router({
             const query: RootFilterQuery<typeof ThemeModel> = {
                 domain: ctx.domainData.domainObj._id,
             };
-            if (input.filter?.status !== undefined) query.status = input.filter.status;
+            if (input.filter?.status) query.status = input.filter.status;
 
             const includeCount = input.pagination?.includePaginationCount ?? true;
             const [items, total] = await Promise.all([
@@ -174,7 +174,6 @@ export const themeRouter = router({
                     .lean(),
                 includeCount ? ThemeModel.countDocuments(query) : Promise.resolve(0)
             ]);
-
             return {
                 items: items.map((item: any) => ({
                     ...item,

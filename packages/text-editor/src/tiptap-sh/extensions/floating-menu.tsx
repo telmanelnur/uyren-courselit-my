@@ -8,7 +8,7 @@ import {
   List,
   Code2,
   ChevronRight,
-  Quote, ImageIcon,
+  Quote,
   Minus, AlignLeft,
   AlignCenter,
   AlignRight,
@@ -94,17 +94,10 @@ const groups: CommandGroupType[] = [
       },
       {
         title: "Code Block",
-        description: "Capture code snippets",
+        description: "Insert a code block",
         icon: Code2,
-        keywords: "code snippet pre",
+        keywords: "code block snippet",
         command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
-      },
-      {
-        title: "Image",
-        description: "Insert an image",
-        icon: ImageIcon,
-        keywords: "image picture photo",
-        command: (editor) => editor.chain().focus().insertImagePlaceholder().run(),
       },
       {
         title: "Horizontal Rule",

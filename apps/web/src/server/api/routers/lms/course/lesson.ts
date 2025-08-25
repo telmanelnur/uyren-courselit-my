@@ -119,10 +119,10 @@ export const lessonRouter = router({
   getById: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .input(z.object({
-      id: z.string().min(1),
+      lessonId: z.string().min(1),
     }))
     .query(async ({ ctx, input }) => {
-      return getLessonOrThrow(input.id, ctx as MainContextType);
+      return getLessonOrThrow(input.lessonId, ctx as MainContextType);
     }),
   create: protectedProcedure
     .use(createDomainRequiredMiddleware())

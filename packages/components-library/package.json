@@ -38,7 +38,6 @@
     "@workspace/common-models": "workspace:^",
     "@workspace/icons": "workspace:^",
     "@workspace/page-models": "workspace:^",
-    "@workspace/text-editor": "workspace:^",
     "@workspace/ui": "workspace:^",
     "@workspace/utils": "workspace:^",
     "class-variance-authority": "^0.7.1",

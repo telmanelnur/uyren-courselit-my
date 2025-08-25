@@ -12,7 +12,7 @@ const EmailTemplateSchema = new mongoose.Schema<EmailTemplate>({
     templateId: { type: String, required: true },
     title: { type: String, required: true },
     creatorId: { type: String, required: true },
-    content: { type: EmailContentSchema, required: true },
+    // content: { type: EmailContentSchema, required: true },
 });
 
 EmailTemplateSchema.index(

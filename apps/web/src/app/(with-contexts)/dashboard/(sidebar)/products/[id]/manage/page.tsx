@@ -1,33 +1,56 @@
-import CourseModel from "@/models/Course"
-import { connectToDatabase } from "@workspace/common-logic"
-import { notFound } from "next/navigation"
-import ProductManageClient from "./_components/product-manage-client"
+"use client";
 
-async function getProductData(id: string) {
-    try {
-        await connectToDatabase()
-        const product = await CourseModel.findOne({ courseId: id }).lean()
-        return product ? JSON.parse(JSON.stringify({
-            ...product,
-        })) : null
-    } catch (error) {
-        return null
+import DashboardContent from "@/components/admin/dashboard-content";
+import { useParams } from "next/navigation";
+import { trpc } from "@/utils/trpc";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import ProductManageClient from "./_components/product-manage-client";
+
+export default function ProductManagePage() {
+    const params = useParams();
+    const productId = params.id as string;
+
+    const { data: product, isLoading: productLoading } = trpc.lmsModule.courseModule.course.getByCourseDetailed.useQuery({
+        courseId: productId,
+    });
+
+    if (productLoading) {
+        return (
+            <DashboardContent breadcrumbs={[
+                { label: "Products", href: "/dashboard/products" },
+                { label: "...", href: "#" },
+                { label: "Manage", href: "#" }
+            ]}>
+                <div className="space-y-8">
+                    <div className="space-y-4">
+                        <Skeleton className="h-9 w-64" />
+                        <Skeleton className="h-5 w-48" />
+                    </div>
+                    <div className="space-y-6">
+                        <Skeleton className="h-20" />
+                        <Skeleton className="h-20" />
+                        <Skeleton className="h-20" />
+                    </div>
+                </div>
+            </DashboardContent>
+        );
     }
-}
-
-export default async function ProductManagePage(props: {
-    params: Promise<{ id: string }>
-}) {
-    const params = await props.params;
-    const product = await getProductData(params.id)
 
     if (!product) {
-        return notFound()
+        return (
+            <DashboardContent breadcrumbs={[
+                { label: "Products", href: "/dashboard/products" },
+                { label: "Product", href: "#" },
+                { label: "Manage", href: "#" }
+            ]}>
+                <div className="text-center py-8">
+                    <p className="text-muted-foreground">Product not found</p>
+                </div>
+            </DashboardContent>
+        );
     }
 
     return (
-        <ProductManageClient
-            product={product}
-        />
-    )
+        <ProductManageClient product={product} />
+    );
 }

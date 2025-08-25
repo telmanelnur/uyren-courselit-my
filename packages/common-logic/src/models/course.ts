@@ -5,7 +5,6 @@ import {
     Course,
     type ProductAccessType,
     type Group,
-    type CourseTheme,
 } from "@workspace/common-models";
 import { MediaSchema } from "./media";
 // import { EmailSchema } from "./email";
@@ -42,24 +41,6 @@ const GroupSchema = new mongoose.Schema<Group>({
     }),
 }, {
     _id: false,
-});
-
-// CourseTheme Schema for mongoose
-const CourseThemeSchema = new mongoose.Schema<CourseTheme>({
-    stylesCss: { type: String, default: "" },
-    typography: {
-        fontFamily: { type: String },
-        fontSize: { type: String },
-        fontWeight: { type: String },
-        lineHeight: { type: String },
-        letterSpacing: { type: String },
-        textTransform: { type: String },
-        textDecoration: { type: String },
-        textOverflow: { type: String },
-        customFonts: [{ type: String }], // Array of font URLs
-    },
-}, {
-    // _id: false,
 });
 
 
@@ -105,7 +86,7 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
             enum: ["beginner", "intermediate", "advanced"]
         },
         duration: { type: Number, required: true },
-        // theme: { type: CourseThemeSchema }, // New theme field
+        themeId: { type: mongoose.Schema.Types.ObjectId, required: false, default: null },
     },
     {
         timestamps: true,

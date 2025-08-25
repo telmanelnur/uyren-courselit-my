@@ -5,7 +5,6 @@ import * as React from "react"
 
 // --- Tiptap Core Extensions ---
 import { Highlight } from "@tiptap/extension-highlight"
-import { Image } from "@tiptap/extension-image"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
@@ -231,7 +230,6 @@ export function ContentEditor({
     TaskList,
     TaskItem.configure({ nested: true }),
     Highlight.configure({ multicolor: true }),
-    Image,
     Typography,
     Superscript,
     Subscript,

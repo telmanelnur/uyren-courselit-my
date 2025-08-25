@@ -1,6 +1,7 @@
 "use client";
 
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import { TextEditorContent } from "@workspace/common-models";
 import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
@@ -17,37 +18,89 @@ import {
   AlignLeft,
   AlignRight,
   Edit,
-  FileTextIcon,
   Maximize,
   MoreVertical,
-  Pause,
-  Play,
   Trash,
-  Volume2,
-  VolumeX
 } from "lucide-react";
 import { useRef, useState } from "react";
 
+type AssetType = TextEditorContent["assets"][number];
+
+// Media type components defined within the same file
+function ImageMedia({ url, alt, onLoad }: { 
+  url: string; 
+  alt?: string; 
+  onLoad: (aspectRatio: number) => void; 
+}) {
+  return (
+    <img
+      src={url}
+      alt={alt}
+      className="w-full h-auto rounded-lg"
+      onLoad={(e) => {
+        const img = e.currentTarget;
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        onLoad(aspectRatio);
+      }}
+    />
+  );
+}
+
+function VideoMedia({ url }: { url: string }) {
+  return (
+    <video
+      src={url}
+      controls
+      className="w-full h-auto rounded-lg"
+    />
+  );
+}
+
+function AudioMedia({ url }: { url: string }) {
+  return (
+    <audio
+      src={url}
+      controls
+      className="w-full"
+    />
+  );
+}
+
+function PdfMedia({ url, title }: { url: string; title?: string }) {
+  return (
+    <iframe
+      src={url}
+      className="w-full h-96 rounded-lg border"
+      title={title || "PDF Document"}
+    />
+  );
+}
+
+function EmbedMedia({ url }: { url: string }) {
+  return (
+    <div
+      className="w-full h-96 rounded-lg border bg-muted flex items-center justify-center"
+      dangerouslySetInnerHTML={{ __html: url }}
+    />
+  );
+}
+
 export function MediaViewComponent(props: NodeViewProps) {
   const { node, editor, selected, deleteNode, updateAttributes } = props;
-  const [isEditing, setIsEditing] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [showActions, setShowActions] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
-  const [caption, setCaption] = useState(node.attrs.obj?.caption || "");
+  const [caption, setCaption] = useState(node.attrs.asset?.caption || "");
   const [openedMore, setOpenedMore] = useState(false);
   const mediaRef = useRef<HTMLDivElement>(null);
-  const [mediaState, setMediaState] = useState({
-    isPlaying: false,
-    isMuted: false,
-    volume: 1,
-  });
+
+  const { asset, display } = node.attrs;
+  const { url, media } = asset || {};
+  const { width, height, align } = display || {};
 
   const handleCaptionUpdate = (newCaption: string) => {
     setCaption(newCaption);
     updateAttributes({ 
-      obj: { 
-        ...node.attrs.obj, 
+      asset: { 
+        ...node.attrs.asset, 
         caption: newCaption 
       } 
     });
@@ -57,151 +110,56 @@ export function MediaViewComponent(props: NodeViewProps) {
     deleteNode();
   };
 
-  const handleResize = (newWidth: number, newHeight?: number) => {
-    updateAttributes({
-      attrs: {
-        ...node.attrs.attrs,
-        width: `${newWidth}px`,
-        height: newHeight ? `${newHeight}px` : undefined,
-      }
+  const handleAspectRatioUpdate = (aspectRatio: number) => {
+    // Store aspect ratio in display settings if needed
+    updateAttributes({ 
+      display: { 
+        ...node.attrs.display, 
+        aspectRatio 
+      } 
     });
   };
 
-  const handleMediaControl = (control: string, value?: any) => {
-    switch (control) {
-      case "play":
-        setMediaState(prev => ({ ...prev, isPlaying: true }));
-        break;
-      case "pause":
-        setMediaState(prev => ({ ...prev, isPlaying: false }));
-        break;
-      case "mute":
-        setMediaState(prev => ({ ...prev, isMuted: !prev.isMuted }));
-        break;
-      case "volume":
-        setMediaState(prev => ({ ...prev, volume: value }));
-        break;
+  const getMediaType = (url: string, mimeType?: string): string => {
+    if (!url) return "unknown";
+    
+    if (mimeType) {
+      if (mimeType.startsWith("image/")) return "image";
+      if (mimeType.startsWith("video/")) return "video";
+      if (mimeType.startsWith("audio/")) return "audio";
+      if (mimeType === "application/pdf") return "pdf";
     }
+    
+    // Fallback to URL extension
+    const extension = url.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension || '')) return "image";
+    if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(extension || '')) return "video";
+    if (['mp3', 'wav', 'ogg', 'aac'].includes(extension || '')) return "audio";
+    if (extension === 'pdf') return "pdf";
+    
+    return "unknown";
   };
 
   const renderMediaContent = () => {
-    const { attrs, obj } = node.attrs;
-    const { src, alt, title, controls, autoplay, loop, muted, poster } = attrs || {};
-    const { type } = obj || {};
-
-    switch (type) {
+    const mediaType = getMediaType(url, media?.mimeType);
+    
+    switch (mediaType) {
       case "image":
-        return (
-          <img
-            src={src}
-            alt={alt}
-            title={title}
-            className="w-full h-auto rounded-lg"
-            onLoad={(e) => {
-              const img = e.currentTarget;
-              const aspectRatio = img.naturalWidth / img.naturalHeight;
-              updateAttributes({ 
-                obj: { 
-                  ...node.attrs.obj, 
-                  aspectRatio 
-                } 
-              });
-            }}
-          />
-        );
-
+        return <ImageMedia url={url} alt={caption} onLoad={handleAspectRatioUpdate} />;
       case "video":
-        return (
-          <video
-            src={src}
-            controls={controls}
-            autoPlay={autoplay}
-            loop={loop}
-            muted={muted}
-            poster={poster}
-            className="w-full h-auto rounded-lg"
-            onLoadStart={() => {
-              const video = mediaRef.current?.querySelector("video");
-              if (video) {
-                video.volume = mediaState.volume;
-                video.muted = mediaState.isMuted;
-              }
-            }}
-          />
-        );
-
+        return <VideoMedia url={url} />;
       case "audio":
-        return (
-          <audio
-            src={src}
-            controls={controls}
-            autoPlay={autoplay}
-            loop={loop}
-            muted={muted}
-            className="w-full"
-          />
-        );
-
+        return <AudioMedia url={url} />;
       case "pdf":
-        return (
-          <iframe
-            src={src}
-            className="w-full h-96 rounded-lg border"
-            title={title || "PDF Document"}
-          />
-        );
-
-      case "embed":
-        return (
-          <div
-            className="w-full h-96 rounded-lg border bg-muted flex items-center justify-center"
-            dangerouslySetInnerHTML={{ __html: obj?.embedCode || "" }}
-          />
-        );
-
+        return <PdfMedia url={url} title={media?.originalFileName} />;
       default:
         return (
           <div className="w-full h-32 rounded-lg border bg-muted flex items-center justify-center text-muted-foreground">
-            <FileTextIcon className="h-8 w-8" />
-            <span className="ml-2">Unsupported media type</span>
+            <span>Unsupported media type</span>
           </div>
         );
     }
   };
-
-  const renderMediaControls = () => {
-    const { obj } = node.attrs;
-    const { type } = obj || {};
-    
-    if (type === "video" || type === "audio") {
-      return (
-        <div className="flex items-center gap-2 p-2 bg-background/80 rounded-md">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8"
-            onClick={() => handleMediaControl(mediaState.isPlaying ? "pause" : "play")}
-          >
-            {mediaState.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </Button>
-          
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8"
-            onClick={() => handleMediaControl("mute")}
-          >
-            {mediaState.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </Button>
-        </div>
-      );
-    }
-    
-    return null;
-  };
-
-  const { attrs, obj } = node.attrs;
-  const { width, align } = attrs || {};
 
   return (
     <NodeViewWrapper
@@ -214,19 +172,12 @@ export function MediaViewComponent(props: NodeViewProps) {
         align === "right" && "left-full -translate-x-full"
       )}
       style={{ width }}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
     >
-      <div className={cn("group relative flex flex-col rounded-md", isResizing && "")}>
-        {/* Media Content */}
+      <div className="group relative flex flex-col rounded-md">
         <div className="relative">
           {renderMediaContent()}
-          
-          {/* Media Controls Overlay */}
-          {renderMediaControls()}
         </div>
 
-        {/* Caption */}
         {editingCaption ? (
           <Input
             value={caption}
@@ -254,23 +205,21 @@ export function MediaViewComponent(props: NodeViewProps) {
           </div>
         )}
 
-        {/* Toolbar */}
         {editor?.isEditable && (
           <div
             className={cn(
               "absolute right-4 top-4 flex items-center gap-1 rounded-md border bg-background/80 p-1 opacity-0 backdrop-blur transition-opacity",
-              !isResizing && "group-hover:opacity-100",
+              "group-hover:opacity-100",
               openedMore && "opacity-100"
             )}
           >
-            {/* Alignment buttons */}
             <Button
               size="icon"
               className={cn("size-7", align === "left" && "bg-accent")}
               variant="ghost"
               onClick={() => updateAttributes({ 
-                attrs: { 
-                  ...node.attrs.attrs, 
+                display: { 
+                  ...node.attrs.display, 
                   align: "left" 
                 } 
               })}
@@ -282,8 +231,8 @@ export function MediaViewComponent(props: NodeViewProps) {
               className={cn("size-7", align === "center" && "bg-accent")}
               variant="ghost"
               onClick={() => updateAttributes({ 
-                attrs: { 
-                  ...node.attrs.attrs, 
+                display: { 
+                  ...node.attrs.display, 
                   align: "center" 
                 } 
               })}
@@ -295,8 +244,8 @@ export function MediaViewComponent(props: NodeViewProps) {
               className={cn("size-7", align === "right" && "bg-accent")}
               variant="ghost"
               onClick={() => updateAttributes({ 
-                attrs: { 
-                  ...node.attrs.attrs, 
+                display: { 
+                  ...node.attrs.display, 
                   align: "right" 
                 } 
               })}
@@ -306,7 +255,6 @@ export function MediaViewComponent(props: NodeViewProps) {
             
             <Separator orientation="vertical" className="h-[20px]" />
             
-            {/* More options */}
             <DropdownMenu open={openedMore} onOpenChange={setOpenedMore}>
               <DropdownMenuTrigger asChild>
                 <Button size="icon" className="size-7" variant="ghost">
@@ -320,12 +268,12 @@ export function MediaViewComponent(props: NodeViewProps) {
                 
                 <DropdownMenuItem
                   onClick={() => {
-                    const aspectRatio = obj?.aspectRatio;
+                    const aspectRatio = node.attrs.display?.aspectRatio;
                     if (aspectRatio) {
                       const parentWidth = mediaRef.current?.parentElement?.offsetWidth ?? 0;
                       updateAttributes({
-                        attrs: {
-                          ...node.attrs.attrs,
+                        display: {
+                          ...node.attrs.display,
                           width: parentWidth,
                           height: parentWidth / aspectRatio,
                         }

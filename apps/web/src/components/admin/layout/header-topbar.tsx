@@ -12,7 +12,7 @@ type HeaderProps = {
         subtitle: string;
     }
     backLink?: boolean;
-    rightAction: ReactNode;
+    rightAction?: ReactNode;
 }
 
 const HeaderTopbar = (props: HeaderProps) => {

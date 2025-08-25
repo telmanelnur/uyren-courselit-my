@@ -1,10 +1,10 @@
-.description-editor-wrapper {
+.lesson-content-editor-wrapper {
     .content-editor-content {
         height: unset;
     }
 
     .tiptap.ProseMirror {
-        min-height: unset;
+        // min-height: unset;
 
         &.content-editor {
             padding-top: 0;

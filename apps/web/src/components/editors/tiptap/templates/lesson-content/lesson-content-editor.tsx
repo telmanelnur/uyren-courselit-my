@@ -1,19 +1,22 @@
-import { ContentEditorProps, ContentEditorRef, NotionContentEditor, VideoIcon } from "@workspace/text-editor/tiptap";
+// import { ContentEditorProps, ContentEditorRef, NotionContentEditor, VideoIcon } from "@workspace/text-editor/tiptap";
+import { ContentEditor, ContentEditorProps, ContentEditorRef } from "@workspace/text-editor/tiptap-sh";
 import { forwardRef } from "react";
-
-import "@workspace/text-editor/tiptap/styles/_keyframe-animations.scss";
-import "@workspace/text-editor/tiptap/styles/_variables.scss";
+// import "@workspace/text-editor/tiptap/styles/_keyframe-animations.scss";
+// import "@workspace/text-editor/tiptap/styles/_variables.scss";
 import { AssignmentLinkNodeExtension } from "../../extensions/assignment-link/assignment-link-node-extension";
-import { ImageIcon } from "@workspace/text-editor/tiptap";
+// import { ImageIcon, VideoIcon } from "@workspace/text-editor/tiptap";
 import { MediaBrowserNiceDialog, NiceModal } from "@workspace/components-library";
-import { MyEditorContentNodeExtension } from "../../extensions/my-editor-content/my-editor-content-node-extension";
+import { ImageIcon, VideoIcon } from "lucide-react";
+// import { MyEditorContentNodeExtension } from "../../extensions/my-editor-content/my-editor-content-node-extension";
 
+
+import "./lesson-content-editor.scss"
 
 export const LessonContentEditor = forwardRef<ContentEditorRef, ContentEditorProps>(
     (props, ref) => {
 
         return (
-            <NotionContentEditor
+            <ContentEditor
                 onEditor={(editor, meta) => {
                     if (ref && typeof ref === 'function') {
                         ref(editor);
@@ -27,7 +30,6 @@ export const LessonContentEditor = forwardRef<ContentEditorRef, ContentEditorPro
                 className="lesson-content-editor-wrapper"
                 extraExtensions={[
                     AssignmentLinkNodeExtension,
-                    MyEditorContentNodeExtension,
                 ]}
                 extraSlashMenuConfig={{
                     customItems: [

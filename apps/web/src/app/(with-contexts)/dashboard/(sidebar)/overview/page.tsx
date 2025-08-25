@@ -20,7 +20,7 @@ const Todo = dynamic(() =>
     })),
 );
 const LoadingScreen = dynamic(() => import("@/components/admin/loading-screen"));
-const MetricCard = dynamic(() => import("../product/[id]/metric-card"));
+const MetricCard = dynamic(() => import("../products/[id]/_components/metric-card"));
 const SalesCard = dynamic(() => import("./sales-card"));
 
 // Dynamically import UI components

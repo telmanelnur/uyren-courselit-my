@@ -1,0 +1,35 @@
+FROM node:20-alpine AS base
+
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/*/package.json ./packages/
+COPY apps/*/package.json ./apps/
+
+RUN npm install -g pnpm@10.4.1
+
+FROM base AS deps
+RUN pnpm install --frozen-lockfile
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN pnpm --filter=@apps/queue build
+
+FROM node:20-alpine AS production
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
+
+COPY --from=builder --chown=nodejs:nodejs /app/apps/queue/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/apps/queue/package.json ./package.json
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+
+USER nodejs
+
+EXPOSE 3001
+
+CMD ["node", "dist/server.js"]

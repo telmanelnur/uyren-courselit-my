@@ -17,7 +17,6 @@ import { BulletListToolbar } from "./bullet-list";
 import { OrderedListToolbar } from "./ordered-list";
 import { HorizontalRuleToolbar } from "./horizontal-rule";
 import { AlignmentTooolbar } from "./alignment";
-import { ImagePlaceholderToolbar } from "./image-placeholder-toolbar";
 import { MediaDropdownToolbar } from "./media-dropdown-toolbar";
 import { ColorHighlightToolbar } from "./color-and-highlight";
 import { SearchAndReplaceToolbar } from "./search-and-replace-toolbar";
@@ -67,7 +66,6 @@ export const EditorToolbar = ({
 
                 {/* Media & Styling Group */}
                 <MediaDropdownToolbar />
-                <ImagePlaceholderToolbar />
                 <ColorHighlightToolbar />
                 <Separator orientation="vertical" className="mx-1 h-7" />
 

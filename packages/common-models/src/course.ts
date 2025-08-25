@@ -14,21 +14,6 @@ export type CourseType = (typeof CourseType)[keyof typeof CourseType];
 export type ProductAccessType =
     (typeof ProductAccessType)[keyof typeof ProductAccessType];
 
-export interface CourseTheme {
-    stylesCss: string; // Simple dictionary with key:value string pairs
-    typography: {
-        fontFamily?: string;
-        fontSize?: string;
-        fontWeight?: string;
-        lineHeight?: string;
-        letterSpacing?: string;
-        textTransform?: string;
-        textDecoration?: string;
-        textOverflow?: string;
-        customFonts?: string[]; // Array of font URLs to load
-    };
-}
-
 export type CourseLevel = "beginner" | "intermediate" | "advanced";
 
 export interface Course {
@@ -54,7 +39,7 @@ export interface Course {
     leadMagnet?: boolean;
     lessons?: Lesson[];
     user: User;
-    theme?: CourseTheme; // New optional theme field
+    themeId?: string; // Reference to existing Theme model
     level: CourseLevel;
     duration: number;
 }

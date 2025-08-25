@@ -4,13 +4,10 @@ import { Log } from "@/lib/logger";
 import CourseModel from "@/models/Course";
 import LessonModel from "@/models/Lesson";
 import MembershipModel from "@/models/Membership";
-import PageModel from "@/models/Page";
 import UserModel from "@/models/User";
 import {
-  AuthorizationException,
   ConflictException,
-  NotFoundException,
-  ValidationException,
+  NotFoundException
 } from "@/server/api/core/exceptions";
 import { checkOwnershipWithoutModel } from "@/server/api/core/permissions";
 import {
@@ -30,15 +27,14 @@ import {
 } from "@/server/api/core/validators";
 import { deleteMedia } from "@/server/services/media";
 import { InternalCourse } from "@workspace/common-logic";
-import { Constants, Drip, Email, Group, Lesson, Media, PaymentPlan, UIConstants, WidgetInstance } from "@workspace/common-models";
+import { Constants, Drip, Group, Lesson, Media, PaymentPlan, UIConstants } from "@workspace/common-models";
 import { checkPermission, generateUniqueId, slugify } from "@workspace/utils";
 import mongoose, { RootFilterQuery } from "mongoose";
-import { ActivityType, PaymentPlanType } from "node_modules/@workspace/common-models/src/constants";
+import { ActivityType } from "node_modules/@workspace/common-models/src/constants";
 import { z } from "zod";
 import { getActivities } from "../../activity/helpers";
 import { getPlans } from "../../community/helpers";
-import { verifyMandatoryTags } from "../main/helpers";
-import { deleteAllLessons, getCourseOrThrow, getPrevNextCursor, validateCourse } from "./helpers";
+import { deleteAllLessons, getCourseOrThrow, getPrevNextCursor } from "./helpers";
 
 
 const { permissions } = UIConstants;
@@ -659,32 +655,28 @@ export const courseRouter = router({
       privacy: z.nativeEnum(Constants.ProductAccessType).optional(),
       description: textEditorContentValidator().optional(),
       featuredImage: mediaWrappedFieldValidator().nullable().optional(),
+      themeId: documentIdValidator().optional(),
     }).extend({
       courseId: z.string(),
     })).mutation(async ({ ctx, input }) => {
-      let course = await getCourseOrThrow(undefined, ctx, input.courseId);
+      const course = await getCourseOrThrow(undefined, ctx, input.courseId);
+      checkOwnershipWithoutModel(course, ctx as any);
 
-      for (const key of Object.keys(input.data)) {
-        if (
-          key === "published" &&
-          !checkPermission(ctx.user.permissions, [permissions.publishCourse])
-        ) {
-          throw new AuthorizationException(responses.action_not_allowed);
-        }
+      const updateData: any = {};
+      if (input.data.title !== undefined) updateData.title = input.data.title;
+      if (input.data.published !== undefined) updateData.published = input.data.published;
+      if (input.data.privacy !== undefined) updateData.privacy = input.data.privacy;
+      if (input.data.description !== undefined) updateData.description = input.data.description;
+      if (input.data.featuredImage !== undefined) updateData.featuredImage = input.data.featuredImage;
+      if (input.data.themeId !== undefined) updateData.themeId = input.data.themeId;
 
-        if (key === "published" && !ctx.user.name) {
-          throw new ValidationException(responses.profile_incomplete);
-        }
-        (course as any)[key] = (input as any).data[key];
-      }
+      const updatedCourse = await CourseModel.findOneAndUpdate(
+        { courseId: input.courseId },
+        { $set: updateData },
+        { new: true },
+      );
 
-      course = await validateCourse(course, ctx as any) as any;
-      course = await course.save();
-      // await PageModel.updateOne(
-      //   { entityId: course.courseId, domain: ctx.domainData.domainObj._id },
-      //   { $set: { name: course.title } },
-      // );
-      return await formatCourse(course.courseId, ctx);
+      return updatedCourse;
     }),
 
   delete: protectedProcedure
@@ -825,7 +817,7 @@ export const courseRouter = router({
         creatorName: course.creatorName,
         slug: course.slug,
         privacy: course.privacy,
-        theme: course.theme,
+        themeId: course.themeId,
         defaultPaymentPlan: course.defaultPaymentPlan,
         attachedPaymentPlans: course.attachedPaymentPlans.map(formatPaymentPlan),
         attachedLessons: course.attachedLessons.map(formatLesson),

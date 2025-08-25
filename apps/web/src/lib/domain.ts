@@ -12,7 +12,10 @@ export {
   parseHost,
 } from "./domain-utils";
 
-const mainIdentifiers = ["main", "localhost", "127.0.0.1", "uyren-courselit-my-1.loca.lt", ];
+const useRedis = process.env.USER_REDIS === "true";
+console.log("useRedis", useRedis);
+
+const mainIdentifiers = ["main", "localhost", "127.0.0.1", "uyren-courselit-my-1.loca.lt",];
 
 export async function getDomainHeaders() {
   const headersList = await headers();
@@ -48,15 +51,15 @@ export class DomainManager {
   private static readonly CACHE_PREFIX = "domain:";
 
   private static formatDomainForClient(domain: Domain): Omit<Domain, 'settings'> & {
-    settings: Omit<Domain['settings'], 
-      | 'stripeSecret' | 'stripeWebhookSecret' | 'paypalSecret' | 'paytmSecret' 
+    settings: Omit<Domain['settings'],
+      | 'stripeSecret' | 'stripeWebhookSecret' | 'paypalSecret' | 'paytmSecret'
       | 'razorpaySecret' | 'razorpayWebhookSecret' | 'lemonsqueezyWebhookSecret'
     >;
   } {
     if (!domain) return domain as any;
     const { settings, ...rest } = domain;
     const safeSettings = { ...settings };
-    
+
     delete safeSettings.stripeSecret;
     delete safeSettings.stripeWebhookSecret;
     delete safeSettings.paypalSecret;
@@ -64,7 +67,7 @@ export class DomainManager {
     delete safeSettings.razorpaySecret;
     delete safeSettings.razorpayWebhookSecret;
     delete safeSettings.lemonsqueezyWebhookSecret;
-    
+
     return { ...rest, settings: safeSettings };
   }
 
@@ -81,14 +84,16 @@ export class DomainManager {
 
   static async getDomainByName(name: string) {
     const cacheKey = `${this.CACHE_PREFIX}name:${name}`;
-    try {
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached) as Domain;
-        return this.formatDomainForClient(parsed);
-      }
-    } catch (error) {}
+    if (useRedis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached) as Domain;
+          return this.formatDomainForClient(parsed);
+        }
+      } catch (error) { }
 
+    }
     await connectToDatabase();
     const domain = await DomainModel.findOne({ name, deleted: false });
     if (domain) {
@@ -101,14 +106,15 @@ export class DomainManager {
 
   static async getDomainByCustomDomain(customDomain: string): Promise<Domain | null> {
     const cacheKey = `${this.CACHE_PREFIX}custom:${customDomain}`;
-    try {
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached) as Domain;
-        return this.formatDomainForClient(parsed);
-      }
-    } catch (error) {}
-
+    if (useRedis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached) as Domain;
+          return this.formatDomainForClient(parsed);
+        }
+      } catch (error) { }
+    }
     await connectToDatabase();
     const domain = await DomainModel.findOne({ customDomain, deleted: false });
     if (domain) {
@@ -127,13 +133,15 @@ export class DomainManager {
     try {
       const promises = [];
       const domainJson = JSON.stringify(domain);
-      if (domain.name) {
-        promises.push(redis.setex(`${this.CACHE_PREFIX}name:${domain.name}`, this.CACHE_TTL, domainJson));
+      if (useRedis) {
+        if (domain.name) {
+          promises.push(redis.setex(`${this.CACHE_PREFIX}name:${domain.name}`, this.CACHE_TTL, domainJson));
+        }
+        if (domain.customDomain) {
+          promises.push(redis.setex(`${this.CACHE_PREFIX}custom:${domain.customDomain}`, this.CACHE_TTL, domainJson));
+        }
+        await Promise.all(promises);
       }
-      if (domain.customDomain) {
-        promises.push(redis.setex(`${this.CACHE_PREFIX}custom:${domain.customDomain}`, this.CACHE_TTL, domainJson));
-      }
-      await Promise.all(promises);
     } catch (error) {
       Log.error("[cache] Redis caching failed: " + error);
     }
@@ -144,7 +152,9 @@ export class DomainManager {
       const keys = [`${this.CACHE_PREFIX}id:${domain._id}`];
       if (domain.name) keys.push(`${this.CACHE_PREFIX}name:${domain.name}`);
       if (domain.customDomain) keys.push(`${this.CACHE_PREFIX}custom:${domain.customDomain}`);
-      await redis.del(...keys);
+      if (useRedis) {
+        await redis.del(...keys);
+      }
     } catch (error) {
       Log.error("[removeFromCache] Cache removal failed: " + error);
     }

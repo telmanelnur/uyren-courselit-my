@@ -1,6 +1,13 @@
 "use client"
 
 import DashboardContent from "@/components/admin/dashboard-content";
+import HeaderTopbar from "@/components/admin/layout/header-topbar";
+import PaymentPlanList from "@/components/admin/payments/payment-plan-list";
+import { useAddress } from "@/components/contexts/address-context";
+import { useProfile } from "@/components/contexts/profile-context";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
+import { MIMETYPE_IMAGE } from "@/lib/ui/config/constants";
 import {
     APP_MESSAGE_COURSE_SAVED,
     BTN_DELETE_COURSE,
@@ -11,11 +18,10 @@ import {
 } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MIMETYPE_IMAGE } from "@/lib/ui/config/constants";
-import { useAddress } from "@/components/contexts/address-context";
-import { useProfile } from "@/components/contexts/profile-context";
-import { Media, Profile } from "@workspace/common-models";
+import { Constants, Media, Profile } from "@workspace/common-models";
 import {
+    ComboBox2,
+    getSymbolFromCurrency,
     MediaSelector,
     useToast,
 } from "@workspace/components-library";
@@ -38,7 +44,7 @@ import { Switch } from "@workspace/ui/components/switch";
 import { Trash2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm, } from "react-hook-form";
 import z from "zod";
 
@@ -46,9 +52,12 @@ const DescriptionEditor = dynamic(() =>
     import("@/components/editors/tiptap/templates/description/description-editor").then((mod) => ({ default: mod.DescriptionEditor })),
 );
 
+const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
+
 const ProductSchema = z.object({
     title: z.string().min(1, "Title is required").max(255, "Title must be less than 255 characters"),
     description: z.any().optional(),
+    themeId: z.string().optional(),
 });
 
 type ProductFormDataType = z.infer<typeof ProductSchema>;
@@ -62,6 +71,7 @@ export default function ProductManageClient({ product }: ProductManageClientProp
     const { toast } = useToast();
     const { address } = useAddress();
     const { profile } = useProfile();
+    const { siteInfo } = useSiteInfo();
 
     const [editorContent, setEditorContent] = useState({
         type: "doc" as const,
@@ -76,14 +86,49 @@ export default function ProductManageClient({ product }: ProductManageClientProp
     const [featuredImage, setFeaturedImage] = useState(product.featuredImage || {});
     const [published, setPublished] = useState(product.published || false);
     const [isPrivate, setPrivate] = useState(product.privacy === "unlisted" || false);
+    const [selectedTheme, setSelectedTheme] = useState<{ key: string; title: string } | null>(
+        product.themeId ? { key: product.themeId, title: "" } : null
+    );
+
+    const {
+        paymentPlans,
+        setPaymentPlans,
+        defaultPaymentPlan,
+        setDefaultPaymentPlan,
+        onPlanSubmitted,
+        onPlanArchived,
+        onDefaultPlanChanged,
+    } = usePaymentPlanOperations({
+        id: product.courseId,
+        entityType: MembershipEntityType.COURSE,
+    });
 
     const form = useForm<ProductFormDataType>({
         resolver: zodResolver(ProductSchema),
         defaultValues: {
             title: product.title || "",
             description: product.description || "",
-        }
+            themeId: product.themeId || "",
+        },
     });
+
+    const trpcUtils = trpc.useUtils();
+    const fetchThemes = useCallback(async (search: string, offset: number, size: number) => {
+        try {
+            const response = await trpcUtils.lmsModule.themeModule.theme.list.fetch({
+                pagination: { skip: offset, take: size },
+                search: search ? { q: search } : undefined,
+                filter: { status: "published" },
+            });
+            return response.items.map((theme: any) => ({
+                key: theme._id,
+                title: theme.name,
+            }));
+        } catch (error) {
+            console.error("Failed to fetch themes:", error);
+            return [];
+        }
+    }, [trpcUtils]);
 
     const updateCourseMutation = trpc.lmsModule.courseModule.course.update.useMutation({
         onSuccess: () => {
@@ -118,6 +163,14 @@ export default function ProductManageClient({ product }: ProductManageClientProp
         },
     });
 
+    // Initialize payment plans and default plan
+    useEffect(() => {
+        if (product) {
+            setPaymentPlans(product.attachedPaymentPlans || []);
+            setDefaultPaymentPlan(product?.defaultPaymentPlan || "");
+        }
+    }, [product, setPaymentPlans, setDefaultPaymentPlan]);
+
     const handleSubmit = async (data: ProductFormDataType) => {
         try {
             await updateCourseMutation.mutateAsync({
@@ -125,6 +178,7 @@ export default function ProductManageClient({ product }: ProductManageClientProp
                 data: {
                     title: data.title,
                     description: editorContent,
+                    themeId: data.themeId,
                 },
             });
         } catch (error) {
@@ -193,6 +247,20 @@ export default function ProductManageClient({ product }: ProductManageClientProp
         }
     }, [product.description]);
 
+    // Initialize themeId in form when product loads
+    useEffect(() => {
+        if (product.themeId) {
+            form.setValue('themeId', product.themeId);
+            // Fetch the theme name to display
+            fetchThemes("", 0, 100).then(themes => {
+                const theme = themes.find(t => t.key === product.themeId);
+                if (theme) {
+                    setSelectedTheme(theme);
+                }
+            });
+        }
+    }, [product.themeId, form, fetchThemes]);
+
     const breadcrumbs = [
         { label: "Products", href: "/dashboard/products" },
         {
@@ -205,14 +273,12 @@ export default function ProductManageClient({ product }: ProductManageClientProp
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
             <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-4xl font-semibold">Manage</h1>
-                        <p className="text-muted-foreground mt-2">
-                            Manage your product settings
-                        </p>
-                    </div>
-                </div>
+                <HeaderTopbar
+                    header={{
+                        title: "Manage",
+                        subtitle: " Manage your product settings"
+                    }}
+                />
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
@@ -241,7 +307,7 @@ export default function ProductManageClient({ product }: ProductManageClientProp
                                     placeholder="Enter a description for your product..."
                                     onEditor={(editor, meta) => {
                                         if (meta.reason === "create") {
-                                            editor!.commands.setContent(editorContent.content);
+                                            editor!.commands.setMyContent(editorContent);
                                         }
                                     }}
                                     onChange={(content) => {
@@ -254,6 +320,41 @@ export default function ProductManageClient({ product }: ProductManageClientProp
                             </FormControl>
                             <FormMessage />
                         </FormItem>
+
+                        <FormField
+                            control={form.control}
+                            name="themeId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-base font-semibold">
+                                        Course Theme
+                                    </FormLabel>
+                                    <FormControl>
+                                        <ComboBox2<{ key: string; title: string }>
+                                            title="Select a theme"
+                                            valueKey="key"
+                                            value={selectedTheme || undefined}
+                                            searchFn={fetchThemes}
+                                            renderText={(item) => item.title}
+                                            onChange={(item) => {
+                                                setSelectedTheme(item);
+                                                field.onChange(item?.key || "");
+                                            }}
+                                            multiple={false}
+                                            showCreateButton={true}
+                                            showEditButton={true}
+                                            onCreateClick={() => {
+                                                router.push('/dashboard/lms/themes/new');
+                                            }}
+                                            onEditClick={(item) => {
+                                                router.push(`/dashboard/lms/themes/${item.key}`);
+                                            }}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         <Button type="submit" disabled={isSaving || isSubmitting}>
                             Save Changes
@@ -301,6 +402,68 @@ export default function ProductManageClient({ product }: ProductManageClientProp
                             saveFeaturedImage();
                         }}
                         type="course"
+                    />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4 flex flex-col md:flex-row md:items-start md:justify-between w-full">
+                    <div className="space-y-2">
+                        <Label className="text-lg font-semibold">Pricing</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage your product&apos;s pricing plans
+                        </p>
+                    </div>
+                    <PaymentPlanList
+                        paymentPlans={paymentPlans.map((plan) => ({
+                            ...plan,
+                            type: plan.type,
+                        }))}
+                        onPlanSubmit={async (values) => {
+                            try {
+                                await onPlanSubmitted(values);
+                            } catch (err: any) {
+                                toast({
+                                    title: TOAST_TITLE_ERROR,
+                                    description: err.message,
+                                });
+                            }
+                        }}
+                        onPlanArchived={async (id) => {
+                            try {
+                                await onPlanArchived(id);
+                            } catch (err: any) {
+                                toast({
+                                    title: TOAST_TITLE_ERROR,
+                                    description: err.message,
+                                    variant: "destructive",
+                                });
+                            }
+                        }}
+                        allowedPlanTypes={[
+                            paymentPlanType.SUBSCRIPTION,
+                            paymentPlanType.FREE,
+                            paymentPlanType.ONE_TIME,
+                            paymentPlanType.EMI,
+                        ]}
+                        currencySymbol={getSymbolFromCurrency(
+                            siteInfo.currencyISOCode || "USD",
+                        )}
+                        currencyISOCode={
+                            siteInfo.currencyISOCode?.toUpperCase() || "USD"
+                        }
+                        onDefaultPlanChanged={async (id) => {
+                            try {
+                                await onDefaultPlanChanged(id);
+                            } catch (err: any) {
+                                toast({
+                                    title: TOAST_TITLE_ERROR,
+                                    description: err.message,
+                                });
+                            }
+                        }}
+                        defaultPaymentPlanId={defaultPaymentPlan}
+                        paymentMethod={siteInfo.paymentMethod}
                     />
                 </div>
 
