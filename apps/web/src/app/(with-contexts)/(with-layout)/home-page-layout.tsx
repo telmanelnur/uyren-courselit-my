@@ -1,19 +1,19 @@
 "use client";
 
 import { PropsWithChildren } from "react";
-import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
+// import Header from "@/components/layout/header";
+// import Footer from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 
 export default function HomepageLayout({ children }: PropsWithChildren) {
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col">
-        <Header />
+        {/* <Header /> */}
         <main className="flex-1">
           {children}
         </main>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </ThemeProvider>
   );
