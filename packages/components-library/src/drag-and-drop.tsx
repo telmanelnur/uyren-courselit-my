@@ -1,20 +1,20 @@
 "use client";
 
 import {
-    DndContext,
-    KeyboardSensor,
-    MouseSensor,
-    PointerSensor,
-    TouchSensor,
-    closestCorners,
-    useSensor,
-    useSensors,
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 import {
-    SortableContext,
-    arrayMove,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { DragHandle } from "@workspace/icons";
 import { FC, useEffect, useState } from "react";
@@ -24,124 +24,121 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 
 export function SortableItem({
-    id,
-    Renderer,
-    rendererProps,
+  id,
+  Renderer,
+  rendererProps,
 }: {
-    id: number;
-    Renderer: any;
-    rendererProps: Record<string, unknown>;
+  id: number;
+  Renderer: any;
+  rendererProps: Record<string, unknown>;
 }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: id });
 
-    const style = {
-        transition,
-        transform: CSS.Transform.toString(transform),
-    };
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
 
-    return (
-        <div
-            {...attributes}
-            ref={setNodeRef}
-            style={style}
-            className={clsx(
-                "flex flex-col text-black",
-                isDragging && "opacity-50",
-            )}
-        >
-            <div className="flex items-center gap-5">
-                <button className="border" {...listeners}>
-                    <DragHandle />
-                </button>
-                <Renderer {...rendererProps} />
-            </div>
-        </div>
-    );
+  return (
+    <div
+      {...attributes}
+      ref={setNodeRef}
+      style={style}
+      className={clsx("flex flex-col text-black", isDragging && "opacity-50")}
+    >
+      <div className="flex items-center gap-5">
+        <button className="border" {...listeners}>
+          <DragHandle />
+        </button>
+        <Renderer {...rendererProps} />
+      </div>
+    </div>
+  );
 }
 
 const DragAndDrop = ({
-    items,
-    onChange,
-    Renderer,
+  items,
+  onChange,
+  Renderer,
 }: {
-    items: any;
-    onChange: any;
-    Renderer: FC<any>;
+  items: any;
+  onChange: any;
+  Renderer: FC<any>;
 }) => {
-    const [data, setData] = useState(items);
+  const [data, setData] = useState(items);
 
-    const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        }),
-        useSensor(MouseSensor, {
-            // Require the mouse to move by 10 pixels before activating
-            activationConstraint: {
-                distance: 10,
-            },
-        }),
-        useSensor(TouchSensor, {
-            // Press delay of 250ms, with tolerance of 5px of movement
-            activationConstraint: {
-                delay: 250,
-                tolerance: 5,
-            },
-        }),
-    );
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+    useSensor(MouseSensor, {
+      // Require the mouse to move by 10 pixels before activating
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      // Press delay of 250ms, with tolerance of 5px of movement
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+  );
 
-    const findPositionOfItems = (id: number) =>
-        data.findIndex((item: { id: number }) => item.id === id);
+  const findPositionOfItems = (id: number) =>
+    data.findIndex((item: { id: number }) => item.id === id);
 
-    const handleDragEnd = (event: { active: any; over: any }) => {
-        const { active, over } = event;
+  const handleDragEnd = (event: { active: any; over: any }) => {
+    const { active, over } = event;
 
-        if (active.id === over.id) return;
-        setData((data: any) => {
-            const originalPos = findPositionOfItems(active.id);
-            const newPos = findPositionOfItems(over.id);
-            return arrayMove(data, originalPos, newPos);
-        });
-    };
+    if (active.id === over.id) return;
+    setData((data: any) => {
+      const originalPos = findPositionOfItems(active.id);
+      const newPos = findPositionOfItems(over.id);
+      return arrayMove(data, originalPos, newPos);
+    });
+  };
 
-    useEffect(() => {
-        if (onChange && JSON.stringify(data) !== JSON.stringify(items)) {
-            onChange(data);
-        }
-    }, [data]);
+  useEffect(() => {
+    if (onChange && JSON.stringify(data) !== JSON.stringify(items)) {
+      onChange(data);
+    }
+  }, [data]);
 
-    useEffect(() => {
-        setData(items);
-    }, [items]);
+  useEffect(() => {
+    setData(items);
+  }, [items]);
 
-    return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragEnd={handleDragEnd}
-        >
-            <SortableContext
-                items={data.map((item: { id: any }) => item.id)}
-                strategy={verticalListSortingStrategy}
-            >
-                {data.map((item: any) => (
-                    <SortableItem
-                        key={item.id}
-                        id={item.id}
-                        rendererProps={item}
-                        Renderer={Renderer}
-                    />
-                ))}
-            </SortableContext>
-        </DndContext>
-    );
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={data.map((item: { id: any }) => item.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        {data.map((item: any) => (
+          <SortableItem
+            key={item.id}
+            id={item.id}
+            rendererProps={item}
+            Renderer={Renderer}
+          />
+        ))}
+      </SortableContext>
+    </DndContext>
+  );
 };
 
 export default DragAndDrop;

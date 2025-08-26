@@ -7,7 +7,7 @@ import MembershipModel from "@/models/Membership";
 import UserModel from "@/models/User";
 import {
   ConflictException,
-  NotFoundException
+  NotFoundException,
 } from "@/server/api/core/exceptions";
 import { checkOwnershipWithoutModel } from "@/server/api/core/permissions";
 import {
@@ -17,25 +17,40 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/core/procedures";
-import { getFormDataSchema, ListInputSchema, PaginationSchema } from "@/server/api/core/schema";
+import {
+  getFormDataSchema,
+  ListInputSchema,
+  PaginationSchema,
+} from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
 import { paginate } from "@/server/api/core/utils";
 import {
   documentIdValidator,
   mediaWrappedFieldValidator,
-  textEditorContentValidator
+  textEditorContentValidator,
 } from "@/server/api/core/validators";
 import { deleteMedia } from "@/server/services/media";
 import { InternalCourse } from "@workspace/common-logic";
-import { Constants, Drip, Group, Lesson, Media, PaymentPlan, UIConstants } from "@workspace/common-models";
+import {
+  Constants,
+  Drip,
+  Group,
+  Lesson,
+  Media,
+  PaymentPlan,
+  UIConstants,
+} from "@workspace/common-models";
 import { checkPermission, generateUniqueId, slugify } from "@workspace/utils";
 import mongoose, { RootFilterQuery } from "mongoose";
 import { ActivityType } from "node_modules/@workspace/common-models/src/constants";
 import { z } from "zod";
 import { getActivities } from "../../activity/helpers";
 import { getPlans } from "../../community/helpers";
-import { deleteAllLessons, getCourseOrThrow, getPrevNextCursor } from "./helpers";
-
+import {
+  deleteAllLessons,
+  getCourseOrThrow,
+  getPrevNextCursor,
+} from "./helpers";
 
 const { permissions } = UIConstants;
 
@@ -43,7 +58,7 @@ async function formatCourse(
   courseId: string | InternalCourse,
   ctx: {
     domainData: { domainObj: { _id: mongoose.Types.ObjectId } };
-  }
+  },
 ) {
   const find = async () => {
     if (typeof courseId === "string") {
@@ -59,9 +74,8 @@ async function formatCourse(
     } else {
       return courseId;
     }
-  }
+  };
   let course = await find();
-
 
   const paymentPlans = await getPlans({
     planIds: course!.paymentPlans,
@@ -70,12 +84,12 @@ async function formatCourse(
 
   if (
     [Constants.CourseType.COURSE, Constants.CourseType.DOWNLOAD].includes(
-      course.type as any
+      course.type as any,
     )
   ) {
     const { nextLesson } = await getPrevNextCursor(
       course.courseId,
-      ctx.domainData.domainObj._id
+      ctx.domainData.domainObj._id,
     );
     (course as any).firstLesson = nextLesson;
   }
@@ -143,7 +157,9 @@ const removeGroup = async (
     course.type === Constants.CourseType.DOWNLOAD &&
     course.groups?.length === 1
   ) {
-    throw new ConflictException(responses.download_course_last_group_cannot_be_removed);
+    throw new ConflictException(
+      responses.download_course_last_group_cannot_be_removed,
+    );
   }
 
   const countOfAssociatedLessons = await LessonModel.countDocuments({
@@ -350,14 +366,15 @@ const setupBlog = async ({
   return course;
 };
 
-
 export const courseRouter = router({
   list: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .use(createPermissionMiddleware([
-      UIConstants.permissions.manageCourse,
-      UIConstants.permissions.manageAnyCourse,
-    ]))
+    .use(
+      createPermissionMiddleware([
+        UIConstants.permissions.manageCourse,
+        UIConstants.permissions.manageAnyCourse,
+      ]),
+    )
     .input(
       ListInputSchema.extend({
         filter: z
@@ -366,7 +383,7 @@ export const courseRouter = router({
           })
           .optional()
           .default({}),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const query: Partial<Omit<InternalCourse, "type">> & {
@@ -400,7 +417,8 @@ export const courseRouter = router({
         CourseModel.find(query as any)
           .skip(paginationMeta.skip)
           .limit(paginationMeta.take)
-          .sort(sortObject).lean(),
+          .sort(sortObject)
+          .lean(),
         paginationMeta.includePaginationCount
           ? CourseModel.countDocuments(query as any)
           : Promise.resolve(null),
@@ -422,7 +440,7 @@ export const courseRouter = router({
               ctx: ctx as any,
             })
           ).count,
-        }))
+        })),
       );
 
       return {
@@ -439,7 +457,7 @@ export const courseRouter = router({
         courseId: z.string(),
         asGuest: z.boolean().optional().default(false),
         withLessons: z.boolean().optional().default(false),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const course = await CourseModel.findOne({
@@ -488,7 +506,7 @@ export const courseRouter = router({
       z.object({
         courseId: z.string(),
         asGuest: z.boolean().optional().default(false),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const course = await CourseModel.findOne({
@@ -496,7 +514,11 @@ export const courseRouter = router({
         domain: ctx.domainData.domainObj._id,
       })
         .populate<{
-          attachedLessons: Array<Pick<Lesson, "lessonId" | "type" | "title" | "groupId"> & { id: string }>;
+          attachedLessons: Array<
+            Pick<Lesson, "lessonId" | "type" | "title" | "groupId"> & {
+              id: string;
+            }
+          >;
         }>({
           path: "attachedLessons",
           select: "lessonId type title groupId -_id",
@@ -506,8 +528,8 @@ export const courseRouter = router({
         }>({
           path: "attachedPaymentPlans",
           // select: "planId name type -_id",
-        }).lean();
-
+        })
+        .lean();
 
       if (!course) {
         throw new NotFoundException("Course", String(input.courseId));
@@ -528,7 +550,6 @@ export const courseRouter = router({
         throw new NotFoundException("Course", String(input.courseId));
       }
 
-
       return course;
     }),
 
@@ -538,22 +559,25 @@ export const courseRouter = router({
       createPermissionMiddleware([
         UIConstants.permissions.manageCourse,
         UIConstants.permissions.manageAnyCourse,
-      ])
+      ]),
     )
     .input(
-      ListInputSchema
-        .extend({
-          filter: z.object({
-            courseId: z.string(),
-            status: z.nativeEnum(Constants.MembershipStatus).optional(),
-          }),
-          pagination: PaginationSchema.extend({
-            take: z.number().max(10000).optional(),
-          }).optional(),
-        })
+      ListInputSchema.extend({
+        filter: z.object({
+          courseId: z.string(),
+          status: z.nativeEnum(Constants.MembershipStatus).optional(),
+        }),
+        pagination: PaginationSchema.extend({
+          take: z.number().max(10000).optional(),
+        }).optional(),
+      }),
     )
     .query(async ({ ctx, input }) => {
-      const course = await getCourseOrThrow(undefined, ctx, input.filter.courseId);
+      const course = await getCourseOrThrow(
+        undefined,
+        ctx,
+        input.filter.courseId,
+      );
 
       const query: RootFilterQuery<typeof MembershipModel> = {
         domain: ctx.domainData.domainObj._id,
@@ -577,7 +601,8 @@ export const courseRouter = router({
         MembershipModel.find(query as any)
           .skip(paginationMeta.skip)
           .limit(paginationMeta.take)
-          .sort(sortObject).lean(),
+          .sort(sortObject)
+          .lean(),
         paginationMeta.includePaginationCount
           ? MembershipModel.countDocuments(query as any)
           : Promise.resolve(null),
@@ -588,8 +613,7 @@ export const courseRouter = router({
           const user = await UserModel.findOne({
             domain: ctx.domainData.domainObj._id,
             userId: member.userId,
-          })
-            .lean();
+          }).lean();
           const purchase = user?.purchases?.find(
             (purchase) => purchase.courseId === course.courseId,
           );
@@ -604,11 +628,11 @@ export const courseRouter = router({
             downloaded: purchase?.downloaded,
             user: user
               ? {
-                userId: user.userId,
-                email: user.email,
-                name: user.name,
-                avatar: user.avatar,
-              }
+                  userId: user.userId,
+                  email: user.email,
+                  name: user.name,
+                  avatar: user.avatar,
+                }
               : undefined,
             // status: member.status,
             // subscriptionMethod: member.subscriptionMethod,
@@ -624,13 +648,13 @@ export const courseRouter = router({
 
   create: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .use(createPermissionMiddleware([
-      UIConstants.permissions.manageCourse,
-    ]))
-    .input(getFormDataSchema({
-      title: z.string().min(1).max(255),
-      type: z.nativeEnum(Constants.CourseType),
-    }))
+    .use(createPermissionMiddleware([UIConstants.permissions.manageCourse]))
+    .input(
+      getFormDataSchema({
+        title: z.string().min(1).max(255),
+        type: z.nativeEnum(Constants.CourseType),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       if (input.data.type === "blog") {
         return await setupBlog({
@@ -648,27 +672,35 @@ export const courseRouter = router({
 
   update: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(getFormDataSchema({
-      title: z.string().min(1).max(255).optional(),
-      // type: z.nativeEnum(Constants.CourseType).optional(),
-      published: z.boolean().optional(),
-      privacy: z.nativeEnum(Constants.ProductAccessType).optional(),
-      description: textEditorContentValidator().optional(),
-      featuredImage: mediaWrappedFieldValidator().nullable().optional(),
-      themeId: documentIdValidator().optional(),
-    }).extend({
-      courseId: z.string(),
-    })).mutation(async ({ ctx, input }) => {
+    .input(
+      getFormDataSchema({
+        title: z.string().min(1).max(255).optional(),
+        // type: z.nativeEnum(Constants.CourseType).optional(),
+        published: z.boolean().optional(),
+        privacy: z.nativeEnum(Constants.ProductAccessType).optional(),
+        description: textEditorContentValidator().optional(),
+        featuredImage: mediaWrappedFieldValidator().nullable().optional(),
+        themeId: documentIdValidator().optional(),
+      }).extend({
+        courseId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       const course = await getCourseOrThrow(undefined, ctx, input.courseId);
       checkOwnershipWithoutModel(course, ctx as any);
 
       const updateData: any = {};
       if (input.data.title !== undefined) updateData.title = input.data.title;
-      if (input.data.published !== undefined) updateData.published = input.data.published;
-      if (input.data.privacy !== undefined) updateData.privacy = input.data.privacy;
-      if (input.data.description !== undefined) updateData.description = input.data.description;
-      if (input.data.featuredImage !== undefined) updateData.featuredImage = input.data.featuredImage;
-      if (input.data.themeId !== undefined) updateData.themeId = input.data.themeId;
+      if (input.data.published !== undefined)
+        updateData.published = input.data.published;
+      if (input.data.privacy !== undefined)
+        updateData.privacy = input.data.privacy;
+      if (input.data.description !== undefined)
+        updateData.description = input.data.description;
+      if (input.data.featuredImage !== undefined)
+        updateData.featuredImage = input.data.featuredImage;
+      if (input.data.themeId !== undefined)
+        updateData.themeId = input.data.themeId;
 
       const updatedCourse = await CourseModel.findOneAndUpdate(
         { courseId: input.courseId },
@@ -684,7 +716,7 @@ export const courseRouter = router({
     .input(
       z.object({
         courseId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const course = await getCourseOrThrow(undefined, ctx, input.courseId);
@@ -716,7 +748,7 @@ export const courseRouter = router({
         courseId: z.string(),
         name: z.string().min(1).max(255),
         collapsed: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       return await addGroup({
@@ -729,21 +761,23 @@ export const courseRouter = router({
 
   updateGroup: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(getFormDataSchema({
-      groupId: z.string(),
-      courseId: z.string(),
-      name: z.string().optional(),
-      rank: z.number().optional(),
-      collapsed: z.boolean().optional(),
-      lessonsOrder: z.array(z.string()).optional(),
-      // drip: z.object({
-      //   type: z.nativeEnum(Constants.dripType),
-      //   status: z.boolean().optional(),
-      //   delayInMillis: z.number().optional(),
-      //   dateInUTC: z.number().optional(),
-      //   email: z.object({
-      // }).optional(),
-    }))
+    .input(
+      getFormDataSchema({
+        groupId: z.string(),
+        courseId: z.string(),
+        name: z.string().optional(),
+        rank: z.number().optional(),
+        collapsed: z.boolean().optional(),
+        lessonsOrder: z.array(z.string()).optional(),
+        // drip: z.object({
+        //   type: z.nativeEnum(Constants.dripType),
+        //   status: z.boolean().optional(),
+        //   delayInMillis: z.number().optional(),
+        //   dateInUTC: z.number().optional(),
+        //   email: z.object({
+        // }).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return await updateGroup({
         groupId: input.data.groupId,
@@ -757,13 +791,14 @@ export const courseRouter = router({
       });
     }),
 
-
   removeGroup: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      groupId: z.string(),
-      courseId: z.string(),
-    }))
+    .input(
+      z.object({
+        groupId: z.string(),
+        courseId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return await removeGroup(input.groupId, input.courseId, ctx as any);
     }),
@@ -773,7 +808,7 @@ export const courseRouter = router({
     .input(
       z.object({
         courseId: z.string(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const course = await CourseModel.findOne({
@@ -782,7 +817,12 @@ export const courseRouter = router({
         published: true, // Only published courses
       })
         .populate<{
-          attachedLessons: Array<Pick<Lesson, "lessonId" | "type" | "title" | "groupId" | "requiresEnrollment">>;
+          attachedLessons: Array<
+            Pick<
+              Lesson,
+              "lessonId" | "type" | "title" | "groupId" | "requiresEnrollment"
+            >
+          >;
         }>({
           path: "attachedLessons",
           select: "lessonId type title groupId requiresEnrollment",
@@ -792,7 +832,8 @@ export const courseRouter = router({
         }>({
           path: "attachedPaymentPlans",
           // select: "planId name type -_id",
-        }).lean();
+        })
+        .lean();
 
       if (!course) {
         throw new NotFoundException("Course", String(input.courseId));
@@ -819,7 +860,8 @@ export const courseRouter = router({
         privacy: course.privacy,
         themeId: course.themeId,
         defaultPaymentPlan: course.defaultPaymentPlan,
-        attachedPaymentPlans: course.attachedPaymentPlans.map(formatPaymentPlan),
+        attachedPaymentPlans:
+          course.attachedPaymentPlans.map(formatPaymentPlan),
         attachedLessons: course.attachedLessons.map(formatLesson),
         createdAt: course.createdAt,
         groups: course.groups,
@@ -854,7 +896,6 @@ const formatPaymentPlan = (paymentPlan: PaymentPlan) => {
     subscriptionYearlyAmount: paymentPlan.subscriptionYearlyAmount,
   };
 };
-
 
 const formatLesson = (lesson: Partial<Lesson>) => {
   return {

@@ -4,7 +4,7 @@ const { permissions } = constants;
 
 export const checkForInvalidPermissions = (userPermissions: string[]) => {
   const invalidPerms = userPermissions.filter(
-    (x) => !Object.values(permissions).includes(x)
+    (x) => !Object.values(permissions).includes(x),
   );
   if (invalidPerms.length) {
     throw new Error(responses.invalid_permission);

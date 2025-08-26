@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const TextExtendIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -29,8 +29,8 @@ export const TextExtendIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-TextExtendIcon.displayName = "TextExtendIcon"
+TextExtendIcon.displayName = "TextExtendIcon";

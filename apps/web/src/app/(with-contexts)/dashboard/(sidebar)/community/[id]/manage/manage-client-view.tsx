@@ -7,61 +7,61 @@ import { useSiteInfo } from "@/components/contexts/site-info-context";
 import { useCommunity } from "@/hooks/use-community";
 import { useMembership } from "@/hooks/use-membership";
 import {
-    COMMUNITY_SETTINGS,
-    DANGER_ZONE_HEADER,
-    MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
-    MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
-    TOAST_DESCRIPTION_CHANGES_SAVED,
-    TOAST_TITLE_ERROR,
-    TOAST_TITLE_SUCCESS
+  COMMUNITY_SETTINGS,
+  DANGER_ZONE_HEADER,
+  MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+  MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+  TOAST_DESCRIPTION_CHANGES_SAVED,
+  TOAST_TITLE_ERROR,
+  TOAST_TITLE_SUCCESS,
 } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
 import {
-    Constants,
-    Media,
-    PaymentPlan,
-    PaymentPlanType,
+  Constants,
+  Media,
+  PaymentPlan,
+  PaymentPlanType,
 } from "@workspace/common-models";
 import {
-    Form,
-    FormField,
-    getSymbolFromCurrency,
-    Image,
-    Link,
-    MediaSelector,
-    useToast,
+  getSymbolFromCurrency,
+  Image,
+  Link,
+  MediaSelector,
+  useToast,
 } from "@workspace/components-library";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@workspace/ui/components/dialog";
 import { Label } from "@workspace/ui/components/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@workspace/ui/components/select";
 import { Separator } from "@workspace/ui/components/separator";
 import { Switch } from "@workspace/ui/components/switch";
+import { Input } from "@workspace/ui/components/input";
+import { FormItem, FormLabel, FormControl, FormMessage } from "@workspace/ui/components/form";
 import { Edit, FlagTriangleRight, Users, X } from "lucide-react";
 import { redirect, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -370,15 +370,20 @@ export const ManageClientView = ({ id }: { id: string }) => {
           </p>
         </div>
         <div className="space-y-6">
-          <FormField
-            value={name}
-            name="name"
-            label={"Name"}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setName(e.target.value)
-            }
-            placeholder="Community name"
-          />
+          <FormItem>
+            <FormLabel>Name</FormLabel>
+            <FormControl>
+              <Input
+                value={name}
+                name="name"
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setName(e.target.value)
+                }
+                placeholder="Community name"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
           <div>
             <h2 className="font-semibold">Description</h2>
             {/* <TextEditor
@@ -419,15 +424,20 @@ export const ManageClientView = ({ id }: { id: string }) => {
               onCheckedChange={setAutoAcceptMembers}
             />
           </div>
-          <FormField
-            value={joiningReasonText}
-            name="joiningReasonText"
-            label="Joining reason text"
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setJoiningReasonText(e.target.value)
-            }
-            placeholder="Text to show when users request to join a free community"
-          />
+          <FormItem>
+            <FormLabel>Joining reason text</FormLabel>
+            <FormControl>
+              <Input
+                value={joiningReasonText}
+                name="joiningReasonText"
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setJoiningReasonText(e.target.value)
+                }
+                placeholder="Text to show when users request to join a free community"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         </div>
         <Button type="submit">Save Changes</Button>
       </Form>
@@ -502,18 +512,22 @@ export const ManageClientView = ({ id }: { id: string }) => {
             </Badge>
           ))}
         </div>
-        <Form onSubmit={handleAddCategory} className="flex gap-2">
-          <FormField
-            name="name"
-            value={newCategory}
-            onChange={(e: any) => setNewCategory(e.target.value)}
-            placeholder="Enter category name"
-            className="flex-1"
-          />
+        <form onSubmit={handleAddCategory} className="flex gap-2">
+          <FormItem className="flex-1">
+            <FormControl>
+              <Input
+                name="name"
+                value={newCategory}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCategory(e.target.value)}
+                placeholder="Enter category name"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
           <Button type="submit" variant="secondary">
             Add Category
           </Button>
-        </Form>
+        </form>
       </div>
       <Separator className="my-8" />
       <div className="space-y-4 flex flex-col md:flex-row md:items-start md:justify-between w-full">
@@ -537,7 +551,7 @@ export const ManageClientView = ({ id }: { id: string }) => {
             paymentPlanType.EMI,
           ]}
           currencySymbol={getSymbolFromCurrency(
-            siteInfo.currencyISOCode || "USD"
+            siteInfo.currencyISOCode || "USD",
           )}
           currencyISOCode={siteInfo.currencyISOCode?.toUpperCase() || "USD"}
           onDefaultPlanChanged={onDefaultPlanChanged}

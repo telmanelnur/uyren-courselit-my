@@ -62,7 +62,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const DomainModel = createModel("Domain", DomainSchema);

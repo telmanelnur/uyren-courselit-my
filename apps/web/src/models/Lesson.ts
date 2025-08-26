@@ -8,7 +8,7 @@ const { text, video, audio, pdf, quiz, file, embed } = constants;
 
 export type EmbedUrlContent = {
   value: string;
-}
+};
 
 export interface Lesson {
   id: mongoose.Types.ObjectId;

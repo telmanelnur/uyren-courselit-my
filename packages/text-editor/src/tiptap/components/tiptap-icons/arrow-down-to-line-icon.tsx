@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const ArrowDownToLineIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -21,8 +21,8 @@ export const ArrowDownToLineIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-ArrowDownToLineIcon.displayName = "ArrowDownToLineIcon"
+ArrowDownToLineIcon.displayName = "ArrowDownToLineIcon";

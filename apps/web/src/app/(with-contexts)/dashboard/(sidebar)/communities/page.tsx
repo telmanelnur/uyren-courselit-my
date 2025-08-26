@@ -25,7 +25,7 @@ export default function Page() {
     (value: number) => {
       router.push(`/dashboard/communities?page=${value}`);
     },
-    [router]
+    [router],
   );
 
   return (

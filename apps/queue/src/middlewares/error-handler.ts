@@ -13,7 +13,7 @@ export class CustomError extends Error implements AppError {
   constructor(
     message: string,
     statusCode: number = 500,
-    isOperational: boolean = true
+    isOperational: boolean = true,
   ) {
     super(message);
     this.statusCode = statusCode;
@@ -27,7 +27,7 @@ export const errorHandler = (
   error: AppError | Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   let statusCode = 500;
   let message = "Internal Server Error";

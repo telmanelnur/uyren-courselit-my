@@ -87,9 +87,10 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                     Sign in with Google
                   </Button>
                 </div>
-                
+
                 <div className="text-center text-[12px] text-muted-foreground mt-4">
-                  By signing in, you agree to our Terms of Service and Privacy Policy
+                  By signing in, you agree to our Terms of Service and Privacy
+                  Policy
                 </div>
               </CardContent>
             </Card>

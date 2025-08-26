@@ -24,13 +24,12 @@ export default function List() {
   const [page, setPage] = useState(1);
 
   // Use tRPC query to fetch communities with pagination count
-  const { data, isLoading } =
-    trpc.communityModule.community.list.useQuery({
-      pagination: {
-        skip: (page - 1) * communitiesResultsLimit,
-        take: communitiesResultsLimit,
-      },
-    });
+  const { data, isLoading } = trpc.communityModule.community.list.useQuery({
+    pagination: {
+      skip: (page - 1) * communitiesResultsLimit,
+      take: communitiesResultsLimit,
+    },
+  });
 
   // Extract communities and total from the response
   // The response can be either an array (backward compatibility) or an object with items

@@ -1,20 +1,23 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { type Editor } from "@tiptap/react"
-import { useHotkeys } from "react-hotkeys-hook"
+import * as React from "react";
+import { type Editor } from "@tiptap/react";
+import { useHotkeys } from "react-hotkeys-hook";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
-import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
+import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile";
 
 // --- Lib ---
-import { isMarkInSchema, isNodeTypeSelected } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
+import {
+  isMarkInSchema,
+  isNodeTypeSelected,
+} from "@workspace/text-editor/tiptap/lib/tiptap-utils";
 
 // --- Icons ---
-import { TextColorSmallIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-color-small-icon"
+import { TextColorSmallIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-color-small-icon";
 
-export const COLOR_TEXT_SHORTCUT_KEY = "mod+shift+t"
+export const COLOR_TEXT_SHORTCUT_KEY = "mod+shift+t";
 export const TEXT_COLORS = [
   {
     label: "Default text",
@@ -66,7 +69,7 @@ export const TEXT_COLORS = [
     value: "var(--tt-color-text-red)",
     border: "var(--tt-color-text-red-contrast)",
   },
-]
+];
 
 /**
  * Configuration for the color text functionality
@@ -75,42 +78,42 @@ export interface UseColorTextConfig {
   /**
    * The Tiptap editor instance.
    */
-  editor?: Editor | null
+  editor?: Editor | null;
   /**
    * The text color to apply.
    * Can be any valid CSS color value.
    */
-  textColor: string
+  textColor: string;
   /**
    * Optional text to display alongside the icon.
    */
-  label: string
+  label: string;
   /**
    * Whether the button should hide when the mark is not available.
    * @default false
    */
-  hideWhenUnavailable?: boolean
+  hideWhenUnavailable?: boolean;
   /**
    * Called when the text color is applied.
    */
-  onApplied?: ({ color, label }: { color: string; label: string }) => void
+  onApplied?: ({ color, label }: { color: string; label: string }) => void;
 }
 
 /**
  * Checks if text color can be toggled in the current editor state
  */
 export function canColorText(editor: Editor | null): boolean {
-  if (!editor || !editor.isEditable) return false
+  if (!editor || !editor.isEditable) return false;
   if (
     !isMarkInSchema("textStyle", editor) ||
     isNodeTypeSelected(editor, ["image"])
   )
-    return false
+    return false;
 
   try {
-    return editor.can().setMark("textStyle", { color: "currentColor" })
+    return editor.can().setMark("textStyle", { color: "currentColor" });
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -119,29 +122,29 @@ export function canColorText(editor: Editor | null): boolean {
  */
 export function isColorTextActive(
   editor: Editor | null,
-  textColor: string
+  textColor: string,
 ): boolean {
-  if (!editor || !editor.isEditable) return false
-  return editor.isActive("textStyle", { color: textColor })
+  if (!editor || !editor.isEditable) return false;
+  return editor.isActive("textStyle", { color: textColor });
 }
 
 /**
  * Determines if the color text button should be shown
  */
 export function shouldShowButton(props: {
-  editor: Editor | null
-  hideWhenUnavailable: boolean
+  editor: Editor | null;
+  hideWhenUnavailable: boolean;
 }): boolean {
-  const { editor, hideWhenUnavailable } = props
+  const { editor, hideWhenUnavailable } = props;
 
-  if (!editor || !editor.isEditable) return false
-  if (!isMarkInSchema("textStyle", editor)) return false
+  if (!editor || !editor.isEditable) return false;
+  if (!isMarkInSchema("textStyle", editor)) return false;
 
   if (hideWhenUnavailable && !editor.isActive("code")) {
-    return canColorText(editor)
+    return canColorText(editor);
   }
 
-  return true
+  return true;
 }
 
 /**
@@ -199,56 +202,56 @@ export function useColorText(config: UseColorTextConfig) {
     textColor,
     hideWhenUnavailable = false,
     onApplied,
-  } = config
+  } = config;
 
-  const { editor } = useTiptapEditor(providedEditor)
-  const isMobile = useIsMobile()
-  const [isVisible, setIsVisible] = React.useState<boolean>(true)
-  const canColorTextState = canColorText(editor)
-  const isActive = isColorTextActive(editor, textColor)
+  const { editor } = useTiptapEditor(providedEditor);
+  const isMobile = useIsMobile();
+  const [isVisible, setIsVisible] = React.useState<boolean>(true);
+  const canColorTextState = canColorText(editor);
+  const isActive = isColorTextActive(editor, textColor);
 
   React.useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
 
     const handleSelectionUpdate = () => {
-      setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }))
-    }
+      setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }));
+    };
 
-    handleSelectionUpdate()
+    handleSelectionUpdate();
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("selectionUpdate", handleSelectionUpdate);
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
-    }
-  }, [editor, hideWhenUnavailable])
+      editor.off("selectionUpdate", handleSelectionUpdate);
+    };
+  }, [editor, hideWhenUnavailable]);
 
   const handleColorText = React.useCallback(() => {
-    if (!editor || !canColorTextState) return false
+    if (!editor || !canColorTextState) return false;
 
     const success = editor
       .chain()
       .focus()
       .toggleMark("textStyle", { color: textColor })
-      .run()
+      .run();
     if (success) {
-      onApplied?.({ color: textColor, label })
+      onApplied?.({ color: textColor, label });
     }
-    return success
-  }, [editor, canColorTextState, textColor, onApplied, label])
+    return success;
+  }, [editor, canColorTextState, textColor, onApplied, label]);
 
   useHotkeys(
     COLOR_TEXT_SHORTCUT_KEY,
     (event: KeyboardEvent) => {
-      event.preventDefault()
-      handleColorText()
+      event.preventDefault();
+      handleColorText();
     },
     {
       enabled: isVisible && canColorTextState,
       enableOnContentEditable: !isMobile,
       enableOnFormTags: true,
-    }
-  )
+    },
+  );
 
   return {
     isVisible,
@@ -258,5 +261,5 @@ export function useColorText(config: UseColorTextConfig) {
     label: label || `Color text to ${textColor}`,
     shortcutKeys: COLOR_TEXT_SHORTCUT_KEY,
     Icon: TextColorSmallIcon,
-  }
+  };
 }

@@ -19,7 +19,11 @@ interface AuthData {
  * Unified Firebase Auth hook supporting multiple providers
  */
 export const useFirebaseAuth = () => {
-  return useMutation<AuthMutationResult, Error, { provider: AuthProvider; data?: AuthData }>({
+  return useMutation<
+    AuthMutationResult,
+    Error,
+    { provider: AuthProvider; data?: AuthData }
+  >({
     mutationFn: async ({ provider, data }): Promise<AuthMutationResult> => {
       switch (provider) {
         case "google":
@@ -30,18 +34,21 @@ export const useFirebaseAuth = () => {
             return { success: false, error: "Email required" };
           }
           // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise((resolve) => setTimeout(resolve, 1500));
           return {
             success: false,
-            error: "Email authentication not yet implemented"
+            error: "Email authentication not yet implemented",
           };
         default:
-          return { success: false, error: `Provider '${provider}' not supported` };
+          return {
+            success: false,
+            error: `Provider '${provider}' not supported`,
+          };
       }
     },
     retry: (failureCount, error) => {
       // Retry up to 2 times for network errors
-      if (failureCount < 2 && error.message.includes('network')) {
+      if (failureCount < 2 && error.message.includes("network")) {
         return true;
       }
       return false;

@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 
 export async function generateMetadata(
   _: any,
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
   return {
     title: `${HEADER_HELP} | ${(await parent)?.title?.absolute}`,

@@ -2,7 +2,7 @@ import mongoose, { Model, Schema } from "mongoose";
 
 export const createModel = <T = any>(
   modelName: string,
-  schema: Schema<T>
+  schema: Schema<T>,
 ): Model<T> => {
   // Check if model already exists to avoid OverwriteModelError
   if (mongoose.models[modelName]) {
@@ -11,4 +11,3 @@ export const createModel = <T = any>(
 
   return mongoose.model<T>(modelName, schema);
 };
-

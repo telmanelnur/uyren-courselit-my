@@ -2,18 +2,17 @@
 
 import { TOAST_TITLE_SUCCESS } from "@/lib/ui/config/strings";
 import { TextEditorContent } from "@workspace/common-models";
-import {
-  useToast
-} from "@workspace/components-library";
+import { useToast } from "@workspace/components-library";
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import { Button } from "@workspace/ui/components/button";
 import { AlertCircle, Check, Loader2, Pencil, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 const DescriptionEditor = dynamic(() =>
-  import("@/components/editors/tiptap/templates/description/description-editor").then((mod) => ({ default: mod.DescriptionEditor })),
+  import(
+    "@/components/editors/tiptap/templates/description/description-editor"
+  ).then((mod) => ({ default: mod.DescriptionEditor })),
 );
-
 
 interface BannerComponentProps {
   canEdit: boolean;
@@ -69,7 +68,6 @@ export default function Banner({
     return null;
   }
 
-
   return (
     <div className="relative">
       <Alert>
@@ -106,7 +104,7 @@ export default function Banner({
                   }
                 }}
                 onChange={(content) => {
-                  setEditedBannerText(content)
+                  setEditedBannerText(content);
                 }}
                 placeholder="Share important updates, announcements, or news with your community members here."
               />
@@ -120,7 +118,11 @@ export default function Banner({
                   <X className="h-4 w-4 mr-1" />
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleSaveBanner} disabled={isSaving}>
+                <Button
+                  size="sm"
+                  onClick={handleSaveBanner}
+                  disabled={isSaving}
+                >
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />

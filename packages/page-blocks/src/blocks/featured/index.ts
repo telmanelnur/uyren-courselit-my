@@ -4,7 +4,7 @@ import Widget from "./widget";
 import { Widget as WidgetType } from "@workspace/common-models";
 
 export const Featured: WidgetType = {
-    widget: Widget,
-    metadata,
-    adminWidget: AdminWidget,
+  widget: Widget,
+  metadata,
+  adminWidget: AdminWidget,
 };

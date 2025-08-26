@@ -1,51 +1,58 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import type { EmojiItem } from "@tiptap/extension-emoji"
+import * as React from "react";
+import type { EmojiItem } from "@tiptap/extension-emoji";
 
 // --- Hooks ---
-import { useMenuNavigation } from "@workspace/text-editor/tiptap/hooks/use-menu-navigation"
+import { useMenuNavigation } from "@workspace/text-editor/tiptap/hooks/use-menu-navigation";
 
 // --- Lib ---
-import { getElementOverflowPosition } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils"
+import { getElementOverflowPosition } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils";
 
 // --- UI Primitives ---
-import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Input } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/input"
-import { Card, CardBody, CardHeader } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card"
+import {
+  Button,
+  ButtonGroup,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Input } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/input";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card";
 
-import { getFilteredEmojis } from "./emoji-menu-utils"
+import { getFilteredEmojis } from "./emoji-menu-utils";
 
 // --- Styles ---
-import "@workspace/text-editor/tiptap/components/tiptap-ui/emoji-menu/emoji-menu.scss"
+import "@workspace/text-editor/tiptap/components/tiptap-ui/emoji-menu/emoji-menu.scss";
 
 export interface EmojiMenuItemProps<T extends EmojiItem> {
-  emoji: T
-  index: number
-  isSelected: boolean
-  onSelect: (emoji: T) => void
-  selector: string
+  emoji: T;
+  index: number;
+  isSelected: boolean;
+  onSelect: (emoji: T) => void;
+  selector: string;
 }
 
 export const EmojiMenuItem = <T extends EmojiItem>(
-  props: EmojiMenuItemProps<T>
+  props: EmojiMenuItemProps<T>,
 ) => {
-  const { emoji, isSelected, onSelect, selector } = props
-  const itemRef = React.useRef<HTMLButtonElement>(null)
+  const { emoji, isSelected, onSelect, selector } = props;
+  const itemRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
-    const menuElement = document.querySelector(selector) as HTMLElement
-    if (!itemRef.current || !isSelected || !menuElement) return
+    const menuElement = document.querySelector(selector) as HTMLElement;
+    if (!itemRef.current || !isSelected || !menuElement) return;
 
-    const overflow = getElementOverflowPosition(itemRef.current, menuElement)
+    const overflow = getElementOverflowPosition(itemRef.current, menuElement);
     if (overflow === "top") {
-      itemRef.current.scrollIntoView(true)
+      itemRef.current.scrollIntoView(true);
     } else if (overflow === "bottom") {
-      itemRef.current.scrollIntoView(false)
+      itemRef.current.scrollIntoView(false);
     }
-  }, [isSelected, selector])
+  }, [isSelected, selector]);
 
-  if (!emoji) return null
+  if (!emoji) return null;
 
   return (
     <Button
@@ -66,15 +73,15 @@ export const EmojiMenuItem = <T extends EmojiItem>(
       )}
       <span className="tiptap-button-text">:{emoji.name}:</span>
     </Button>
-  )
-}
+  );
+};
 
 export interface EmojiMenuProps<T extends EmojiItem> {
-  emojis: T[]
-  onSelect: (emoji: T) => void
-  onClose?: () => void
-  showSearch?: boolean
-  selector?: string
+  emojis: T[];
+  onSelect: (emoji: T) => void;
+  onClose?: () => void;
+  showSearch?: boolean;
+  selector?: string;
 }
 
 export const EmojiMenu = <T extends EmojiItem>(props: EmojiMenuProps<T>) => {
@@ -84,17 +91,17 @@ export const EmojiMenu = <T extends EmojiItem>(props: EmojiMenuProps<T>) => {
     onClose,
     showSearch = false,
     selector = ".emoji-menu-list",
-  } = props
+  } = props;
 
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const searchRef = React.useRef<HTMLInputElement>(null)
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const searchRef = React.useRef<HTMLInputElement>(null);
 
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   const filteredEmojis = React.useMemo(() => {
-    const filtered = getFilteredEmojis({ query: searchQuery, emojis })
-    return filtered
-  }, [emojis, searchQuery])
+    const filtered = getFilteredEmojis({ query: searchQuery, emojis });
+    return filtered;
+  }, [emojis, searchQuery]);
 
   const { selectedIndex } = useMenuNavigation({
     containerRef,
@@ -102,7 +109,7 @@ export const EmojiMenu = <T extends EmojiItem>(props: EmojiMenuProps<T>) => {
     items: filteredEmojis,
     onSelect,
     onClose,
-  })
+  });
 
   const renderedItems = React.useMemo(() => {
     return filteredEmojis.map((emoji, index) => (
@@ -114,8 +121,8 @@ export const EmojiMenu = <T extends EmojiItem>(props: EmojiMenuProps<T>) => {
         onSelect={() => onSelect(emoji)}
         selector={selector}
       />
-    ))
-  }, [filteredEmojis, selectedIndex, onSelect, selector])
+    ));
+  }, [filteredEmojis, selectedIndex, onSelect, selector]);
 
   return (
     <Card ref={containerRef}>
@@ -139,5 +146,5 @@ export const EmojiMenu = <T extends EmojiItem>(props: EmojiMenuProps<T>) => {
         </CardBody>
       )}
     </Card>
-  )
-}
+  );
+};

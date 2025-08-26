@@ -11,7 +11,7 @@ type ActivitiesType = {
   count: number;
   points?: { date: Date; count: number }[];
   growth?: number;
-}
+};
 
 export const getActivities = async ({
   ctx,
@@ -35,10 +35,10 @@ export const getActivities = async ({
   let startFromDate = calculatePastDate(duration, ctx.domainData.domainObj);
   let extendedStartDate = growth
     ? calculatePastDate(
-      duration,
-      ctx.domainData.domainObj,
-      new Date(startFromDate.getTime() - 1)
-    )
+        duration,
+        ctx.domainData.domainObj,
+        new Date(startFromDate.getTime() - 1),
+      )
     : startFromDate;
 
   // Single query for both current and previous period
@@ -52,25 +52,25 @@ export const getActivities = async ({
 
   // Split activities into current and previous periods
   const currentPeriodActivities = activities.filter(
-    (activity) => new Date(activity.createdAt!) >= startFromDate
+    (activity) => new Date(activity.createdAt!) >= startFromDate,
   );
 
   const count = currentPeriodActivities.reduce(
     (acc, activity) =>
       acc + (type === "purchased" ? activity.metadata?.cost || 0 : 1),
-    0
+    0,
   );
 
   let result: ActivitiesType = { count };
 
   if (growth) {
     const previousPeriodActivities = activities.filter(
-      (activity) => new Date(activity.createdAt!) < startFromDate
+      (activity) => new Date(activity.createdAt!) < startFromDate,
     );
     const previousCount = previousPeriodActivities.reduce(
       (acc, activity) =>
         acc + (type === "purchased" ? activity.metadata?.cost || 0 : 1),
-      0
+      0,
     );
     result.growth =
       previousCount === 0 && count > 0
@@ -104,7 +104,8 @@ export const getActivities = async ({
       const currentValue = pointsMap.get(dateStr) || 0;
       pointsMap.set(
         dateStr,
-        currentValue + (type === "purchased" ? activity.metadata?.cost || 0 : 1)
+        currentValue +
+          (type === "purchased" ? activity.metadata?.cost || 0 : 1),
       );
     });
 
@@ -120,7 +121,7 @@ export const getActivities = async ({
 export const calculatePastDate = (
   duration: (typeof analyticsDurations)[number],
   domain: Domain,
-  from?: Date
+  from?: Date,
 ): Date => {
   const startDate = from || new Date();
   let result: Date = new Date(startDate.getTime());

@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 // --- Lib ---
-import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
+import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
 
 // --- TIptap UI ---
-import type { UseAiAskConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button"
+import type { UseAiAskConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button";
 import {
   AI_ASK_SHORTCUT_KEY,
   useAiAsk,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button";
 
 // --- UI Primitives ---
-import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge"
+import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge";
 
 export interface AiAskButtonProps
   extends Omit<ButtonProps, "type">,
@@ -26,11 +26,11 @@ export interface AiAskButtonProps
   /**
    * Optional text to display alongside the icon
    */
-  text?: string
+  text?: string;
   /**
    * Optional show shortcut keys in the button
    */
-  showShortcut?: boolean
+  showShortcut?: boolean;
 }
 
 /**
@@ -39,9 +39,9 @@ export interface AiAskButtonProps
 export function AskAiShortcutBadge({
   shortcutKeys = AI_ASK_SHORTCUT_KEY,
 }: {
-  shortcutKeys?: string
+  shortcutKeys?: string;
 }) {
-  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>
+  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>;
 }
 
 /**
@@ -61,27 +61,27 @@ export const AiAskButton = React.forwardRef<
     children,
     ...buttonProps
   },
-  ref
+  ref,
 ) {
-  const { editor } = useTiptapEditor(providedEditor)
+  const { editor } = useTiptapEditor(providedEditor);
   const { isVisible, canAiAsk, handleAiAsk, label, shortcutKeys, Icon } =
     useAiAsk({
       editor,
       hideWhenUnavailable,
       onAiAsked,
-    })
+    });
 
   const handleClick = React.useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
-      onClick?.(event)
-      if (event.defaultPrevented) return
-      handleAiAsk()
+      onClick?.(event);
+      if (event.defaultPrevented) return;
+      handleAiAsk();
     },
-    [handleAiAsk, onClick]
-  )
+    [handleAiAsk, onClick],
+  );
 
   if (!isVisible) {
-    return null
+    return null;
   }
 
   return (
@@ -106,5 +106,5 @@ export const AiAskButton = React.forwardRef<
         </>
       )}
     </Button>
-  )
-})
+  );
+});

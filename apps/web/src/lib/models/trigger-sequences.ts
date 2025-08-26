@@ -68,7 +68,7 @@ export async function triggerSequences({
 
       await SequenceModel.updateOne(
         { _id: sequence._id },
-        { $addToSet: { entrants: user.userId } }
+        { $addToSet: { entrants: user.userId } },
       );
     }
   } catch (err: any) {

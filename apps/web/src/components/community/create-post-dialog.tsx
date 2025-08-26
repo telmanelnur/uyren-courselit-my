@@ -38,7 +38,7 @@ interface CreatePostDialogProps {
   onPostCreated: (
     post: Pick<CommunityPost, "title" | "content" | "category"> & {
       media: MediaItem[];
-    }
+    },
   ) => void;
   categories: string[];
 }
@@ -311,7 +311,7 @@ export function CreatePostDialog({
                     size="sm"
                     onClick={() => {
                       const videoInput = document.getElementById(
-                        "video"
+                        "video",
                       ) as HTMLInputElement;
                       handleVideoAdd(videoInput.value);
                       videoInput.value = "";

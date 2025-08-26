@@ -1,18 +1,24 @@
-"use client"
+"use client";
 
-import { useProfile } from "@/components/contexts/profile-context"
-import { useSiteInfo } from "@/components/contexts/site-info-context"
-import { getPlanPrice } from "@/lib/ui/lib/utils"
-import { GeneralRouterOutputs } from "@/server/api/types"
-import { Constants } from "@workspace/common-models"
-import { Clock, Globe } from "@workspace/icons"
-import { Badge } from "@workspace/ui/components/badge"
-import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
-import { Separator } from "@workspace/ui/components/separator"
-import { Skeleton } from "@workspace/ui/components/skeleton"
-import { formatCurrency } from "@workspace/utils"
-import { trpc } from "@/utils/trpc"
+import { useProfile } from "@/components/contexts/profile-context";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { getPlanPrice } from "@/lib/ui/lib/utils";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { Constants } from "@workspace/common-models";
+import { Clock, Globe } from "@workspace/icons";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import { Separator } from "@workspace/ui/components/separator";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { formatCurrency } from "@workspace/utils";
+import { trpc } from "@/utils/trpc";
 import {
   Award,
   BookOpen,
@@ -25,78 +31,94 @@ import {
   Lock,
   Play,
   Users,
-  Video
-} from "lucide-react"
-import Link from "next/link"
-import { useCallback, useState } from "react"
+  Video,
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useState } from "react";
 
-type CourseDetailType = GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["publicGetByCourseId"]
+type CourseDetailType =
+  GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["publicGetByCourseId"];
 
 interface CourseLessonsSidebarProps {
-  course: CourseDetailType
-  currentLessonId?: string
-  showPricing?: boolean
-  showCourseInfo?: boolean
+  course: CourseDetailType;
+  currentLessonId?: string;
+  showPricing?: boolean;
+  showCourseInfo?: boolean;
 }
 
-export default function CourseLessonsSidebar({ 
-  course, 
+export default function CourseLessonsSidebar({
+  course,
   currentLessonId,
   showPricing = true,
-  showCourseInfo = true 
+  showCourseInfo = true,
 }: CourseLessonsSidebarProps) {
-  const { siteInfo } = useSiteInfo()
-  const { profile } = useProfile()
-  
+  const { siteInfo } = useSiteInfo();
+  const { profile } = useProfile();
+
   // Get membership status via tRPC only if user is authenticated
-  const { data: membershipStatus, isLoading: isMembershipLoading } = trpc.userModule.user.getMembershipStatus.useQuery({
-    entityId: course.courseId,
-    entityType: Constants.MembershipEntityType.COURSE,
-  }, {
-    enabled: !!course.courseId && !!profile?.userId,
-  })
+  const { data: membershipStatus, isLoading: isMembershipLoading } =
+    trpc.userModule.user.getMembershipStatus.useQuery(
+      {
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+      },
+      {
+        enabled: !!course.courseId && !!profile?.userId,
+      },
+    );
 
   const handlePurchase = useCallback(() => {
-    window.location.href = `/checkout?type=course&id=${course.courseId}`
-  }, [course.courseId])
+    window.location.href = `/checkout?type=course&id=${course.courseId}`;
+  }, [course.courseId]);
 
-  const allLessons = course.groups?.flatMap(group => group.lessonsOrder || []) || []
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([])
-  
+  const allLessons =
+    course.groups?.flatMap((group) => group.lessonsOrder || []) || [];
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+
   const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev => prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId])
-  }
+    setExpandedGroups((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId],
+    );
+  };
 
-  const defaultPlan = course.attachedPaymentPlans?.find(plan => plan.planId === course.defaultPaymentPlan) ||
-    course.attachedPaymentPlans?.[0]
-  const isFree = defaultPlan?.type === Constants.PaymentPlanType.FREE
-  const planPrice = defaultPlan ? getPlanPrice(defaultPlan) : { amount: 0, period: "" }
-  
+  const defaultPlan =
+    course.attachedPaymentPlans?.find(
+      (plan) => plan.planId === course.defaultPaymentPlan,
+    ) || course.attachedPaymentPlans?.[0];
+  const isFree = defaultPlan?.type === Constants.PaymentPlanType.FREE;
+  const planPrice = defaultPlan
+    ? getPlanPrice(defaultPlan)
+    : { amount: 0, period: "" };
+
   // Determine if user has access to the course
-  const isAuthenticated = !!profile?.userId
-  const hasAccess = isAuthenticated && membershipStatus === Constants.MembershipStatus.ACTIVE
-  const isPending = isAuthenticated && membershipStatus === Constants.MembershipStatus.PENDING
+  const isAuthenticated = !!profile?.userId;
+  const hasAccess =
+    isAuthenticated && membershipStatus === Constants.MembershipStatus.ACTIVE;
+  const isPending =
+    isAuthenticated && membershipStatus === Constants.MembershipStatus.PENDING;
 
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "video":
-        return <Video className="h-4 w-4" />
+        return <Video className="h-4 w-4" />;
       case "text":
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
       case "quiz":
-        return <HelpCircle className="h-4 w-4" />
+        return <HelpCircle className="h-4 w-4" />;
       case "audio":
-        return <Play className="h-4 w-4" />
+        return <Play className="h-4 w-4" />;
       case "pdf":
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
       case "file":
-        return <Download className="h-4 w-4" />
+        return <Download className="h-4 w-4" />;
       case "embed":
-        return <Play className="h-4 w-4" />
+        return <Play className="h-4 w-4" />;
       default:
-        return <Play className="h-4 w-4" />
+        return <Play className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -115,44 +137,60 @@ export default function CourseLessonsSidebar({
                   <>
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <span className="text-2xl font-bold text-[rgb(var(--brand-primary))]">
-                        {formatCurrency(planPrice.amount, siteInfo.currencyISOCode)}
-                        {planPrice.period && <span className="text-lg">{planPrice.period}</span>}
-                      </span>
-                      {defaultPlan.type === Constants.PaymentPlanType.EMI && defaultPlan.emiTotalInstallments && (
-                        <span className="text-lg text-muted-foreground">
-                          for {defaultPlan.emiTotalInstallments} months
-                        </span>
-                      )}
-                    </div>
-                    {defaultPlan.type === Constants.PaymentPlanType.ONE_TIME && course.cost > 0 && (
-                      <div className="space-y-2">
-                        {defaultPlan.oneTimeAmount && course.cost > defaultPlan.oneTimeAmount && (
-                          <div className="text-center">
-                            <span className="text-sm text-muted-foreground line-through">
-                              {formatCurrency(course.cost, siteInfo.currencyISOCode)}
-                            </span>
-                          </div>
+                        {formatCurrency(
+                          planPrice.amount,
+                          siteInfo.currencyISOCode,
                         )}
-                        <Badge
-                          variant="destructive"
-                          className="bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))]"
-                        >
-                          {defaultPlan.oneTimeAmount && course.cost > defaultPlan.oneTimeAmount
-                            ? `${Math.round(((course.cost - defaultPlan.oneTimeAmount) / course.cost) * 100)}% OFF`
-                            : "Special Offer"
-                          }
-                        </Badge>
-                      </div>
-                    )}
-                    {defaultPlan.type === Constants.PaymentPlanType.SUBSCRIPTION && (
+                        {planPrice.period && (
+                          <span className="text-lg">{planPrice.period}</span>
+                        )}
+                      </span>
+                      {defaultPlan.type === Constants.PaymentPlanType.EMI &&
+                        defaultPlan.emiTotalInstallments && (
+                          <span className="text-lg text-muted-foreground">
+                            for {defaultPlan.emiTotalInstallments} months
+                          </span>
+                        )}
+                    </div>
+                    {defaultPlan.type === Constants.PaymentPlanType.ONE_TIME &&
+                      course.cost > 0 && (
+                        <div className="space-y-2">
+                          {defaultPlan.oneTimeAmount &&
+                            course.cost > defaultPlan.oneTimeAmount && (
+                              <div className="text-center">
+                                <span className="text-sm text-muted-foreground line-through">
+                                  {formatCurrency(
+                                    course.cost,
+                                    siteInfo.currencyISOCode,
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          <Badge
+                            variant="destructive"
+                            className="bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))]"
+                          >
+                            {defaultPlan.oneTimeAmount &&
+                            course.cost > defaultPlan.oneTimeAmount
+                              ? `${Math.round(((course.cost - defaultPlan.oneTimeAmount) / course.cost) * 100)}% OFF`
+                              : "Special Offer"}
+                          </Badge>
+                        </div>
+                      )}
+                    {defaultPlan.type ===
+                      Constants.PaymentPlanType.SUBSCRIPTION && (
                       <Badge variant="secondary" className="text-xs">
-                        {defaultPlan.subscriptionYearlyAmount ? "Yearly Plan" : "Monthly Plan"}
+                        {defaultPlan.subscriptionYearlyAmount
+                          ? "Yearly Plan"
+                          : "Monthly Plan"}
                       </Badge>
                     )}
                   </>
                 ) : course.costType === Constants.ProductPriceType.FREE ? (
                   <div className="text-center">
-                    <span className="text-2xl font-bold text-[rgb(var(--brand-primary))]">Free</span>
+                    <span className="text-2xl font-bold text-[rgb(var(--brand-primary))]">
+                      Free
+                    </span>
                   </div>
                 ) : (
                   <div className="text-center">
@@ -171,21 +209,29 @@ export default function CourseLessonsSidebar({
                 ) : isPending ? (
                   <div className="space-y-2">
                     <div className="text-center">
-                      <span className="text-sm text-muted-foreground">Your enrollment is pending</span>
+                      <span className="text-sm text-muted-foreground">
+                        Your enrollment is pending
+                      </span>
                     </div>
                     <div className="flex items-center justify-center gap-2">
                       <Clock className="h-5 w-5 text-amber-500" />
-                      <span className="text-sm font-medium text-amber-600">Waiting for approval</span>
+                      <span className="text-sm font-medium text-amber-600">
+                        Waiting for approval
+                      </span>
                     </div>
                   </div>
                 ) : hasAccess ? (
                   <div className="space-y-2">
                     <div className="text-center">
-                      <span className="text-sm text-muted-foreground">You have access to this course</span>
+                      <span className="text-sm text-muted-foreground">
+                        You have access to this course
+                      </span>
                     </div>
                     <div className="flex items-center justify-center gap-2">
                       <CheckCircle className="h-5 w-5 text-green-500" />
-                      <span className="text-sm font-medium text-green-600">Course Purchased</span>
+                      <span className="text-sm font-medium text-green-600">
+                        Course Purchased
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -194,7 +240,9 @@ export default function CourseLessonsSidebar({
                     className="bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))] text-white"
                     onClick={handlePurchase}
                   >
-                    {defaultPlan?.type === Constants.PaymentPlanType.FREE ? "Get Free Course" : "Purchase Course"}
+                    {defaultPlan?.type === Constants.PaymentPlanType.FREE
+                      ? "Get Free Course"
+                      : "Purchase Course"}
                   </Button>
                 )}
               </div>
@@ -261,7 +309,8 @@ export default function CourseLessonsSidebar({
         <CardHeader>
           <CardTitle>Course Content</CardTitle>
           <CardDescription>
-            {course.groups.length} sections • {allLessons.length} lessons • {course.duration} weeks
+            {course.groups.length} sections • {allLessons.length} lessons •{" "}
+            {course.duration} weeks
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -296,21 +345,28 @@ export default function CourseLessonsSidebar({
                       )}
                       <span className="font-medium">{group.name}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{group.lessonsOrder.length} lessons</span>
+                    <span className="text-xs text-muted-foreground">
+                      {group.lessonsOrder.length} lessons
+                    </span>
                   </button>
 
                   {expandedGroups.includes(group.groupId) && (
                     <div className="ml-4 border-l border-muted">
                       {group.lessonsOrder.map((lessonId) => {
-                        const lesson = course.attachedLessons?.find(l => l.lessonId === lessonId)
-                        const isCurrentLesson = lessonId === currentLessonId
-                        
+                        const lesson = course.attachedLessons?.find(
+                          (l) => l.lessonId === lessonId,
+                        );
+                        const isCurrentLesson = lessonId === currentLessonId;
+
                         // Lesson access logic:
                         // - hasAccess: User has active membership
                         // - !lesson?.requiresEnrollment: Lesson doesn't require enrollment (free preview)
                         // - If neither condition is met, lesson is locked
                         return (
-                          <div key={lessonId} className="w-full overflow-hidden">
+                          <div
+                            key={lessonId}
+                            className="w-full overflow-hidden"
+                          >
                             <Link
                               href={`/courses/${course.courseId}/lessons/${lessonId}`}
                               className={`block p-3 pl-6 text-left hover:bg-muted/50 transition-colors ${
@@ -319,7 +375,7 @@ export default function CourseLessonsSidebar({
                             >
                               <div className="flex items-center gap-3">
                                 <div className="flex-shrink-0">
-                                  {(hasAccess || !lesson?.requiresEnrollment) ? (
+                                  {hasAccess || !lesson?.requiresEnrollment ? (
                                     getTypeIcon(lesson?.type || "text")
                                   ) : (
                                     <Lock className="h-4 w-4 text-muted-foreground" />
@@ -327,13 +383,15 @@ export default function CourseLessonsSidebar({
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium truncate">{lesson?.title || `Lesson ${lessonId}`}</span>
+                                    <span className="text-sm font-medium truncate">
+                                      {lesson?.title || `Lesson ${lessonId}`}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                             </Link>
                           </div>
-                        )
+                        );
                       })}
                     </div>
                   )}
@@ -345,5 +403,5 @@ export default function CourseLessonsSidebar({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

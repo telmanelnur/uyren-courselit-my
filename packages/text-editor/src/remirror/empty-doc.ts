@@ -1,8 +1,8 @@
 import { RemirrorContentType } from "remirror";
 
 const emptyDoc: RemirrorContentType = {
-    type: "doc",
-    content: [],
+  type: "doc",
+  content: [],
 };
 
 export default emptyDoc;

@@ -44,40 +44,40 @@ export class CloudinaryService {
       if (file instanceof Buffer) {
         // Upload buffer to Cloudinary
         uploadResult = await new Promise((resolve, reject) => {
-          cloudinary.uploader.upload_stream(
-            {
-              resource_type: "auto",
-              folder: `courselit/${type}`,
-              transformation: [
-                { quality: "auto", fetch_format: "auto" },
-              ],
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          ).end(file);
+          cloudinary.uploader
+            .upload_stream(
+              {
+                resource_type: "auto",
+                folder: `courselit/${type}`,
+                transformation: [{ quality: "auto", fetch_format: "auto" }],
+              },
+              (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+              },
+            )
+            .end(file);
         });
       } else {
         // Upload File object to Cloudinary
         const bytes = await (file as File).arrayBuffer();
         const buffer = Buffer.from(bytes);
-        
+
         uploadResult = await new Promise((resolve, reject) => {
-          cloudinary.uploader.upload_stream(
-            {
-              public_id: publicId,
-              resource_type: "auto",
-              folder: `courselit/${type}`,
-              transformation: [
-                { quality: "auto", fetch_format: "auto" },
-              ],
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          ).end(buffer);
+          cloudinary.uploader
+            .upload_stream(
+              {
+                public_id: publicId,
+                resource_type: "auto",
+                folder: `courselit/${type}`,
+                transformation: [{ quality: "auto", fetch_format: "auto" }],
+              },
+              (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+              },
+            )
+            .end(buffer);
         });
       }
 
@@ -86,23 +86,27 @@ export class CloudinaryService {
         url: uploadResult.secure_url,
         mediaId: mediaId,
         originalFileName: file instanceof File ? file.name : "uploaded_file",
-        mimeType: file instanceof File ? file.type : this.getMimeTypeFromFormat(uploadResult.format),
+        mimeType:
+          file instanceof File
+            ? file.type
+            : this.getMimeTypeFromFormat(uploadResult.format),
         size: uploadResult.bytes,
         access: (access as any) || Constants.MediaAccessType.PUBLIC,
-        thumbnail: uploadResult.resource_type === "image" 
-          ? cloudinary.url(uploadResult.public_id, {
-              width: 200,
-              height: 200,
-              crop: "fill",
-              quality: "auto",
-              fetch_format: "auto",
-            })
-          : uploadResult.secure_url,
+        thumbnail:
+          uploadResult.resource_type === "image"
+            ? cloudinary.url(uploadResult.public_id, {
+                width: 200,
+                height: 200,
+                crop: "fill",
+                quality: "auto",
+                fetch_format: "auto",
+              })
+            : uploadResult.secure_url,
         caption: caption || "",
         storageProvider: "cloudinary",
         metadata: {
           public_id: uploadResult.public_id,
-        }
+        },
       };
 
       return media;
@@ -123,12 +127,12 @@ export class CloudinaryService {
   }
 
   static generateSecureUrl(
-    mediaId: string, 
+    mediaId: string,
     transformation?: {
       width?: number;
       height?: number;
       crop?: string;
-    }
+    },
   ): string {
     try {
       return cloudinary.url(mediaId, {
@@ -149,7 +153,7 @@ export class CloudinaryService {
       height?: number;
       crop?: string;
       quality?: string;
-    }
+    },
   ): string {
     try {
       return cloudinary.url(mediaId, {
@@ -181,4 +185,3 @@ export class CloudinaryService {
     return formatMappings[format.toLowerCase()] || `application/${format}`;
   }
 }
-

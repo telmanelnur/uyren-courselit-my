@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const AlignBottomIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -21,8 +21,8 @@ export const AlignBottomIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-AlignBottomIcon.displayName = "AlignBottomIcon"
+AlignBottomIcon.displayName = "AlignBottomIcon";

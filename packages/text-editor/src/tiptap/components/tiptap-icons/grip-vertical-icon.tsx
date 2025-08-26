@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const GripVerticalIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -37,8 +37,8 @@ export const GripVerticalIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-GripVerticalIcon.displayName = "GripVerticalIcon"
+GripVerticalIcon.displayName = "GripVerticalIcon";

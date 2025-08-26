@@ -70,7 +70,6 @@ export type { default as WidgetProps } from "./widget-props";
 export type { BasicPublicationStatus } from "./publication-status";
 export { BASIC_PUBLICATION_STATUS_TYPE } from "./publication-status";
 
-
 // export type { default as Lesson } from "./lesson";
 // export type { TextEditorContent } from "./text-editor-content";
 

@@ -57,7 +57,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const { navMainItems, navProjectItems, navSecondaryItems } = getSidebarItems(
     profile,
     path!,
-    tab!
+    tab!,
   );
 
   return (
@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 function getSidebarItems(
   profile: ReturnType<typeof useProfile>["profile"],
   path: string,
-  tab: string | null
+  tab: string | null,
 ) {
   const navMainItems: any[] = [];
 

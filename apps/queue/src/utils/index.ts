@@ -6,7 +6,7 @@
  * Sleep for a specified number of milliseconds
  */
 export const sleep = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 /**
@@ -22,15 +22,15 @@ export const generateId = (prefix?: string): string => {
  * Format bytes to human readable string
  */
 export const formatBytes = (bytes: number, decimals: number = 2): string => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 };
 
 /**
@@ -39,8 +39,9 @@ export const formatBytes = (bytes: number, decimals: number = 2): string => {
 export const formatDuration = (ms: number): string => {
   if (ms < 1000) return `${ms}ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  if (ms < 3600000) return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
-  
+  if (ms < 3600000)
+    return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+
   const hours = Math.floor(ms / 3600000);
   const minutes = Math.floor((ms % 3600000) / 60000);
   return `${hours}h ${minutes}m`;
@@ -56,31 +57,31 @@ export const retry = async <T>(
     delay?: number;
     backoff?: number;
     onRetry?: (error: Error, attempt: number) => void;
-  } = {}
+  } = {},
 ): Promise<T> => {
   const { retries = 3, delay = 1000, backoff = 2, onRetry } = options;
-  
+
   let lastError: Error;
-  
+
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === retries) {
         throw lastError;
       }
-      
+
       if (onRetry) {
         onRetry(lastError, attempt + 1);
       }
-      
+
       const waitTime = delay * Math.pow(backoff, attempt);
       await sleep(waitTime);
     }
   }
-  
+
   throw lastError!;
 };
 
@@ -89,15 +90,15 @@ export const retry = async <T>(
  */
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
 ): ((...args: Parameters<T>) => void) => {
   let timeout: NodeJS.Timeout | null = null;
-  
+
   return (...args: Parameters<T>) => {
     if (timeout) {
       clearTimeout(timeout);
     }
-    
+
     timeout = setTimeout(() => {
       func(...args);
     }, wait);
@@ -109,15 +110,15 @@ export const debounce = <T extends (...args: any[]) => any>(
  */
 export const throttle = <T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number,
 ): ((...args: Parameters<T>) => void) => {
   let inThrottle = false;
-  
+
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args);
       inThrottle = true;
-      
+
       setTimeout(() => {
         inThrottle = false;
       }, limit);
@@ -149,9 +150,9 @@ export const isValidEmail = (email: string): boolean => {
  */
 export const sanitizeFilename = (filename: string): string => {
   return filename
-    .replace(/[^a-z0-9.-]/gi, '_')
-    .replace(/_{2,}/g, '_')
-    .replace(/^_|_$/g, '');
+    .replace(/[^a-z0-9.-]/gi, "_")
+    .replace(/_{2,}/g, "_")
+    .replace(/^_|_$/g, "");
 };
 
 /**
@@ -179,12 +180,12 @@ export const getEnvNumber = (key: string, defaultValue?: number): number => {
     }
     throw new Error(`Environment variable ${key} is required`);
   }
-  
+
   const num = parseInt(value, 10);
   if (isNaN(num)) {
     throw new Error(`Environment variable ${key} must be a valid number`);
   }
-  
+
   return num;
 };
 
@@ -199,6 +200,6 @@ export const getEnvBoolean = (key: string, defaultValue?: boolean): boolean => {
     }
     throw new Error(`Environment variable ${key} is required`);
   }
-  
-  return value.toLowerCase() === 'true';
+
+  return value.toLowerCase() === "true";
 };

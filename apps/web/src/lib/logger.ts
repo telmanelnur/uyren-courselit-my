@@ -16,7 +16,7 @@ export class Log {
       errorHandle?: boolean;
     } = {
       errorHandle: true,
-    }
+    },
   ) {
     if (options?.errorHandle) {
       if (metadata instanceof Error) {

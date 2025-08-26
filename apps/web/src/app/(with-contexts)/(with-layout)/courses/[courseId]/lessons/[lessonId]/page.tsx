@@ -1,53 +1,60 @@
-"use client"
+"use client";
 
-import { trpc } from "@/utils/trpc"
-import { Badge } from "@workspace/ui/components/badge"
-import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent } from "@workspace/ui/components/card"
-import {
-  ArrowLeft,
-  ArrowRight,
-  FileText
-} from "lucide-react"
-import Link from "next/link"
-import { useParams } from "next/navigation"
-import { useRef } from "react"
-import dynamic from "next/dynamic"
-import CourseLessonsSidebar from "../../../_components/course-lessons-sidebar"
-import { TextEditorContent } from "@workspace/common-models"
+import { trpc } from "@/utils/trpc";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent } from "@workspace/ui/components/card";
+import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useRef } from "react";
+import dynamic from "next/dynamic";
+import CourseLessonsSidebar from "../../../_components/course-lessons-sidebar";
+import { TextEditorContent } from "@workspace/common-models";
 
 // Dynamic import for LessonContentEditor
 const LessonContentEditor = dynamic(
-  () => import("@/components/editors/tiptap/templates/lesson-content/lesson-content-editor").then(mod => ({ default: mod.LessonContentEditor })),
-  { ssr: false }
-)
+  () =>
+    import(
+      "@/components/editors/tiptap/templates/lesson-content/lesson-content-editor"
+    ).then((mod) => ({ default: mod.LessonContentEditor })),
+  { ssr: false },
+);
 
 export default function LessonDetailPage() {
-  const params = useParams()
-  const courseId = params.courseId as string
-  const lessonId = params.lessonId as string
-  const editorRef = useRef<any>(null)
+  const params = useParams();
+  const courseId = params.courseId as string;
+  const lessonId = params.lessonId as string;
+  const editorRef = useRef<any>(null);
 
   // Load lesson data from tRPC
-  const loadLessonQuery = trpc.lmsModule.courseModule.lesson.publicGetById.useQuery({
-    courseId,
-    lessonId,
-  }, {
-    enabled: !!(courseId && lessonId),
-  })
+  const loadLessonQuery =
+    trpc.lmsModule.courseModule.lesson.publicGetById.useQuery(
+      {
+        courseId,
+        lessonId,
+      },
+      {
+        enabled: !!(courseId && lessonId),
+      },
+    );
 
   // Load course data to get lesson groups and navigation
-  const loadCourseQuery = trpc.lmsModule.courseModule.course.getByCourseDetailed.useQuery({
-    courseId,
-  }, {
-    enabled: !!courseId,
-  })
+  const loadCourseQuery =
+    trpc.lmsModule.courseModule.course.getByCourseDetailed.useQuery(
+      {
+        courseId,
+      },
+      {
+        enabled: !!courseId,
+      },
+    );
 
-  const isLoading = loadLessonQuery.isLoading || loadCourseQuery.isLoading
-  const lesson = loadLessonQuery.data
-  const course = loadCourseQuery.data
-  const lessonError = loadLessonQuery.error
-  const courseError = loadCourseQuery.error
+  const isLoading = loadLessonQuery.isLoading || loadCourseQuery.isLoading;
+  const lesson = loadLessonQuery.data;
+  const course = loadCourseQuery.data;
+  const lessonError = loadLessonQuery.error;
+  const courseError = loadCourseQuery.error;
 
   // Handle errors
   if (lessonError) {
@@ -55,7 +62,9 @@ export default function LessonDetailPage() {
       <main className="bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Error Loading Lesson</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-4">
+              Error Loading Lesson
+            </h1>
             <p className="text-muted-foreground mb-6">{lessonError.message}</p>
             <Button asChild>
               <Link href={`/courses/${courseId}`}>Back to Course</Link>
@@ -63,7 +72,7 @@ export default function LessonDetailPage() {
           </div>
         </div>
       </main>
-    )
+    );
   }
 
   if (courseError) {
@@ -71,7 +80,9 @@ export default function LessonDetailPage() {
       <main className="bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Error Loading Course</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-4">
+              Error Loading Course
+            </h1>
             <p className="text-muted-foreground mb-6">{courseError.message}</p>
             <Button asChild>
               <Link href="/courses">Back to Courses</Link>
@@ -79,7 +90,7 @@ export default function LessonDetailPage() {
           </div>
         </div>
       </main>
-    )
+    );
   }
 
   if (isLoading) {
@@ -99,7 +110,7 @@ export default function LessonDetailPage() {
           </div>
         </div>
       </main>
-    )
+    );
   }
 
   if (!lesson) {
@@ -107,25 +118,30 @@ export default function LessonDetailPage() {
       <main className="bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Lesson Not Found</h1>
-            <p className="text-muted-foreground mb-6">The lesson you're looking for doesn't exist or you don't have access to it.</p>
+            <h1 className="text-2xl font-bold text-foreground mb-4">
+              Lesson Not Found
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              The lesson you're looking for doesn't exist or you don't have
+              access to it.
+            </p>
             <Button asChild>
               <Link href={`/courses/${courseId}`}>Back to Course</Link>
             </Button>
           </div>
         </div>
       </main>
-    )
+    );
   }
 
   const getTypeIcon = (type: string) => {
     switch (type?.toLowerCase()) {
       case "text":
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
       default:
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
     <main className="bg-background">
@@ -139,7 +155,10 @@ export default function LessonDetailPage() {
                 Courses
               </Link>
               <span>/</span>
-              <Link href={`/courses/${courseId}`} className="hover:text-foreground">
+              <Link
+                href={`/courses/${courseId}`}
+                className="hover:text-foreground"
+              >
                 {course?.title || "Course"}
               </Link>
               <span>/</span>
@@ -155,9 +174,13 @@ export default function LessonDetailPage() {
                 </Badge>
               </div>
 
-              <h1 className="text-3xl font-bold text-foreground">{lesson.title}</h1>
+              <h1 className="text-3xl font-bold text-foreground">
+                {lesson.title}
+              </h1>
               {lesson.media?.caption && (
-                <p className="text-lg text-muted-foreground">{lesson.media.caption}</p>
+                <p className="text-lg text-muted-foreground">
+                  {lesson.media.caption}
+                </p>
               )}
             </div>
 
@@ -184,14 +207,24 @@ export default function LessonDetailPage() {
                         editable={false}
                         placeholder="Loading lesson content..."
                         onEditor={(editor, meta) => {
-                          if (meta.reason === "create" && lesson?.content && lesson.type === "text") {
+                          if (
+                            meta.reason === "create" &&
+                            lesson?.content &&
+                            lesson.type === "text"
+                          ) {
                             try {
                               // Set content when editor is ready
-                              console.log("Setting lesson content:", lesson.content)
-                              const c = lesson.content as TextEditorContent
-                              editor?.commands.setContent(c.content)
+                              console.log(
+                                "Setting lesson content:",
+                                lesson.content,
+                              );
+                              const c = lesson.content as TextEditorContent;
+                              editor?.commands.setContent(c.content);
                             } catch (error) {
-                              console.error("Error setting lesson content:", error)
+                              console.error(
+                                "Error setting lesson content:",
+                                error,
+                              );
                             }
                           }
                         }}
@@ -205,7 +238,9 @@ export default function LessonDetailPage() {
                     <div className="bg-muted rounded-lg p-8 text-center">
                       <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                       <h4 className="text-lg font-semibold mb-2">Content</h4>
-                      <p className="text-muted-foreground">Only text lessons are supported at this time.</p>
+                      <p className="text-muted-foreground">
+                        Only text lessons are supported at this time.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -215,8 +250,13 @@ export default function LessonDetailPage() {
             {/* Navigation */}
             <div className="flex items-center justify-between">
               {lesson.meta?.prevLesson ? (
-                <Link href={`/courses/${courseId}/lessons/${lesson.meta.prevLesson}`}>
-                  <Button variant="outline" className="flex items-center gap-2 bg-transparent">
+                <Link
+                  href={`/courses/${courseId}/lessons/${lesson.meta.prevLesson}`}
+                >
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 bg-transparent"
+                  >
                     <ArrowLeft className="h-4 w-4" />
                     Previous Lesson
                   </Button>
@@ -226,7 +266,9 @@ export default function LessonDetailPage() {
               )}
 
               {lesson.meta?.nextLesson ? (
-                <Link href={`/courses/${courseId}/lessons/${lesson.meta.nextLesson}`}>
+                <Link
+                  href={`/courses/${courseId}/lessons/${lesson.meta.nextLesson}`}
+                >
                   <Button className="flex items-center gap-2 bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))] text-white">
                     Next Lesson
                     <ArrowRight className="h-4 w-4" />
@@ -255,5 +297,5 @@ export default function LessonDetailPage() {
         </div>
       </div>
     </main>
-  )
+  );
 }

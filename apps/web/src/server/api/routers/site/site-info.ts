@@ -46,7 +46,7 @@ function validateSiteInfo(domain: Domain) {
 }
 
 const currencyISOCodes = currencies.map((currency) =>
-  currency.isoCode?.toLowerCase()
+  currency.isoCode?.toLowerCase(),
 );
 
 const verifyCurrencyISOCode = (isoCode: string) => {
@@ -70,7 +70,7 @@ const verifyCurrencyISOCodeBasedOnSiteInfo = (siteInfo: SiteInfo) => {
 };
 
 const checkForInvalidPaymentSettings = (
-  siteInfo: SiteInfo
+  siteInfo: SiteInfo,
 ): undefined | Error => {
   verifyCurrencyISOCodeBasedOnSiteInfo(siteInfo);
 
@@ -136,13 +136,11 @@ const checkForInvalidPaymentMethodSettings = (siteInfo: SiteInfo) => {
 
 const getPaymentInvalidException = (paymentMethod: string) =>
   new Error(
-    `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`
+    `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`,
   );
 
 export const siteInfoRouter = router({
   publicGetSettings: publicProcedure.query(async ({ ctx }) => {
-    
-
     const { domainObj } = ctx.domainData || {};
 
     if (!domainObj) {
@@ -157,11 +155,9 @@ export const siteInfoRouter = router({
     .input(
       z.object({
         pageId: z.string().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
-      
-
       console.log("[publicGetFullSiteSetup]");
 
       const { domainObj } = ctx.domainData || {};
@@ -289,7 +285,7 @@ export const siteInfoRouter = router({
         codeInjectionBody: z.string().optional(),
         codeInjectionFoot: z.string().optional(),
         mailingAddress: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const domain = await DomainModel.findOne({
@@ -337,7 +333,7 @@ export const siteInfoRouter = router({
       }
       const domain = await DomainModel.findById(
         ctx.domainData.domainObj._id,
-        exclusionProjection
+        exclusionProjection,
       );
       if (!domain) {
         throw new NotFoundException("Domain", "current");
@@ -355,7 +351,7 @@ export const siteInfoRouter = router({
           name: 1,
           keyId: 1,
           createdAt: 1,
-        }
+        },
       ).lean();
 
       return apikeys;
@@ -367,7 +363,7 @@ export const siteInfoRouter = router({
     .input(
       getFormDataSchema({
         name: z.string().min(1).max(255),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const domain = await DomainModel.findById(ctx.domainData.domainObj._id);
@@ -399,7 +395,7 @@ export const siteInfoRouter = router({
     .input(
       getFormDataSchema({
         keyId: z.string().min(1).max(255),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const domain = await DomainModel.findById(ctx.domainData.domainObj._id);
@@ -438,7 +434,7 @@ export const siteInfoRouter = router({
         //   $lemonsqueezySubscriptionMonthlyVariantId,
         // lemonsqueezySubscriptionYearlyVariantId:
         //   $lemonsqueezySubscriptionYearlyVariantId,
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const domain = await DomainModel.findById(ctx.domainData.domainObj._id);
@@ -453,14 +449,14 @@ export const siteInfoRouter = router({
       Object.assign(domain.settings, input.data);
 
       const invalidPaymentMethod = checkForInvalidPaymentSettings(
-        domain.settings
+        domain.settings,
       );
       if (invalidPaymentMethod) {
         throw invalidPaymentMethod;
       }
 
       const failedPaymentMethod = checkForInvalidPaymentMethodSettings(
-        domain.settings
+        domain.settings,
       );
       if (failedPaymentMethod) {
         throw getPaymentInvalidException(failedPaymentMethod);

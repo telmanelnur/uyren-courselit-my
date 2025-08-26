@@ -7,7 +7,7 @@ export const assertDomainExist = async (
   ctx: any,
   options?: {
     loadDatabase?: boolean;
-  }
+  },
 ) => {
   const domainObj = ctx.domainData.domainObj as Domain;
   if (!domainObj) {
@@ -33,8 +33,8 @@ export const checkOwnershipWithoutModel = <
     user: {
       _id: mongoose.Types.ObjectId | string;
       userId: mongoose.Types.ObjectId | string;
-    }
-  }
+    };
+  },
 ) => {
   if (
     !item ||

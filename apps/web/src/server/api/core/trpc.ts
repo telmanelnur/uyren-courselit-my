@@ -24,11 +24,13 @@ export const t = initTRPC.context<Context>().create({
         ...shape,
         data: {
           ...shape.data,
-          zodError: error.cause instanceof z.ZodError ? error.cause.issues : null,
+          zodError:
+            error.cause instanceof z.ZodError ? error.cause.issues : null,
           code: error.code,
           message: error.message,
           name: "ValidationError",
-          stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === "development" ? error.stack : undefined,
         },
       };
     }
@@ -42,7 +44,8 @@ export const t = initTRPC.context<Context>().create({
           message: error.message,
           name: "AuthenticationError",
           redirectTo: "/auth/login",
-          stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === "development" ? error.stack : undefined,
         },
       };
     }
@@ -56,7 +59,8 @@ export const t = initTRPC.context<Context>().create({
           message: error.message,
           name: "AuthorizationError",
           redirectTo: "/auth/login",
-          stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV === "development" ? error.stack : undefined,
         },
       };
     }

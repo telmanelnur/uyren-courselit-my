@@ -7,7 +7,7 @@ import { useSettingsContext } from "./settings-context";
 export default function DomainManagement() {
   const { profile } = useProfile();
   const { loadSettingsQuery } = useSettingsContext();
-  
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,7 +16,7 @@ export default function DomainManagement() {
           Manage your domain settings and configurations.
         </p>
       </div>
-      
+
       <div className="p-4 border rounded-md bg-muted">
         <p className="text-sm">
           Domain management features will be implemented here.

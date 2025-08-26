@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { type Editor } from "@tiptap/react"
-import type { TextOptions, Language } from "../ai-types"
+import * as React from "react";
+import { type Editor } from "@tiptap/react";
+import type { TextOptions, Language } from "../ai-types";
 
 // -- Hooks --
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
 
 // -- Tiptap UI --
 import {
   getContextAndInsertAt,
   useAiMenuState,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-menu"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-menu";
 
 // -- UI Primitives --
 import {
@@ -26,31 +26,34 @@ import {
   MenuGroupLabel,
   MenuItem,
   useComboboxValueState,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/menu"
-import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { ComboboxList } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/combobox"
-import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/menu";
+import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { ComboboxList } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/combobox";
+import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator";
 
-import { SUPPORTED_LANGUAGES, SUPPORTED_TONES } from "./ai-menu-items-constants"
+import {
+  SUPPORTED_LANGUAGES,
+  SUPPORTED_TONES,
+} from "./ai-menu-items-constants";
 import type {
   EditorMenuAction,
   ExecutableMenuAction,
   MenuActionIdentifier,
   MenuActionRendererProps,
   NestedMenuAction,
-} from "./ai-menu-items-types"
+} from "./ai-menu-items-types";
 
 // -- Icons --
-import { ChevronRightIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/chevron-right-icon"
-import { SummarizeTextIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/summarize-text-icon"
-import { Simplify2Icon } from "@workspace/text-editor/tiptap/components/tiptap-icons/simplify-2-icon"
-import { LanguagesIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/languages-icon"
-import { MicAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/mic-ai-icon"
-import { TextExtendIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-extend-icon"
-import { TextReduceIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-reduce-icon"
-import { CompleteSentenceIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/complete-sentence-icon"
-import { SmileAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/smile-ai-icon"
-import { CheckAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/check-ai-icon"
+import { ChevronRightIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/chevron-right-icon";
+import { SummarizeTextIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/summarize-text-icon";
+import { Simplify2Icon } from "@workspace/text-editor/tiptap/components/tiptap-icons/simplify-2-icon";
+import { LanguagesIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/languages-icon";
+import { MicAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/mic-ai-icon";
+import { TextExtendIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-extend-icon";
+import { TextReduceIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-reduce-icon";
+import { CompleteSentenceIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/complete-sentence-icon";
+import { SmileAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/smile-ai-icon";
+import { CheckAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/check-ai-icon";
 
 function initializeEditorMenuActions(): Record<
   MenuActionIdentifier,
@@ -72,24 +75,27 @@ function initializeEditorMenuActions(): Record<
       label: "Fix spelling & grammar",
       value: "aiFixSpellingAndGrammar",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiFixSpellingAndGrammar?: (options: unknown) => { run: () => boolean }
-        }
+          aiFixSpellingAndGrammar?: (options: unknown) => {
+            run: () => boolean;
+          };
+        };
         if (typeof chainAny.aiFixSpellingAndGrammar === "function") {
-          chainAny.aiFixSpellingAndGrammar(newOptions).run()
+          chainAny.aiFixSpellingAndGrammar(newOptions).run();
         }
       },
     },
@@ -99,24 +105,25 @@ function initializeEditorMenuActions(): Record<
       label: "Make longer",
       value: "aiExtend",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiExtend?: (options: unknown) => { run: () => boolean }
-        }
+          aiExtend?: (options: unknown) => { run: () => boolean };
+        };
         if (typeof chainAny.aiExtend === "function") {
-          chainAny.aiExtend(newOptions).run()
+          chainAny.aiExtend(newOptions).run();
         }
       },
     },
@@ -126,24 +133,25 @@ function initializeEditorMenuActions(): Record<
       label: "Make shorter",
       value: "aiShorten",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiShorten?: (options: unknown) => { run: () => boolean }
-        }
+          aiShorten?: (options: unknown) => { run: () => boolean };
+        };
         if (typeof chainAny.aiShorten === "function") {
-          chainAny.aiShorten(newOptions).run()
+          chainAny.aiShorten(newOptions).run();
         }
       },
     },
@@ -153,24 +161,25 @@ function initializeEditorMenuActions(): Record<
       label: "Simplify language",
       value: "simplifyLanguage",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiSimplify?: (options: unknown) => { run: () => boolean }
-        }
+          aiSimplify?: (options: unknown) => { run: () => boolean };
+        };
         if (typeof chainAny.aiSimplify === "function") {
-          chainAny.aiSimplify(newOptions).run()
+          chainAny.aiSimplify(newOptions).run();
         }
       },
     },
@@ -180,24 +189,25 @@ function initializeEditorMenuActions(): Record<
       label: "Improve writing",
       value: "improveWriting",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiRephrase?: (options: unknown) => { run: () => boolean }
-        }
+          aiRephrase?: (options: unknown) => { run: () => boolean };
+        };
         if (typeof chainAny.aiRephrase === "function") {
-          chainAny.aiRephrase(newOptions).run()
+          chainAny.aiRephrase(newOptions).run();
         }
       },
     },
@@ -207,24 +217,25 @@ function initializeEditorMenuActions(): Record<
       label: "Emojify",
       value: "emojify",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiEmojify?: (options: unknown) => { run: () => boolean }
-        }
+          aiEmojify?: (options: unknown) => { run: () => boolean };
+        };
         if (typeof chainAny.aiEmojify === "function") {
-          chainAny.aiEmojify(newOptions).run()
+          chainAny.aiEmojify(newOptions).run();
         }
       },
     },
@@ -234,24 +245,25 @@ function initializeEditorMenuActions(): Record<
       label: "Continue writing",
       value: "continueWriting",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiComplete?: (options: unknown) => { run: () => boolean }
-        }
+          aiComplete?: (options: unknown) => { run: () => boolean };
+        };
         if (typeof chainAny.aiComplete === "function") {
-          chainAny.aiComplete(newOptions).run()
+          chainAny.aiComplete(newOptions).run();
         }
       },
     },
@@ -261,24 +273,25 @@ function initializeEditorMenuActions(): Record<
       label: "Add a summary",
       value: "summarize",
       onSelect: ({ editor, options }) => {
-        if (!editor) return
+        if (!editor) return;
 
-        const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+        const { insertAt, isSelection, context } =
+          getContextAndInsertAt(editor);
         const newOptions: TextOptions = {
           ...options,
           insertAt,
           regenerate: !isSelection,
-        }
+        };
 
         if (isSelection) {
-          newOptions.text = context
+          newOptions.text = context;
         }
 
         const chainAny = editor.chain() as unknown as {
-          aiSummarize?: (options: unknown) => { run: () => boolean }
-        }
+          aiSummarize?: (options: unknown) => { run: () => boolean };
+        };
         if (typeof chainAny.aiSummarize === "function") {
-          chainAny.aiSummarize(newOptions).run()
+          chainAny.aiSummarize(newOptions).run();
         }
       },
     },
@@ -291,18 +304,18 @@ function initializeEditorMenuActions(): Record<
       label: "Languages",
       value: "translateTo",
     },
-  }
+  };
 }
 
 function mapInteractionContextToActions(
-  menuActions: Record<MenuActionIdentifier, EditorMenuAction>
+  menuActions: Record<MenuActionIdentifier, EditorMenuAction>,
 ) {
   const convertToMenuAction = (item: EditorMenuAction) => ({
     label: item.label,
     value: item.value,
     icon: item.icon,
     filterItems: item.type === "nested" ? item.filterItems : undefined,
-  })
+  });
 
   const grouped: Action[] = [
     {
@@ -325,68 +338,71 @@ function mapInteractionContextToActions(
         menuActions.translateTo,
       ]).map(convertToMenuAction),
     },
-  ]
+  ];
 
-  return grouped
+  return grouped;
 }
 
 function isExecutableMenuItem(
-  item: EditorMenuAction
+  item: EditorMenuAction,
 ): item is ExecutableMenuAction {
-  return item.type === "executable"
+  return item.type === "executable";
 }
 
 function isNestedMenuItem(item: EditorMenuAction): item is NestedMenuAction {
-  return item.type === "nested"
+  return item.type === "nested";
 }
 
 export function LanguageSelectionSubmenu({
   editor,
 }: {
-  editor: Editor | null
+  editor: Editor | null;
 }) {
-  const [searchValue] = useComboboxValueState()
-  const { state, updateState } = useAiMenuState()
+  const [searchValue] = useComboboxValueState();
+  const { state, updateState } = useAiMenuState();
 
   const availableLanguages = React.useMemo(() => {
     const translationAction = initializeEditorMenuActions()
-      .translateTo as NestedMenuAction
-    const languageOptions = { items: translationAction.items || [] }
-    return filterMenuItems(languageOptions, searchValue)
-  }, [searchValue])
+      .translateTo as NestedMenuAction;
+    const languageOptions = { items: translationAction.items || [] };
+    return filterMenuItems(languageOptions, searchValue);
+  }, [searchValue]);
 
   const handleLanguageSelection = React.useCallback(
     (selectedLanguageCode: Language) => {
-      if (!editor) return
+      if (!editor) return;
 
-      const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+      const { insertAt, isSelection, context } = getContextAndInsertAt(editor);
 
-      updateState({ language: selectedLanguageCode })
+      updateState({ language: selectedLanguageCode });
 
       const langOptions: TextOptions = {
         stream: true,
         format: "rich-text",
         insertAt,
         regenerate: !isSelection,
-      }
+      };
 
       if (state.tone) {
-        langOptions.tone = state.tone
+        langOptions.tone = state.tone;
       }
 
       if (isSelection) {
-        langOptions.text = context
+        langOptions.text = context;
       }
 
       const chainAny = editor.chain() as unknown as {
-        aiTranslate?: (lang: unknown, options: unknown) => { run: () => boolean }
-      }
+        aiTranslate?: (
+          lang: unknown,
+          options: unknown,
+        ) => { run: () => boolean };
+      };
       if (typeof chainAny.aiTranslate === "function") {
-        chainAny.aiTranslate(selectedLanguageCode, langOptions).run()
+        chainAny.aiTranslate(selectedLanguageCode, langOptions).run();
       }
     },
-    [editor, state.tone, updateState]
-  )
+    [editor, state.tone, updateState],
+  );
 
   const languageMenuItems = (
     <>
@@ -409,10 +425,10 @@ export function LanguageSelectionSubmenu({
         />
       ))}
     </>
-  )
+  );
 
   if (searchValue) {
-    return languageMenuItems
+    return languageMenuItems;
   }
 
   return (
@@ -440,28 +456,28 @@ export function LanguageSelectionSubmenu({
         </ComboboxList>
       </MenuContent>
     </Menu>
-  )
+  );
 }
 
 export function ToneSelectionSubmenu({ editor }: { editor: Editor | null }) {
-  const [searchValue] = useComboboxValueState()
-  const { state, updateState } = useAiMenuState()
+  const [searchValue] = useComboboxValueState();
+  const { state, updateState } = useAiMenuState();
 
   const availableTones = React.useMemo(() => {
     const toneAction = initializeEditorMenuActions()
-      .adjustTone as NestedMenuAction
-    const toneOptions = { items: toneAction.items || [] }
-    return filterMenuItems(toneOptions, searchValue)
-  }, [searchValue])
+      .adjustTone as NestedMenuAction;
+    const toneOptions = { items: toneAction.items || [] };
+    return filterMenuItems(toneOptions, searchValue);
+  }, [searchValue]);
 
   const handleToneSelection = React.useCallback(
     (selectedTone: string) => {
-      if (!editor) return
+      if (!editor) return;
 
-      const { insertAt, isSelection, context } = getContextAndInsertAt(editor)
+      const { insertAt, isSelection, context } = getContextAndInsertAt(editor);
 
       if (!state.tone || state.tone !== selectedTone) {
-        updateState({ tone: selectedTone })
+        updateState({ tone: selectedTone });
       }
 
       const toneOptions: TextOptions = {
@@ -469,25 +485,28 @@ export function ToneSelectionSubmenu({ editor }: { editor: Editor | null }) {
         format: "rich-text",
         insertAt,
         regenerate: !isSelection,
-      }
+      };
 
       if (state.language) {
-        toneOptions.language = state.language
+        toneOptions.language = state.language;
       }
 
       if (isSelection) {
-        toneOptions.text = context
+        toneOptions.text = context;
       }
 
       const chainAny = editor.chain() as unknown as {
-        aiAdjustTone?: (tone: unknown, options: unknown) => { run: () => boolean }
-      }
+        aiAdjustTone?: (
+          tone: unknown,
+          options: unknown,
+        ) => { run: () => boolean };
+      };
       if (typeof chainAny.aiAdjustTone === "function") {
-        chainAny.aiAdjustTone(selectedTone, toneOptions).run()
+        chainAny.aiAdjustTone(selectedTone, toneOptions).run();
       }
     },
-    [editor, state.language, state.tone, updateState]
-  )
+    [editor, state.language, state.tone, updateState],
+  );
 
   const toneMenuItems = availableTones.map((tone) => (
     <MenuItem
@@ -499,10 +518,10 @@ export function ToneSelectionSubmenu({ editor }: { editor: Editor | null }) {
         </Button>
       }
     />
-  ))
+  ));
 
   if (searchValue) {
-    return toneMenuItems
+    return toneMenuItems;
   }
 
   return (
@@ -530,7 +549,7 @@ export function ToneSelectionSubmenu({ editor }: { editor: Editor | null }) {
         </ComboboxList>
       </MenuContent>
     </Menu>
-  )
+  );
 }
 
 export function MenuActionRenderer({
@@ -538,20 +557,20 @@ export function MenuActionRenderer({
   availableActions,
   editor,
 }: MenuActionRendererProps) {
-  const { state } = useAiMenuState()
+  const { state } = useAiMenuState();
 
   if (!menuItem.value) {
-    return null
+    return null;
   }
 
-  const editorAction = availableActions[menuItem.value]
+  const editorAction = availableActions[menuItem.value];
   if (!editorAction) {
-    return null
+    return null;
   }
 
   if (isNestedMenuItem(editorAction)) {
-    const SubmenuComponent = editorAction.component
-    return <SubmenuComponent key={menuItem.value} editor={editor} />
+    const SubmenuComponent = editorAction.component;
+    return <SubmenuComponent key={menuItem.value} editor={editor} />;
   }
 
   if (isExecutableMenuItem(editorAction)) {
@@ -559,10 +578,10 @@ export function MenuActionRenderer({
       stream: true,
       format: "rich-text",
       language: state.language,
-    }
+    };
 
     if (state.tone) {
-      options.tone = state.tone
+      options.tone = state.tone;
     }
 
     return (
@@ -581,43 +600,43 @@ export function MenuActionRenderer({
           </Button>
         }
       />
-    )
+    );
   }
 
-  return null
+  return null;
 }
 
 export function AiMenuItems({
   editor: providedEditor,
 }: {
-  editor?: Editor | null
+  editor?: Editor | null;
 }) {
-  const { editor } = useTiptapEditor(providedEditor)
-  const [searchValue] = useComboboxValueState()
+  const { editor } = useTiptapEditor(providedEditor);
+  const [searchValue] = useComboboxValueState();
 
   const availableMenuActions = React.useMemo(
     () => initializeEditorMenuActions(),
-    []
-  )
+    [],
+  );
   const contextualActionGroups = React.useMemo(
     () => mapInteractionContextToActions(availableMenuActions),
-    [availableMenuActions]
-  )
+    [availableMenuActions],
+  );
 
   const filteredActionGroups = React.useMemo(() => {
     return (
       filterMenuGroups(contextualActionGroups, searchValue) ||
       contextualActionGroups
-    )
-  }, [contextualActionGroups, searchValue])
+    );
+  }, [contextualActionGroups, searchValue]);
 
   const wouldActionRenderContent = React.useCallback(
     (menuItem: Action) => {
-      if (!menuItem.value) return false
+      if (!menuItem.value) return false;
 
       const editorAction =
-        availableMenuActions[menuItem.value as MenuActionIdentifier]
-      if (!editorAction) return false
+        availableMenuActions[menuItem.value as MenuActionIdentifier];
+      if (!editorAction) return false;
 
       // For nested menu items with filterItems=true, check their internal filtering
       if (
@@ -627,18 +646,18 @@ export function AiMenuItems({
       ) {
         const nestedItems = filterMenuItems(
           { items: editorAction.items || [] },
-          searchValue
-        )
-        return nestedItems.length > 0
+          searchValue,
+        );
+        return nestedItems.length > 0;
       }
 
-      return true
+      return true;
     },
-    [availableMenuActions, searchValue]
-  )
+    [availableMenuActions, searchValue],
+  );
 
   if (!editor) {
-    return null
+    return null;
   }
 
   const renderableGroups = filteredActionGroups
@@ -646,10 +665,10 @@ export function AiMenuItems({
       ...actionGroup,
       items: actionGroup.items?.filter(wouldActionRenderContent) ?? [],
     }))
-    .filter((actionGroup) => actionGroup.items.length > 0)
+    .filter((actionGroup) => actionGroup.items.length > 0);
 
   if (renderableGroups.length === 0) {
-    return null
+    return null;
   }
 
   return renderableGroups.map((actionGroup, groupIndex) => (
@@ -669,5 +688,5 @@ export function AiMenuItems({
         <Separator orientation="horizontal" />
       )}
     </React.Fragment>
-  ))
+  ));
 }

@@ -102,14 +102,14 @@ export const tagRouter = router({
     .input(getFormDataSchema({ tag: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const domainObj = await DomainModel.findById(
-        ctx.domainData.domainObj._id
+        ctx.domainData.domainObj._id,
       );
       if (!domainObj) {
         throw new NotFoundException("Domain not found");
       }
       await UserModel.updateMany(
         { domain: domainObj._id },
-        { $pull: { tags: input.data.tag } }
+        { $pull: { tags: input.data.tag } },
       );
       const tagIndex = domainObj.tags.indexOf(input.data.tag);
       domainObj.tags.splice(tagIndex, 1);
@@ -125,7 +125,7 @@ export const tagRouter = router({
     .mutation(async ({ ctx, input }) => {
       await UserModel.updateMany(
         { domain: ctx.domainData.domainObj._id },
-        { $pull: { tags: input.data.tag } }
+        { $pull: { tags: input.data.tag } },
       );
       return await getTagsWithDetails(ctx as any);
     }),

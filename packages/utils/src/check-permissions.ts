@@ -1,8 +1,8 @@
 export default function checkPermission(
-    actualPermissions: string[],
-    desiredPermissions: string[],
+  actualPermissions: string[],
+  desiredPermissions: string[],
 ) {
-    return actualPermissions.some((permission) =>
-        desiredPermissions.includes(permission),
-    );
+  return actualPermissions.some((permission) =>
+    desiredPermissions.includes(permission),
+  );
 }

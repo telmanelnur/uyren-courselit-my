@@ -9,15 +9,16 @@ import {
   Code2,
   ChevronRight,
   Quote,
-  Minus, AlignLeft,
+  Minus,
+  AlignLeft,
   AlignCenter,
   AlignRight,
   CodeSquare,
-  TextQuote 
+  TextQuote,
 } from "lucide-react";
 import { FloatingMenu } from "@tiptap/react/menus";
 import {
-  Command,  
+  Command,
   CommandEmpty,
   CommandGroup,
   CommandItem,
@@ -178,18 +179,24 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
           ...group,
           items: group.items.filter(
             (item) =>
-              item.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-              item.description.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-              item.keywords.toLowerCase().includes(debouncedSearch.toLowerCase())
+              item.title
+                .toLowerCase()
+                .includes(debouncedSearch.toLowerCase()) ||
+              item.description
+                .toLowerCase()
+                .includes(debouncedSearch.toLowerCase()) ||
+              item.keywords
+                .toLowerCase()
+                .includes(debouncedSearch.toLowerCase()),
           ),
         }))
         .filter((group) => group.items.length > 0),
-    [debouncedSearch]
+    [debouncedSearch],
   );
 
   const flatFilteredItems = useMemo(
     () => filteredGroups.flatMap((g) => g.items),
-    [filteredGroups]
+    [filteredGroups],
   );
 
   const executeCommand = useCallback(
@@ -218,7 +225,7 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
         setSelectedIndex(-1);
       }
     },
-    [editor, search]
+    [editor, search],
   );
 
   const handleKeyDown = useCallback(
@@ -262,7 +269,7 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
           break;
       }
     },
-    [isOpen, selectedIndex, flatFilteredItems, executeCommand, editor]
+    [isOpen, selectedIndex, flatFilteredItems, executeCommand, editor],
   );
 
   useEffect(() => {
@@ -298,7 +305,7 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
           0,
           $from.parentOffset,
           "\n",
-          " "
+          " ",
         );
 
         const isSlashCommand =
@@ -326,7 +333,11 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
         },
       }}
     >
-      <Command role="listbox" ref={commandRef} className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg">
+      <Command
+        role="listbox"
+        ref={commandRef}
+        className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
+      >
         <ScrollArea className="max-h-[330px]">
           <CommandList>
             <CommandEmpty className="py-3 text-center text-sm text-muted-foreground">
@@ -356,7 +367,7 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
                       onSelect={() => executeCommand(item.command)}
                       className={cn(
                         "gap-3 aria-selected:bg-accent/50",
-                        flatIndex === selectedIndex ? "bg-accent/50" : ""
+                        flatIndex === selectedIndex ? "bg-accent/50" : "",
                       )}
                       aria-selected={flatIndex === selectedIndex}
                       ref={(el) => {

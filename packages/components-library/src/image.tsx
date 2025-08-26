@@ -70,7 +70,7 @@ export const Image = (props: ImgProps) => {
         src={source}
         placeholder="blur"
         blurDataURL={`data:image/svg+xml;base64,${toBase64(
-          shimmer("100%", "auto")
+          shimmer("100%", "auto"),
         )}`}
         alt={alt || source}
         priority={loading === "eager"}

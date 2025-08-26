@@ -28,7 +28,7 @@ export interface AnswerScoringResult {
 }
 
 export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
-  abstract readonly type: T['type'];
+  abstract readonly type: T["type"];
   abstract readonly description: string;
   abstract readonly displayName: string;
 
@@ -36,16 +36,25 @@ export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
   protected abstract getSpecificValidationSchema(): z.ZodObject<z.ZodRawShape>;
 
   // Abstract method for answer-specific validation
-  protected abstract validateAnswerSpecific(answer: QuestionAnswer, question: T): string[];
+  protected abstract validateAnswerSpecific(
+    answer: QuestionAnswer,
+    question: T,
+  ): string[];
 
   // Abstract method for answer normalization
-  protected abstract normalizeAnswer(answer: QuestionAnswer, question: T): QuestionAnswer;
+  protected abstract normalizeAnswer(
+    answer: QuestionAnswer,
+    question: T,
+  ): QuestionAnswer;
 
   // Abstract method for answer validation - must be public to implement interface
   abstract isAnswerCorrect(answer: QuestionAnswer, question: T): boolean;
 
   // Common validation logic using Zod
-  validateQuestion(question: Partial<T>): { isValid: boolean; errors: string[] } {
+  validateQuestion(question: Partial<T>): {
+    isValid: boolean;
+    errors: string[];
+  } {
     try {
       const baseSchema = baseQuestionSchema.partial();
       const specificSchema = this.getSpecificValidationSchema();
@@ -57,12 +66,12 @@ export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
       if (error instanceof z.ZodError) {
         return {
           isValid: false,
-          errors: error.errors.map(e => e.message)
+          errors: error.errors.map((e) => e.message),
         };
       }
       return {
         isValid: false,
-        errors: ["Validation failed"]
+        errors: ["Validation failed"],
       };
     }
   }
@@ -83,7 +92,10 @@ export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
     return {
       isValid: errors.length === 0,
       errors,
-      normalizedAnswer: errors.length === 0 ? this.normalizeAnswer(answer, question) : undefined
+      normalizedAnswer:
+        errors.length === 0
+          ? this.normalizeAnswer(answer, question)
+          : undefined,
     };
   }
 
@@ -114,14 +126,19 @@ export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
     } catch (error) {
       console.log("error", error);
       if (error instanceof z.ZodError) {
-        throw new Error(`Validation failed: ${error.errors.map(e => e.message).join(", ")}`);
+        throw new Error(
+          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+        );
       }
       throw new Error("Validation failed");
     }
   }
 
   // Validate and prepare data for updates
-  getValidatedUpdateData(existingQuestion: T, updateData: Partial<T>): Partial<T> {
+  getValidatedUpdateData(
+    existingQuestion: T,
+    updateData: Partial<T>,
+  ): Partial<T> {
     try {
       const baseSchema = baseQuestionSchema.partial();
       const specificSchema = this.getSpecificValidationSchema();
@@ -136,7 +153,9 @@ export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
       return validatedData as Partial<T>;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        throw new Error(`Validation failed: ${error.errors.map(e => e.message).join(", ")}`);
+        throw new Error(
+          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+        );
       }
       throw new Error("Validation failed");
     }
@@ -163,12 +182,15 @@ export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
   }
 
   // Common display processing
-  processQuestionForDisplay(question: T, hideAnswers: boolean = true): Partial<T> {
+  processQuestionForDisplay(
+    question: T,
+    hideAnswers: boolean = true,
+  ): Partial<T> {
     const processed = { ...question };
 
     if (hideAnswers) {
-      delete (processed).correctAnswers;
-      delete (processed).explanation;
+      delete processed.correctAnswers;
+      delete processed.explanation;
     }
 
     return processed;
@@ -178,7 +200,7 @@ export abstract class BaseQuestionProvider<T extends IQuestion = IQuestion> {
   getDefaultSettings(): Record<string, unknown> {
     return {
       points: 1,
-      shuffleOptions: true
+      shuffleOptions: true,
     };
   }
 }

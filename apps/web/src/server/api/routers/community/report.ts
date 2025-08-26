@@ -1,5 +1,8 @@
 import { responses } from "@/config/strings";
-import { getNextStatusForCommunityReport, hasCommunityPermission } from "@/lib/ui/lib/utils";
+import {
+  getNextStatusForCommunityReport,
+  hasCommunityPermission,
+} from "@/lib/ui/lib/utils";
 import CommunityCommentModel, {
   InternalCommunityComment,
 } from "@/models/CommunityComment";
@@ -16,13 +19,13 @@ import {
   CommunityReport,
   CommunityReportType,
   Constants,
-  Membership
+  Membership,
 } from "@workspace/common-models";
 import mongoose from "mongoose";
 import { z } from "zod";
 import {
   AuthorizationException,
-  NotFoundException
+  NotFoundException,
 } from "../../core/exceptions";
 import {
   createDomainRequiredMiddleware,
@@ -34,7 +37,7 @@ import { paginate } from "../../core/utils";
 import {
   getCommunityObjOrAssert,
   getMembership,
-  toggleContentVisibility
+  toggleContentVisibility,
 } from "./helpers";
 
 const CreateSchema = getFormDataSchema({
@@ -106,7 +109,7 @@ type CommunityReportPartial = Omit<CommunityReport, "user"> & {
 };
 async function formatCommunityReport(
   report: InternalCommunityReport,
-  domainId: mongoose.Types.ObjectId
+  domainId: mongoose.Types.ObjectId,
 ): Promise<CommunityReportPartial> {
   const content = await getCommunityReportContent({
     domain: domainId,
@@ -147,7 +150,7 @@ async function getPostSubscribersExceptUserId({
 function hasPermissionToDelete(
   membership: Membership,
   comment: InternalCommunityComment,
-  replyId?: string
+  replyId?: string,
 ) {
   const ownerUserId = replyId
     ? comment.replies.find((r) => r.replyId === replyId)?.userId
@@ -173,13 +176,12 @@ export const reportRouter = router({
             ])
             .optional(),
         }),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
-      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
-        input.filter.communityId
+        input.filter.communityId,
       );
       const member = await getMembership(ctx, communityObj.communityId);
       if (
@@ -187,7 +189,7 @@ export const reportRouter = router({
         !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
       ) {
         throw new AuthorizationException(
-          "You are not a member of this community"
+          "You are not a member of this community",
         );
       }
       const query = {
@@ -215,8 +217,8 @@ export const reportRouter = router({
       return {
         items: await Promise.all(
           items.map((item) =>
-            formatCommunityReport(item, ctx.domainData.domainObj._id)
-          )
+            formatCommunityReport(item, ctx.domainData.domainObj._id),
+          ),
         ),
         total,
         meta,
@@ -230,13 +232,12 @@ export const reportRouter = router({
         communityId: z.string(),
         reportId: z.string(),
         rejectionReason: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      
       const communityObj = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const member = await getMembership(ctx, communityObj.communityId);
       if (
@@ -244,7 +245,7 @@ export const reportRouter = router({
         !hasCommunityPermission(member!, Constants.MembershipRole.MODERATE)
       ) {
         throw new AuthorizationException(
-          "You are not a member of this community"
+          "You are not a member of this community",
         );
       }
       const report =

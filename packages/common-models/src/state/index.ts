@@ -8,13 +8,13 @@ import { ServerConfig } from "../server-config";
 // import { Theme } from "@workspacepage-models";
 
 export default interface State {
-    auth: Auth;
-    siteinfo: SiteInfo;
-    networkAction: boolean;
-    profile: Profile;
-    address: Address;
-    // theme: Theme;
-    typefaces: Typeface[];
-    message: Message;
-    config: ServerConfig;
+  auth: Auth;
+  siteinfo: SiteInfo;
+  networkAction: boolean;
+  profile: Profile;
+  address: Address;
+  // theme: Theme;
+  typefaces: Typeface[];
+  message: Message;
+  config: ServerConfig;
 }

@@ -10,44 +10,39 @@ const Free = dynamic(() => import("./free"));
 const Lemonsqueezy = dynamic(() => import("./lemonsqueezy"));
 
 interface CheckoutExternalProps {
-    course: Course;
-    siteInfo: SiteInfo;
+  course: Course;
+  siteInfo: SiteInfo;
 }
 
 const CheckoutExternal = (props: CheckoutExternalProps) => {
-    const { course } = props;
-    const { paymentMethod } = props.siteInfo;
+  const { course } = props;
+  const { paymentMethod } = props.siteInfo;
 
-    return (
-        <div className="flex justify-end">
-            {course.cost === 0 && <Free course={course} />}
-            {course.cost !== 0 && (
-                <>
-                    {paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE && (
-                        <Stripe course={course} />
-                    )}
-                    {paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY && (
-                        <Razorpay course={course} />
-                    )}
-                    {paymentMethod ===
-                        UIConstants.PAYMENT_METHOD_LEMONSQUEEZY && (
-                        <Lemonsqueezy course={course} />
-                    )}
-                    {paymentMethod === UIConstants.PAYMENT_METHOD_PAYTM && (
-                        <></>
-                    )}
-                    {paymentMethod === UIConstants.PAYMENT_METHOD_PAYPAL && (
-                        <></>
-                    )}
-                </>
-            )}
-        </div>
-    );
+  return (
+    <div className="flex justify-end">
+      {course.cost === 0 && <Free course={course} />}
+      {course.cost !== 0 && (
+        <>
+          {paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE && (
+            <Stripe course={course} />
+          )}
+          {paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY && (
+            <Razorpay course={course} />
+          )}
+          {paymentMethod === UIConstants.PAYMENT_METHOD_LEMONSQUEEZY && (
+            <Lemonsqueezy course={course} />
+          )}
+          {paymentMethod === UIConstants.PAYMENT_METHOD_PAYTM && <></>}
+          {paymentMethod === UIConstants.PAYMENT_METHOD_PAYPAL && <></>}
+        </>
+      )}
+    </div>
+  );
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    siteInfo: state.siteinfo,
+  auth: state.auth,
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(CheckoutExternal);

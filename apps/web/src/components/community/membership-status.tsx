@@ -67,7 +67,7 @@ export default function MembershipStatus({
           description: error.message,
         });
       },
-    }
+    },
   );
 
   const handleJoinSubmit = async (e: FormEvent) => {

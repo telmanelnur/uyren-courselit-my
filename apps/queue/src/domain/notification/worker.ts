@@ -18,7 +18,7 @@ const notificationWorker = new Worker(
       logger.error(err);
     }
   },
-  { connection: redisConfig }
+  { connection: redisConfig },
 );
 
 const transporter = nodemailer.createTransport({
@@ -49,12 +49,12 @@ const mailWorker = new Worker(
       throw err;
     }
   },
-  { 
+  {
     connection: redisConfig,
     concurrency: 5,
     removeOnComplete: { age: 24 * 3600, count: 100 },
     removeOnFail: { age: 24 * 3600, count: 50 },
-  }
+  },
 );
 
 function deliverInAppNotification(notification: any) {

@@ -23,7 +23,10 @@ const ServerConfigContext = createContext<ServerConfigContextType>({
   },
 });
 
-export const ServerConfigProvider = ({ children, initialConfig }: PropsWithChildren<{
+export const ServerConfigProvider = ({
+  children,
+  initialConfig,
+}: PropsWithChildren<{
   initialConfig: ServerConfig;
 }>) => {
   const [config, setConfig] = useState<ServerConfig>(initialConfig);
@@ -39,7 +42,7 @@ export const useServerConfig = () => {
   const context = useContext(ServerConfigContext);
   if (!context) {
     throw new Error(
-      "useServerConfig must be used within a ServerConfigProvider"
+      "useServerConfig must be used within a ServerConfigProvider",
     );
   }
   return context;

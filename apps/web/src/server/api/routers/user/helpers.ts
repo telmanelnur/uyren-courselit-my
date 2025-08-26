@@ -78,7 +78,7 @@ export async function createUser({
         providerData,
       },
     },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 
   const createdUser = rawResult;

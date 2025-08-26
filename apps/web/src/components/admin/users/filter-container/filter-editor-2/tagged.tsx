@@ -17,7 +17,11 @@ import React, { useState, useMemo } from "react";
 import { DropdownMenuLabel } from "@workspace/ui/components/dropdown-menu";
 import { trpc } from "@/utils/trpc";
 
-export default function TaggedFilterEditor({ onApply }: { onApply: (...args: any[]) => any }) {
+export default function TaggedFilterEditor({
+  onApply,
+}: {
+  onApply: (...args: any[]) => any;
+}) {
   const [condition, setCondition] = useState(USER_FILTER_PRODUCT_HAS);
   const [value, setValue] = useState("");
   const { toast } = useToast();
@@ -30,7 +34,7 @@ export default function TaggedFilterEditor({ onApply }: { onApply: (...args: any
         label: tag,
         value: tag,
       })),
-    [tagsQuery.data]
+    [tagsQuery.data],
   );
 
   const onSubmit = (e: any) => {
@@ -52,7 +56,10 @@ export default function TaggedFilterEditor({ onApply }: { onApply: (...args: any
         title=""
         options={[
           { label: USER_FILTER_PRODUCT_HAS, value: USER_FILTER_PRODUCT_HAS },
-          { label: USER_FILTER_PRODUCT_DOES_NOT_HAVE, value: USER_FILTER_PRODUCT_DOES_NOT_HAVE },
+          {
+            label: USER_FILTER_PRODUCT_DOES_NOT_HAVE,
+            value: USER_FILTER_PRODUCT_DOES_NOT_HAVE,
+          },
         ]}
       />
       <Select
@@ -64,7 +71,11 @@ export default function TaggedFilterEditor({ onApply }: { onApply: (...args: any
         placeholderMessage={USER_FILTER_TAGGED_DROPDOWN_LABEL}
       />
       <div className="flex justify-between">
-        <FormSubmit disabled={!value} name="apply" text={USER_FILTER_APPLY_BTN} />
+        <FormSubmit
+          disabled={!value}
+          name="apply"
+          text={USER_FILTER_APPLY_BTN}
+        />
         <Button name="cancel" variant="soft">
           {POPUP_CANCEL_ACTION}
         </Button>

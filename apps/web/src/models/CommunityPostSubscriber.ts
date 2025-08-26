@@ -26,14 +26,14 @@ const CommunityPostSubscriberSchema =
     },
     {
       timestamps: true,
-    }
+    },
   );
 
 CommunityPostSubscriberSchema.index({ postId: 1, userId: 1 }, { unique: true });
 
 const CommunityPostSubscriberModel = createModel(
   "CommunityPostSubscriber",
-  CommunityPostSubscriberSchema
+  CommunityPostSubscriberSchema,
 );
 
 export default CommunityPostSubscriberModel;

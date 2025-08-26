@@ -53,9 +53,7 @@ export default function NewTag() {
             {USERS_MANAGER_PAGE_HEADING}
           </Link>
 
-          <Link href={`/dashboard/users?tab=Tags`}>
-            {USERS_TAG_HEADER}
-          </Link>
+          <Link href={`/dashboard/users?tab=Tags`}>{USERS_TAG_HEADER}</Link>
 
           <p>{BTN_NEW_TAG}</p>
         </Breadcrumbs>
@@ -68,13 +66,19 @@ export default function NewTag() {
             label="Tag name"
             name="name"
             value={name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setName(e.target.value)
+            }
           />
           <div className="flex gap-2">
             <Button disabled={!name || loading} onClick={createTag}>
               {BTN_CONTINUE}
             </Button>
-            <Button component="link" href={`/dashboard/users?tab=Tags`} variant="soft">
+            <Button
+              component="link"
+              href={`/dashboard/users?tab=Tags`}
+              variant="soft"
+            >
               {BUTTON_CANCEL_TEXT}
             </Button>
           </div>

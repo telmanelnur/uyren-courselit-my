@@ -214,7 +214,13 @@ type ToasterToast = {
  * A wrapper around sonner's toast function to maintain a similar
  * interface to your original `toast` function.
  */
-function toast({ title, description, action, duration, variant }: Omit<ToasterToast, "id">) {
+function toast({
+  title,
+  description,
+  action,
+  duration,
+  variant,
+}: Omit<ToasterToast, "id">) {
   // sonnerToast returns an ID, which can be useful for programmatic dismissal/updates
   const id = getFn(variant || "info")(title, {
     description: description,

@@ -1,17 +1,20 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import type { Node as TiptapNode } from "@tiptap/pm/model"
-import { offset } from "@floating-ui/react"
+import * as React from "react";
+import type { Node as TiptapNode } from "@tiptap/pm/model";
+import { offset } from "@floating-ui/react";
 
 // Hooks
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
-import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile"
-import { useUiEditorState } from "@workspace/text-editor/tiptap/hooks/use-ui-editor-state"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
+import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile";
+import { useUiEditorState } from "@workspace/text-editor/tiptap/hooks/use-ui-editor-state";
 
 // Primitive UI Components
-import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Spacer } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/spacer"
+import {
+  Button,
+  ButtonGroup,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Spacer } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/spacer";
 import {
   Menu,
   MenuContent,
@@ -19,71 +22,74 @@ import {
   MenuGroup,
   MenuGroupLabel,
   MenuButton,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/menu"
-import { Combobox, ComboboxList } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/combobox"
-import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/menu";
+import {
+  Combobox,
+  ComboboxList,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/combobox";
+import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator";
 
 // Tiptap UI
-import { useImageDownload } from "@workspace/text-editor/tiptap/components/tiptap-ui/image-download-button"
+import { useImageDownload } from "@workspace/text-editor/tiptap/components/tiptap-ui/image-download-button";
 import {
   DuplicateShortcutBadge,
   useDuplicate,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/duplicate-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/duplicate-button";
 import {
   CopyToClipboardShortcutBadge,
   useCopyToClipboard,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/copy-to-clipboard-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/copy-to-clipboard-button";
 import {
   DeleteNodeShortcutBadge,
   useDeleteNode,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/delete-node-button"
-import { useResetAllFormatting } from "@workspace/text-editor/tiptap/components/tiptap-ui/reset-all-formatting-button"
-import { SlashCommandTriggerButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-command-trigger-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/delete-node-button";
+import { useResetAllFormatting } from "@workspace/text-editor/tiptap/components/tiptap-ui/reset-all-formatting-button";
+import { SlashCommandTriggerButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-command-trigger-button";
 import {
   TEXT_COLORS,
   useColorText,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button";
 import {
   HIGHLIGHT_COLORS,
   useColorHighlight,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-highlight-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-highlight-button";
 import {
   AskAiShortcutBadge,
   useAiAsk,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button"
-import { useText } from "@workspace/text-editor/tiptap/components/tiptap-ui/text-button"
-import { useHeading } from "@workspace/text-editor/tiptap/components/tiptap-ui/heading-button"
-import { useList } from "@workspace/text-editor/tiptap/components/tiptap-ui/list-button"
-import { useBlockquote } from "@workspace/text-editor/tiptap/components/tiptap-ui/blockquote-button"
-import { useCodeBlock } from "@workspace/text-editor/tiptap/components/tiptap-ui/code-block-button"
-import type { RecentColor } from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-popover"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button";
+import { useText } from "@workspace/text-editor/tiptap/components/tiptap-ui/text-button";
+import { useHeading } from "@workspace/text-editor/tiptap/components/tiptap-ui/heading-button";
+import { useList } from "@workspace/text-editor/tiptap/components/tiptap-ui/list-button";
+import { useBlockquote } from "@workspace/text-editor/tiptap/components/tiptap-ui/blockquote-button";
+import { useCodeBlock } from "@workspace/text-editor/tiptap/components/tiptap-ui/code-block-button";
+import type { RecentColor } from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-popover";
 import {
   getColorByValue,
   useRecentColors,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-popover"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-popover";
 
-import { DragHandle } from "@tiptap/extension-drag-handle-react"
+import { DragHandle } from "@tiptap/extension-drag-handle-react";
 
 // Utils
 import {
   getNodeDisplayName,
   isTextSelectionValid,
-} from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils"
+} from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils";
 
 import type {
   ColorMenuItemProps,
   DragContextMenuProps,
   MenuItemProps,
   NodeChangeData,
-} from "./drag-context-menu-types"
-import { useMenuActionVisibility } from "./drag-context-menu-hooks"
+} from "./drag-context-menu-types";
+import { useMenuActionVisibility } from "./drag-context-menu-hooks";
 
 // Icons
-import { GripVerticalIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/grip-vertical-icon"
-import { PaintBucketIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/paint-bucket-icon"
-import { ChevronRightIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/chevron-right-icon"
-import { Repeat2Icon } from "@workspace/text-editor/tiptap/components/tiptap-icons/repeat-2-icon"
-import { TextColorSmallIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-color-small-icon"
+import { GripVerticalIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/grip-vertical-icon";
+import { PaintBucketIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/paint-bucket-icon";
+import { ChevronRightIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/chevron-right-icon";
+import { Repeat2Icon } from "@workspace/text-editor/tiptap/components/tiptap-icons/repeat-2-icon";
+import { TextColorSmallIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/text-color-small-icon";
 
 const SR_ONLY = {
   position: "absolute",
@@ -95,18 +101,18 @@ const SR_ONLY = {
   clip: "rect(0, 0, 0, 0)",
   whiteSpace: "nowrap",
   borderWidth: 0,
-} as const
+} as const;
 
 const useNodeTransformActions = () => {
-  const text = useText()
-  const heading1 = useHeading({ level: 1 })
-  const heading2 = useHeading({ level: 2 })
-  const heading3 = useHeading({ level: 3 })
-  const bulletList = useList({ type: "bulletList" })
-  const orderedList = useList({ type: "orderedList" })
-  const taskList = useList({ type: "taskList" })
-  const blockquote = useBlockquote()
-  const codeBlock = useCodeBlock()
+  const text = useText();
+  const heading1 = useHeading({ level: 1 });
+  const heading2 = useHeading({ level: 2 });
+  const heading3 = useHeading({ level: 3 });
+  const bulletList = useList({ type: "bulletList" });
+  const orderedList = useList({ type: "orderedList" });
+  const taskList = useList({ type: "taskList" });
+  const blockquote = useBlockquote();
+  const codeBlock = useCodeBlock();
 
   const mapper = (
     action: ReturnType<
@@ -115,14 +121,14 @@ const useNodeTransformActions = () => {
       | typeof useList
       | typeof useBlockquote
       | typeof useCodeBlock
-    >
+    >,
   ) => ({
     icon: action.Icon,
     label: action.label,
     onClick: action.handleToggle,
     disabled: !action.canToggle,
     isActive: action.isActive,
-  })
+  });
 
   return [
     mapper(text),
@@ -132,8 +138,8 @@ const useNodeTransformActions = () => {
     mapper(taskList),
     mapper(blockquote),
     mapper(codeBlock),
-  ]
-}
+  ];
+};
 
 const BaseMenuItem: React.FC<MenuItemProps> = ({
   icon: Icon,
@@ -154,12 +160,12 @@ const BaseMenuItem: React.FC<MenuItemProps> = ({
     <span className="tiptap-button-text">{label}</span>
     {shortcutBadge}
   </MenuItem>
-)
+);
 
 const SubMenuTrigger: React.FC<{
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  children: React.ReactNode
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  children: React.ReactNode;
 }> = ({ icon: Icon, label, children }) => (
   <Menu
     placement="right"
@@ -184,16 +190,16 @@ const SubMenuTrigger: React.FC<{
       <ComboboxList style={{ width: "fit-content" }}>{children}</ComboboxList>
     </MenuContent>
   </Menu>
-)
+);
 
 const TextColorMenuItem: React.FC<ColorMenuItemProps> = ({ color }) => {
-  const { addRecentColor } = useRecentColors()
+  const { addRecentColor } = useRecentColors();
   const { isActive, handleColorText, label } = useColorText({
     label: color.label,
     textColor: color.value,
     onApplied: ({ color, label }) =>
       addRecentColor({ type: "text", label, value: color }),
-  })
+  });
 
   return (
     <MenuItem
@@ -213,17 +219,17 @@ const TextColorMenuItem: React.FC<ColorMenuItemProps> = ({ color }) => {
       </span>
       <span className="tiptap-button-text">{label}</span>
     </MenuItem>
-  )
-}
+  );
+};
 
 const HighlightColorMenuItem: React.FC<ColorMenuItemProps> = ({ color }) => {
-  const { addRecentColor } = useRecentColors()
+  const { addRecentColor } = useRecentColors();
   const { isActive, handleColorHighlight, label } = useColorHighlight({
     label: color.label,
     highlightColor: color.value,
     onApplied: ({ color, label }) =>
       addRecentColor({ type: "highlight", label, value: color }),
-  })
+  });
 
   return (
     <MenuItem
@@ -241,23 +247,23 @@ const HighlightColorMenuItem: React.FC<ColorMenuItemProps> = ({ color }) => {
       />
       <span className="tiptap-button-text">{label}</span>
     </MenuItem>
-  )
-}
+  );
+};
 
 const RecentColorMenuItem: React.FC<{
-  colorObj: RecentColor
+  colorObj: RecentColor;
 }> = ({ colorObj }) => {
-  const colorSet = colorObj.type === "text" ? TEXT_COLORS : HIGHLIGHT_COLORS
-  const color = getColorByValue(colorObj.value, colorSet)
+  const colorSet = colorObj.type === "text" ? TEXT_COLORS : HIGHLIGHT_COLORS;
+  const color = getColorByValue(colorObj.value, colorSet);
 
   const ColorComponent =
-    colorObj.type === "text" ? TextColorMenuItem : HighlightColorMenuItem
+    colorObj.type === "text" ? TextColorMenuItem : HighlightColorMenuItem;
 
-  return <ColorComponent color={color} />
-}
+  return <ColorComponent color={color} />;
+};
 
 const ColorActionGroup: React.FC = () => {
-  const { recentColors, isInitialized } = useRecentColors()
+  const { recentColors, isInitialized } = useRecentColors();
 
   return (
     <SubMenuTrigger icon={PaintBucketIcon} label="Color">
@@ -293,11 +299,11 @@ const ColorActionGroup: React.FC = () => {
         ))}
       </MenuGroup>
     </SubMenuTrigger>
-  )
-}
+  );
+};
 
 const TransformActionGroup: React.FC = () => {
-  const actions = useNodeTransformActions()
+  const actions = useNodeTransformActions();
   return (
     <SubMenuTrigger icon={Repeat2Icon} label="Turn Into">
       <MenuGroup>
@@ -307,15 +313,15 @@ const TransformActionGroup: React.FC = () => {
         ))}
       </MenuGroup>
     </SubMenuTrigger>
-  )
-}
+  );
+};
 
 const ResetFormattingAction: React.FC = () => {
   const { canReset, handleResetFormatting, label, Icon } =
     useResetAllFormatting({
       hideWhenUnavailable: true,
       preserveMarks: ["inlineThread"],
-    })
+    });
 
   return (
     <BaseMenuItem
@@ -324,13 +330,13 @@ const ResetFormattingAction: React.FC = () => {
       disabled={!canReset}
       onClick={handleResetFormatting}
     />
-  )
-}
+  );
+};
 
 const ImageActionGroup: React.FC = () => {
   const { canDownload, handleDownload, label, Icon } = useImageDownload({
     hideWhenUnavailable: true,
-  })
+  });
 
   return (
     <>
@@ -343,8 +349,8 @@ const ImageActionGroup: React.FC = () => {
 
       <Separator orientation="horizontal" />
     </>
-  )
-}
+  );
+};
 
 const CoreActionGroup: React.FC = () => {
   const {
@@ -352,13 +358,13 @@ const CoreActionGroup: React.FC = () => {
     canDuplicate,
     label,
     Icon: DuplicateIcon,
-  } = useDuplicate()
+  } = useDuplicate();
   const {
     handleCopyToClipboard,
     canCopyToClipboard,
     label: copyLabel,
     Icon: CopyIcon,
-  } = useCopyToClipboard()
+  } = useCopyToClipboard();
 
   return (
     <>
@@ -381,13 +387,13 @@ const CoreActionGroup: React.FC = () => {
 
       <Separator orientation="horizontal" />
     </>
-  )
-}
+  );
+};
 
 const AIActionGroup: React.FC = () => {
-  const { handleAiAsk, canAiAsk, Icon: AiAskIcon } = useAiAsk()
+  const { handleAiAsk, canAiAsk, Icon: AiAskIcon } = useAiAsk();
 
-  if (!canAiAsk) return null
+  if (!canAiAsk) return null;
 
   return (
     <>
@@ -404,11 +410,11 @@ const AIActionGroup: React.FC = () => {
 
       <Separator orientation="horizontal" />
     </>
-  )
-}
+  );
+};
 
 const DeleteActionGroup: React.FC = () => {
-  const { handleDeleteNode, canDeleteNode, label, Icon } = useDeleteNode()
+  const { handleDeleteNode, canDeleteNode, label, Icon } = useDeleteNode();
 
   return (
     <MenuGroup>
@@ -420,8 +426,8 @@ const DeleteActionGroup: React.FC = () => {
         shortcutBadge={<DeleteNodeShortcutBadge />}
       />
     </MenuGroup>
-  )
-}
+  );
+};
 
 export const DragContextMenu: React.FC<DragContextMenuProps> = ({
   editor: providedEditor,
@@ -429,23 +435,23 @@ export const DragContextMenu: React.FC<DragContextMenuProps> = ({
   mobileBreakpoint = 768,
   ...props
 }) => {
-  const { editor } = useTiptapEditor(providedEditor)
-  const { aiGenerationActive } = useUiEditorState(editor)
-  const isMobile = useIsMobile(mobileBreakpoint)
-  const [open, setOpen] = React.useState(false)
-  const [node, setNode] = React.useState<TiptapNode | null>(null)
-  const [nodePos, setNodePos] = React.useState<number>(-1)
+  const { editor } = useTiptapEditor(providedEditor);
+  const { aiGenerationActive } = useUiEditorState(editor);
+  const isMobile = useIsMobile(mobileBreakpoint);
+  const [open, setOpen] = React.useState(false);
+  const [node, setNode] = React.useState<TiptapNode | null>(null);
+  const [nodePos, setNodePos] = React.useState<number>(-1);
 
   const handleNodeChange = React.useCallback((data: NodeChangeData) => {
-    if (data.node) setNode(data.node)
-    setNodePos(data.pos)
-  }, [])
+    if (data.node) setNode(data.node);
+    setNodePos(data.pos);
+  }, []);
 
   React.useEffect(() => {
-    if (!editor) return
-    editor.commands.setLockDragHandle(open)
-    editor.commands.setMeta("lockDragHandle", open)
-  }, [editor, open])
+    if (!editor) return;
+    editor.commands.setLockDragHandle(open);
+    editor.commands.setMeta("lockDragHandle", open);
+  }, [editor, open]);
 
   const {
     hasAnyActionGroups,
@@ -453,34 +459,34 @@ export const DragContextMenu: React.FC<DragContextMenuProps> = ({
     hasTransformActions,
     hasResetFormatting,
     hasImage,
-  } = useMenuActionVisibility(editor)
+  } = useMenuActionVisibility(editor);
 
   const dynamicPositions = React.useMemo(() => {
     return {
       middleware: [
         offset(({ rects }) => {
-          const nodeHeight = rects.reference.height
-          const dragHandleHeight = 32
+          const nodeHeight = rects.reference.height;
+          const dragHandleHeight = 32;
 
-          const crossAxis = nodeHeight / 2 - dragHandleHeight / 2
+          const crossAxis = nodeHeight / 2 - dragHandleHeight / 2;
 
           return {
             mainAxis: 16,
             // if height is more than 40px, then it's likely a block node
             crossAxis: nodeHeight > 40 ? 0 : crossAxis,
-          }
+          };
         }),
       ],
-    }
-  }, [])
+    };
+  }, []);
 
   const handleOnMenuClose = React.useCallback(() => {
     if (editor) {
-      editor.commands.setMeta("hideDragHandle", true)
+      editor.commands.setMeta("hideDragHandle", true);
     }
-  }, [editor])
+  }, [editor]);
 
-  if (!editor) return null
+  if (!editor) return null;
 
   return (
     <DragHandle
@@ -527,8 +533,8 @@ export const DragContextMenu: React.FC<DragContextMenuProps> = ({
                     ...(open ? { pointerEvents: "none" } : {}),
                   }}
                   onMouseDown={() => {
-                    if (!editor) return
-                    editor.commands.setNodeSelection(nodePos)
+                    if (!editor) return;
+                    editor.commands.setNodeSelection(nodePos);
                   }}
                 >
                   <GripVerticalIcon className="tiptap-button-icon" />
@@ -565,5 +571,5 @@ export const DragContextMenu: React.FC<DragContextMenuProps> = ({
         </Menu>
       </ButtonGroup>
     </DragHandle>
-  )
-}
+  );
+};

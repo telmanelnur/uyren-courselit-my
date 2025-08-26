@@ -87,7 +87,7 @@ async function getMessage({
       let parentReply;
       if (reply.parentReplyId) {
         parentReply = comment.replies.find(
-          (r: any) => r.replyId === reply.parentReplyId
+          (r: any) => r.replyId === reply.parentReplyId,
         );
       }
 
@@ -194,7 +194,7 @@ async function getMessage({
 // Helper function to format a single notification
 async function formatNotification(
   notification: any,
-  loggedInUserId: string
+  loggedInUserId: string,
 ): Promise<Notification> {
   const userName = await getUserName(notification.userId);
   const { message, href } = await getMessage({
@@ -217,12 +217,12 @@ async function formatNotification(
 // Helper function to format multiple notifications
 async function formatNotifications(
   notifications: any[],
-  loggedInUserId: string
+  loggedInUserId: string,
 ): Promise<Notification[]> {
   return Promise.all(
     notifications.map(async (notification) => {
       return await formatNotification(notification, loggedInUserId);
-    })
+    }),
   );
 }
 
@@ -233,7 +233,7 @@ export const notificationRouter = router({
       ListInputSchema.extend({
         page: z.number().int().positive().default(1),
         limit: z.number().int().positive().max(50).default(10),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       try {
@@ -260,7 +260,7 @@ export const notificationRouter = router({
 
         const formattedNotifications = await formatNotifications(
           notifications,
-          userId
+          userId,
         );
 
         return {
@@ -286,7 +286,7 @@ export const notificationRouter = router({
     .input(
       z.object({
         notificationId: z.string().min(1),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       try {
@@ -323,7 +323,7 @@ export const notificationRouter = router({
     .input(
       z.object({
         notificationId: z.string().min(1),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
@@ -338,7 +338,7 @@ export const notificationRouter = router({
             notificationId: input.notificationId,
           },
           { read: true },
-          { new: true }
+          { new: true },
         );
 
         if (!notification) {
@@ -372,7 +372,7 @@ export const notificationRouter = router({
           forUserId: userId,
           read: false,
         },
-        { read: true }
+        { read: true },
       );
 
       return { success: true, message: "All notifications marked as read" };

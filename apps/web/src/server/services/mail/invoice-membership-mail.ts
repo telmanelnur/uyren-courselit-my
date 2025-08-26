@@ -71,7 +71,9 @@ export async function sendInvoiceMembershipEmail({
     }
 
     // Get course details
-    const course = await CourseModel.findOne({ courseId: membership.entityId }).lean();
+    const course = await CourseModel.findOne({
+      courseId: membership.entityId,
+    }).lean();
     if (!course) {
       throw new Error(`Course not found: ${membership.entityId}`);
     }
@@ -128,11 +130,14 @@ export async function sendInvoiceMembershipEmail({
       membershipId: membership.membershipId,
       membershipStatus: membership.status,
       membershipRole: membership.role || "Student",
-      membershipDate: new Date(membership.createdAt || Date.now()).toLocaleDateString(),
+      membershipDate: new Date(
+        membership.createdAt || Date.now(),
+      ).toLocaleDateString(),
       currencySymbol: "$", // Default currency symbol
-      loginLink: eventType === "checkout.session.expired" 
-        ? `${headers.host}/checkout?type=course&id=${membership.entityId}`
-        : `${headers.host}/login`,
+      loginLink:
+        eventType === "checkout.session.expired"
+          ? `${headers.host}/checkout?type=course&id=${membership.entityId}`
+          : `${headers.host}/login`,
       userName: user.name || user.email,
       userEmail: user.email,
       currentDate: new Date().toLocaleDateString(),
@@ -147,8 +152,10 @@ export async function sendInvoiceMembershipEmail({
       emailData.amount = invoice.amount;
       emailData.invoiceStatus = invoice.status;
       emailData.paymentProcessor = invoice.paymentProcessor;
-      emailData.invoiceDate = new Date(invoice.createdAt || Date.now()).toLocaleDateString();
-      
+      emailData.invoiceDate = new Date(
+        invoice.createdAt || Date.now(),
+      ).toLocaleDateString();
+
       // Update currency symbol based on invoice
       emailData.currencySymbol = getCurrencySymbol(invoice.currencyISOCode);
     }
@@ -215,7 +222,11 @@ function getCurrencySymbol(currencyISOCode: string): string {
 }
 
 // Convenience functions for different email types
-export async function sendMembershipApprovalEmail(membershipId: string, domain: any, headers: any) {
+export async function sendMembershipApprovalEmail(
+  membershipId: string,
+  domain: any,
+  headers: any,
+) {
   return sendInvoiceMembershipEmail({
     membershipId,
     domain,
@@ -223,7 +234,11 @@ export async function sendMembershipApprovalEmail(membershipId: string, domain: 
   });
 }
 
-export async function sendMembershipPendingEmail(membershipId: string, domain: any, headers: any) {
+export async function sendMembershipPendingEmail(
+  membershipId: string,
+  domain: any,
+  headers: any,
+) {
   return sendInvoiceMembershipEmail({
     membershipId,
     domain,
@@ -231,7 +246,11 @@ export async function sendMembershipPendingEmail(membershipId: string, domain: a
   });
 }
 
-export async function sendMembershipRejectionEmail(membershipId: string, domain: any, headers: any) {
+export async function sendMembershipRejectionEmail(
+  membershipId: string,
+  domain: any,
+  headers: any,
+) {
   return sendInvoiceMembershipEmail({
     membershipId,
     domain,
@@ -239,7 +258,12 @@ export async function sendMembershipRejectionEmail(membershipId: string, domain:
   });
 }
 
-export async function sendInvoicePaidEmail(membershipId: string, invoiceId: string, domain: any, headers: any) {
+export async function sendInvoicePaidEmail(
+  membershipId: string,
+  invoiceId: string,
+  domain: any,
+  headers: any,
+) {
   return sendInvoiceMembershipEmail({
     membershipId,
     invoiceId,
@@ -248,7 +272,12 @@ export async function sendInvoicePaidEmail(membershipId: string, invoiceId: stri
   });
 }
 
-export async function sendInvoiceFailedEmail(membershipId: string, invoiceId: string, domain: any, headers: any) {
+export async function sendInvoiceFailedEmail(
+  membershipId: string,
+  invoiceId: string,
+  domain: any,
+  headers: any,
+) {
   return sendInvoiceMembershipEmail({
     membershipId,
     invoiceId,
@@ -258,7 +287,12 @@ export async function sendInvoiceFailedEmail(membershipId: string, invoiceId: st
 }
 
 // New convenience function for payment expiration
-export async function sendPaymentExpirationEmail(membershipId: string, invoiceId: string, domain: any, headers: any) {
+export async function sendPaymentExpirationEmail(
+  membershipId: string,
+  invoiceId: string,
+  domain: any,
+  headers: any,
+) {
   return sendInvoiceMembershipEmail({
     membershipId,
     invoiceId,

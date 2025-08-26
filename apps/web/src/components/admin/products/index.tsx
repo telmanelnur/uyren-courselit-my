@@ -1,24 +1,24 @@
 import {
-    BTN_NEW_PRODUCT,
-    MANAGE_COURSES_PAGE_HEADING,
-    PRODUCTS_TABLE_HEADER_ACTIONS,
-    PRODUCTS_TABLE_HEADER_NAME,
-    PRODUCTS_TABLE_HEADER_SALES,
-    PRODUCTS_TABLE_HEADER_STATUS,
-    PRODUCTS_TABLE_HEADER_STUDENTS,
-    PRODUCTS_TABLE_HEADER_TYPE,
-    TOAST_TITLE_ERROR,
+  BTN_NEW_PRODUCT,
+  MANAGE_COURSES_PAGE_HEADING,
+  PRODUCTS_TABLE_HEADER_ACTIONS,
+  PRODUCTS_TABLE_HEADER_NAME,
+  PRODUCTS_TABLE_HEADER_SALES,
+  PRODUCTS_TABLE_HEADER_STATUS,
+  PRODUCTS_TABLE_HEADER_STUDENTS,
+  PRODUCTS_TABLE_HEADER_TYPE,
+  TOAST_TITLE_ERROR,
 } from "@/lib/ui/config/strings";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import type { Address, SiteInfo } from "@workspace/common-models";
 import {
-    Button,
-    Link,
-    Table,
-    TableBody,
-    TableHead,
-    useToast,
+  Button,
+  Link,
+  Table,
+  TableBody,
+  TableHead,
+  useToast,
 } from "@workspace/components-library";
 import { useEffect, useState } from "react";
 import Product from "./product";

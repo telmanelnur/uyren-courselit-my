@@ -9,7 +9,7 @@ import type {
   MembershipRole,
   PaymentPlan,
   Profile,
-  Typeface
+  Typeface,
 } from "@workspace/common-models";
 import { Constants, UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
@@ -20,7 +20,7 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const formattedLocaleDate = (
   epochString?: Date | number | string,
-  monthFormat?: "short" | "long"
+  monthFormat?: "short" | "long",
 ) => {
   if (epochString) {
     return new Date(Number(epochString)).toLocaleString("en-US", {
@@ -33,7 +33,8 @@ export const formattedLocaleDate = (
 };
 
 export const formulateCourseUrl = (course: any, backend = "") =>
-  `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${course.slug
+  `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${
+    course.slug
   }`;
 
 export const getAddress = (host: string) => {
@@ -54,7 +55,6 @@ export const canAccessDashboard = (profile: Profile) => {
   ]);
 };
 
-
 export const isEnrolled = (courseId: string, profile: Profile) =>
   profile.fetched &&
   profile.purchases.some((purchase: any) => purchase.courseId === courseId);
@@ -69,7 +69,7 @@ export const isLessonCompleted = ({
   profile: Profile;
 }) => {
   const indexOfCurrentCourse = profile.purchases.findIndex(
-    (purchase) => purchase.courseId === courseId
+    (purchase) => purchase.courseId === courseId,
   );
   if (indexOfCurrentCourse === -1) return false;
   const tmp = profile.purchases[indexOfCurrentCourse];
@@ -87,8 +87,8 @@ export const generateFontString = (typefaces: Typeface[]): string => {
       fontStringPieces.push(
         `family=${typeface.typeface.replace(
           /\s/g,
-          "+"
-        )}:wght@${typeface.fontWeights.join(";")}`
+          "+",
+        )}:wght@${typeface.fontWeights.join(";")}`,
       );
     }
   }
@@ -132,7 +132,6 @@ export const sortCourseGroups = (course: Course) => {
   }
   return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
 };
-
 
 export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
   const statusCycle = [
@@ -191,7 +190,7 @@ export function getPlanPrice(plan: PaymentPlan): {
 
 export function hasCommunityPermission(
   member: Pick<Membership, "role">,
-  requiredRole: MembershipRole
+  requiredRole: MembershipRole,
 ): boolean {
   const roleHierarchy = [
     Constants.MembershipRole.COMMENT,
@@ -199,7 +198,7 @@ export function hasCommunityPermission(
     Constants.MembershipRole.MODERATE,
   ];
   const memberRoleIndex = roleHierarchy.indexOf(
-    member.role.toLowerCase() as MembershipRole
+    member.role.toLowerCase() as MembershipRole,
   );
   const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
 

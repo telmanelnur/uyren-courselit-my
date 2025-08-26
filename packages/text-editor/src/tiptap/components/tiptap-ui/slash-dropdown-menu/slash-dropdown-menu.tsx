@@ -1,53 +1,63 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 // --- Lib ---
-import { getElementOverflowPosition } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils"
+import { getElementOverflowPosition } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils";
 
 // --- Tiptap UI ---
 import type {
   SuggestionItem,
   SuggestionMenuProps,
   SuggestionMenuRenderProps,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu"
-import { filterSuggestionItems, SuggestionMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu";
+import {
+  filterSuggestionItems,
+  SuggestionMenu,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-utils/suggestion-menu";
 
 // --- Hooks ---
-import type { SlashMenuConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/use-slash-dropdown-menu"
-import { useSlashDropdownMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/use-slash-dropdown-menu"
+import type { SlashMenuConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/use-slash-dropdown-menu";
+import { useSlashDropdownMenu } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/use-slash-dropdown-menu";
 
 // --- UI Primitives ---
-import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
+import {
+  Button,
+  ButtonGroup,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
   CardGroupLabel,
   CardItemGroup,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card"
-import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card";
+import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator";
 
-import "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/slash-dropdown-menu.scss"
+import "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu/slash-dropdown-menu.scss";
 
 type SlashDropdownMenuProps = Omit<
   SuggestionMenuProps,
   "items" | "children"
 > & {
-  config?: SlashMenuConfig
-}
+  config?: SlashMenuConfig;
+};
 
 export const SlashDropdownMenu = (props: SlashDropdownMenuProps) => {
-  const { config, ...restProps } = props
-  const { getSlashMenuItems } = useSlashDropdownMenu(config)
-  const [isDark, setIsDark] = React.useState(false)
+  const { config, ...restProps } = props;
+  const { getSlashMenuItems } = useSlashDropdownMenu(config);
+  const [isDark, setIsDark] = React.useState(false);
 
   React.useEffect(() => {
-    const update = () => setIsDark(document.body.classList.contains('code-dark'))
-    update()
-    const observer = new MutationObserver(update)
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] })
-    return () => observer.disconnect()
-  }, [])
+    const update = () =>
+      setIsDark(document.body.classList.contains("code-dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <SuggestionMenu
@@ -57,44 +67,44 @@ export const SlashDropdownMenu = (props: SlashDropdownMenuProps) => {
       decorationContent="Filter..."
       selector="tiptap-slash-dropdown-menu"
       items={({ query, editor }) => {
-        const items = filterSuggestionItems(getSlashMenuItems(editor), query)
-        return items
+        const items = filterSuggestionItems(getSlashMenuItems(editor), query);
+        return items;
       }}
       {...restProps}
     >
       {(props) => <List {...props} config={config} isDark={isDark} />}
     </SuggestionMenu>
-  )
-}
+  );
+};
 
 const Item = (props: {
-  item: SuggestionItem
-  isSelected: boolean
-  onSelect: () => void
-  isDark?: boolean
+  item: SuggestionItem;
+  isSelected: boolean;
+  onSelect: () => void;
+  isDark?: boolean;
 }) => {
-  const { item, isSelected, onSelect, isDark } = props
-  const itemRef = React.useRef<HTMLButtonElement>(null)
-  const [hovered, setHovered] = React.useState(false)
+  const { item, isSelected, onSelect, isDark } = props;
+  const itemRef = React.useRef<HTMLButtonElement>(null);
+  const [hovered, setHovered] = React.useState(false);
 
   React.useEffect(() => {
     const selector = document.querySelector(
-      '[data-selector="tiptap-slash-dropdown-menu"]'
-    ) as HTMLElement
-    if (!itemRef.current || !isSelected || !selector) return
+      '[data-selector="tiptap-slash-dropdown-menu"]',
+    ) as HTMLElement;
+    if (!itemRef.current || !isSelected || !selector) return;
 
-    const overflow = getElementOverflowPosition(itemRef.current, selector)
+    const overflow = getElementOverflowPosition(itemRef.current, selector);
 
     if (overflow === "top") {
-      itemRef.current.scrollIntoView(true)
+      itemRef.current.scrollIntoView(true);
     } else if (overflow === "bottom") {
-      itemRef.current.scrollIntoView(false)
+      itemRef.current.scrollIntoView(false);
     }
-  }, [isSelected])
+  }, [isSelected]);
 
-  const BadgeIcon = item.badge
+  const BadgeIcon = item.badge;
 
-  const dynamicColor = isDark ? (hovered ? '#000000' : '#ffffff') : undefined
+  const dynamicColor = isDark ? (hovered ? "#000000" : "#ffffff") : undefined;
 
   return (
     <Button
@@ -112,10 +122,12 @@ const Item = (props: {
           style={{ color: dynamicColor, fill: dynamicColor }}
         />
       )}
-      <div className="tiptap-button-text" style={{ color: dynamicColor }}>{item.title}</div>
+      <div className="tiptap-button-text" style={{ color: dynamicColor }}>
+        {item.title}
+      </div>
     </Button>
-  )
-}
+  );
+};
 
 const List = ({
   items,
@@ -123,10 +135,13 @@ const List = ({
   onSelect,
   config,
   isDark,
-}: SuggestionMenuRenderProps & { config?: SlashMenuConfig; isDark?: boolean }) => {
+}: SuggestionMenuRenderProps & {
+  config?: SlashMenuConfig;
+  isDark?: boolean;
+}) => {
   const renderedItems = React.useMemo(() => {
-    const rendered: React.ReactElement[] = []
-    const showGroups = config?.showGroups !== false
+    const rendered: React.ReactElement[] = [];
+    const showGroups = config?.showGroups !== false;
 
     if (!showGroups) {
       items.forEach((item, index) => {
@@ -137,34 +152,37 @@ const List = ({
             isSelected={index === selectedIndex}
             onSelect={() => onSelect(item)}
             isDark={isDark}
-          />
-        )
-      })
-      return rendered
+          />,
+        );
+      });
+      return rendered;
     }
 
     const groups: {
-      [groupLabel: string]: { items: SuggestionItem[]; indices: number[] }
-    } = {}
+      [groupLabel: string]: { items: SuggestionItem[]; indices: number[] };
+    } = {};
 
     items.forEach((item, index) => {
-      const groupLabel = item.group || ""
+      const groupLabel = item.group || "";
       if (!groups[groupLabel]) {
-        groups[groupLabel] = { items: [], indices: [] }
+        groups[groupLabel] = { items: [], indices: [] };
       }
-      groups[groupLabel].items.push(item)
-      groups[groupLabel].indices.push(index)
-    })
+      groups[groupLabel].items.push(item);
+      groups[groupLabel].indices.push(index);
+    });
 
     Object.entries(groups).forEach(([groupLabel, groupData], groupIndex) => {
       if (groupIndex > 0) {
         rendered.push(
-          <Separator key={`separator-${groupIndex}`} orientation="horizontal" />
-        )
+          <Separator
+            key={`separator-${groupIndex}`}
+            orientation="horizontal"
+          />,
+        );
       }
 
       const groupItems = groupData.items.map((item, itemIndex) => {
-        const originalIndex = groupData.indices[itemIndex]
+        const originalIndex = groupData.indices[itemIndex];
         return (
           <Item
             key={`item-${originalIndex}-${item.title}`}
@@ -173,28 +191,28 @@ const List = ({
             onSelect={() => onSelect(item)}
             isDark={isDark}
           />
-        )
-      })
+        );
+      });
 
       if (groupLabel) {
         rendered.push(
           <CardItemGroup key={`group-${groupIndex}-${groupLabel}`}>
-            <CardGroupLabel style={{ color: isDark ? '#8b949e' : undefined }}>
+            <CardGroupLabel style={{ color: isDark ? "#8b949e" : undefined }}>
               {groupLabel}
             </CardGroupLabel>
             <ButtonGroup>{groupItems}</ButtonGroup>
-          </CardItemGroup>
-        )
+          </CardItemGroup>,
+        );
       } else {
-        rendered.push(...groupItems)
+        rendered.push(...groupItems);
       }
-    })
+    });
 
-    return rendered
-  }, [items, selectedIndex, onSelect, config?.showGroups, isDark])
+    return rendered;
+  }, [items, selectedIndex, onSelect, config?.showGroups, isDark]);
 
   if (!renderedItems.length) {
-    return null
+    return null;
   }
 
   return (
@@ -202,12 +220,17 @@ const List = ({
       className="tiptap-slash-card"
       style={{
         maxHeight: "var(--suggestion-menu-max-height)",
-        backgroundColor: isDark ? '#1e1e1e' : undefined,
-        borderColor: isDark ? '#30363d' : undefined,
-        color: isDark ? '#c9d1d9' : undefined,
+        backgroundColor: isDark ? "#1e1e1e" : undefined,
+        borderColor: isDark ? "#30363d" : undefined,
+        color: isDark ? "#c9d1d9" : undefined,
       }}
     >
-      <CardBody className="tiptap-slash-card-body" style={{ color: isDark ? '#c9d1d9' : undefined }}>{renderedItems}</CardBody>
+      <CardBody
+        className="tiptap-slash-card-body"
+        style={{ color: isDark ? "#c9d1d9" : undefined }}
+      >
+        {renderedItems}
+      </CardBody>
     </Card>
-  )
-}
+  );
+};

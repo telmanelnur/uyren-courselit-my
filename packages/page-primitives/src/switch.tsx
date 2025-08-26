@@ -16,7 +16,7 @@ export const Switch = React.forwardRef<
     // Base styles
     "",
     // User overrides
-    className
+    className,
   );
 
   return <ShadcnSwitch ref={ref} className={classes} {...props} />;

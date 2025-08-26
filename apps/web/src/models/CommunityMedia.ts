@@ -3,10 +3,10 @@ import { MediaSchema } from "./Media";
 import { CommunityMedia } from "@workspace/common-models";
 
 const CommunityMediaSchema = new mongoose.Schema<CommunityMedia>({
-    type: { type: String, required: true },
-    title: { type: String, required: true },
-    url: { type: String },
-    media: MediaSchema,
+  type: { type: String, required: true },
+  title: { type: String, required: true },
+  url: { type: String },
+  media: MediaSchema,
 });
 
 export default CommunityMediaSchema;

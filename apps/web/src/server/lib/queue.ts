@@ -24,14 +24,17 @@ interface MailProps {
 export async function addMailJob({ to, from, subject, body }: MailProps) {
   try {
     const jwtSecret = getJwtSecret();
-    const token = jwtUtils.generateToken({
-      user: {
-        userId: "test-user-id",
-        email: "test@example.com",
-        domain: "test-domain-id"
+    const token = jwtUtils.generateToken(
+      {
+        user: {
+          userId: "test-user-id",
+          email: "test@example.com",
+          domain: "test-domain-id",
+        },
+        service: "app",
       },
-      service: "app"
-    }, jwtSecret);
+      jwtSecret,
+    );
     const response = await fetch(`${queueServer}/api/job/mail`, {
       method: "POST",
       headers: {
@@ -75,17 +78,28 @@ export async function addNotification({
   userId: string;
   entityTargetId?: string;
 }) {
-  console.log("addNotification", domain, entityId, entityAction, forUserIds, userId, entityTargetId);
+  console.log(
+    "addNotification",
+    domain,
+    entityId,
+    entityAction,
+    forUserIds,
+    userId,
+    entityTargetId,
+  );
   try {
     const jwtSecret = getJwtSecret();
-    const token = jwtUtils.generateToken({
-      user: {
-        userId: "test-user-id",
-        email: "test@example.com",
-        domain: "test-domain-id"
+    const token = jwtUtils.generateToken(
+      {
+        user: {
+          userId: "test-user-id",
+          email: "test@example.com",
+          domain: "test-domain-id",
+        },
+        service: "app",
       },
-      service: "app"
-    }, jwtSecret);
+      jwtSecret,
+    );
     const response = await fetch(`${queueServer}/api/job/notification`, {
       method: "POST",
       headers: {

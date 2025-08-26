@@ -2,7 +2,7 @@ import { router } from "../../core/trpc";
 import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
-  protectedProcedure
+  protectedProcedure,
 } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { paginate } from "../../core/utils";
@@ -24,10 +24,13 @@ export const sequenceRouter = router({
     .use(createPermissionMiddleware([permissions.manageUsers]))
     .input(
       ListInputSchema.extend({
-        filter: z.object({
-          type: z.enum(["broadcast", "sequence"]).optional(),
-        }).optional().default({}),
-      })
+        filter: z
+          .object({
+            type: z.enum(["broadcast", "sequence"]).optional(),
+          })
+          .optional()
+          .default({}),
+      }),
     )
     .query(async ({ ctx, input }) => {
       const query: RootFilterQuery<AdminSequence> = {
@@ -56,7 +59,7 @@ export const sequenceRouter = router({
           : Promise.resolve(null),
       ]);
       return {
-        items: items.map(seq => ({
+        items: items.map((seq) => ({
           sequenceId: seq.sequenceId,
           title: seq.title || "",
           emails: seq.emails || [],
@@ -71,9 +74,11 @@ export const sequenceRouter = router({
   getById: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(z.object({
-      sequenceId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -97,9 +102,11 @@ export const sequenceRouter = router({
   create: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(getFormDataSchema({
-      type: z.enum(["broadcast", "sequence"]),
-    }))
+    .input(
+      getFormDataSchema({
+        type: z.enum(["broadcast", "sequence"]),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // const sequence = await SequenceModel.create({
       //   domain: ctx.domainData.domainObj._id,
@@ -169,12 +176,14 @@ export const sequenceRouter = router({
   update: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(getFormDataSchema({
-      title: z.string().min(1).max(255).optional(),
-      status: z.enum(Constants.sequenceStatus as any).optional(),
-    }).extend({
-      sequenceId: z.string(),
-    }))
+    .input(
+      getFormDataSchema({
+        title: z.string().min(1).max(255).optional(),
+        status: z.enum(Constants.sequenceStatus as any).optional(),
+      }).extend({
+        sequenceId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -185,7 +194,7 @@ export const sequenceRouter = router({
         throw new NotFoundException("Sequence", input.sequenceId);
       }
 
-      Object.keys(input.data).forEach(key => {
+      Object.keys(input.data).forEach((key) => {
         (sequence as any)[key] = (input.data as any)[key];
       });
 
@@ -201,9 +210,11 @@ export const sequenceRouter = router({
   delete: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(z.object({
-      sequenceId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -225,9 +236,11 @@ export const sequenceRouter = router({
   startSequence: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(z.object({
-      sequenceId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -250,9 +263,11 @@ export const sequenceRouter = router({
   pauseSequence: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(z.object({
-      sequenceId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -275,9 +290,11 @@ export const sequenceRouter = router({
   addMailToSequence: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(z.object({
-      sequenceId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -311,10 +328,12 @@ export const sequenceRouter = router({
   deleteMailFromSequence: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(z.object({
-      sequenceId: z.string(),
-      emailId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+        emailId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -326,11 +345,15 @@ export const sequenceRouter = router({
       }
 
       // Remove email from emails array
-      sequence.emails = sequence.emails.filter(email => email.emailId !== input.emailId);
-      
+      sequence.emails = sequence.emails.filter(
+        (email) => email.emailId !== input.emailId,
+      );
+
       // Remove email from emailsOrder
-      sequence.emailsOrder = sequence.emailsOrder.filter(id => id !== input.emailId);
-      
+      sequence.emailsOrder = sequence.emailsOrder.filter(
+        (id) => id !== input.emailId,
+      );
+
       await sequence.save();
 
       return {
@@ -343,14 +366,16 @@ export const sequenceRouter = router({
   updateMailInSequence: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(z.object({
-      sequenceId: z.string(),
-      emailId: z.string(),
-      subject: z.string().optional(),
-      content: z.string().optional(),
-      delayInMillis: z.number().optional(),
-      published: z.boolean().optional(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+        emailId: z.string(),
+        subject: z.string().optional(),
+        content: z.string().optional(),
+        delayInMillis: z.number().optional(),
+        published: z.boolean().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sequence = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -361,7 +386,7 @@ export const sequenceRouter = router({
         throw new NotFoundException("Sequence", input.sequenceId);
       }
 
-      const email = sequence.emails.find(e => e.emailId === input.emailId);
+      const email = sequence.emails.find((e) => e.emailId === input.emailId);
       if (!email) {
         throw new NotFoundException("Email", input.emailId);
       }
@@ -369,7 +394,8 @@ export const sequenceRouter = router({
       // Update email fields
       if (input.subject !== undefined) email.subject = input.subject;
       if (input.content !== undefined) email.content = input.content;
-      if (input.delayInMillis !== undefined) email.delayInMillis = input.delayInMillis;
+      if (input.delayInMillis !== undefined)
+        email.delayInMillis = input.delayInMillis;
       if (input.published !== undefined) email.published = input.published;
 
       await sequence.save();

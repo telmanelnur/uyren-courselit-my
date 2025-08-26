@@ -1,15 +1,21 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@workspace/ui/components/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@workspace/ui/components/form";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useToast } from "@workspace/components-library";
-import { 
+import {
   SITE_MAILING_ADDRESS_SETTING_HEADER,
   SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
   BUTTON_SAVE,
   APP_MESSAGE_SETTINGS_SAVED,
-  TOAST_TITLE_SUCCESS
+  TOAST_TITLE_SUCCESS,
 } from "@/lib/ui/config/strings";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
@@ -24,7 +30,8 @@ const mailsSettingsSchema = z.object({
 type MailsSettingsFormData = z.infer<typeof mailsSettingsSchema>;
 
 export default function MailsSettings() {
-  const { settings, updateSettingsMutation, loadSettingsQuery } = useSettingsContext();
+  const { settings, updateSettingsMutation, loadSettingsQuery } =
+    useSettingsContext();
   const { toast } = useToast();
 
   const form = useForm<MailsSettingsFormData>({
@@ -84,7 +91,7 @@ export default function MailsSettings() {
               </FormItem>
             )}
           />
-          
+
           <p className="text-xs text-muted-foreground">
             {SITE_MAILING_ADDRESS_SETTING_EXPLANATION}
           </p>

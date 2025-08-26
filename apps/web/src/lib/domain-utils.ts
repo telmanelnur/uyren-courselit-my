@@ -1,7 +1,7 @@
 /**
  * Edge-compatible domain utility functions
  * These functions work in both server and edge environments (middleware)
- * 
+ *
  * IMPORTANT: This file should NOT import any database connections or Redis
  * to maintain Edge Runtime compatibility for middleware usage.
  */
@@ -25,7 +25,7 @@ export function cleanHost(host: string): string | null {
  */
 export function extractSubdomain(
   host: string,
-  baseDomain = "localhost"
+  baseDomain = "localhost",
 ): string | null {
   const clean = cleanHost(host);
   if (!clean || clean === baseDomain) return null;
@@ -46,10 +46,7 @@ export function extractSubdomain(
  * @param baseDomain - The base domain to check against
  * @returns True if it's a custom domain
  */
-function isCustomDomain(
-  host: string,
-  baseDomain = "localhost"
-): boolean {
+function isCustomDomain(host: string, baseDomain = "localhost"): boolean {
   const clean = cleanHost(host);
   if (!clean) return false;
 
@@ -62,36 +59,39 @@ function isCustomDomain(
  * @param baseDomain - The base domain to check against
  * @returns Object with cleanHost and subdomain (if any)
  */
-export function parseHost(host: string, baseDomain = "localhost"): {
+export function parseHost(
+  host: string,
+  baseDomain = "localhost",
+): {
   cleanHost: string | null;
   subdomain: string | null;
   isCustomDomain: boolean;
 } {
   const clean = cleanHost(host);
   if (!clean) {
-    return { 
-      cleanHost: null, 
-      subdomain: null, 
-      isCustomDomain: false 
+    return {
+      cleanHost: null,
+      subdomain: null,
+      isCustomDomain: false,
     };
   }
 
   // For localhost development, treat everything as localhost
   if (clean === "localhost" || clean === "127.0.0.1") {
-    return { 
-      cleanHost: clean, 
-      subdomain: null, 
-      isCustomDomain: false 
+    return {
+      cleanHost: clean,
+      subdomain: null,
+      isCustomDomain: false,
     };
   }
 
   const subdomain = extractSubdomain(clean, baseDomain);
   const customDomain = isCustomDomain(clean, baseDomain);
 
-  return { 
-    cleanHost: clean, 
-    subdomain, 
-    isCustomDomain: customDomain 
+  return {
+    cleanHost: clean,
+    subdomain,
+    isCustomDomain: customDomain,
   };
 }
 
@@ -101,13 +101,16 @@ export function parseHost(host: string, baseDomain = "localhost"): {
  * @param baseDomain - The base domain to check against
  * @returns Object with domain type and identifier
  */
-export function analyzeDomain(host: string, baseDomain = "localhost"): {
+export function analyzeDomain(
+  host: string,
+  baseDomain = "localhost",
+): {
   type: "localhost" | "subdomain" | "custom";
   identifier: string | null;
   cleanHost: string | null;
 } {
   const { cleanHost, subdomain, isCustomDomain } = parseHost(host, baseDomain);
-  
+
   if (!cleanHost) {
     return { type: "localhost", identifier: null, cleanHost: null };
   }
@@ -132,9 +135,11 @@ export function analyzeDomain(host: string, baseDomain = "localhost"): {
  * @param protocol - Protocol from headers (x-forwarded-proto)
  * @returns The protocol (http or https)
  */
-export function getProtocol(protocol: string | string[] | undefined = "http"): string {
+export function getProtocol(
+  protocol: string | string[] | undefined = "http",
+): string {
   if (!protocol) return "http";
-  
+
   const protocolStr = Array.isArray(protocol) ? protocol[0] : protocol;
   return protocolStr?.includes("https") ? "https" : "http";
 }
@@ -145,9 +150,9 @@ export function getProtocol(protocol: string | string[] | undefined = "http"): s
  * @returns The backend address as a URL
  */
 export function getBackendAddress(
-  headers: Record<string, unknown>
+  headers: Record<string, unknown>,
 ): `${string}://${string}` {
   return `${getProtocol(
-    headers["x-forwarded-proto"] as string | string[] | undefined
+    headers["x-forwarded-proto"] as string | string[] | undefined,
   )}://${headers.host}`;
 }

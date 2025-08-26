@@ -13,7 +13,7 @@ export default async function LoginPage({
 
   if (session) {
     redirect(
-      typeof redirectTo === "string" ? redirectTo : "/dashboard/my-content"
+      typeof redirectTo === "string" ? redirectTo : "/dashboard/my-content",
     );
   }
 

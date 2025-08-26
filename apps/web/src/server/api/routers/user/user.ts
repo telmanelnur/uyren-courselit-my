@@ -9,7 +9,12 @@ import UserModel from "@/models/User";
 import { addMailJob } from "@/server/lib/queue";
 import courseEnrollTemplate from "@/server/services/mail/templates/course-enroll";
 import { TRPCError } from "@trpc/server";
-import { Constants, MembershipEntityType, UIConstants, User } from "@workspace/common-models";
+import {
+  Constants,
+  MembershipEntityType,
+  UIConstants,
+  User,
+} from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import mongoose from "mongoose";
 import pug from "pug";
@@ -19,7 +24,7 @@ import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
   MainContextType,
-  protectedProcedure
+  protectedProcedure,
 } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
@@ -46,7 +51,7 @@ const validateUserProperties = (user: User) => {
 };
 const updateCoursesForCreatorName = async (
   creatorId: string,
-  creatorName: string
+  creatorName: string,
 ) => {
   await CourseModel.updateMany(
     {
@@ -54,7 +59,7 @@ const updateCoursesForCreatorName = async (
     },
     {
       creatorName,
-    }
+    },
   );
 };
 async function getUserContentInternal(ctx: MainContextType, user: User) {
@@ -65,7 +70,6 @@ async function getUserContentInternal(ctx: MainContextType, user: User) {
   });
 
   const content: Record<string, unknown>[] = [];
-
 
   for (const membership of memberships) {
     if (membership.entityType === Constants.MembershipEntityType.COURSE) {
@@ -84,17 +88,14 @@ async function getUserContentInternal(ctx: MainContextType, user: User) {
             type: course.type,
             totalLessons: course.lessons.length,
             completedLessonsCount: user.purchases.find(
-              (progress) =>
-                progress.courseId === course.courseId,
+              (progress) => progress.courseId === course.courseId,
             )?.completedLessons.length,
             featuredImage: course.featuredImage,
           },
         });
       }
     }
-    if (
-      membership.entityType === Constants.MembershipEntityType.COMMUNITY
-    ) {
+    if (membership.entityType === Constants.MembershipEntityType.COMMUNITY) {
       const community = await CommunityModel.findOne({
         communityId: membership.entityId,
         domain: ctx.domainData.domainObj._id,
@@ -117,15 +118,18 @@ async function getUserContentInternal(ctx: MainContextType, user: User) {
   return content;
 }
 
-const updateUser = async (userData: {
-  id: mongoose.Types.ObjectId;
-  tags?: string[];
-  name?: string;
-  email?: string;
-  active?: boolean;
-  permissions?: string[];
-  subscribedToUpdates?: boolean;
-}, ctx: MainContextType) => {
+const updateUser = async (
+  userData: {
+    id: mongoose.Types.ObjectId;
+    tags?: string[];
+    name?: string;
+    email?: string;
+    active?: boolean;
+    permissions?: string[];
+    subscribedToUpdates?: boolean;
+  },
+  ctx: MainContextType,
+) => {
   const keys = Object.keys(userData);
 
   const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
@@ -141,7 +145,10 @@ const updateUser = async (userData: {
     throw new Error(responses.action_not_allowed);
   }
 
-  let user = await UserModel.findOne({ _id: userData.id, domain: ctx.domainData.domainObj._id });
+  let user = await UserModel.findOne({
+    _id: userData.id,
+    domain: ctx.domainData.domainObj._id,
+  });
   if (!user) throw new Error(responses.item_not_found);
 
   for (const key of keys.filter((key) => key !== "id")) {
@@ -175,13 +182,12 @@ export const getMembership = async ({
   entityId: string;
   planId: string;
 }) => {
-  const existingMembership =
-    await MembershipModel.findOne({
-      domain: domainId,
-      userId,
-      entityType,
-      entityId,
-    });
+  const existingMembership = await MembershipModel.findOne({
+    domain: domainId,
+    userId,
+    entityType,
+    entityId,
+  });
 
   let membership =
     existingMembership ||
@@ -196,7 +202,6 @@ export const getMembership = async ({
 
   return membership;
 };
-
 
 export const userRouter = router({
   list: protectedProcedure
@@ -217,11 +222,11 @@ export const userRouter = router({
       // Build MongoDB query for search
       const searchQuery = q
         ? {
-          $or: [
-            { name: { $regex: q, $options: "i" } },
-            { email: { $regex: q, $options: "i" } },
-          ],
-        }
+            $or: [
+              { name: { $regex: q, $options: "i" } },
+              { email: { $regex: q, $options: "i" } },
+            ],
+          }
         : {};
 
       const [items, total] = await Promise.all([
@@ -247,55 +252,53 @@ export const userRouter = router({
 
       return {
         // items,
-        items: await Promise.all(items.map(
-          async (i) => ({
+        items: await Promise.all(
+          items.map(async (i) => ({
             ...i.toJSON(),
             content: await getUserContentInternal(ctx as any, i),
-          })
-        )),
+          })),
+        ),
         total,
-        meta: paginationMeta
+        meta: paginationMeta,
       };
     }),
   // Get user profile data from MongoDB
-  getProfileProtected: protectedProcedure
-    .query(async ({ ctx }) => {
+  getProfileProtected: protectedProcedure.query(async ({ ctx }) => {
+    const user = await UserModel.findOne({
+      userId: ctx.session.user.userId,
+    }).select({
+      name: 1,
+      _id: 1,
+      email: 1,
+      userId: 1,
+      bio: 1,
+      permissions: 1,
+      purchases: 1,
+      avatar: 1,
+      subscribedToUpdates: 1,
+    });
 
-      const user = await UserModel.findOne({
-        userId: ctx.session.user.userId,
-      }).select({
-        name: 1,
-        _id: 1,
-        email: 1,
-        userId: 1,
-        bio: 1,
-        permissions: 1,
-        purchases: 1,
-        avatar: 1,
-        subscribedToUpdates: 1,
-      });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
 
-      if (!user) {
-        throw new NotFoundException("User not found");
-      }
-
-      return {
-        name: user.name,
-        id: user._id.toString(),
-        email: user.email,
-        userId: user.userId,
-        bio: user.bio,
-        permissions: user.permissions || [],
-        purchases:
-          user.purchases?.map((purchase: any) => ({
-            courseId: purchase.courseId,
-            completedLessons: purchase.completedLessons || [],
-            accessibleGroups: purchase.accessibleGroups || [],
-          })) || [],
-        avatar: user.avatar,
-        subscribedToUpdates: user.subscribedToUpdates || false,
-      };
-    }),
+    return {
+      name: user.name,
+      id: user._id.toString(),
+      email: user.email,
+      userId: user.userId,
+      bio: user.bio,
+      permissions: user.permissions || [],
+      purchases:
+        user.purchases?.map((purchase: any) => ({
+          courseId: purchase.courseId,
+          completedLessons: purchase.completedLessons || [],
+          accessibleGroups: purchase.accessibleGroups || [],
+        })) || [],
+      avatar: user.avatar,
+      subscribedToUpdates: user.subscribedToUpdates || false,
+    };
+  }),
 
   // Update user profile
   updateProfile: protectedProcedure
@@ -305,7 +308,7 @@ export const userRouter = router({
         bio: z.string().max(500).optional(),
         avatar: mediaWrappedFieldValidator().nullable().optional(),
         subscribedToUpdates: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const session = ctx.session!;
@@ -321,7 +324,7 @@ export const userRouter = router({
       const updatedUser = await UserModel.findOneAndUpdate(
         { userId: userId },
         { $set: updateData },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!updatedUser) {
@@ -389,28 +392,39 @@ export const userRouter = router({
         invited: z.boolean().optional(),
       }).extend({
         userId: z.string().min(2).max(100),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await updateUser({
-        ...input.data,
-        id: ctx.user._id,
-      }, ctx as any);
+      return await updateUser(
+        {
+          ...input.data,
+          id: ctx.user._id,
+        },
+        ctx as any,
+      );
     }),
 
   inviteCustomer: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageUsers]))
-    .input(getFormDataSchema({
-      email: z.string(),
-      tags: z.array(z.string()),
-      courseId: z.string(),
-    }))
+    .input(
+      getFormDataSchema({
+        email: z.string(),
+        tags: z.array(z.string()),
+        courseId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const domain = ctx.domainData.domainObj;
-      const course = await getCourseOrThrow(undefined, ctx, input.data.courseId);
+      const course = await getCourseOrThrow(
+        undefined,
+        ctx,
+        input.data.courseId,
+      );
       if (!course.published) {
-        throw new ConflictException(responses.cannot_invite_to_unpublished_product);
+        throw new ConflictException(
+          responses.cannot_invite_to_unpublished_product,
+        );
       }
 
       const sanitizedEmail = input.data.email.toLowerCase();
@@ -431,13 +445,17 @@ export const userRouter = router({
         user = await updateUser(
           {
             id: user._id,
-            tags: Array.from(new Set([...(user.tags || []), ...input.data.tags])),
+            tags: Array.from(
+              new Set([...(user.tags || []), ...input.data.tags]),
+            ),
           },
           ctx as any,
         );
       }
 
-      const paymentPlan = await getInternalPaymentPlan(ctx.domainData.domainObj._id.toString());
+      const paymentPlan = await getInternalPaymentPlan(
+        ctx.domainData.domainObj._id.toString(),
+      );
 
       if (!paymentPlan) {
         throw new ConflictException("Payment plan not found");
@@ -455,7 +473,11 @@ export const userRouter = router({
         return user;
       }
 
-      await activateMembership(ctx.domainData.domainObj, membership as any, paymentPlan);
+      await activateMembership(
+        ctx.domainData.domainObj,
+        membership as any,
+        paymentPlan,
+      );
 
       try {
         const address = ctx.domainData.headers.host;
@@ -488,7 +510,7 @@ export const userRouter = router({
       z.object({
         entityId: z.string(),
         entityType: z.nativeEnum(Constants.MembershipEntityType),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { entityId, entityType } = input;

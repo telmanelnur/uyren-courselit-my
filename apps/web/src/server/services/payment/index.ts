@@ -5,7 +5,7 @@ import StripePayment from "./stripe-payment";
 
 export const getPaymentMethodFromSettings = async (
   siteInfo: Domain["settings"] | null,
-  name?: string
+  name?: string,
 ) => {
   if (!siteInfo || !siteInfo.paymentMethod) {
     return null;

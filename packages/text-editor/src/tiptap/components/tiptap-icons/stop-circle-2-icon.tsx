@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const StopCircle2Icon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -19,8 +19,8 @@ export const StopCircle2Icon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-StopCircle2Icon.displayName = "StopCircle2Icon"
+StopCircle2Icon.displayName = "StopCircle2Icon";

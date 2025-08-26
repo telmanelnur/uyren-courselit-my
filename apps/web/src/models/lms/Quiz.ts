@@ -1,5 +1,8 @@
 import { createModel } from "@workspace/common-logic";
-import { BASIC_PUBLICATION_STATUS_TYPE, type BasicPublicationStatus } from "@workspace/common-models";
+import {
+  BASIC_PUBLICATION_STATUS_TYPE,
+  type BasicPublicationStatus,
+} from "@workspace/common-models";
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IQuiz {
@@ -20,49 +23,52 @@ export interface IQuiz {
   updatedAt: Date;
 }
 
-const QuizSchema = new Schema<IQuiz>({
-  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-  title: { type: String, required: true, trim: true, maxlength: 255 },
-  description: { type: String, trim: true },
-  courseId: { type: String, required: true, index: true },
-  ownerId: { type: String, required: true, index: true },
-  timeLimit: { type: Number, min: 1 },
-  maxAttempts: { type: Number, min: 1, max: 10, default: 1 },
-  passingScore: { type: Number, min: 0, max: 100, default: 60 },
-  shuffleQuestions: { type: Boolean, default: true },
-  showResults: { type: Boolean, default: false },
-  status: {
-    type: String,
-    required: true,
-    enum: [
-      BASIC_PUBLICATION_STATUS_TYPE.DRAFT,
-      BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
-      BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED,
-    ],
-    // default: BASIC_PUBLICATION_STATUS_TYPE.DRAFT
+const QuizSchema = new Schema<IQuiz>(
+  {
+    domain: { type: mongoose.Schema.Types.ObjectId, required: true },
+    title: { type: String, required: true, trim: true, maxlength: 255 },
+    description: { type: String, trim: true },
+    courseId: { type: String, required: true, index: true },
+    ownerId: { type: String, required: true, index: true },
+    timeLimit: { type: Number, min: 1 },
+    maxAttempts: { type: Number, min: 1, max: 10, default: 1 },
+    passingScore: { type: Number, min: 0, max: 100, default: 60 },
+    shuffleQuestions: { type: Boolean, default: true },
+    showResults: { type: Boolean, default: false },
+    status: {
+      type: String,
+      required: true,
+      enum: [
+        BASIC_PUBLICATION_STATUS_TYPE.DRAFT,
+        BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
+        BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED,
+      ],
+      // default: BASIC_PUBLICATION_STATUS_TYPE.DRAFT
+    },
+    questionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
+    totalPoints: { type: Number, min: 0, default: 0 },
   },
-  questionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
-  totalPoints: { type: Number, min: 0, default: 0 },
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+  },
+);
 
 QuizSchema.index({ ownerId: 1, status: 1 });
 QuizSchema.index({ courseId: 1, status: 1 });
 
 // Virtual populate for owner
-QuizSchema.virtual('owner', {
-  ref: 'User',
-  localField: 'ownerId',
-  foreignField: 'userId',
+QuizSchema.virtual("owner", {
+  ref: "User",
+  localField: "ownerId",
+  foreignField: "userId",
   justOne: true,
 });
 
 // Virtual populate for course
-QuizSchema.virtual('course', {
-  ref: 'Course',
-  localField: 'courseId',
-  foreignField: 'courseId',
+QuizSchema.virtual("course", {
+  ref: "Course",
+  localField: "courseId",
+  foreignField: "courseId",
   justOne: true,
 });
 

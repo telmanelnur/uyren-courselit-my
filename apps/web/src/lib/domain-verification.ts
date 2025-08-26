@@ -13,7 +13,9 @@ export interface DomainVerificationResult {
  * @param host - The host string to verify
  * @returns Promise with verification result
  */
-export async function verifyDomainFromHost(host: string): Promise<DomainVerificationResult> {
+export async function verifyDomainFromHost(
+  host: string,
+): Promise<DomainVerificationResult> {
   try {
     if (!host) {
       return {
@@ -24,7 +26,7 @@ export async function verifyDomainFromHost(host: string): Promise<DomainVerifica
     }
 
     const domain = await DomainManager.getDomainByHost(host);
-    
+
     if (!domain) {
       return {
         success: false,

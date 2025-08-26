@@ -7,16 +7,13 @@ import { connectToDatabase } from "@workspace/common-logic";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { mediaId: string } }
+  { params }: { params: { mediaId: string } },
 ) {
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { mediaId } = params;
@@ -24,7 +21,7 @@ export async function DELETE(
     if (!mediaId) {
       return NextResponse.json(
         { error: "Media ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -44,7 +41,7 @@ export async function DELETE(
     if (!mediaRecord) {
       return NextResponse.json(
         { error: "Media not found or you don't have permission to delete it" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -57,17 +54,17 @@ export async function DELETE(
       default:
         return NextResponse.json(
           { error: "Unsupported storage type" },
-          { status: 400 }
+          { status: 400 },
         );
     }
 
     if (deleted) {
       // Remove from database
       await MediaModel.deleteOne({ _id: mediaRecord._id });
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: "success" 
+
+      return NextResponse.json({
+        success: true,
+        message: "success",
       });
     } else {
       throw new Error("Failed to delete media from storage");
@@ -76,7 +73,7 @@ export async function DELETE(
     console.error("Delete error:", error);
     return NextResponse.json(
       { error: error.message || "Delete failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

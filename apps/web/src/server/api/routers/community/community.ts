@@ -1,6 +1,10 @@
 import constants from "@/config/constants";
 import { internal, responses } from "@/config/strings";
-import { getNextRoleForCommunityMember, getNextStatusForCommunityMember, hasCommunityPermission } from "@/lib/ui/lib/utils";
+import {
+  getNextRoleForCommunityMember,
+  getNextStatusForCommunityMember,
+  hasCommunityPermission,
+} from "@/lib/ui/lib/utils";
 import CommunityModel, { InternalCommunity } from "@/models/Community";
 import CommunityCommentModel from "@/models/CommunityComment";
 import CommunityPostModel from "@/models/CommunityPost";
@@ -112,7 +116,7 @@ async function getMembersCount({
 
 async function formatCommunity(
   community: InternalCommunity,
-  ctx: MainContextType
+  ctx: MainContextType,
 ): Promise<Community & Pick<InternalCommunity, "autoAcceptMembers">> {
   return {
     name: community.name,
@@ -199,7 +203,7 @@ async function getCommunityReportContent({
 }
 async function formatCommunityReport(
   report: InternalCommunityReport,
-  domainId: mongoose.Types.ObjectId
+  domainId: mongoose.Types.ObjectId,
 ): Promise<CommunityReportPartial> {
   const content = await getCommunityReportContent({
     domain: domainId,
@@ -220,7 +224,6 @@ async function formatCommunityReport(
     rejectionReason: report.rejectionReason,
   };
 }
-
 
 const hasActiveSubscription = async (
   member: Membership,
@@ -317,7 +320,7 @@ export const communityRouter = router({
               communityId: community.communityId,
               status: Constants.MembershipStatus.ACTIVE,
             }),
-          }))
+          })),
         ),
         total,
         meta: paginationMeta,
@@ -329,7 +332,7 @@ export const communityRouter = router({
     .input(
       getFormDataSchema({
         communityId: z.string(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const query = {
@@ -366,7 +369,7 @@ export const communityRouter = router({
 
       if (existingCommunity) {
         throw new ValidationException(
-          "Community with this name already exists"
+          "Community with this name already exists",
         );
       }
 
@@ -430,7 +433,7 @@ export const communityRouter = router({
         !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
       ) {
         throw new AuthorizationException(
-          "You do not have permission to update this community"
+          "You do not have permission to update this community",
         );
       }
       const { enabled, ...updateData } = input.data;
@@ -448,7 +451,7 @@ export const communityRouter = router({
           }
           if (!community.defaultPaymentPlan) {
             throw new ValidationException(
-              responses.default_payment_plan_required
+              responses.default_payment_plan_required,
             );
           }
         }
@@ -463,7 +466,7 @@ export const communityRouter = router({
     .input(
       z.object({
         communityId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(ctx, input.communityId);
@@ -476,7 +479,7 @@ export const communityRouter = router({
         },
         {
           deleted: true,
-        }
+        },
       );
 
       await CommunityModel.updateOne(
@@ -486,7 +489,7 @@ export const communityRouter = router({
         },
         {
           deleted: true,
-        }
+        },
       );
 
       return await formatCommunity(community, ctx as any);
@@ -498,12 +501,12 @@ export const communityRouter = router({
       getFormDataSchema({
         communityId: z.string(),
         category: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const member = await getMembership(ctx, community.communityId);
       if (
@@ -511,7 +514,7 @@ export const communityRouter = router({
         !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
       ) {
         throw new AuthorizationException(
-          "You do not have permission to add categories to this community"
+          "You do not have permission to add categories to this community",
         );
       }
       if (!community.categories.includes(input.data.category)) {
@@ -528,12 +531,12 @@ export const communityRouter = router({
         communityId: z.string(),
         category: z.string(),
         migrateToCategory: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const member = await getMembership(ctx, community.communityId);
       if (
@@ -541,7 +544,7 @@ export const communityRouter = router({
         !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
       ) {
         throw new AuthorizationException(
-          "You do not have permission to delete categories from this community"
+          "You do not have permission to delete categories from this community",
         );
       }
       if (community.categories.length === 1) {
@@ -554,7 +557,7 @@ export const communityRouter = router({
       // }
 
       community.categories = community.categories.filter(
-        (cat) => cat !== input.data.category
+        (cat) => cat !== input.data.category,
       );
       await community.save();
       return await formatCommunity(community, ctx as any);
@@ -573,7 +576,7 @@ export const communityRouter = router({
         subscriptionYearlyAmount: z.number().optional(),
         entityId: z.string().min(2).max(100),
         entityType: z.nativeEnum(Constants.MembershipEntityType),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const {
@@ -589,7 +592,7 @@ export const communityRouter = router({
       } = input.data;
       if (type === Constants.PaymentPlanType.ONE_TIME && !oneTimeAmount) {
         throw new Error(
-          "One-time amount is required for one-time payment plan"
+          "One-time amount is required for one-time payment plan",
         );
       }
       if (
@@ -597,7 +600,7 @@ export const communityRouter = router({
         (!emiAmount || !emiTotalInstallments)
       ) {
         throw new Error(
-          "EMI amounts and total installments are required for EMI payment plan"
+          "EMI amounts and total installments are required for EMI payment plan",
         );
       }
       if (
@@ -606,13 +609,13 @@ export const communityRouter = router({
           (subscriptionMonthlyAmount && subscriptionYearlyAmount))
       ) {
         throw new Error(
-          "Either monthly or yearly amount is required for subscription payment plan, but not both"
+          "Either monthly or yearly amount is required for subscription payment plan, but not both",
         );
       }
       const entity = await fetchEntity(
         entityType,
         entityId,
-        ctx.domainData.domainObj._id.toString()
+        ctx.domainData.domainObj._id.toString(),
       );
       if (!entity) {
         throw new NotFoundException("Entity not found");
@@ -644,9 +647,7 @@ export const communityRouter = router({
       if (!domain) {
         throw new ConflictException("Domain not found");
       }
-      const paymentMethod = await getPaymentMethodFromSettings(
-        domain.settings
-      );
+      const paymentMethod = await getPaymentMethodFromSettings(domain.settings);
       if (!paymentMethod && type !== Constants.PaymentPlanType.FREE) {
         throw new ConflictException(responses.payment_info_required);
       }
@@ -784,14 +785,14 @@ export const communityRouter = router({
         planId: z.string().min(1, "Plan ID is required"),
         entityId: z.string().min(1, "Entity ID is required"),
         entityType: z.nativeEnum(Constants.MembershipEntityType),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { planId, entityId, entityType } = input.data;
       const entity = await fetchEntity(
         entityType,
         entityId,
-        ctx.domainData.domainObj._id.toString()
+        ctx.domainData.domainObj._id.toString(),
       );
       if (!entity) {
         throw new NotFoundException("Entity not found");
@@ -809,7 +810,7 @@ export const communityRouter = router({
 
       if (entity.defaultPaymentPlan === paymentPlan.planId) {
         throw new ConflictException(
-          responses.default_payment_plan_cannot_be_archived
+          responses.default_payment_plan_cannot_be_archived,
         );
       }
 
@@ -826,7 +827,7 @@ export const communityRouter = router({
         planId: z.string().min(1, "Plan ID is required"),
         entityId: z.string().min(1, "Entity ID is required"),
         entityType: z.nativeEnum(Constants.MembershipEntityType),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const domainId = ctx.domainData?.domainObj?._id?.toString();
@@ -838,7 +839,7 @@ export const communityRouter = router({
       const entity = await fetchEntity(
         input.data.entityType,
         input.data.entityId,
-        domainId
+        domainId,
       );
       if (!entity) {
         throw new NotFoundException("Entity not found");
@@ -905,17 +906,17 @@ export const communityRouter = router({
           ]),
           contentParentId: z.string().optional(),
         }),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const member = await getMembership(ctx, community.communityId);
       if (!member) {
         throw new AuthorizationException(
-          "You do not have permission to report content in this community"
+          "You do not have permission to report content in this community",
         );
       }
       const communityId = community.communityId;
@@ -930,7 +931,7 @@ export const communityRouter = router({
       });
       if (existingReport) {
         throw new ValidationException(
-          responses.community_content_already_reported
+          responses.community_content_already_reported,
         );
       }
       let content: any = undefined;
@@ -989,12 +990,12 @@ export const communityRouter = router({
       getFormDataSchema({
         communityId: z.string().min(1, "Community ID is required"),
         joiningReason: z.string().min(1, "Joining reason is required"),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       if (!ctx.user.name) {
         throw new ConflictException(responses.profile_incomplete);
@@ -1070,12 +1071,12 @@ export const communityRouter = router({
     .input(
       getFormDataSchema({
         communityId: z.string().min(1, "Community ID is required"),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const member = await getMembership(ctx, community.communityId);
       if (!member) {
@@ -1100,7 +1101,7 @@ export const communityRouter = router({
 
         if (otherModeratorsCount === 0) {
           throw new ConflictException(
-            responses.cannot_leave_community_last_moderator
+            responses.cannot_leave_community_last_moderator,
           );
         }
       }
@@ -1112,7 +1113,7 @@ export const communityRouter = router({
         }
         const paymentMethod = await getPaymentMethodFromSettings(
           domain.settings,
-          member.subscriptionMethod
+          member.subscriptionMethod,
         );
         await paymentMethod?.cancel(member.subscriptionId);
       }
@@ -1124,12 +1125,12 @@ export const communityRouter = router({
     .input(
       getFormDataSchema({
         communityId: z.string().min(1, "Community ID is required"),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       // const member = await getMembership(ctx, community.communityId); add filtet to use active
       return await MembershipModel.findOne({
@@ -1148,7 +1149,7 @@ export const communityRouter = router({
           communityId: z.string().min(1, "Community ID is required"),
           status: z.nativeEnum(Constants.MembershipStatus).optional(),
         }),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const community = await CommunityModel.findOne(
@@ -1158,7 +1159,10 @@ export const communityRouter = router({
         throw new NotFoundException("Community not found");
       }
       const member = await getMembership(ctx, community.communityId);
-      if (!member || !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)) {
+      if (
+        !member ||
+        !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
+      ) {
         throw new AuthorizationException();
       }
       const query: RootFilterQuery<typeof MembershipModel> = {
@@ -1181,23 +1185,24 @@ export const communityRouter = router({
         MembershipModel.find(query)
           .populate<{
             user: {
-              userId: User['userId'];
-              name: User['name'];
-              email: User['email'];
-              avatar: User['avatar'];
-            }
+              userId: User["userId"];
+              name: User["name"];
+              email: User["email"];
+              avatar: User["avatar"];
+            };
           }>({
-            path: 'user',
+            path: "user",
             select: {
               userId: 1,
               name: 1,
               email: 1,
               avatar: 1,
-            }
+            },
           })
           .skip(paginationMeta.skip)
           .limit(paginationMeta.take)
-          .sort(sortObject).lean(),
+          .sort(sortObject)
+          .lean(),
         paginationMeta.includePaginationCount
           ? MembershipModel.countDocuments(query)
           : Promise.resolve(null),
@@ -1216,201 +1221,205 @@ export const communityRouter = router({
             name: member.user.name,
             email: member.user.email,
             avatar: member.user.avatar,
-          }
+          },
         })),
         total,
         meta: paginationMeta,
-      }
+      };
     }),
 
-  updateMemberStatus:
-    protectedProcedure
-      .use(createDomainRequiredMiddleware())
-      .input(
-        getFormDataSchema({
-          communityId: z.string().min(1, "Community ID is required"),
-          userId: z.string().min(1, "User ID is required"),
-          rejectionReason: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        if (ctx.user.userId === input.data.userId) {
-          throw new Error(responses.action_not_allowed);
-        }
-
-        const community = await CommunityModel.findOne(
-          getCommunityQuery(ctx as any, input.data.communityId),
-        );
-
-        if (!community) {
-          throw new Error(responses.item_not_found);
-        }
-        const memberUser = await UserModel.findOne({
-          domain: ctx.domainData.domainObj._id,
-          userId: input.data.userId,
-        });
-        if (!memberUser) {
-          throw new NotFoundException("User not found");
-        }
-
-        const member = await getMembership(ctx, community.communityId);
-
-        if (!member || !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)) {
-          throw new Error(responses.item_not_found);
-        }
-
-        const targetMember = await MembershipModel.findOne({
-          domain: ctx.domainData.domainObj._id,
-          userId: input.data.userId,
-          entityId: community.communityId,
-          entityType: Constants.MembershipEntityType.COMMUNITY,
-        });
-
-        if (!targetMember) {
-          throw new Error(responses.item_not_found);
-        }
-
-        const otherActiveModeratorsCount = await MembershipModel.countDocuments({
-          domain: ctx.domainData.domainObj._id,
-          entityId: community.communityId,
-          entityType: Constants.MembershipEntityType.COMMUNITY,
-          role: Constants.MembershipRole.MODERATE,
-          status: Constants.MembershipStatus.ACTIVE,
-          userId: { $ne: input.data.userId },
-        });
-
-        if (otherActiveModeratorsCount === 0) {
-          throw new Error(responses.action_not_allowed);
-        }
-
-        const nextStatus = getNextStatusForCommunityMember(
-          targetMember.status as CommunityMemberStatus,
-        );
-        if (nextStatus === Constants.MembershipStatus.REJECTED) {
-          if (!input.data.rejectionReason) {
-            throw new ConflictException(responses.rejection_reason_missing);
-          }
-          if (await hasActiveSubscription(targetMember, ctx as any)) {
-            throw new ConflictException(
-              responses.cannot_reject_member_with_active_subscription,
-            );
-          }
-          targetMember.rejectionReason = input.data.rejectionReason;
-        }
-
-        targetMember.status = nextStatus!;
-
-        if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
-          targetMember.rejectionReason = undefined;
-
-          await addNotification({
-            domain: ctx.domainData.domainObj._id.toString(),
-            entityId: community.communityId,
-            entityAction:
-              Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED,
-            forUserIds: [input.data.userId],
-            userId: ctx.user.userId,
-          });
-        }
-
-        await targetMember.save();
-
-        return {
-          ...targetMember,
-          user: {
-            userId: memberUser.userId,
-            name: memberUser.name,
-            email: memberUser.email,
-            avatar: memberUser.avatar,
-          }
-        };
+  updateMemberStatus: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(
+      getFormDataSchema({
+        communityId: z.string().min(1, "Community ID is required"),
+        userId: z.string().min(1, "User ID is required"),
+        rejectionReason: z.string().optional(),
       }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.userId === input.data.userId) {
+        throw new Error(responses.action_not_allowed);
+      }
 
-  updateMemberRole:
-    protectedProcedure
-      .use(createDomainRequiredMiddleware())
-      .input(
-        getFormDataSchema({
-          communityId: z.string().min(1, "Community ID is required"),
-          userId: z.string().min(1, "User ID is required"),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        if (ctx.user.userId === input.data.userId) {
-          throw new AuthorizationException();
+      const community = await CommunityModel.findOne(
+        getCommunityQuery(ctx as any, input.data.communityId),
+      );
+
+      if (!community) {
+        throw new Error(responses.item_not_found);
+      }
+      const memberUser = await UserModel.findOne({
+        domain: ctx.domainData.domainObj._id,
+        userId: input.data.userId,
+      });
+      if (!memberUser) {
+        throw new NotFoundException("User not found");
+      }
+
+      const member = await getMembership(ctx, community.communityId);
+
+      if (
+        !member ||
+        !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
+      ) {
+        throw new Error(responses.item_not_found);
+      }
+
+      const targetMember = await MembershipModel.findOne({
+        domain: ctx.domainData.domainObj._id,
+        userId: input.data.userId,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+      });
+
+      if (!targetMember) {
+        throw new Error(responses.item_not_found);
+      }
+
+      const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+        domain: ctx.domainData.domainObj._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        role: Constants.MembershipRole.MODERATE,
+        status: Constants.MembershipStatus.ACTIVE,
+        userId: { $ne: input.data.userId },
+      });
+
+      if (otherActiveModeratorsCount === 0) {
+        throw new Error(responses.action_not_allowed);
+      }
+
+      const nextStatus = getNextStatusForCommunityMember(
+        targetMember.status as CommunityMemberStatus,
+      );
+      if (nextStatus === Constants.MembershipStatus.REJECTED) {
+        if (!input.data.rejectionReason) {
+          throw new ConflictException(responses.rejection_reason_missing);
         }
-
-        const community = await CommunityModel.findOne(
-          getCommunityQuery(ctx as any, input.data.communityId),
-        );
-
-        if (!community) {
-          throw new NotFoundException("Community not found");
+        if (await hasActiveSubscription(targetMember, ctx as any)) {
+          throw new ConflictException(
+            responses.cannot_reject_member_with_active_subscription,
+          );
         }
+        targetMember.rejectionReason = input.data.rejectionReason;
+      }
 
-        const memberUser = await UserModel.findOne({
-          domain: ctx.domainData.domainObj._id,
-          userId: input.data.userId,
-        });
-        if (!memberUser) {
-          throw new NotFoundException("User not found");
-        }
+      targetMember.status = nextStatus!;
 
-        // const member = await MembershipModel.findOne<Membership>({
-        //     domain: ctx.subdomain._id,
-        //     userId,
-        //     entityId: communityId,
-        //     entityType: Constants.MembershipEntityType.COMMUNITY,
-        // });
-        const member = await getMembership(ctx, community.communityId);
+      if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
+        targetMember.rejectionReason = undefined;
 
-        if (!member || !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)) {
-          throw new Error(responses.item_not_found);
-        }
-
-        const targetMember = await MembershipModel.findOne({
-          domain: ctx.domainData.domainObj._id,
-          userId: input.data.userId,
+        await addNotification({
+          domain: ctx.domainData.domainObj._id.toString(),
           entityId: community.communityId,
-          entityType: Constants.MembershipEntityType.COMMUNITY,
+          entityAction:
+            Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED,
+          forUserIds: [input.data.userId],
+          userId: ctx.user.userId,
         });
+      }
 
-        if (!targetMember) {
-          throw new NotFoundException("Member not found");
-        }
+      await targetMember.save();
 
-        if (targetMember.status !== Constants.MembershipStatus.ACTIVE) {
-          throw new ConflictException(responses.cannot_change_role_inactive_member);
-        }
+      return {
+        ...targetMember,
+        user: {
+          userId: memberUser.userId,
+          name: memberUser.name,
+          email: memberUser.email,
+          avatar: memberUser.avatar,
+        },
+      };
+    }),
 
-        const otherActiveModeratorsCount = await MembershipModel.countDocuments({
-          domain: ctx.domainData.domainObj._id,
-          entityId: community.communityId,
-          entityType: Constants.MembershipEntityType.COMMUNITY,
-          role: Constants.MembershipRole.MODERATE,
-          status: Constants.MembershipStatus.ACTIVE,
-          userId: { $ne: input.data.userId },
-        });
-
-        if (otherActiveModeratorsCount === 0) {
-          throw new AuthorizationException();
-        }
-
-        const nextRole = getNextRoleForCommunityMember(
-          targetMember.role,
-        );
-
-        targetMember.role = nextRole!;
-
-        await targetMember.save();
-        return {
-          ...targetMember.toObject(),
-          user: {
-            userId: memberUser.userId,
-            name: memberUser.name,
-            email: memberUser.email,
-            avatar: memberUser.avatar,
-          }
-        };
+  updateMemberRole: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .input(
+      getFormDataSchema({
+        communityId: z.string().min(1, "Community ID is required"),
+        userId: z.string().min(1, "User ID is required"),
       }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.userId === input.data.userId) {
+        throw new AuthorizationException();
+      }
+
+      const community = await CommunityModel.findOne(
+        getCommunityQuery(ctx as any, input.data.communityId),
+      );
+
+      if (!community) {
+        throw new NotFoundException("Community not found");
+      }
+
+      const memberUser = await UserModel.findOne({
+        domain: ctx.domainData.domainObj._id,
+        userId: input.data.userId,
+      });
+      if (!memberUser) {
+        throw new NotFoundException("User not found");
+      }
+
+      // const member = await MembershipModel.findOne<Membership>({
+      //     domain: ctx.subdomain._id,
+      //     userId,
+      //     entityId: communityId,
+      //     entityType: Constants.MembershipEntityType.COMMUNITY,
+      // });
+      const member = await getMembership(ctx, community.communityId);
+
+      if (
+        !member ||
+        !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
+      ) {
+        throw new Error(responses.item_not_found);
+      }
+
+      const targetMember = await MembershipModel.findOne({
+        domain: ctx.domainData.domainObj._id,
+        userId: input.data.userId,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+      });
+
+      if (!targetMember) {
+        throw new NotFoundException("Member not found");
+      }
+
+      if (targetMember.status !== Constants.MembershipStatus.ACTIVE) {
+        throw new ConflictException(
+          responses.cannot_change_role_inactive_member,
+        );
+      }
+
+      const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+        domain: ctx.domainData.domainObj._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        role: Constants.MembershipRole.MODERATE,
+        status: Constants.MembershipStatus.ACTIVE,
+        userId: { $ne: input.data.userId },
+      });
+
+      if (otherActiveModeratorsCount === 0) {
+        throw new AuthorizationException();
+      }
+
+      const nextRole = getNextRoleForCommunityMember(targetMember.role);
+
+      targetMember.role = nextRole!;
+
+      await targetMember.save();
+      return {
+        ...targetMember.toObject(),
+        user: {
+          userId: memberUser.userId,
+          name: memberUser.name,
+          email: memberUser.email,
+          avatar: memberUser.avatar,
+        },
+      };
+    }),
 });

@@ -43,7 +43,7 @@ router.post(
       logger.error(err instanceof Error ? err.message : String(err));
       res.status(500).json({ error: (err as any).message });
     }
-  }
+  },
 );
 
 // /**
@@ -129,7 +129,7 @@ router.get("/sse/:userId", (req: Request, res: Response) => {
   const notificationHandler = (notification: any) => {
     if (notification.forUserId === userId) {
       res.write(
-        `data: ${JSON.stringify(notification.notificationId || notification._id)}\n\n`
+        `data: ${JSON.stringify(notification.notificationId || notification._id)}\n\n`,
       );
     }
   };

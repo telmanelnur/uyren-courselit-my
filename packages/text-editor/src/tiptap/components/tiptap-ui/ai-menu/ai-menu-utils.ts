@@ -1,45 +1,48 @@
-import { type Editor } from "@tiptap/react"
-import { getSelectedDOMElement } from "@workspace/text-editor/tiptap/lib/tiptap-advanced-utils"
+import { type Editor } from "@tiptap/react";
+import { getSelectedDOMElement } from "@workspace/text-editor/tiptap/lib/tiptap-advanced-utils";
 
 export function getContextAndInsertAt(editor: Editor) {
-  let context: string | undefined = ""
-  let insertAt = { from: 0, to: 0 }
-  let isSelection = true
+  let context: string | undefined = "";
+  let insertAt = { from: 0, to: 0 };
+  let isSelection = true;
   const storage = editor.storage as unknown as {
-    ai?: { generatedWith?: { range?: { from: number; to: number } }; response?: string }
-  }
-  const generatedWith = storage.ai?.generatedWith
+    ai?: {
+      generatedWith?: { range?: { from: number; to: number } };
+      response?: string;
+    };
+  };
+  const generatedWith = storage.ai?.generatedWith;
 
   if (generatedWith && generatedWith.range) {
-    context = storage.ai?.response
-    insertAt = generatedWith.range
-    isSelection = false
+    context = storage.ai?.response;
+    insertAt = generatedWith.range;
+    isSelection = false;
   }
 
   if (!generatedWith || !generatedWith.range) {
-    const { state } = editor
-    const { selection } = state
-    const { from, to } = editor.state.selection
+    const { state } = editor;
+    const { selection } = state;
+    const { from, to } = editor.state.selection;
 
-    const selectionContent = selection.content()
+    const selectionContent = selection.content();
 
     const htmlContent =
-      editor.view.serializeForClipboard(selectionContent).dom.innerHTML
+      editor.view.serializeForClipboard(selectionContent).dom.innerHTML;
     const textContent = selectionContent.content.textBetween(
       0,
       selectionContent.content.size,
-      "\n"
-    )
+      "\n",
+    );
 
-    context = htmlContent || textContent
-    insertAt = { from, to }
+    context = htmlContent || textContent;
+    insertAt = { from, to };
   }
 
-  return { context, insertAt, isSelection }
+  return { context, insertAt, isSelection };
 }
 
 export function createPositionAnchor(rect: DOMRect): HTMLElement {
-  const anchor = document.createElement("div")
+  const anchor = document.createElement("div");
   Object.assign(anchor.style, {
     position: "absolute",
     left: `${rect.left}px`,
@@ -49,74 +52,74 @@ export function createPositionAnchor(rect: DOMRect): HTMLElement {
     pointerEvents: "none",
     opacity: "0",
     zIndex: "-1",
-  })
+  });
 
-  anchor.setAttribute("data-fallback-anchor", "true")
-  document.body.appendChild(anchor)
-  return anchor
+  anchor.setAttribute("data-fallback-anchor", "true");
+  document.body.appendChild(anchor);
+  return anchor;
 }
 
 export function cleanupFallbackAnchors(): void {
   document
     .querySelectorAll('[data-fallback-anchor="true"]')
-    .forEach((el) => el.remove())
+    .forEach((el) => el.remove());
 }
 
 export function getTopMostParentInsideEditor(
   element: HTMLElement,
-  editorRoot: HTMLElement
+  editorRoot: HTMLElement,
 ): HTMLElement {
   if (!element || !editorRoot) {
-    throw new Error("Both element and editorRoot must be provided")
+    throw new Error("Both element and editorRoot must be provided");
   }
 
-  if (element === editorRoot) return element
+  if (element === editorRoot) return element;
 
   if (!editorRoot.contains(element)) {
-    throw new Error("Element is not inside the editor root")
+    throw new Error("Element is not inside the editor root");
   }
 
-  let parent = element
+  let parent = element;
   while (parent.parentElement && parent.parentElement !== editorRoot) {
-    parent = parent.parentElement
+    parent = parent.parentElement;
   }
 
-  return parent
+  return parent;
 }
 
 export function findAiMarkedDOMElement(editor: Editor): HTMLElement | null {
-  const view = editor.view
+  const view = editor.view;
   const aiMarkedElements = view.dom.querySelectorAll(
-    ".tiptap-ai-insertion"
-  ) as NodeListOf<HTMLElement>
+    ".tiptap-ai-insertion",
+  ) as NodeListOf<HTMLElement>;
 
-  if (aiMarkedElements.length === 0) return null
+  if (aiMarkedElements.length === 0) return null;
 
-  const lastAiMarkElement = aiMarkedElements[aiMarkedElements.length - 1]
+  const lastAiMarkElement = aiMarkedElements[aiMarkedElements.length - 1];
 
   if (lastAiMarkElement && view.dom) {
     try {
-      return getTopMostParentInsideEditor(lastAiMarkElement, view.dom)
+      return getTopMostParentInsideEditor(lastAiMarkElement, view.dom);
     } catch {
-      return lastAiMarkElement || null
+      return lastAiMarkElement || null;
     }
   }
 
-  return lastAiMarkElement || null
+  return lastAiMarkElement || null;
 }
 
 export function findPrioritizedAIElement(editor: Editor): HTMLElement | null {
   // AI marked elements
-  const aiMarkedElement = findAiMarkedDOMElement(editor)
+  const aiMarkedElement = findAiMarkedDOMElement(editor);
   if (aiMarkedElement) {
-    return aiMarkedElement
+    return aiMarkedElement;
   }
 
   // Currently selected element
-  const selectedElement = getSelectedDOMElement(editor)
+  const selectedElement = getSelectedDOMElement(editor);
   if (selectedElement) {
-    return selectedElement
+    return selectedElement;
   }
 
-  return null
+  return null;
 }

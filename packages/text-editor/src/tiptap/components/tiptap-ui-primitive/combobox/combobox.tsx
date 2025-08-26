@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as Ariakit from "@ariakit/react"
-import { cn } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
-import "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/combobox/combobox.scss"
+import * as React from "react";
+import * as Ariakit from "@ariakit/react";
+import { cn } from "@workspace/text-editor/tiptap/lib/tiptap-utils";
+import "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/combobox/combobox.scss";
 
 export function ComboboxProvider({ ...props }: Ariakit.ComboboxProviderProps) {
   return (
@@ -12,7 +12,7 @@ export function ComboboxProvider({ ...props }: Ariakit.ComboboxProviderProps) {
       resetValueOnHide
       {...props}
     />
-  )
+  );
 }
 
 export const ComboboxList = React.forwardRef<
@@ -25,9 +25,9 @@ export const ComboboxList = React.forwardRef<
       className={cn("tiptap-combobox-list", className)}
       {...props}
     />
-  )
-})
-ComboboxList.displayName = "ComboboxList"
+  );
+});
+ComboboxList.displayName = "ComboboxList";
 
 export const ComboboxPopover = React.forwardRef<
   React.ComponentRef<typeof Ariakit.ComboboxPopover>,
@@ -39,9 +39,9 @@ export const ComboboxPopover = React.forwardRef<
       className={cn("tiptap-combobox-popover", className)}
       {...props}
     />
-  )
-})
-ComboboxPopover.displayName = "ComboboxPopover"
+  );
+});
+ComboboxPopover.displayName = "ComboboxPopover";
 
 export const Combobox = React.forwardRef<
   React.ComponentRef<typeof Ariakit.Combobox>,
@@ -54,9 +54,9 @@ export const Combobox = React.forwardRef<
       {...props}
       className={cn("tiptap-combobox", className)}
     />
-  )
-})
-Combobox.displayName = "Combobox"
+  );
+});
+Combobox.displayName = "Combobox";
 
 export const ComboboxItem = React.forwardRef<
   React.ComponentRef<typeof Ariakit.ComboboxItem>,
@@ -68,6 +68,6 @@ export const ComboboxItem = React.forwardRef<
       className={cn("tiptap-combobox-item", className)}
       {...props}
     />
-  )
-})
-ComboboxItem.displayName = "ComboboxItem"
+  );
+});
+ComboboxItem.displayName = "ComboboxItem";

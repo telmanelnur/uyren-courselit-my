@@ -18,7 +18,7 @@ const ApiKeySchema = new mongoose.Schema<ApiKey>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 ApiKeySchema.index(
@@ -26,7 +26,7 @@ ApiKeySchema.index(
     domain: 1,
     name: 1,
   },
-  { unique: true }
+  { unique: true },
 );
 
 const ApikeyModel = createModel("Apikey", ApiKeySchema);

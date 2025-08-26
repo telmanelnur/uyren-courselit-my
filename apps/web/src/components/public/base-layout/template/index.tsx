@@ -5,108 +5,108 @@ import { Toaster } from "sonner";
 import EditableWidget from "./editable-widget";
 
 type PageData = Record<string, unknown> & {
-    pageType?: "product" | "site" | "blog" | "community";
+  pageType?: "product" | "site" | "blog" | "community";
 };
 
 interface TemplateProps {
-    layout: Partial<WidgetInstance>[];
-    pageData: PageData;
-    editing?: boolean;
-    onEditClick?: (widgetId: string) => void;
-    children?: ReactNode;
-    childrenOnTop: boolean;
-    onAddWidgetBelow?: (index: number) => void;
-    onMoveWidgetUp?: (index: number) => void;
-    onMoveWidgetDown?: (index: number) => void;
-    id?: string;
-    injectThemeStyles?: boolean;
+  layout: Partial<WidgetInstance>[];
+  pageData: PageData;
+  editing?: boolean;
+  onEditClick?: (widgetId: string) => void;
+  children?: ReactNode;
+  childrenOnTop: boolean;
+  onAddWidgetBelow?: (index: number) => void;
+  onMoveWidgetUp?: (index: number) => void;
+  onMoveWidgetDown?: (index: number) => void;
+  id?: string;
+  injectThemeStyles?: boolean;
 }
 
 const Template = (props: TemplateProps) => {
-    const {
-        layout,
-        pageData,
-        editing = false,
-        onEditClick,
-        children,
-        childrenOnTop = false,
-        onAddWidgetBelow,
-        onMoveWidgetUp,
-        onMoveWidgetDown,
-    } = props;
+  const {
+    layout,
+    pageData,
+    editing = false,
+    onEditClick,
+    children,
+    childrenOnTop = false,
+    onAddWidgetBelow,
+    onMoveWidgetUp,
+    onMoveWidgetDown,
+  } = props;
 
-    if (!layout) return <></>;
-    const footer = layout.filter(
-        (widget) => widget.name === Footer.metadata.name,
-    )[0];
-    const header = layout.filter(
-        (widget) => widget.name === Header.metadata.name,
-    )[0];
-    const widgetsWithoutHeaderAndFooter = layout.filter(
-        (widget) =>
-            ![Header.metadata.name, Footer.metadata.name].includes(widget.name),
-    );
-    const pageWidgets = widgetsWithoutHeaderAndFooter.map(
-        (item: any, index: number) => (
-            <EditableWidget
-                item={item}
-                key={item.widgetId}
-                editing={editing}
-                onEditClick={onEditClick}
-                pageData={pageData}
-                allowsWidgetAddition={true}
-                allowsUpwardMovement={index !== 0}
-                allowsDownwardMovement={
-                    widgetsWithoutHeaderAndFooter.length - 1 !== index
-                }
-                onAddWidgetBelow={onAddWidgetBelow}
-                onMoveWidgetDown={onMoveWidgetDown}
-                onMoveWidgetUp={onMoveWidgetUp}
-                index={index + 1}
-            />
-        ),
-    );
+  if (!layout) return <></>;
+  const footer = layout.filter(
+    (widget) => widget.name === Footer.metadata.name,
+  )[0];
+  const header = layout.filter(
+    (widget) => widget.name === Header.metadata.name,
+  )[0];
+  const widgetsWithoutHeaderAndFooter = layout.filter(
+    (widget) =>
+      ![Header.metadata.name, Footer.metadata.name].includes(widget.name),
+  );
+  const pageWidgets = widgetsWithoutHeaderAndFooter.map(
+    (item: any, index: number) => (
+      <EditableWidget
+        item={item}
+        key={item.widgetId}
+        editing={editing}
+        onEditClick={onEditClick}
+        pageData={pageData}
+        allowsWidgetAddition={true}
+        allowsUpwardMovement={index !== 0}
+        allowsDownwardMovement={
+          widgetsWithoutHeaderAndFooter.length - 1 !== index
+        }
+        onAddWidgetBelow={onAddWidgetBelow}
+        onMoveWidgetDown={onMoveWidgetDown}
+        onMoveWidgetUp={onMoveWidgetUp}
+        index={index + 1}
+      />
+    ),
+  );
 
-    return (
-        <div className="flex flex-col courselit-theme">
-            {header && (
-                <EditableWidget
-                    item={header}
-                    editing={editing}
-                    pageData={pageData}
-                    onEditClick={onEditClick}
-                    allowsWidgetAddition={true}
-                    onAddWidgetBelow={onAddWidgetBelow}
-                    onMoveWidgetDown={onMoveWidgetDown}
-                    onMoveWidgetUp={onMoveWidgetUp}
-                    index={0}
-                />
-            )}
-            {childrenOnTop && (
-                <div className="min-h-screen bg-background">
-                    {children}
-                    {pageWidgets}
-                </div>
-            )}
-            {!childrenOnTop && (
-                <div className="min-h-screen bg-background">
-                    {pageWidgets}
-                    {children}
-                </div>
-            )}
-            {footer && (
-                <EditableWidget
-                    item={footer}
-                    pageData={pageData}
-                    editing={editing}
-                    onEditClick={onEditClick}
-                    index={layout.length - 1}
-                />
-            )}
-            <Toaster />
-            {/* <style>{generateThemeStyles(state.theme as Theme)}</style> */}
+  return (
+    <div className="flex flex-col courselit-theme">
+      {header && (
+        <EditableWidget
+          item={header}
+          editing={editing}
+          pageData={pageData}
+          onEditClick={onEditClick}
+          allowsWidgetAddition={true}
+          onAddWidgetBelow={onAddWidgetBelow}
+          onMoveWidgetDown={onMoveWidgetDown}
+          onMoveWidgetUp={onMoveWidgetUp}
+          index={0}
+        />
+      )}
+      {childrenOnTop && (
+        <div className="min-h-screen bg-background">
+          {children}
+          {pageWidgets}
         </div>
-    );
+      )}
+      {!childrenOnTop && (
+        <div className="min-h-screen bg-background">
+          {pageWidgets}
+          {children}
+        </div>
+      )}
+      {footer && (
+        <EditableWidget
+          item={footer}
+          pageData={pageData}
+          editing={editing}
+          onEditClick={onEditClick}
+          index={layout.length - 1}
+        />
+      )}
+      <Toaster />
+      {/* <style>{generateThemeStyles(state.theme as Theme)}</style> */}
+    </div>
+  );
 };
 
 export default Template;

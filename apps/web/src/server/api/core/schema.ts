@@ -20,7 +20,7 @@ export const ListInputSchema = z.object({
 
 // Define function getFormDataSchema({ title, ...}) so that generate {data:{title, ...}} with zod
 export const getFormDataSchema = <T extends Record<string, z.ZodTypeAny>>(
-  fields: T
+  fields: T,
 ) => {
   return z.object({
     data: z.object(fields),

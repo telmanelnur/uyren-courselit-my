@@ -12,11 +12,14 @@ export async function createAssignmentSubmission(
   assignmentId: string,
   userId: string,
   domainId: string,
-  data: SubmissionData
+  data: SubmissionData,
 ): Promise<any> {
   await connectToDatabase();
 
-  const assignment = await AssignmentModel.findOne({ _id: assignmentId, domain: domainId });
+  const assignment = await AssignmentModel.findOne({
+    _id: assignmentId,
+    domain: domainId,
+  });
   if (!assignment) {
     throw new Error("Assignment not found");
   }
@@ -26,8 +29,14 @@ export async function createAssignmentSubmission(
   }
 
   // Check if assignment is overdue
-  if (assignment.dueDate && new Date() > assignment.dueDate && !assignment.allowLateSubmission) {
-    throw new Error("Assignment is overdue and late submissions are not allowed");
+  if (
+    assignment.dueDate &&
+    new Date() > assignment.dueDate &&
+    !assignment.allowLateSubmission
+  ) {
+    throw new Error(
+      "Assignment is overdue and late submissions are not allowed",
+    );
   }
 
   // Check existing submissions
@@ -67,7 +76,7 @@ export async function gradeAssignmentSubmission(
       score: number;
       feedback?: string;
     }>;
-  }
+  },
 ): Promise<any> {
   await connectToDatabase();
 
@@ -82,16 +91,17 @@ export async function gradeAssignmentSubmission(
   }
 
   // Calculate percentage score
-  const percentageScore = assignment.totalPoints > 0 
-    ? (gradeData.score / assignment.totalPoints) * 100 
-    : 0;
+  const percentageScore =
+    assignment.totalPoints > 0
+      ? (gradeData.score / assignment.totalPoints) * 100
+      : 0;
 
   // Apply late penalty if applicable
   let finalScore = gradeData.score;
   if (assignment.dueDate && submission.submittedAt > assignment.dueDate) {
     const latePenalty = Math.min(
       assignment.latePenalty || 0,
-      gradeData.score * (assignment.latePenalty / 100)
+      gradeData.score * (assignment.latePenalty / 100),
     );
     finalScore = Math.max(0, gradeData.score - latePenalty);
   }
@@ -105,11 +115,10 @@ export async function gradeAssignmentSubmission(
       feedback: gradeData.feedback,
       gradedAt: new Date(),
       gradedBy: graderId,
-      latePenaltyApplied: finalScore < gradeData.score 
-        ? gradeData.score - finalScore 
-        : 0,
+      latePenaltyApplied:
+        finalScore < gradeData.score ? gradeData.score - finalScore : 0,
     },
-    { new: true }
+    { new: true },
   );
 
   return updatedSubmission;
@@ -121,7 +130,7 @@ export async function addPeerReview(
   reviewData: {
     score: number;
     feedback: string;
-  }
+  },
 ): Promise<any> {
   await connectToDatabase();
 
@@ -145,13 +154,16 @@ export async function addPeerReview(
   const updatedSubmission = await AssignmentSubmissionModel.findByIdAndUpdate(
     submissionId,
     { $push: { peerReviews: peerReview } },
-    { new: true }
+    { new: true },
   );
 
   return updatedSubmission;
 }
 
-export async function calculateSubmissionStatistics(assignmentId: string, domainId: string): Promise<{
+export async function calculateSubmissionStatistics(
+  assignmentId: string,
+  domainId: string,
+): Promise<{
   totalSubmissions: number;
   averageScore: number;
   submissionRate: number;
@@ -159,7 +171,10 @@ export async function calculateSubmissionStatistics(assignmentId: string, domain
 }> {
   await connectToDatabase();
 
-  const assignment = await AssignmentModel.findOne({ _id: assignmentId, domain: domainId });
+  const assignment = await AssignmentModel.findOne({
+    _id: assignmentId,
+    domain: domainId,
+  });
   if (!assignment) {
     throw new Error("Assignment not found");
   }
@@ -171,9 +186,11 @@ export async function calculateSubmissionStatistics(assignmentId: string, domain
   });
 
   const totalSubmissions = submissions.length;
-  const averageScore = totalSubmissions > 0 
-    ? submissions.reduce((sum, sub) => sum + (sub.score || 0), 0) / totalSubmissions
-    : 0;
+  const averageScore =
+    totalSubmissions > 0
+      ? submissions.reduce((sum, sub) => sum + (sub.score || 0), 0) /
+        totalSubmissions
+      : 0;
 
   // Calculate grade distribution (A, B, C, D, F)
   const gradeDistribution = {
@@ -184,7 +201,7 @@ export async function calculateSubmissionStatistics(assignmentId: string, domain
     F: 0, // Below 60%
   };
 
-  submissions.forEach(sub => {
+  submissions.forEach((sub) => {
     const percentage = sub.percentageScore || 0;
     if (percentage >= 90) gradeDistribution.A++;
     else if (percentage >= 80) gradeDistribution.B++;

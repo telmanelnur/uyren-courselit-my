@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 // --- Lib ---
-import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
+import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
 
 // --- Tiptap UI ---
-import type { UseImageDownloadConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/image-download-button"
+import type { UseImageDownloadConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/image-download-button";
 import {
   IMAGE_DOWNLOAD_SHORTCUT_KEY,
   useImageDownload,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/image-download-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/image-download-button";
 
 // --- UI Primitives ---
-import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge"
+import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge";
 
 export interface ImageDownloadButtonProps
   extends Omit<ButtonProps, "type">,
@@ -26,20 +26,20 @@ export interface ImageDownloadButtonProps
   /**
    * Optional text to display alongside the icon.
    */
-  text?: string
+  text?: string;
   /**
    * Optional show shortcut keys in the button.
    * @default false
    */
-  showShortcut?: boolean
+  showShortcut?: boolean;
 }
 
 export function ImageDownloadShortcutBadge({
   shortcutKeys = IMAGE_DOWNLOAD_SHORTCUT_KEY,
 }: {
-  shortcutKeys?: string
+  shortcutKeys?: string;
 }) {
-  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>
+  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>;
 }
 
 /**
@@ -64,9 +64,9 @@ export const ImageDownloadButton = React.forwardRef<
       children,
       ...buttonProps
     },
-    ref
+    ref,
   ) => {
-    const { editor } = useTiptapEditor(providedEditor)
+    const { editor } = useTiptapEditor(providedEditor);
     const {
       isVisible,
       canDownload,
@@ -79,19 +79,19 @@ export const ImageDownloadButton = React.forwardRef<
       hideWhenUnavailable,
       onDownloaded,
       resolveFileUrl,
-    })
+    });
 
     const handleClick = React.useCallback(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event)
-        if (event.defaultPrevented) return
-        await handleDownload()
+        onClick?.(event);
+        if (event.defaultPrevented) return;
+        await handleDownload();
       },
-      [handleDownload, onClick]
-    )
+      [handleDownload, onClick],
+    );
 
     if (!isVisible) {
-      return null
+      return null;
     }
 
     return (
@@ -119,8 +119,8 @@ export const ImageDownloadButton = React.forwardRef<
           </>
         )}
       </Button>
-    )
-  }
-)
+    );
+  },
+);
 
-ImageDownloadButton.displayName = "ImageDownloadButton"
+ImageDownloadButton.displayName = "ImageDownloadButton";

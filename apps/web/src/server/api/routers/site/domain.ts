@@ -46,7 +46,6 @@ const UpdateSchema = getFormDataSchema({
 });
 
 async function ensureUniqueName(name: string, excludeId?: string) {
-  
   const existing = await DomainModel.findOne({
     name,
     deleted: false,
@@ -57,9 +56,8 @@ async function ensureUniqueName(name: string, excludeId?: string) {
 
 async function ensureUniqueCustomDomain(
   customDomain: string,
-  excludeId?: string
+  excludeId?: string,
 ) {
-  
   const existing = await DomainModel.findOne({
     customDomain,
     deleted: false,
@@ -79,11 +77,9 @@ export const domainRouter = router({
             customDomain: z.string().optional(),
           })
           .optional(),
-      })
+      }),
     )
     .query(async ({ input }) => {
-      
-
       const q = input?.search?.q;
       const baseWhere: any = {
         deleted: false,
@@ -122,18 +118,16 @@ export const domainRouter = router({
           : Promise.resolve(null),
       ]);
 
-      return { 
-        items, 
-        total, 
-        meta: paginationMeta 
+      return {
+        items,
+        total,
+        meta: paginationMeta,
       };
     }),
 
   getById: adminProcedure
     .input(documentIdValidator())
     .query(async ({ input }) => {
-      
-
       const domain = await DomainModel.findOne({
         _id: input,
         deleted: false,
@@ -144,8 +138,6 @@ export const domainRouter = router({
     }),
 
   create: adminProcedure.input(CreateSchema).mutation(async ({ input }) => {
-    
-
     await ensureUniqueName(input.data.name);
 
     if (input.data.customDomain) {
@@ -161,16 +153,14 @@ export const domainRouter = router({
 
     const saved = await domain.save();
     const domainObj = saved.toObject();
-    
+
     // Cache the new domain in Redis
     await DomainManager.setDomainCache(domainObj);
-    
+
     return domainObj;
   }),
 
   update: adminProcedure.input(UpdateSchema).mutation(async ({ input }) => {
-    
-
     const existing = await DomainModel.findOne({
       _id: input.id,
       deleted: false,
@@ -194,7 +184,7 @@ export const domainRouter = router({
     });
 
     const updatedObj = updated!.toObject();
-    
+
     // Cache the updated domain data
     await DomainManager.setDomainCache(updatedObj);
 
@@ -204,8 +194,6 @@ export const domainRouter = router({
   delete: adminProcedure
     .input(documentIdValidator())
     .mutation(async ({ input }) => {
-      
-
       const existing = await DomainModel.findOne({
         _id: input,
         deleted: false,
@@ -217,11 +205,11 @@ export const domainRouter = router({
       const deleted = await DomainModel.findByIdAndUpdate(
         input,
         { deleted: true },
-        { new: true }
+        { new: true },
       );
 
       const deletedObj = deleted!.toObject();
-      
+
       // Remove from Redis cache
       await DomainManager.removeFromCache(deletedObj);
 
@@ -239,8 +227,6 @@ export const domainRouter = router({
   publicGetByHost: publicProcedure
     .input(z.object({ host: z.string() }))
     .query(async ({ input }) => {
-      
-
       const { cleanHost, subdomain } = parseHost(input.host);
       if (!cleanHost) throw new NotFoundException("Domain", input.host);
 

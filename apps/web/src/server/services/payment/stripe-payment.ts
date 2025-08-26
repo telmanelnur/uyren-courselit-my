@@ -60,7 +60,7 @@ export default class StripePayment implements Payment {
       ],
       mode:
         paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION ||
-          paymentPlan.type === Constants.PaymentPlanType.EMI
+        paymentPlan.type === Constants.PaymentPlanType.EMI
           ? "subscription"
           : "payment",
       success_url: `${origin}/checkout/verify?id=${metadata.invoiceId}`,
@@ -77,12 +77,15 @@ export default class StripePayment implements Payment {
     return this.siteinfo.currencyISOCode!;
   }
 
-  async verify(event: Stripe.Event, meta: {
-    domain: Domain;
-    headers: {
-      host: string;
-    };
-  }) {
+  async verify(
+    event: Stripe.Event,
+    meta: {
+      domain: Domain;
+      headers: {
+        host: string;
+      };
+    },
+  ) {
     if (!event) {
       return false;
     }
@@ -103,7 +106,7 @@ export default class StripePayment implements Payment {
           headers: meta.headers,
           eventType: event.type,
         });
-        
+
         Log.info("Payment expiration email sent successfully", {
           membershipId: metadata.membershipId,
           invoiceId: metadata.invoiceId,

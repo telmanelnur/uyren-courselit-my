@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const LanguagesIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -16,15 +16,15 @@ export const LanguagesIcon = React.memo(
         xmlns="http://www.w3.org/2000/svg"
         {...props}
       >
-        <path d="m5 8 6 6"/>
-        <path d="m4 14 6-6 2-3"/>
-        <path d="M2 5h12"/>
-        <path d="M7 2h1"/>
-        <path d="m22 22-5-10-5 10"/>
-        <path d="M14 18h6"/>
+        <path d="m5 8 6 6" />
+        <path d="m4 14 6-6 2-3" />
+        <path d="M2 5h12" />
+        <path d="M7 2h1" />
+        <path d="m22 22-5-10-5 10" />
+        <path d="M14 18h6" />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-LanguagesIcon.displayName = "LanguagesIcon"
+LanguagesIcon.displayName = "LanguagesIcon";

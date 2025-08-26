@@ -4,7 +4,7 @@ const jwtUtils = {
   generateToken(
     payload: object,
     secret: string,
-    expiresIn: SignOptions["expiresIn"] = "1h"
+    expiresIn: SignOptions["expiresIn"] = "1h",
   ) {
     return jwt.sign(payload, secret, { expiresIn });
   },

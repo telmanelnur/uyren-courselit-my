@@ -6,36 +6,36 @@ import { useTheme } from "next-themes";
 import { WidgetDefaultSettings, WidgetProps } from "@workspace/common-models";
 
 const WidgetByName = ({
-    id,
+  id,
+  name,
+  settings,
+  pageData,
+  editing = false,
+}: Omit<WidgetProps<WidgetDefaultSettings>, "toggleTheme" | "nextTheme">) => {
+  const { resolvedTheme: nextTheme, setTheme: setNextTheme } = useTheme();
+
+  const toggleTheme = () => {
+    const themeNext = nextTheme === "dark" ? "light" : "dark";
+    setNextTheme(themeNext);
+  };
+
+  const widgetProps: WidgetProps<WidgetDefaultSettings> = {
     name,
     settings,
+    id,
     pageData,
-    editing = false,
-}: Omit<WidgetProps<WidgetDefaultSettings>, "toggleTheme" | "nextTheme">) => {
-    const { resolvedTheme: nextTheme, setTheme: setNextTheme } = useTheme();
+    editing,
+    nextTheme,
+    toggleTheme,
+  };
 
-    const toggleTheme = () => {
-        const themeNext = nextTheme === "dark" ? "light" : "dark";
-        setNextTheme(themeNext);
-    };
+  if (!widgets[name]) return <>{`${name} ${COMPONENT_MISSING_SUFFIX}`}</>;
 
-    const widgetProps: WidgetProps<WidgetDefaultSettings> = {
-        name,
-        settings,
-        id,
-        pageData,
-        editing,
-        nextTheme,
-        toggleTheme,
-    };
-
-    if (!widgets[name]) return <>{`${name} ${COMPONENT_MISSING_SUFFIX}`}</>;
-
-    return (
-        <WidgetErrorBoundary widgetName={name}>
-            {React.createElement(widgets[name].widget, widgetProps)}
-        </WidgetErrorBoundary>
-    );
+  return (
+    <WidgetErrorBoundary widgetName={name}>
+      {React.createElement(widgets[name].widget, widgetProps)}
+    </WidgetErrorBoundary>
+  );
 };
 
 export default WidgetByName;

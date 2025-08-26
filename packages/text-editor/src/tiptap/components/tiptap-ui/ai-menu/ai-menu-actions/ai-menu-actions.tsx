@@ -1,23 +1,26 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import type { Editor } from "@tiptap/react"
-import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { RefreshAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/refresh-ai-icon"
-import { XIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/x-icon"
-import { CheckIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/check-icon"
+import * as React from "react";
+import type { Editor } from "@tiptap/react";
+import {
+  Button,
+  ButtonGroup,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { RefreshAiIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/refresh-ai-icon";
+import { XIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/x-icon";
+import { CheckIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/check-icon";
 // Local minimal options type to avoid requiring the Pro package during build
-type TextOptions = Record<string, unknown>
-import { useUiEditorState } from "@workspace/text-editor/tiptap/hooks/use-ui-editor-state"
+type TextOptions = Record<string, unknown>;
+import { useUiEditorState } from "@workspace/text-editor/tiptap/hooks/use-ui-editor-state";
 
-import "@workspace/text-editor/tiptap/components/tiptap-ui/ai-menu/ai-menu-actions/ai-menu-actions.scss"
+import "@workspace/text-editor/tiptap/components/tiptap-ui/ai-menu/ai-menu-actions/ai-menu-actions.scss";
 
 export interface AiMenuActionsProps {
-  editor: Editor | null
-  options: TextOptions
-  onRegenerate?: () => void
-  onAccept?: () => void
-  onReject?: () => void
+  editor: Editor | null;
+  options: TextOptions;
+  onRegenerate?: () => void;
+  onAccept?: () => void;
+  onReject?: () => void;
 }
 
 export function AiMenuActions({
@@ -27,40 +30,40 @@ export function AiMenuActions({
   onAccept,
   onReject,
 }: AiMenuActionsProps) {
-  const { aiGenerationIsLoading } = useUiEditorState(editor)
+  const { aiGenerationIsLoading } = useUiEditorState(editor);
 
   const handleRegenerate = React.useCallback(() => {
-    if (!editor) return
+    if (!editor) return;
     const chainAny = editor.chain().focus() as unknown as {
-      aiRegenerate?: (options: unknown) => { run: () => boolean }
-    }
+      aiRegenerate?: (options: unknown) => { run: () => boolean };
+    };
     if (typeof chainAny.aiRegenerate === "function") {
-      chainAny.aiRegenerate(options).run()
+      chainAny.aiRegenerate(options).run();
     }
-    onRegenerate?.()
-  }, [editor, onRegenerate, options])
+    onRegenerate?.();
+  }, [editor, onRegenerate, options]);
 
   const handleDiscard = React.useCallback(() => {
-    if (!editor) return
+    if (!editor) return;
     const chainAny = editor.chain().focus() as unknown as {
-      aiReject?: () => { run: () => boolean }
-    }
+      aiReject?: () => { run: () => boolean };
+    };
     if (typeof chainAny.aiReject === "function") {
-      chainAny.aiReject().run()
+      chainAny.aiReject().run();
     }
-    onReject?.()
-  }, [editor, onReject])
+    onReject?.();
+  }, [editor, onReject]);
 
   const handleApply = React.useCallback(() => {
-    if (!editor) return
+    if (!editor) return;
     const chainAny = editor.chain().focus() as unknown as {
-      aiAccept?: () => { run: () => boolean }
-    }
+      aiAccept?: () => { run: () => boolean };
+    };
     if (typeof chainAny.aiAccept === "function") {
-      chainAny.aiAccept().run()
+      chainAny.aiAccept().run();
     }
-    onAccept?.()
-  }, [editor, onAccept])
+    onAccept?.();
+  }, [editor, onAccept]);
 
   return (
     <div className="tiptap-ai-menu-actions">
@@ -99,5 +102,5 @@ export function AiMenuActions({
         </ButtonGroup>
       </div>
     </div>
-  )
+  );
 }

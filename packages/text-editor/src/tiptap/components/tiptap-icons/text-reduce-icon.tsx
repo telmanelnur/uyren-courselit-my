@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const TextReduceIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -25,8 +25,8 @@ export const TextReduceIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-TextReduceIcon.displayName = "TextReduceIcon"
+TextReduceIcon.displayName = "TextReduceIcon";

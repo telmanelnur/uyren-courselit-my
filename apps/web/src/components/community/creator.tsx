@@ -1,15 +1,15 @@
 import {
-    BUTTON_CANCEL_TEXT,
-    COMMUNITY_FIELD_NAME,
-    COMMUNITY_NEW_BTN_CAPTION,
-    NEW_COMMUNITY_BUTTON,
+  BUTTON_CANCEL_TEXT,
+  COMMUNITY_FIELD_NAME,
+  COMMUNITY_NEW_BTN_CAPTION,
+  NEW_COMMUNITY_BUTTON,
 } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
 import {
-    Button,
-    Form,
-    FormField,
-    useToast,
+  Button,
+  Form,
+  FormField,
+  useToast,
 } from "@workspace/components-library";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

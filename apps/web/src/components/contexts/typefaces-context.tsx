@@ -7,7 +7,7 @@ import {
   PropsWithChildren,
   SetStateAction,
   useContext,
-  useState
+  useState,
 } from "react";
 import { defaultState } from "./default-state";
 
@@ -25,7 +25,7 @@ const TypefacesContext = createContext<TypefacesContextType>({
 
 export const TypefacesProvider = ({ children }: PropsWithChildren) => {
   const [typefaces, setTypefaces] = useState<Typeface[]>(
-    defaultState.typefaces
+    defaultState.typefaces,
   );
 
   return (

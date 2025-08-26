@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const AiSparklesIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -25,8 +25,8 @@ export const AiSparklesIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-AiSparklesIcon.displayName = "AiSparklesIcon"
+AiSparklesIcon.displayName = "AiSparklesIcon";

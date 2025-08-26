@@ -1,8 +1,8 @@
 import { router } from "../../core/trpc";
-import { 
+import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
-  protectedProcedure 
+  protectedProcedure,
 } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { paginate } from "../../core/utils";
@@ -47,7 +47,7 @@ export const broadcastRouter = router({
       ]);
 
       return {
-        items: items.map(seq => ({
+        items: items.map((seq) => ({
           sequenceId: seq.sequenceId,
           title: seq.title || "",
           emails: seq.emails || [],
@@ -62,9 +62,11 @@ export const broadcastRouter = router({
   getById: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageSite]))
-    .input(z.object({
-      sequenceId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const broadcast = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -88,11 +90,13 @@ export const broadcastRouter = router({
   create: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageSite]))
-    .input(getFormDataSchema({
-      subject: z.string().min(1).max(255),
-      content: z.string().optional(),
-      title: z.string().optional(),
-    }))
+    .input(
+      getFormDataSchema({
+        subject: z.string().min(1).max(255),
+        content: z.string().optional(),
+        title: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const broadcast = await SequenceModel.create({
         domain: ctx.domainData.domainObj._id,
@@ -101,13 +105,15 @@ export const broadcastRouter = router({
         title: input.data.title || input.data.subject,
         creatorId: ctx.user.userId,
         status: Constants.sequenceStatus[0], // draft
-        emails: [{
-          emailId: generateUniqueId(),
-          subject: input.data.subject,
-          content: input.data.content || "",
-          published: false,
-          delayInMillis: 0,
-        }],
+        emails: [
+          {
+            emailId: generateUniqueId(),
+            subject: input.data.subject,
+            content: input.data.content || "",
+            published: false,
+            delayInMillis: 0,
+          },
+        ],
         entrants: [],
       });
 
@@ -121,14 +127,16 @@ export const broadcastRouter = router({
   update: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageSite]))
-    .input(getFormDataSchema({
-      title: z.string().min(1).max(255).optional(),
-      subject: z.string().optional(),
-      content: z.string().optional(),
-      status: z.enum(Constants.sequenceStatus as any).optional(),
-    }).extend({
-      sequenceId: z.string(),
-    }))
+    .input(
+      getFormDataSchema({
+        title: z.string().min(1).max(255).optional(),
+        subject: z.string().optional(),
+        content: z.string().optional(),
+        status: z.enum(Constants.sequenceStatus as any).optional(),
+      }).extend({
+        sequenceId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const broadcast = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -140,7 +148,7 @@ export const broadcastRouter = router({
         throw new NotFoundException("Broadcast", input.sequenceId);
       }
 
-      Object.keys(input.data).forEach(key => {
+      Object.keys(input.data).forEach((key) => {
         if (key === "subject" || key === "content") {
           if (broadcast.emails?.[0]) {
             (broadcast.emails[0] as any)[key] = (input.data as any)[key];
@@ -151,7 +159,7 @@ export const broadcastRouter = router({
       });
 
       await broadcast.save();
-      
+
       return {
         sequenceId: broadcast.sequenceId,
         title: broadcast.title,
@@ -162,9 +170,11 @@ export const broadcastRouter = router({
   delete: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageSite]))
-    .input(z.object({
-      sequenceId: z.string(),
-    }))
+    .input(
+      z.object({
+        sequenceId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const broadcast = await SequenceModel.findOne({
         domain: ctx.domainData.domainObj._id,

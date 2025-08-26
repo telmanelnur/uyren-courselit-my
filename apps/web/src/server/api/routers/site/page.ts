@@ -27,10 +27,9 @@ export const pageRouter = router({
     .input(
       z.object({
         id: z.string().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
-      
       let page: any = null;
 
       if (input.id) {
@@ -72,11 +71,9 @@ export const pageRouter = router({
     .input(
       z.object({
         pageId: z.string(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
-      
-
       const page = await PageModel.findOne({
         domain: ctx.domainData.domainObj._id,
         pageId: input.pageId,
@@ -104,8 +101,6 @@ export const pageRouter = router({
   publicGetDefault: publicProcedure
     .use(createDomainRequiredMiddleware())
     .query(async ({ ctx }) => {
-      
-
       const page = await PageModel.findOne({
         domain: ctx.domainData.domainObj._id,
         deleted: false,

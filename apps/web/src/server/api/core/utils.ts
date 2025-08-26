@@ -15,7 +15,7 @@ export function paginate(p?: {
 }
 export function orderBy(
   field = "createdAt",
-  direction: "asc" | "desc" = "desc"
+  direction: "asc" | "desc" = "desc",
 ) {
   return { [field]: direction } as any;
 }
@@ -36,7 +36,7 @@ interface QueryOptions<T> {
 
 export async function buildMongooseQuery<T = any>(
   model: ReturnType<typeof createModel<T>>,
-  options: QueryOptions<T>
+  options: QueryOptions<T>,
 ) {
   const {
     filter = {},

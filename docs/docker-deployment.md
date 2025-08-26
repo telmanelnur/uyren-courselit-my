@@ -5,6 +5,7 @@ This document provides comprehensive instructions for deploying the Courselit ap
 ## Project Architecture
 
 The project consists of:
+
 - **Web App**: Next.js application (`apps/web`)
 - **Queue Service**: Express.js service for background jobs (`apps/queue`)
 - **Redis**: For caching and job queues
@@ -19,12 +20,14 @@ The project consists of:
 ## Local Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd uyren-courselit-my
    ```
 
 2. **Start development environment**
+
    ```bash
    cd docker
    docker-compose -f docker-compose.dev.yml up -d
@@ -41,21 +44,24 @@ The project consists of:
 ### 1. Environment Configuration
 
 1. **Copy environment template**
+
    ```bash
    cd docker
    cp env.prod.template .env.prod
    ```
 
 2. **Edit environment variables**
+
    ```bash
    nano .env.prod
    ```
-   
+
    Update all values with your production credentials.
 
 ### 2. Deploy to Production
 
 1. **Build and start services**
+
    ```bash
    cd docker
    docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
@@ -84,40 +90,40 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 10.4.1
-        
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
-      
-    - name: Build applications
-      run: pnpm build
-      
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          cd /path/to/your/project
-          git pull origin main
-          cd docker
-          docker-compose -f docker-compose.prod.yml --env-file .env.prod down
-          docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
-          docker system prune -f
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build applications
+        run: pnpm build
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /path/to/your/project
+            git pull origin main
+            cd docker
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod down
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+            docker system prune -f
 ```
 
 ### Required Secrets
@@ -133,11 +139,13 @@ Add these secrets to your GitHub repository:
 ### 1. Initial Server Setup
 
 1. **Update system**
+
    ```bash
    sudo apt update && sudo apt upgrade -y
    ```
 
 2. **Install Docker**
+
    ```bash
    curl -fsSL https://get.docker.com -o get-docker.sh
    sudo sh get-docker.sh
@@ -153,12 +161,14 @@ Add these secrets to your GitHub repository:
 ### 2. Project Deployment
 
 1. **Clone repository**
+
    ```bash
    git clone <your-repo-url>
    cd uyren-courselit-my
    ```
 
 2. **Setup environment**
+
    ```bash
    cd docker
    cp env.prod.template .env.prod
@@ -191,6 +201,7 @@ docker-compose -f docker-compose.prod.yml logs -f queue
 ### 3. Backup Strategy
 
 1. **Database backup**
+
    ```bash
    docker exec courselit-mongo-prod mongodump --out /backup/$(date +%Y%m%d_%H%M%S)
    ```
@@ -203,6 +214,7 @@ docker-compose -f docker-compose.prod.yml logs -f queue
 ### 4. Updates and Rollbacks
 
 1. **Update application**
+
    ```bash
    git pull origin main
    docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
@@ -255,6 +267,7 @@ docker stats
 ## Support
 
 For deployment issues:
+
 1. Check Docker logs
 2. Verify environment variables
 3. Ensure all services are healthy

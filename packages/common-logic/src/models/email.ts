@@ -29,27 +29,27 @@ import { generateUniqueId } from "@workspace/utils";
 // );
 
 const EmailActionSchema = new mongoose.Schema(
-    {
-        type: { type: String, enum: Constants.emailActionTypes },
-        data: { type: mongoose.Schema.Types.Mixed },
-    },
-    { _id: false },
+  {
+    type: { type: String, enum: Constants.emailActionTypes },
+    data: { type: mongoose.Schema.Types.Mixed },
+  },
+  { _id: false },
 );
 
 export const EmailContentSchema = new mongoose.Schema(
-    {
-        // content: { type: [EmailContentBlockSchema], required: true },
-        // style: { type: EmailStyleSchema, required: true },
-        // meta: { type: EmailMetaSchema, required: true },
-    },
-    { _id: false },
+  {
+    // content: { type: [EmailContentBlockSchema], required: true },
+    // style: { type: EmailStyleSchema, required: true },
+    // meta: { type: EmailMetaSchema, required: true },
+  },
+  { _id: false },
 );
 
 export const EmailSchema = new mongoose.Schema<Email>({
-    emailId: { type: String, required: true, default: generateUniqueId },
-    // content: { type: EmailContentSchema, required: true },
-    subject: { type: String, required: true },
-    delayInMillis: { type: Number, required: true, default: 86400000 },
-    published: { type: Boolean, required: true, default: false },
-    action: EmailActionSchema,
+  emailId: { type: String, required: true, default: generateUniqueId },
+  // content: { type: EmailContentSchema, required: true },
+  subject: { type: String, required: true },
+  delayInMillis: { type: Number, required: true, default: 86400000 },
+  published: { type: Boolean, required: true, default: false },
+  action: EmailActionSchema,
 });

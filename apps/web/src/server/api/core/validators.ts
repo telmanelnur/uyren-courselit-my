@@ -32,7 +32,7 @@ export const documentSlugValidator = (zod = z) => {
     .max(255)
     .regex(
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "Slug must be lowercase, alphanumeric, and dash-separated"
+      "Slug must be lowercase, alphanumeric, and dash-separated",
     );
 };
 
@@ -45,24 +45,23 @@ export const toSlug = (s: string) =>
     .replace(/^-+|-+$/g, "");
 
 export const mediaWrappedFieldValidator = (zod = z) => {
-  return zod
-    .object({
-      mediaId: z.string(),
-      originalFileName: z.string(),
-      mimeType: z.string(),
-      size: z.number(),
-      access: z.nativeEnum(MediaAccessType),
-      thumbnail: z.string(),
-      // caption is an optional string
-      caption: z.string().optional(),
-      // file is an optional string
-      file: z.string().optional(),
-      url: z.string(),
-      // storageProvider must be one of 'local' or 'cloudinary'
-      storageProvider: z.enum(["local", "cloudinary", "custom"]),
-      domain: z.string().optional(),
-      userId: z.string().optional(),
-    })
+  return zod.object({
+    mediaId: z.string(),
+    originalFileName: z.string(),
+    mimeType: z.string(),
+    size: z.number(),
+    access: z.nativeEnum(MediaAccessType),
+    thumbnail: z.string(),
+    // caption is an optional string
+    caption: z.string().optional(),
+    // file is an optional string
+    file: z.string().optional(),
+    url: z.string(),
+    // storageProvider must be one of 'local' or 'cloudinary'
+    storageProvider: z.enum(["local", "cloudinary", "custom"]),
+    domain: z.string().optional(),
+    userId: z.string().optional(),
+  });
 };
 
 export const textEditorContentValidator = (zod = z) => {

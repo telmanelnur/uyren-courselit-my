@@ -1,7 +1,12 @@
 import { responses } from "@/config/strings";
 import CourseModel from "@/models/Course";
 import LessonModel from "@/models/Lesson";
-import { AuthorizationException, ConflictException, NotFoundException, ValidationException } from "@/server/api/core/exceptions";
+import {
+  AuthorizationException,
+  ConflictException,
+  NotFoundException,
+  ValidationException,
+} from "@/server/api/core/exceptions";
 import { MainContextType } from "@/server/api/core/procedures";
 import { deleteMedia } from "@/server/services/media";
 import { InternalCourse } from "@workspace/common-logic";
@@ -11,10 +16,9 @@ import { getPlans } from "../../community/helpers";
 import { checkOwnershipWithoutModel } from "@/server/api/core/permissions";
 import { checkPermission } from "@workspace/utils";
 
-
 export const getGroupedLessons = async (
   courseId: string,
-  domainId: mongoose.Types.ObjectId
+  domainId: mongoose.Types.ObjectId,
 ) => {
   const course = await CourseModel.findOne({
     courseId: courseId,
@@ -33,7 +37,7 @@ export const getGroupedLessons = async (
     {
       lessonId: 1,
       groupId: 1,
-    }
+    },
   );
   const lessonsInSequentialOrder = [];
   for (let group of course.groups.sort((a, b) => a.rank - b.rank)) {
@@ -43,8 +47,8 @@ export const getGroupedLessons = async (
         .sort(
           (a, b) =>
             group.lessonsOrder?.indexOf(a.lessonId) -
-            group.lessonsOrder?.indexOf(b.lessonId)
-        )
+            group.lessonsOrder?.indexOf(b.lessonId),
+        ),
     );
   }
   return lessonsInSequentialOrder;
@@ -53,7 +57,7 @@ export const getGroupedLessons = async (
 export const getPrevNextCursor = async (
   courseId: string,
   domainId: mongoose.Types.ObjectId,
-  lessonId?: string
+  lessonId?: string,
 ) => {
   const lessonsInSequentialOrder = await getGroupedLessons(courseId, domainId);
   const indexOfCurrentLesson = lessonId
@@ -73,7 +77,10 @@ export const getPrevNextCursor = async (
 };
 
 // TODO: refactor this as it might not be deleting the media
-export const deleteAllLessons = async (courseId: string, ctx: MainContextType) => {
+export const deleteAllLessons = async (
+  courseId: string,
+  ctx: MainContextType,
+) => {
   const allLessonsWithMedia = await LessonModel.find(
     {
       courseId,
@@ -82,7 +89,7 @@ export const deleteAllLessons = async (courseId: string, ctx: MainContextType) =
     },
     {
       mediaId: 1,
-    }
+    },
   );
   for (let l of allLessonsWithMedia) {
     if (l.media) {
@@ -168,15 +175,15 @@ export const getCourseOrThrow = async (
     };
     domainData: { domainObj: { _id: mongoose.Types.ObjectId } };
   },
-  courseId?: string
+  courseId?: string,
 ) => {
   const query = courseId
     ? {
-      courseId,
-    }
+        courseId,
+      }
     : {
-      _id: id,
-    };
+        _id: id,
+      };
 
   const course = await CourseModel.findOne({
     ...query,
@@ -187,13 +194,21 @@ export const getCourseOrThrow = async (
     throw new NotFoundException("Course", String(courseId || id));
   }
 
-  if (!checkPermission(ctx.user.permissions, [UIConstants.permissions.manageAnyCourse])) {
+  if (
+    !checkPermission(ctx.user.permissions, [
+      UIConstants.permissions.manageAnyCourse,
+    ])
+  ) {
     if (!checkOwnershipWithoutModel(course, ctx)) {
       throw new NotFoundException("Course", String(courseId || id));
     } else {
-      if (!checkPermission(ctx.user.permissions, [UIConstants.permissions.manageCourse])) {
+      if (
+        !checkPermission(ctx.user.permissions, [
+          UIConstants.permissions.manageCourse,
+        ])
+      ) {
         throw new AuthorizationException(
-          `You are not allowed to manage this course`
+          `You are not allowed to manage this course`,
         );
       }
     }

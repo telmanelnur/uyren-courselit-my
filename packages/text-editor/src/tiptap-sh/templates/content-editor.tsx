@@ -27,15 +27,18 @@ import { SlashMenuConfig } from "@workspace/text-editor/tiptap/components/tiptap
 export type ContentEditorProps = {
   initialContent?: string;
   onChange?: (content: string) => void;
-  onEditor?: (editor: Editor | null, meta: {
-    reason: "create" | "destroy"
-  }) => void;
+  onEditor?: (
+    editor: Editor | null,
+    meta: {
+      reason: "create" | "destroy";
+    },
+  ) => void;
   placeholder?: string;
   editable?: boolean;
   className?: ReturnType<typeof cn>;
-  extraExtensions?: AnyExtension[]
-  extraSlashMenuConfig?: SlashMenuConfig
-}
+  extraExtensions?: AnyExtension[];
+  extraSlashMenuConfig?: SlashMenuConfig;
+};
 
 export type ContentEditorRef = Editor;
 
@@ -100,10 +103,8 @@ export function ContentEditor({
       SearchAndReplace,
       Typography,
     ];
-    return [...defaultExtensions, ...extraExtensions]
-  },
-    [extraExtensions, placeholder]
-  )
+    return [...defaultExtensions, ...extraExtensions];
+  }, [extraExtensions, placeholder]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -139,7 +140,7 @@ export function ContentEditor({
       className={cn(
         "content-editor-wrapper",
         "relative max-h-[calc(100dvh-6rem)]  w-full overflow-hidden overflow-y-scroll border bg-card pb-[60px] sm:pb-0",
-        className
+        className,
       )}
     >
       <EditorToolbar editor={editor} />

@@ -13,7 +13,7 @@ class MailQueueManager {
         attempts: 3,
         removeOnComplete: 100,
         removeOnFail: 50,
-        backoff: { type: 'exponential', delay: 2000 },
+        backoff: { type: "exponential", delay: 2000 },
       },
     });
   }

@@ -10,7 +10,7 @@ import { rootProcedure, t } from "./trpc";
 
 // Base middleware for role-based access control
 export const createPermissionMiddleware = <T = any>(
-  allowedPermissions: string[]
+  allowedPermissions: string[],
 ) => {
   return async ({
     ctx,
@@ -22,7 +22,7 @@ export const createPermissionMiddleware = <T = any>(
     const userPermissions = (ctx as any).user!.permissions;
     if (!checkPermission(userPermissions, allowedPermissions)) {
       throw new AuthorizationException(
-        `Access denied. Required permissions: ${allowedPermissions.join(", ")}`
+        `Access denied. Required permissions: ${allowedPermissions.join(", ")}`,
       );
     }
     return next({
@@ -36,7 +36,7 @@ const createRoleMiddleware = (allowedRoles: string[]) => {
     const userRoles = ctx.session!.user.roles;
     if (!checkPermission(userRoles, allowedRoles)) {
       throw new AuthorizationException(
-        `Access denied. Required roles: ${allowedRoles.join(", ")}`
+        `Access denied. Required roles: ${allowedRoles.join(", ")}`,
       );
     }
     return next({
@@ -80,20 +80,20 @@ export const protectedProcedure = rootProcedure.use(
         user,
       },
     });
-  })
+  }),
 );
 export const adminProcedure = protectedProcedure.use(
-  createRoleMiddleware([UIConstants.roles.admin])
+  createRoleMiddleware([UIConstants.roles.admin]),
 );
 export const teacherProcedure = protectedProcedure.use(
-  createRoleMiddleware([UIConstants.roles.admin, UIConstants.roles.instructor])
+  createRoleMiddleware([UIConstants.roles.admin, UIConstants.roles.instructor]),
 );
 export const studentProcedure = protectedProcedure.use(
   createRoleMiddleware([
     UIConstants.roles.admin,
     UIConstants.roles.instructor,
     UIConstants.roles.student,
-  ])
+  ]),
 );
 
 export type MainContextType = {

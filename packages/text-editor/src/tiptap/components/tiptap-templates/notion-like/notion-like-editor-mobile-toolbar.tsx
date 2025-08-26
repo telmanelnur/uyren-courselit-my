@@ -1,56 +1,56 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { type Editor } from "@tiptap/react"
+import * as React from "react";
+import { type Editor } from "@tiptap/react";
 
 // --- Hooks ---
-import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile"
+import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile";
 import {
   useWindowSize,
   type WindowSizeState,
-} from "@workspace/text-editor/tiptap/hooks/use-window-size"
-import { useCursorVisibility } from "@workspace/text-editor/tiptap/hooks/use-cursor-visibility"
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
+} from "@workspace/text-editor/tiptap/hooks/use-window-size";
+import { useCursorVisibility } from "@workspace/text-editor/tiptap/hooks/use-cursor-visibility";
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
 
 // --- Tiptap UI ---
 import {
   ColorHighlightPopover,
   ColorHighlightPopoverButton,
   ColorHighlightPopoverContent,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-highlight-popover"
-import { ImageUploadButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/image-upload-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-highlight-popover";
+import { ImageUploadButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/image-upload-button";
 import {
   LinkButton,
   LinkContent,
   LinkPopover,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/link-popover"
-import { MarkButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/mark-button"
-import { TextAlignButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/text-align-button"
-import { SlashCommandTriggerButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-command-trigger-button"
-import { ResetAllFormattingButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/reset-all-formatting-button"
-import { DeleteNodeButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/delete-node-button"
-import { ImproveDropdown } from "@workspace/text-editor/tiptap/components/tiptap-ui/improve-dropdown"
-import { TurnIntoDropdownContent } from "@workspace/text-editor/tiptap/components/tiptap-ui/turn-into-dropdown"
-import { useRecentColors } from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-popover"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/link-popover";
+import { MarkButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/mark-button";
+import { TextAlignButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/text-align-button";
+import { SlashCommandTriggerButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-command-trigger-button";
+import { ResetAllFormattingButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/reset-all-formatting-button";
+import { DeleteNodeButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/delete-node-button";
+import { ImproveDropdown } from "@workspace/text-editor/tiptap/components/tiptap-ui/improve-dropdown";
+import { TurnIntoDropdownContent } from "@workspace/text-editor/tiptap/components/tiptap-ui/turn-into-dropdown";
+import { useRecentColors } from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-popover";
 import {
   ColorTextButton,
   TEXT_COLORS,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button";
 import {
   ColorHighlightButton,
   HIGHLIGHT_COLORS,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-highlight-button"
-import { useMenuActionVisibility } from "@workspace/text-editor/tiptap/components/tiptap-ui/drag-context-menu"
-import { AiAskButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button"
-import { DuplicateButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/duplicate-button"
-import { CopyToClipboardButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/copy-to-clipboard-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-highlight-button";
+import { useMenuActionVisibility } from "@workspace/text-editor/tiptap/components/tiptap-ui/drag-context-menu";
+import { AiAskButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/ai-ask-button";
+import { DuplicateButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/duplicate-button";
+import { CopyToClipboardButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/copy-to-clipboard-button";
 
 // --- Utils ---
-import { getNodeDisplayName } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils"
+import { getNodeDisplayName } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils";
 
 // --- Icons ---
-import { PaintBucketIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/paint-bucket-icon"
-import { Repeat2Icon } from "@workspace/text-editor/tiptap/components/tiptap-icons/repeat-2-icon"
+import { PaintBucketIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/paint-bucket-icon";
+import { Repeat2Icon } from "@workspace/text-editor/tiptap/components/tiptap-icons/repeat-2-icon";
 
 // --- UI Primitives ---
 import {
@@ -58,9 +58,9 @@ import {
   CardBody,
   CardGroupLabel,
   CardItemGroup,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card"
-import { Spacer } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/spacer"
-import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card";
+import { Spacer } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/spacer";
+import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,20 +70,23 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/dropdown-menu"
-import { ArrowLeftIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/arrow-left-icon"
-import { ChevronRightIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/chevron-right-icon"
-import { HighlighterIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/highlighter-icon"
-import { LinkIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/link-icon"
-import { MoreVerticalIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/more-vertical-icon"
-import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/dropdown-menu";
+import { ArrowLeftIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/arrow-left-icon";
+import { ChevronRightIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/chevron-right-icon";
+import { HighlighterIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/highlighter-icon";
+import { LinkIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/link-icon";
+import { MoreVerticalIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/more-vertical-icon";
+import {
+  Button,
+  ButtonGroup,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
 import {
   Toolbar,
   ToolbarGroup,
   ToolbarSeparator,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/toolbar"
-import { useScrolling } from "@workspace/text-editor/tiptap/hooks/use-scrolling"
-import { MoveNodeButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/move-node-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/toolbar";
+import { useScrolling } from "@workspace/text-editor/tiptap/hooks/use-scrolling";
+import { MoveNodeButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/move-node-button";
 
 // =============================================================================
 // Types & Constants
@@ -93,30 +96,30 @@ const TOOLBAR_VIEWS = {
   MAIN: "main",
   HIGHLIGHTER: "highlighter",
   LINK: "link",
-} as const
+} as const;
 
-type ToolbarViewId = (typeof TOOLBAR_VIEWS)[keyof typeof TOOLBAR_VIEWS]
+type ToolbarViewId = (typeof TOOLBAR_VIEWS)[keyof typeof TOOLBAR_VIEWS];
 
 export type ToolbarViewType = {
-  id: string
-  title: string
-  icon: React.ReactNode
-  content: React.ReactNode
-  mobileButton?: (onClick: () => void) => React.ReactNode
-  desktopComponent?: React.ReactNode
-}
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  content: React.ReactNode;
+  mobileButton?: (onClick: () => void) => React.ReactNode;
+  desktopComponent?: React.ReactNode;
+};
 
 type ToolbarViewRegistry = Record<
   Exclude<ToolbarViewId, typeof TOOLBAR_VIEWS.MAIN>,
   ToolbarViewType
->
+>;
 
 interface ToolbarState {
-  viewId: ToolbarViewId
-  setViewId: (id: ToolbarViewId) => void
-  isMainView: boolean
-  showMainView: () => void
-  showView: (id: ToolbarViewId) => void
+  viewId: ToolbarViewId;
+  setViewId: (id: ToolbarViewId) => void;
+  isMainView: boolean;
+  showMainView: () => void;
+  showView: (id: ToolbarViewId) => void;
 }
 
 // =============================================================================
@@ -124,13 +127,13 @@ interface ToolbarState {
 // =============================================================================
 
 function useToolbarState(isMobile: boolean): ToolbarState {
-  const [viewId, setViewId] = React.useState<ToolbarViewId>(TOOLBAR_VIEWS.MAIN)
+  const [viewId, setViewId] = React.useState<ToolbarViewId>(TOOLBAR_VIEWS.MAIN);
 
   React.useEffect(() => {
     if (!isMobile && viewId !== TOOLBAR_VIEWS.MAIN) {
-      setViewId(TOOLBAR_VIEWS.MAIN)
+      setViewId(TOOLBAR_VIEWS.MAIN);
     }
-  }, [isMobile, viewId])
+  }, [isMobile, viewId]);
 
   return {
     viewId,
@@ -138,37 +141,37 @@ function useToolbarState(isMobile: boolean): ToolbarState {
     isMainView: viewId === TOOLBAR_VIEWS.MAIN,
     showMainView: () => setViewId(TOOLBAR_VIEWS.MAIN),
     showView: (id: ToolbarViewId) => setViewId(id),
-  }
+  };
 }
 
 function hasTextSelection(editor: Editor | null): boolean {
-  if (!editor || !editor.isEditable) return false
+  if (!editor || !editor.isEditable) return false;
 
-  const { selection } = editor.state
-  return !selection.empty
+  const { selection } = editor.state;
+  return !selection.empty;
 }
 
 export function useViewportTransform(
   vp: WindowSizeState,
-  bodyRect: Omit<DOMRect, "toJSON">
+  bodyRect: Omit<DOMRect, "toJSON">,
 ) {
-  const [transform, setTransform] = React.useState<string>("none")
+  const [transform, setTransform] = React.useState<string>("none");
 
   React.useEffect(() => {
-    if (typeof document === "undefined") return
+    if (typeof document === "undefined") return;
 
     try {
-      const transformOffsetTop = vp.height - bodyRect.height + vp.offsetTop
-      const transformScale = 1 / vp.scale
+      const transformOffsetTop = vp.height - bodyRect.height + vp.offsetTop;
+      const transformScale = 1 / vp.scale;
 
-      const newTransform = `translate(${vp.offsetLeft}px, ${transformOffsetTop}px) scale(${transformScale})`
-      setTransform(newTransform)
+      const newTransform = `translate(${vp.offsetLeft}px, ${transformOffsetTop}px) scale(${transformScale})`;
+      setTransform(newTransform);
     } catch {
-      setTransform("none")
+      setTransform("none");
     }
-  }, [vp.height, vp.offsetTop, vp.offsetLeft, vp.scale, bodyRect.height])
+  }, [vp.height, vp.offsetTop, vp.offsetLeft, vp.scale, bodyRect.height]);
 
-  return transform
+  return transform;
 }
 
 // =============================================================================
@@ -195,7 +198,7 @@ function createToolbarViewRegistry(): ToolbarViewRegistry {
       mobileButton: (onClick: () => void) => <LinkButton onClick={onClick} />,
       desktopComponent: <LinkPopover />,
     },
-  }
+  };
 }
 
 // =============================================================================
@@ -210,7 +213,7 @@ function AlignmentGroup() {
       <TextAlignButton align="right" />
       <TextAlignButton align="justify" />
     </ToolbarGroup>
-  )
+  );
 }
 
 function ScriptGroup() {
@@ -219,7 +222,7 @@ function ScriptGroup() {
       <MarkButton type="superscript" />
       <MarkButton type="subscript" />
     </ToolbarGroup>
-  )
+  );
 }
 
 function FormattingGroup() {
@@ -230,14 +233,14 @@ function FormattingGroup() {
       <MarkButton type="strike" />
       <MarkButton type="code" />
     </ToolbarGroup>
-  )
+  );
 }
 
 function ColorActionGroup() {
-  const { recentColors, isInitialized, addRecentColor } = useRecentColors()
+  const { recentColors, isInitialized, addRecentColor } = useRecentColors();
 
   const renderRecentColors = () => {
-    if (!isInitialized || recentColors.length === 0) return null
+    if (!isInitialized || recentColors.length === 0) return null;
 
     return (
       <>
@@ -283,8 +286,8 @@ function ColorActionGroup() {
         </CardItemGroup>
         <Separator orientation="horizontal" />
       </>
-    )
-  }
+    );
+  };
 
   return (
     <DropdownMenuSub>
@@ -350,7 +353,7 @@ function ColorActionGroup() {
         </DropdownMenuSubContent>
       </DropdownMenuPortal>
     </DropdownMenuSub>
-  )
+  );
 }
 
 function TransformActionGroup() {
@@ -369,7 +372,7 @@ function TransformActionGroup() {
         <TurnIntoDropdownContent />
       </DropdownMenuSubContent>
     </DropdownMenuSub>
-  )
+  );
 }
 
 // =============================================================================
@@ -377,7 +380,7 @@ function TransformActionGroup() {
 // =============================================================================
 
 interface DropdownMenuActionsProps {
-  editor: Editor | null
+  editor: Editor | null;
 }
 
 function DropdownMenuActions({ editor }: DropdownMenuActionsProps) {
@@ -386,8 +389,8 @@ function DropdownMenuActions({ editor }: DropdownMenuActionsProps) {
     hasColorActions,
     hasTransformActions,
     hasResetFormatting,
-  } = useMenuActionVisibility(editor)
-  const isMobile = useIsMobile()
+  } = useMenuActionVisibility(editor);
+  const isMobile = useIsMobile();
 
   return (
     <Card>
@@ -436,7 +439,7 @@ function DropdownMenuActions({ editor }: DropdownMenuActionsProps) {
         </ButtonGroup>
       </CardBody>
     </Card>
-  )
+  );
 }
 
 function MoreActionsDropdown({ editor }: DropdownMenuActionsProps) {
@@ -451,7 +454,7 @@ function MoreActionsDropdown({ editor }: DropdownMenuActionsProps) {
         <DropdownMenuActions editor={editor} />
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
 
 // =============================================================================
@@ -459,9 +462,9 @@ function MoreActionsDropdown({ editor }: DropdownMenuActionsProps) {
 // =============================================================================
 
 interface ToolbarViewButtonProps {
-  view: ToolbarViewType
-  isMobile: boolean
-  onViewChange: (viewId: ToolbarViewId) => void
+  view: ToolbarViewType;
+  isMobile: boolean;
+  onViewChange: (viewId: ToolbarViewId) => void;
 }
 
 function ToolbarViewButton({
@@ -469,32 +472,32 @@ function ToolbarViewButton({
   isMobile,
   onViewChange,
 }: ToolbarViewButtonProps) {
-  const viewId = view.id as Exclude<ToolbarViewId, typeof TOOLBAR_VIEWS.MAIN>
+  const viewId = view.id as Exclude<ToolbarViewId, typeof TOOLBAR_VIEWS.MAIN>;
 
   if (isMobile) {
     return view.mobileButton ? (
       React.cloneElement(
         view.mobileButton(() => onViewChange(viewId)) as React.ReactElement,
-        { key: view.id }
+        { key: view.id },
       )
     ) : (
       <Button key={view.id} onClick={() => onViewChange(viewId)}>
         {view.icon}
       </Button>
-    )
+    );
   }
 
   return view.desktopComponent
     ? React.cloneElement(view.desktopComponent as React.ReactElement, {
-      key: view.id,
-    })
-    : null
+        key: view.id,
+      })
+    : null;
 }
 
 interface ToolbarViewsGroupProps {
-  toolbarViews: ToolbarViewRegistry
-  isMobile: boolean
-  onViewChange: (viewId: ToolbarViewId) => void
+  toolbarViews: ToolbarViewRegistry;
+  isMobile: boolean;
+  onViewChange: (viewId: ToolbarViewId) => void;
 }
 
 function ToolbarViewsGroup({
@@ -513,7 +516,7 @@ function ToolbarViewsGroup({
         />
       ))}
     </>
-  )
+  );
 }
 
 // =============================================================================
@@ -521,10 +524,10 @@ function ToolbarViewsGroup({
 // =============================================================================
 
 interface MainToolbarContentProps {
-  editor: Editor | null
-  isMobile: boolean
-  toolbarViews: ToolbarViewRegistry
-  onViewChange: (viewId: ToolbarViewId) => void
+  editor: Editor | null;
+  isMobile: boolean;
+  toolbarViews: ToolbarViewRegistry;
+  onViewChange: (viewId: ToolbarViewId) => void;
 }
 
 function MainToolbarContent({
@@ -533,7 +536,7 @@ function MainToolbarContent({
   toolbarViews,
   onViewChange,
 }: MainToolbarContentProps) {
-  const hasSelection = hasTextSelection(editor)
+  const hasSelection = hasTextSelection(editor);
 
   return (
     <>
@@ -585,7 +588,7 @@ function MainToolbarContent({
         </>
       )}
     </>
-  )
+  );
 }
 
 // =============================================================================
@@ -593,8 +596,8 @@ function MainToolbarContent({
 // =============================================================================
 
 interface SpecializedToolbarContentProps {
-  view: ToolbarViewType
-  onBack: () => void
+  view: ToolbarViewType;
+  onBack: () => void;
 }
 
 function SpecializedToolbarContent({
@@ -614,7 +617,7 @@ function SpecializedToolbarContent({
 
       {view.content}
     </>
-  )
+  );
 }
 
 // =============================================================================
@@ -622,33 +625,33 @@ function SpecializedToolbarContent({
 // =============================================================================
 
 export interface MobileToolbarProps {
-  editor?: Editor | null
+  editor?: Editor | null;
 }
 
 export function MobileToolbar({ editor: providedEditor }: MobileToolbarProps) {
-  const { editor } = useTiptapEditor(providedEditor)
-  const isMobile = useIsMobile(480)
-  const toolbarRef = React.useRef<HTMLDivElement>(null)
-  const toolbarState = useToolbarState(isMobile)
+  const { editor } = useTiptapEditor(providedEditor);
+  const isMobile = useIsMobile(480);
+  const toolbarRef = React.useRef<HTMLDivElement>(null);
+  const toolbarState = useToolbarState(isMobile);
 
-  const vp = useWindowSize()
-  const isScrolling = useScrolling()
+  const vp = useWindowSize();
+  const isScrolling = useScrolling();
   const rect = useCursorVisibility({
     editor,
     overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
-  })
+  });
   // const transform = useViewportTransform(vp, rect)
 
-  const toolbarViews = React.useMemo(() => createToolbarViewRegistry(), [])
+  const toolbarViews = React.useMemo(() => createToolbarViewRegistry(), []);
 
   const currentView = toolbarState.isMainView
     ? null
     : toolbarViews[
-    toolbarState.viewId as Exclude<ToolbarViewId, typeof TOOLBAR_VIEWS.MAIN>
-    ]
+        toolbarState.viewId as Exclude<ToolbarViewId, typeof TOOLBAR_VIEWS.MAIN>
+      ];
 
   if (!isMobile || !editor || !editor.isEditable) {
-    return null
+    return null;
   }
 
   return (
@@ -661,16 +664,12 @@ export function MobileToolbar({ editor: providedEditor }: MobileToolbarProps) {
           : {}),
         ...(isMobile
           ? {
-            bottom: `calc(100% - ${vp.height - rect.y}px)`,
-          }
+              bottom: `calc(100% - ${vp.height - rect.y}px)`,
+            }
           : {}),
       }}
     >
-      {
-        toolbarState.isMainView ? 
-          "IsMainView": "<MainToolbarContent />"
-        
-      }
+      {toolbarState.isMainView ? "IsMainView" : "<MainToolbarContent />"}
       {toolbarState.isMainView ? (
         <MainToolbarContent
           editor={editor}
@@ -687,5 +686,5 @@ export function MobileToolbar({ editor: providedEditor }: MobileToolbarProps) {
         )
       )}
     </Toolbar>
-  )
+  );
 }

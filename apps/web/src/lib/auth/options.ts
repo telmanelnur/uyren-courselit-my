@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
           //   await connectToDatabase();
           const decoded = await adminAuth.verifyIdToken(idToken);
 
-          console.log("decoded", decoded);  
+          console.log("decoded", decoded);
 
           if (!decoded.email_verified) {
             throw new Error("Email is not verified");
@@ -75,16 +75,16 @@ export const authOptions: NextAuthOptions = {
             });
             user.avatar = decoded.picture
               ? {
-                url: decoded.picture,
-                mediaId: `google_${decoded.uid}`,
-                originalFileName: "google_profile_picture",
-                mimeType: "image/jpeg",
-                size: 0,
-                access: "public",
-                thumbnail: decoded.picture,
-                caption: "Google profile picture",
-                storageProvider: "custom",
-              }
+                  url: decoded.picture,
+                  mediaId: `google_${decoded.uid}`,
+                  originalFileName: "google_profile_picture",
+                  mimeType: "image/jpeg",
+                  size: 0,
+                  access: "public",
+                  thumbnail: decoded.picture,
+                  caption: "Google profile picture",
+                  storageProvider: "custom",
+                }
               : undefined;
             await user.save();
           }
@@ -92,18 +92,20 @@ export const authOptions: NextAuthOptions = {
           if (!user.active) {
             return null;
           }
-          const media: Media | undefined = user.avatar ? {
-            storageProvider: "custom",
-            url: user.avatar.url,
-            mediaId: user.avatar.mediaId,
-            originalFileName: user.avatar.originalFileName,
-            mimeType: user.avatar.mimeType,
-            size: user.avatar.size,
-            access: user.avatar.access,
-            thumbnail: user.avatar.thumbnail,
-            caption: user.avatar.caption,
-            file: user.avatar.file,
-          } : undefined;
+          const media: Media | undefined = user.avatar
+            ? {
+                storageProvider: "custom",
+                url: user.avatar.url,
+                mediaId: user.avatar.mediaId,
+                originalFileName: user.avatar.originalFileName,
+                mimeType: user.avatar.mimeType,
+                size: user.avatar.size,
+                access: user.avatar.access,
+                thumbnail: user.avatar.thumbnail,
+                caption: user.avatar.caption,
+                file: user.avatar.file,
+              }
+            : undefined;
           return {
             id: user.userId,
             userId: user.userId,
@@ -165,7 +167,6 @@ export const authOptions: NextAuthOptions = {
   events: {
     signOut: async () => {
       try {
-        
         // Sign out from Firebase if user is authenticated
         if (firebaseAuth.currentUser) {
           await firebaseAuth.signOut();

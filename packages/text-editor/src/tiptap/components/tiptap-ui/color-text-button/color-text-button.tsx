@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 // --- Lib ---
-import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
+import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
 
 // --- Tiptap UI ---
-import type { UseColorTextConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button"
+import type { UseColorTextConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button";
 import {
   COLOR_TEXT_SHORTCUT_KEY,
   useColorText,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button";
 
 // --- UI Primitives ---
-import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge"
+import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge";
 
 // --- Styles ---
-import "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button/color-text-button.scss"
+import "@workspace/text-editor/tiptap/components/tiptap-ui/color-text-button/color-text-button.scss";
 
 export interface ColorTextButtonProps
   extends Omit<ButtonProps, "type">,
@@ -29,20 +29,20 @@ export interface ColorTextButtonProps
   /**
    * Optional text to display alongside the icon.
    */
-  text?: string
+  text?: string;
   /**
    * Optional show shortcut keys in the button.
    * @default false
    */
-  showShortcut?: boolean
+  showShortcut?: boolean;
 }
 
 export function ColorTextShortcutBadge({
   shortcutKeys = COLOR_TEXT_SHORTCUT_KEY,
 }: {
-  shortcutKeys?: string
+  shortcutKeys?: string;
 }) {
-  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>
+  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>;
 }
 
 /**
@@ -67,9 +67,9 @@ export const ColorTextButton = React.forwardRef<
       style,
       ...buttonProps
     },
-    ref
+    ref,
   ) => {
-    const { editor } = useTiptapEditor(providedEditor)
+    const { editor } = useTiptapEditor(providedEditor);
     const {
       isVisible,
       canColorText,
@@ -84,16 +84,16 @@ export const ColorTextButton = React.forwardRef<
       label: text || `Color text to ${textColor}`,
       hideWhenUnavailable,
       onApplied,
-    })
+    });
 
     const handleClick = React.useCallback(
       (event: React.MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event)
-        if (event.defaultPrevented) return
-        handleColorText()
+        onClick?.(event);
+        if (event.defaultPrevented) return;
+        handleColorText();
       },
-      [handleColorText, onClick]
-    )
+      [handleColorText, onClick],
+    );
 
     const buttonStyle = React.useMemo(
       () =>
@@ -101,11 +101,11 @@ export const ColorTextButton = React.forwardRef<
           ...style,
           "--color-text-button-color": textColor,
         }) as React.CSSProperties,
-      [textColor, style]
-    )
+      [textColor, style],
+    );
 
     if (!isVisible) {
-      return null
+      return null;
     }
 
     return (
@@ -143,8 +143,8 @@ export const ColorTextButton = React.forwardRef<
           </>
         )}
       </Button>
-    )
-  }
-)
+    );
+  },
+);
 
-ColorTextButton.displayName = "ColorTextButton"
+ColorTextButton.displayName = "ColorTextButton";

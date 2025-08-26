@@ -8,10 +8,9 @@ interface SessionWrapperProps {
   session: Session | null;
 }
 
-export default function SessionWrapper({ children, session }: SessionWrapperProps) {
-  return (
-    <SessionProvider session={session}>
-      {children}
-    </SessionProvider>
-  );
+export default function SessionWrapper({
+  children,
+  session,
+}: SessionWrapperProps) {
+  return <SessionProvider session={session}>{children}</SessionProvider>;
 }

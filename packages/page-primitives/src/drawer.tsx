@@ -31,7 +31,7 @@ export function Drawer({
   const classes = cn(
     // Base styles
     "courselit-theme",
-    className
+    className,
   );
 
   return (

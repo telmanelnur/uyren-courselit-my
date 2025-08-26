@@ -19,13 +19,15 @@ type CommentType = NonNullable<
   GeneralRouterOutputs["communityModule"]["post"]["listComments"]["items"][number]
 >;
 
-const formatComment = (comment: any): Omit<CommentType, "createdAt" | "updatedAt"> & {
-    createdAt: Date;
-    updatedAt: Date;
+const formatComment = (
+  comment: any,
+): Omit<CommentType, "createdAt" | "updatedAt"> & {
+  createdAt: Date;
+  updatedAt: Date;
 } => ({
-    ...comment,
-    createdAt: new Date(comment.createdAt),
-    updatedAt: new Date(comment.updatedAt),
+  ...comment,
+  createdAt: new Date(comment.createdAt),
+  updatedAt: new Date(comment.updatedAt),
 });
 
 export default function CommentSection({
@@ -37,7 +39,9 @@ export default function CommentSection({
   communityId: string;
   postId: string;
   onPostUpdated: (postId: string, commentsCount: number) => void;
-  membership: Pick<Membership, "status" | "role" | "rejectionReason"> | undefined;
+  membership:
+    | Pick<Membership, "status" | "role" | "rejectionReason">
+    | undefined;
 }) {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [content, setContent] = useState("");
@@ -132,7 +136,7 @@ export default function CommentSection({
   const handleCommentReply = async (
     commentId: string,
     content: string,
-    parentReplyId?: string
+    parentReplyId?: string,
   ) => {
     console.log("[handleCommentReply]", commentId, content, parentReplyId);
     return;
@@ -318,7 +322,7 @@ export default function CommentSection({
   const deleteCommentMutation =
     trpc.communityModule.post.deleteComment.useMutation();
   const handleDeleteComment = async (
-    comment: CommunityComment | CommunityCommentReply
+    comment: CommunityComment | CommunityCommentReply,
   ) => {
     try {
       const response = await deleteCommentMutation.mutateAsync({
@@ -345,13 +349,15 @@ export default function CommentSection({
 
   const replaceComment = (comment: CommentType) => {
     setComments((prevComments) =>
-      prevComments.map((c) => (c.commentId === comment.commentId ? comment : c))
+      prevComments.map((c) =>
+        c.commentId === comment.commentId ? comment : c,
+      ),
     );
   };
 
   const removeComment = (comment: CommunityComment) => {
     setComments((prevComments) =>
-      prevComments.filter((c) => c.commentId !== comment.commentId)
+      prevComments.filter((c) => c.commentId !== comment.commentId),
     );
   };
 

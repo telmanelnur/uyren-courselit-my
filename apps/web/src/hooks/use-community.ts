@@ -15,7 +15,7 @@ export const useCommunity = (communityId?: string) => {
     },
     {
       enabled: !!communityId,
-    }
+    },
   );
 
   useEffect(() => {

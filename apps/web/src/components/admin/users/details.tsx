@@ -28,7 +28,7 @@ interface DetailsProps {
 
 const Details = ({ userId, address }: DetailsProps) => {
   const [userData, setUserData] = useState<UserWithAdminFields>();
-//   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  //   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [tags, setTags] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -56,16 +56,14 @@ const Details = ({ userId, address }: DetailsProps) => {
       setTags(tagsQuery.data);
     }
   }, [tagsQuery.data]);
-  
-//   const enrolledCoursesQuery =
-//     trpc.courseModule.course.getEnrolledCourses.useQuery({ userId });
-//   useEffect(() => {
-//     if (enrolledCoursesQuery.data) {
-//       setEnrolledCourses(enrolledCoursesQuery.data);
-//     }
-//   }, [enrolledCoursesQuery.data]);
 
-
+  //   const enrolledCoursesQuery =
+  //     trpc.courseModule.course.getEnrolledCourses.useQuery({ userId });
+  //   useEffect(() => {
+  //     if (enrolledCoursesQuery.data) {
+  //       setEnrolledCourses(enrolledCoursesQuery.data);
+  //     }
+  //   }, [enrolledCoursesQuery.data]);
 
   // tRPC equivalent for active state
   const updateUserMutation = trpc.userModule.user.update.useMutation();
@@ -80,8 +78,8 @@ const Details = ({ userId, address }: DetailsProps) => {
       });
       if (response) {
         setUserData({
-            ...response,
-            tags: response.tags || [],
+          ...response,
+          tags: response.tags || [],
         });
       }
     } catch (err: any) {
@@ -92,8 +90,6 @@ const Details = ({ userId, address }: DetailsProps) => {
       });
     }
   };
-
-
 
   // tRPC equivalent for updating tags
   const updateTags = async (tags: string[]) => {

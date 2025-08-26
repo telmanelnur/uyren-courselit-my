@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 
 export function FunctionSquareIcon({ className }: { className?: string }) {
   return (
@@ -18,5 +18,5 @@ export function FunctionSquareIcon({ className }: { className?: string }) {
       <path d="M8 12h8" />
       <path d="M10 16h4" />
     </svg>
-  )
-} 
+  );
+}

@@ -1,8 +1,7 @@
-import { ThemeStyle } from "@workspace/page-models";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
-export function SkeletonCard({ theme }: { theme?: ThemeStyle }) {
+export function SkeletonCard() {
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <div className="relative aspect-video">

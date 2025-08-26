@@ -2,8 +2,22 @@
 
 import { useState } from "react";
 import { Button } from "@workspace/ui/components/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@workspace/ui/components/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@workspace/ui/components/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@workspace/ui/components/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
 import { useToast } from "@workspace/components-library";
 import { trpc } from "@/utils/trpc";
@@ -23,6 +37,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Copy } from "lucide-react";
+import { Label } from "@workspace/ui/components/label";
 
 const newApiKeySchema = z.object({
   name: z.string().min(1, "API key name is required"),
@@ -35,7 +50,10 @@ interface NewApiKeyDialogProps {
   onSuccess?: () => void;
 }
 
-export default function NewApiKeyDialog({ children, onSuccess }: NewApiKeyDialogProps) {
+export default function NewApiKeyDialog({
+  children,
+  onSuccess,
+}: NewApiKeyDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [generatedKey, setGeneratedKey] = useState("");
   const { toast } = useToast();
@@ -44,10 +62,10 @@ export default function NewApiKeyDialog({ children, onSuccess }: NewApiKeyDialog
     onSuccess: (response) => {
       if (response?.key) {
         setGeneratedKey(response.key);
-        toast({
-          title: TOAST_TITLE_SUCCESS,
-          description: "API key created successfully",
-        });
+        // toast({
+        //   title: TOAST_TITLE_SUCCESS,
+        //   description: "API key created successfully",
+        // });
       }
     },
     onError: (error: any) => {
@@ -108,9 +126,7 @@ export default function NewApiKeyDialog({ children, onSuccess }: NewApiKeyDialog
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{APIKEY_NEW_HEADER}</DialogTitle>
@@ -169,7 +185,7 @@ export default function NewApiKeyDialog({ children, onSuccess }: NewApiKeyDialog
             </div>
 
             <div className="space-y-2">
-              <FormLabel>API Key</FormLabel>
+              <Label>API Key</Label>
               <div className="flex gap-2">
                 <Input
                   value={generatedKey}
@@ -188,9 +204,7 @@ export default function NewApiKeyDialog({ children, onSuccess }: NewApiKeyDialog
             </div>
 
             <DialogFooter>
-              <Button onClick={handleDone}>
-                {BUTTON_DONE_TEXT}
-              </Button>
+              <Button onClick={handleDone}>{BUTTON_DONE_TEXT}</Button>
             </DialogFooter>
           </div>
         )}

@@ -70,7 +70,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
         {children}
       </button>
     );
-  }
+  },
 );
 
 export default Button;

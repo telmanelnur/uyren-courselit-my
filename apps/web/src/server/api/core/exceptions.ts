@@ -30,7 +30,7 @@ export class APIException extends TRPCError {
     message: string,
     code: string = "INTERNAL_SERVER_ERROR",
     statusCode: number = 500,
-    details?: Record<string, any>
+    details?: Record<string, any>,
   ) {
     super({
       message,
@@ -105,7 +105,7 @@ export class ResourceExistsException extends ConflictException {
 export class DatabaseException extends APIException {
   constructor(
     message: string = "Database operation failed",
-    details?: Record<string, any>
+    details?: Record<string, any>,
   ) {
     super(message, "DATABASE_ERROR", 500, details);
     this.name = "DatabaseException";
@@ -118,7 +118,7 @@ export class ExternalServiceException extends APIException {
       `External service error (${service}): ${message}`,
       "EXTERNAL_SERVICE_ERROR",
       502,
-      details
+      details,
     );
     this.name = "ExternalServiceException";
   }

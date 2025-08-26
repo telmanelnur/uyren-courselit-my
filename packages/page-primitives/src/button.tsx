@@ -1,5 +1,5 @@
 import React from "react";
-import { cn } from "@workspace/ui/lib/utils"
+import { cn } from "@workspace/ui/lib/utils";
 import type { ThemeStyle } from "@workspace/page-models";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -9,9 +9,12 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
@@ -26,7 +29,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -36,53 +39,49 @@ export interface ButtonProps
 }
 
 export const Button: React.FC<ButtonProps> = ({
-    variant = "default",
-    size = "default",
-    disabled = false,
-    children,
-    className = "",
-    theme,
-    ...props
+  variant = "default",
+  size = "default",
+  disabled = false,
+  children,
+  className = "",
+  theme,
+  ...props
 }) => {
-    const buttonStyles = theme?.interactives?.button;
-    const typographyStyles = theme?.typography?.button;
+  const buttonStyles = theme?.interactives?.button;
+  const typographyStyles = theme?.typography?.button;
 
-    const classes = cn(
-        buttonVariants({ variant, size }),
-        // Theme typography
-        typographyStyles?.fontFamily,
-        typographyStyles?.fontSize,
-        typographyStyles?.fontWeight,
-        typographyStyles?.lineHeight,
-        typographyStyles?.letterSpacing,
-        typographyStyles?.textTransform,
-        typographyStyles?.textDecoration,
-        typographyStyles?.textOverflow,
-        // Theme interactivity
-        buttonStyles?.padding?.x,
-        buttonStyles?.padding?.y,
-        buttonStyles?.border?.width,
-        buttonStyles?.border?.radius,
-        buttonStyles?.border?.style,
-        buttonStyles?.shadow,
-        // Theme disabled states
-        disabled && buttonStyles?.disabled?.opacity,
-        disabled && buttonStyles?.disabled?.cursor,
-        disabled && buttonStyles?.disabled?.color,
-        disabled && buttonStyles?.disabled?.background,
-        disabled && buttonStyles?.disabled?.border,
-        // User overrides
-        buttonStyles?.custom,
-        className,
-    );
+  const classes = cn(
+    buttonVariants({ variant, size }),
+    // Theme typography
+    typographyStyles?.fontFamily,
+    typographyStyles?.fontSize,
+    typographyStyles?.fontWeight,
+    typographyStyles?.lineHeight,
+    typographyStyles?.letterSpacing,
+    typographyStyles?.textTransform,
+    typographyStyles?.textDecoration,
+    typographyStyles?.textOverflow,
+    // Theme interactivity
+    buttonStyles?.padding?.x,
+    buttonStyles?.padding?.y,
+    buttonStyles?.border?.width,
+    buttonStyles?.border?.radius,
+    buttonStyles?.border?.style,
+    buttonStyles?.shadow,
+    // Theme disabled states
+    disabled && buttonStyles?.disabled?.opacity,
+    disabled && buttonStyles?.disabled?.cursor,
+    disabled && buttonStyles?.disabled?.color,
+    disabled && buttonStyles?.disabled?.background,
+    disabled && buttonStyles?.disabled?.border,
+    // User overrides
+    buttonStyles?.custom,
+    className,
+  );
 
-    return (
-        <button
-            disabled={disabled}
-            className={classes}
-            {...props}
-        >
-            {children}
-        </button>
-    );
+  return (
+    <button disabled={disabled} className={classes} {...props}>
+      {children}
+    </button>
+  );
 };

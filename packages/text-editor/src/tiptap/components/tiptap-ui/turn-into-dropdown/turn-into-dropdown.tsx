@@ -1,59 +1,65 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 // --- Tiptap UI ---
-import type { UseTurnIntoDropdownConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/turn-into-dropdown"
+import type { UseTurnIntoDropdownConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/turn-into-dropdown";
 import {
   useTurnIntoDropdown,
   getFilteredBlockTypeOptions,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui/turn-into-dropdown"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui/turn-into-dropdown";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
 
 // --- Tiptap UI Components ---
-import { TextButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/text-button"
-import { HeadingButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/heading-button"
-import { ListButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/list-button"
-import { BlockquoteButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/blockquote-button"
-import { CodeBlockButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/code-block-button"
+import { TextButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/text-button";
+import { HeadingButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/heading-button";
+import { ListButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/list-button";
+import { BlockquoteButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/blockquote-button";
+import { CodeBlockButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/code-block-button";
 
 // --- UI Primitives ---
-import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
+import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import {
+  Button,
+  ButtonGroup,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/dropdown-menu"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/dropdown-menu";
 import {
   Card,
   CardBody,
   CardGroupLabel,
   CardItemGroup,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card";
 
 export interface TurnIntoDropdownContentProps {
-  blockTypes?: string[]
-  useCardLayout?: boolean
+  blockTypes?: string[];
+  useCardLayout?: boolean;
 }
 
 export const TurnIntoDropdownContent: React.FC<
   TurnIntoDropdownContentProps
 > = ({ blockTypes, useCardLayout = true }) => {
-  const filteredOptions = getFilteredBlockTypeOptions(blockTypes)
+  const filteredOptions = getFilteredBlockTypeOptions(blockTypes);
 
   const renderButtons = () => (
     <ButtonGroup>
       {filteredOptions.map((option, index) =>
-        renderBlockTypeButton(option, `${option.type}-${option.level ?? index}`)
+        renderBlockTypeButton(
+          option,
+          `${option.type}-${option.level ?? index}`,
+        ),
       )}
     </ButtonGroup>
-  )
+  );
 
-  if (!useCardLayout) return renderButtons()
+  if (!useCardLayout) return renderButtons();
 
   return (
     <Card>
@@ -64,12 +70,12 @@ export const TurnIntoDropdownContent: React.FC<
         </CardItemGroup>
       </CardBody>
     </Card>
-  )
-}
+  );
+};
 
 function renderBlockTypeButton(
   option: ReturnType<typeof getFilteredBlockTypeOptions>[0],
-  key: string
+  key: string,
 ) {
   switch (option.type) {
     case "paragraph":
@@ -77,11 +83,11 @@ function renderBlockTypeButton(
         <DropdownMenuItem key={key} asChild>
           <TextButton showTooltip={false} text={option.label} />
         </DropdownMenuItem>
-      )
+      );
 
     case "heading":
       if (!option.level) {
-        return null
+        return null;
       }
 
       return (
@@ -92,7 +98,7 @@ function renderBlockTypeButton(
             text={option.label}
           />
         </DropdownMenuItem>
-      )
+      );
 
     case "bulletList":
       return (
@@ -103,7 +109,7 @@ function renderBlockTypeButton(
             text={option.label}
           />
         </DropdownMenuItem>
-      )
+      );
 
     case "orderedList":
       return (
@@ -114,31 +120,31 @@ function renderBlockTypeButton(
             text={option.label}
           />
         </DropdownMenuItem>
-      )
+      );
 
     case "taskList":
       return (
         <DropdownMenuItem key={key} asChild>
           <ListButton type="taskList" showTooltip={false} text={option.label} />
         </DropdownMenuItem>
-      )
+      );
 
     case "blockquote":
       return (
         <DropdownMenuItem key={key} asChild>
           <BlockquoteButton showTooltip={false} text={option.label} />
         </DropdownMenuItem>
-      )
+      );
 
     case "codeBlock":
       return (
         <DropdownMenuItem key={key} asChild>
           <CodeBlockButton showTooltip={false} text={option.label} />
         </DropdownMenuItem>
-      )
+      );
 
     default:
-      return null
+      return null;
   }
 }
 
@@ -149,12 +155,12 @@ export interface TurnIntoDropdownProps
    * Whether to render the dropdown menu in a portal
    * @default false
    */
-  portal?: boolean
+  portal?: boolean;
   /**
    * Whether to use card layout for the dropdown content
    * @default true
    */
-  useCardLayout?: boolean
+  useCardLayout?: boolean;
 }
 
 /**
@@ -176,9 +182,9 @@ export const TurnIntoDropdown = React.forwardRef<
       children,
       ...buttonProps
     },
-    ref
+    ref,
   ) => {
-    const { editor } = useTiptapEditor(providedEditor)
+    const { editor } = useTiptapEditor(providedEditor);
     const {
       isVisible,
       canToggle,
@@ -192,10 +198,10 @@ export const TurnIntoDropdown = React.forwardRef<
       hideWhenUnavailable,
       blockTypes,
       onOpenChange,
-    })
+    });
 
     if (!isVisible) {
-      return null
+      return null;
     }
 
     return (
@@ -231,8 +237,8 @@ export const TurnIntoDropdown = React.forwardRef<
           />
         </DropdownMenuContent>
       </DropdownMenu>
-    )
-  }
-)
+    );
+  },
+);
 
-TurnIntoDropdown.displayName = "TurnIntoDropdown"
+TurnIntoDropdown.displayName = "TurnIntoDropdown";

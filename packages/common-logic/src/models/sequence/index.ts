@@ -68,5 +68,5 @@ export const SequenceSchema = new mongoose.Schema<AdminSequence>(
   },
   {
     timestamps: true,
-  }
+  },
 );

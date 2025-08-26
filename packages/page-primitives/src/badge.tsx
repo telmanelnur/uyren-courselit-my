@@ -40,7 +40,7 @@ export const Badge: React.FC<BadgeProps> = ({
     buttonStyles?.border?.width,
     buttonStyles?.border?.radius,
     buttonStyles?.border?.style,
-    className
+    className,
   );
 
   return (

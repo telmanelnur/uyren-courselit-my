@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { router } from "@/server/api/core/trpc";
-import { createDomainRequiredMiddleware, protectedProcedure } from "@/server/api/core/procedures";
+import {
+  createDomainRequiredMiddleware,
+  protectedProcedure,
+} from "@/server/api/core/procedures";
 import MediaModel from "@/models/Media";
 import { ListInputSchema } from "@/server/api/core/schema";
 import { CloudinaryService } from "@/server/services/cloudinary";
@@ -9,11 +12,13 @@ export const mediaRouter: any = router({
   // List media files (for admin dashboard)
   list: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(ListInputSchema.extend({
-      userId: z.string().optional(),
-      storageProvider: z.string().optional(),
-      mimeType: z.string().optional(),
-    }))
+    .input(
+      ListInputSchema.extend({
+        userId: z.string().optional(),
+        storageProvider: z.string().optional(),
+        mimeType: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { pagination, search, userId, storageProvider, mimeType } = input;
       const skip = pagination?.skip || 0;
@@ -75,9 +80,11 @@ export const mediaRouter: any = router({
   // Get media by ID
   getById: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      mediaId: z.string(),
-    }))
+    .input(
+      z.object({
+        mediaId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { mediaId } = input;
 
@@ -99,20 +106,27 @@ export const mediaRouter: any = router({
 
   // Generate secure URL for media
   getSecureUrl: protectedProcedure
-    .input(z.object({
-      mediaId: z.string(),
-      transformation: z.object({
-        width: z.number().optional(),
-        height: z.number().optional(),
-        crop: z.string().optional(),
-      }).optional(),
-    }))
+    .input(
+      z.object({
+        mediaId: z.string(),
+        transformation: z
+          .object({
+            width: z.number().optional(),
+            height: z.number().optional(),
+            crop: z.string().optional(),
+          })
+          .optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { mediaId, transformation } = input;
 
       try {
         // For now, only Cloudinary is supported
-        const url = CloudinaryService.generateSecureUrl(mediaId, transformation);
+        const url = CloudinaryService.generateSecureUrl(
+          mediaId,
+          transformation,
+        );
         return { url };
       } catch (error: any) {
         throw new Error(`URL generation failed: ${error.message}`);
@@ -121,21 +135,28 @@ export const mediaRouter: any = router({
 
   // Generate public URL for media
   getPublicUrl: protectedProcedure
-    .input(z.object({
-      mediaId: z.string(),
-      transformation: z.object({
-        width: z.number().optional(),
-        height: z.number().optional(),
-        crop: z.string().optional(),
-        quality: z.string().optional(),
-      }).optional(),
-    }))
+    .input(
+      z.object({
+        mediaId: z.string(),
+        transformation: z
+          .object({
+            width: z.number().optional(),
+            height: z.number().optional(),
+            crop: z.string().optional(),
+            quality: z.string().optional(),
+          })
+          .optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { mediaId, transformation } = input;
 
       try {
         // For now, only Cloudinary is supported
-        const url = CloudinaryService.generatePublicUrl(mediaId, transformation);
+        const url = CloudinaryService.generatePublicUrl(
+          mediaId,
+          transformation,
+        );
         return { url };
       } catch (error: any) {
         throw new Error(`URL generation failed: ${error.message}`);
@@ -185,14 +206,17 @@ export const mediaRouter: any = router({
       };
 
       // Process storage provider stats
-      const storageStats = result.byStorageProvider.reduce((acc: any, item: any) => {
-        if (!acc[item.provider]) {
-          acc[item.provider] = { count: 0, totalSize: 0 };
-        }
-        acc[item.provider].count += 1;
-        acc[item.provider].totalSize += item.size;
-        return acc;
-      }, {});
+      const storageStats = result.byStorageProvider.reduce(
+        (acc: any, item: any) => {
+          if (!acc[item.provider]) {
+            acc[item.provider] = { count: 0, totalSize: 0 };
+          }
+          acc[item.provider].count += 1;
+          acc[item.provider].totalSize += item.size;
+          return acc;
+        },
+        {},
+      );
 
       // Process mime type stats
       const mimeTypeStats = result.byMimeType.reduce((acc: any, item: any) => {
@@ -206,7 +230,8 @@ export const mediaRouter: any = router({
       return {
         totalFiles: result.totalFiles,
         totalSize: result.totalSize,
-        averageSize: result.totalFiles > 0 ? result.totalSize / result.totalFiles : 0,
+        averageSize:
+          result.totalFiles > 0 ? result.totalSize / result.totalFiles : 0,
         storageProviders: storageStats,
         mimeTypes: mimeTypeStats,
       };

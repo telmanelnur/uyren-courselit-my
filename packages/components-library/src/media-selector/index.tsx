@@ -1,14 +1,17 @@
 "use client";
 
 import { Address, Media, Profile } from "@workspace/common-models";
-import { X, Upload } from "lucide-react";
-import React, { ChangeEvent, useEffect, useState } from "react";
-import { Button2, PageBuilderPropertyHeader, Tooltip, useToast } from "..";
-import Dialog2 from "../dialog2";
-import Form from "../form";
-import FormField from "../form-field";
-import { Image } from "../image";
+import { FormControl, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
 import { Progress } from "@workspace/ui/components/progress";
+import { Textarea } from "@workspace/ui/components/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import { Upload, X } from "lucide-react";
+import React, { ChangeEvent, useEffect, useState } from "react";
+import Button2 from "../button";
+import Dialog2 from "../dialog2";
+import { useToast } from "../hooks/use-toast";
+import { Image } from "../image";
 import Access from "./access";
 
 interface Strings {
@@ -117,10 +120,12 @@ const MediaSelector = (props: MediaSelectorProps) => {
     // Create XMLHttpRequest for progress tracking
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      
+
       xhr.upload.addEventListener("progress", (event) => {
         if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          const percentComplete = Math.round(
+            (event.loaded / event.total) * 100,
+          );
           setUploadProgress(percentComplete);
         }
       });
@@ -147,7 +152,10 @@ const MediaSelector = (props: MediaSelectorProps) => {
         reject(new Error("Network error during upload"));
       });
 
-      xhr.open("POST", `${address.backend}/api/services/media/upload?storageType=cloudinary`);
+      xhr.open(
+        "POST",
+        `${address.backend}/api/services/media/upload?storageType=cloudinary`,
+      );
       xhr.send(formData);
     });
   };
@@ -191,19 +199,19 @@ const MediaSelector = (props: MediaSelectorProps) => {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || "Delete failed");
       }
-      
+
       if (props.onRemove) {
         props.onRemove();
       }
-      
+
       toast({
         title: "Success",
         description: strings.mediaDeleted || "Media deleted successfully",
@@ -218,7 +226,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
 
   return (
     <div className="">
-      <PageBuilderPropertyHeader label={title} tooltip={tooltip} />
       <div className="flex items-center gap-4 rounded-lg border-2 border-dashed p-4 relative">
         {!props.hidePreview && (
           <div className="flex flex-col gap-2 items-center">
@@ -228,10 +235,15 @@ const MediaSelector = (props: MediaSelectorProps) => {
               height="h-[80px]"
               className="rounded-md"
             />
-            <Tooltip title={srcTitle}>
-              <p className="text-xs w-12 truncate text-muted-foreground">
+            <Tooltip>
+              <TooltipTrigger>
+                <p className="text-xs w-12 truncate text-muted-foreground">
+                  {srcTitle}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent>
                 {srcTitle}
-              </p>
+              </TooltipContent>
             </Tooltip>
           </div>
         )}
@@ -269,39 +281,40 @@ const MediaSelector = (props: MediaSelectorProps) => {
               }
             >
               {error && <div>{error}</div>}
-              <Form
+              <form
                 encType="multipart/form-data"
                 className="flex flex-col gap-4"
                 onSubmit={uploadFile}
               >
-                <FormField
-                  label={""}
-                  ref={fileInput}
-                  name="file"
-                  type="file"
-                  accept={props.mimeTypesToShow?.join(",")}
-                  onChange={(e: any) => setSelectedFile(e.target.files[0])}
-                  messages={[
-                    {
-                      match: "valueMissing",
-                      text: "File is required",
-                    },
-                  ]}
-                  disabled={selectedFile && uploading}
-                  className="mt-2"
-                  required
-                />
-                
+                <FormItem>
+                  <FormLabel>File</FormLabel>
+                  <FormControl>
+                    <Input
+                      ref={fileInput}
+                      name="file"
+                      type="file"
+                      accept={props.mimeTypesToShow?.join(",")}
+                      onChange={(e: any) => setSelectedFile(e.target.files[0])}
+                      disabled={!!selectedFile && uploading}
+                      className="mt-2"
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+
                 {selectedFile && (
                   <div className="p-3 bg-gray-50 rounded-lg border">
                     <div className="flex items-center gap-2 mb-2">
                       <Upload className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm font-medium">{selectedFile.name}</span>
+                      <span className="text-sm font-medium">
+                        {selectedFile.name}
+                      </span>
                       <span className="text-xs text-gray-500">
                         ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                       </span>
                     </div>
-                    
+
                     {uploading && (
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs text-gray-600">
@@ -313,18 +326,23 @@ const MediaSelector = (props: MediaSelectorProps) => {
                     )}
                   </div>
                 )}
-                
-                <FormField
-                  label={"Caption"}
-                  name="caption"
-                  value={caption}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setCaption(e.target.value)
-                  }
-                  rows={5}
-                  disabled={selectedFile && uploading}
-                />
-              </Form>
+
+                <FormItem>
+                  <FormLabel>Caption</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      name="caption"
+                      value={caption}
+                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                        setCaption(e.target.value)
+                      }
+                      rows={5}
+                      disabled={!!selectedFile && uploading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </form>
             </Dialog2>
           </div>
         )}

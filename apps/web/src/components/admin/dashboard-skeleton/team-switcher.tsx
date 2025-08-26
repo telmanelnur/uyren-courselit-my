@@ -27,7 +27,7 @@ type TeamType = {
 export function TeamSwitcher({ teams }: { teams: TeamType[] }) {
   const { isMobile } = useSidebar();
   const [activeTeam, setActiveTeam] = useState<TeamType>(
-    teams[0] ?? { name: "", logo: () => null, plan: "" }
+    teams[0] ?? { name: "", logo: () => null, plan: "" },
   );
 
   return (

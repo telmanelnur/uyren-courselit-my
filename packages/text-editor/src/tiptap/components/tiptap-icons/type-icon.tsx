@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const TypeIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -17,8 +17,8 @@ export const TypeIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-TypeIcon.displayName = "TypeIcon"
+TypeIcon.displayName = "TypeIcon";

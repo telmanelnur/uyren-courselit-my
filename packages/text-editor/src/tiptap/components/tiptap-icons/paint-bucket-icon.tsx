@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const PaintBucketIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -25,8 +25,8 @@ export const PaintBucketIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-PaintBucketIcon.displayName = "MoreVerticalIcon"
+PaintBucketIcon.displayName = "MoreVerticalIcon";

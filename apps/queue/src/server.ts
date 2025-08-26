@@ -23,12 +23,14 @@ class QueueServer {
 
   private setupMiddlewares(): void {
     // CORS - Allow all origins for SSE to work properly
-    this.app.use(cors({
-      origin: "*",
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"]
-    }));
+    this.app.use(
+      cors({
+        origin: "*",
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"],
+      }),
+    );
 
     // Body parsing
     this.app.use(express.json());
@@ -36,10 +38,9 @@ class QueueServer {
   }
 
   private setupRoutes() {
-    
     // SSE Routes (directly under root for easier access)
     this.app.use("/", notificationRouter);
-    
+
     // Mail routes
     this.app.use("/", mailRouter);
 

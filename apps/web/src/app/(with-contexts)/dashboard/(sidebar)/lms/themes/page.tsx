@@ -12,7 +12,12 @@ import { useDebounce } from "@workspace/components-library";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
 import { Edit, Eye, Palette, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -20,10 +25,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models";
 import { GeneralRouterOutputs } from "@/server/api/types";
 
-const breadcrumbs = [{ label: "LMS", href: "#" }, { label: "Themes", href: "#" }];
+const breadcrumbs = [
+  { label: "LMS", href: "#" },
+  { label: "Themes", href: "#" },
+];
 
-type ItemType = GeneralRouterOutputs["lmsModule"]["themeModule"]["theme"]["list"]["items"][number];
-type QueryParams = Parameters<typeof trpc.lmsModule.themeModule.theme.list.useQuery>[0];
+type ItemType =
+  GeneralRouterOutputs["lmsModule"]["themeModule"]["theme"]["list"]["items"][number];
+type QueryParams = Parameters<
+  typeof trpc.lmsModule.themeModule.theme.list.useQuery
+>[0];
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,11 +50,14 @@ export default function Page() {
     },
   });
 
-  const handleDelete = useCallback((theme: ItemType) => {
-    if (confirm("Are you sure you want to delete this theme?")) {
-      deleteMutation.mutate(theme._id);
-    }
-  }, [deleteMutation]);
+  const handleDelete = useCallback(
+    (theme: ItemType) => {
+      if (confirm("Are you sure you want to delete this theme?")) {
+        deleteMutation.mutate(theme._id);
+      }
+    },
+    [deleteMutation],
+  );
 
   const columns: ColumnDef<ItemType>[] = useMemo(() => {
     return [
@@ -59,36 +73,56 @@ export default function Page() {
               </div>
               <div>
                 <div className="font-medium">{theme.name}</div>
-                <div className="text-sm text-muted-foreground">{theme.description || "No description"}</div>
+                <div className="text-sm text-muted-foreground">
+                  {theme.description || "No description"}
+                </div>
               </div>
             </div>
           );
         },
       },
-             {
-         accessorKey: "status",
-         header: "Status",
-         cell: ({ row }) => {
-           const status = row.original.status;
-           return (
-             <Badge variant={status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED ? "default" : status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT ? "secondary" : "destructive"}>
-               <div className="flex items-center gap-1">
-                 {status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED ? "Published" : status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT ? "Draft" : "Archived"}
-               </div>
-             </Badge>
-           );
-         },
-         meta: {
-           label: "Status",
-           variant: "select",
-           options: [
-             { label: "Draft", value: BASIC_PUBLICATION_STATUS_TYPE.DRAFT },
-             { label: "Published", value: BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED },
-             { label: "Archived", value: BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED },
-           ],
-         },
-         enableColumnFilter: true,
-       },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+          const status = row.original.status;
+          return (
+            <Badge
+              variant={
+                status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED
+                  ? "default"
+                  : status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT
+                    ? "secondary"
+                    : "destructive"
+              }
+            >
+              <div className="flex items-center gap-1">
+                {status === BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED
+                  ? "Published"
+                  : status === BASIC_PUBLICATION_STATUS_TYPE.DRAFT
+                    ? "Draft"
+                    : "Archived"}
+              </div>
+            </Badge>
+          );
+        },
+        meta: {
+          label: "Status",
+          variant: "select",
+          options: [
+            { label: "Draft", value: BASIC_PUBLICATION_STATUS_TYPE.DRAFT },
+            {
+              label: "Published",
+              value: BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
+            },
+            {
+              label: "Archived",
+              value: BASIC_PUBLICATION_STATUS_TYPE.ARCHIVED,
+            },
+          ],
+        },
+        enableColumnFilter: true,
+      },
       {
         accessorKey: "createdAt",
         header: "Created",
@@ -125,7 +159,7 @@ export default function Page() {
                     Edit Theme
                   </Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem
                   onClick={() => handleDelete(theme)}
                   className="text-red-600"
@@ -139,7 +173,7 @@ export default function Page() {
         },
       },
     ];
-     }, [handleDelete]);
+  }, [handleDelete]);
 
   const { table } = useDataTable({
     columns,
@@ -158,13 +192,17 @@ export default function Page() {
         skip: tableState.pagination.pageIndex * tableState.pagination.pageSize,
         take: tableState.pagination.pageSize,
       },
-             filter: {
-         status: Array.isArray(
-           tableState.columnFilters.find((filter) => filter.id === "status")?.value
-         )
-           ? (tableState.columnFilters.find((filter) => filter.id === "status")?.value as string[])[0]
-           : undefined,
-       }
+      filter: {
+        status: Array.isArray(
+          tableState.columnFilters.find((filter) => filter.id === "status")
+            ?.value,
+        )
+          ? (
+              tableState.columnFilters.find((filter) => filter.id === "status")
+                ?.value as string[]
+            )[0]
+          : undefined,
+      },
     };
     if (tableState.sorting[0]) {
       parsed.orderBy = {
@@ -178,16 +216,25 @@ export default function Page() {
       };
     }
     return parsed;
-  }, [tableState.sorting, tableState.pagination, tableState.columnFilters, tableState.globalFilter, debouncedSearchQuery]);
+  }, [
+    tableState.sorting,
+    tableState.pagination,
+    tableState.columnFilters,
+    tableState.globalFilter,
+    debouncedSearchQuery,
+  ]);
 
-  const loadListQuery = trpc.lmsModule.themeModule.theme.list.useQuery(queryParams);
+  const loadListQuery =
+    trpc.lmsModule.themeModule.theme.list.useQuery(queryParams);
 
   useEffect(() => {
     if (!loadListQuery.data) return;
     const parsed = loadListQuery.data.items || [];
     setParsedData(parsed);
     setParsedPagination({
-      pageCount: Math.ceil(loadListQuery.data.total / loadListQuery.data.meta.take),
+      pageCount: Math.ceil(
+        loadListQuery.data.total / loadListQuery.data.meta.take,
+      ),
     });
   }, [loadListQuery.data]);
 
@@ -197,11 +244,9 @@ export default function Page() {
         <HeaderTopbar
           header={{
             title: "Themes",
-            subtitle: "Manage LMS themes and styling"
+            subtitle: "Manage LMS themes and styling",
           }}
-          rightAction={
-            <CreateButton href="/dashboard/lms/themes/new" />
-          }
+          rightAction={<CreateButton href="/dashboard/lms/themes/new" />}
         />
         <Card>
           <CardContent>
@@ -212,7 +257,7 @@ export default function Page() {
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="h-8 w-40 lg:w-56"
               />
-              <DataTable table={table} >
+              <DataTable table={table}>
                 <DataTableToolbar table={table} />
               </DataTable>
             </div>

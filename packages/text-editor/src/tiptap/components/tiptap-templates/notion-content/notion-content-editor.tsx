@@ -1,90 +1,105 @@
-"use client"
+"use client";
 
-import { AnyExtension, Editor, EditorContent, EditorContext, useEditor } from "@tiptap/react"
-import * as React from "react"
+import {
+  AnyExtension,
+  Editor,
+  EditorContent,
+  EditorContext,
+  useEditor,
+} from "@tiptap/react";
+import * as React from "react";
 
 // --- Tiptap Core Extensions ---
-import { Highlight } from "@tiptap/extension-highlight"
-import { TaskItem, TaskList } from "@tiptap/extension-list"
-import { Subscript } from "@tiptap/extension-subscript"
-import { Superscript } from "@tiptap/extension-superscript"
-import { TableKit } from '@tiptap/extension-table'
-import { TextAlign } from "@tiptap/extension-text-align"
-import { Typography } from "@tiptap/extension-typography"
-import { Placeholder, Selection } from "@tiptap/extensions"
-import { StarterKit } from "@tiptap/starter-kit"
+import { Highlight } from "@tiptap/extension-highlight";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { Subscript } from "@tiptap/extension-subscript";
+import { Superscript } from "@tiptap/extension-superscript";
+import { TableKit } from "@tiptap/extension-table";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { Typography } from "@tiptap/extension-typography";
+import { Placeholder, Selection } from "@tiptap/extensions";
+import { StarterKit } from "@tiptap/starter-kit";
 
 // --- UI Primitives ---
 
 // --- Tiptap Node ---
 // import { ImageUploadNode } from "../../tiptap-node/image-upload-node/image-upload-node-extension"
-import "../../tiptap-node/blockquote-node/blockquote-node.scss"
-import "../../tiptap-node/code-block-node/code-block-node.scss"
-import "../../tiptap-node/heading-node/heading-node.scss"
-import { HorizontalRule } from "../../tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
-import "../../tiptap-node/horizontal-rule-node/horizontal-rule-node.scss"
-import "../../tiptap-node/image-node/image-node.scss"
-import "../../tiptap-node/list-node/list-node.scss"
-import "../../tiptap-node/paragraph-node/paragraph-node.scss"
+import "../../tiptap-node/blockquote-node/blockquote-node.scss";
+import "../../tiptap-node/code-block-node/code-block-node.scss";
+import "../../tiptap-node/heading-node/heading-node.scss";
+import { HorizontalRule } from "../../tiptap-node/horizontal-rule-node/horizontal-rule-node-extension";
+import "../../tiptap-node/horizontal-rule-node/horizontal-rule-node.scss";
+import "../../tiptap-node/image-node/image-node.scss";
+import "../../tiptap-node/list-node/list-node.scss";
+import "../../tiptap-node/paragraph-node/paragraph-node.scss";
 // import "../../tiptap-node/table-node/table-node.scss"
 
-
 // --- Tiptap UI ---
-import { SlashDropdownMenu, SlashMenuConfig } from "../../tiptap-ui/slash-dropdown-menu"
+import {
+  SlashDropdownMenu,
+  SlashMenuConfig,
+} from "../../tiptap-ui/slash-dropdown-menu";
 
 // --- Icons ---
 
 // --- Components ---
 
 // --- Styles ---
-import "@workspace/text-editor/tiptap/components/tiptap-ui/paste-modal/paste-modal.scss"
-import "./notion-content-editor.scss"
+import "@workspace/text-editor/tiptap/components/tiptap-ui/paste-modal/paste-modal.scss";
+import "./notion-content-editor.scss";
 
-import Emoji, { gitHubEmojis } from "@tiptap/extension-emoji"
-import Mathematics from "@tiptap/extension-mathematics"
-import Paragraph from "@tiptap/extension-paragraph"
-import { Color, TextStyle } from "@tiptap/extension-text-style"
-import UniqueID from "@tiptap/extension-unique-id"
-import Youtube from "@tiptap/extension-youtube"
-import { TableHoverControls } from "@workspace/text-editor/tiptap/components/tiptap-ui/table-hover-controls/table-hover-controls"
-import { AiProvider, useAi } from "@workspace/text-editor/tiptap/contexts/ai-context"
-import { AppProvider } from "@workspace/text-editor/tiptap/contexts/app-context"
-import { useCollab } from "@workspace/text-editor/tiptap/contexts/collab-context"
-import useUiEditorState from "@workspace/text-editor/tiptap/hooks/use-ui-editor-state"
-import { cn } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
-import { UiState } from "../../tiptap-extension/ui-state-extension"
-import { AiMenu } from "../../tiptap-ui/ai-menu"
-import { CodeBlockLanguageDropdown } from "../../tiptap-ui/code-block-language-dropdown/CodeBlockLanguageDropdown"
-import { DragContextMenu } from "../../tiptap-ui/drag-context-menu"
-import { EmojiDropdownMenu } from "../../tiptap-ui/emoji-dropdown-menu"
-import { MathInputModal, useMathModal } from "../../tiptap-ui/math-input-modal"
-import { PasteModal } from "../../tiptap-ui/paste-modal/paste-modal"
-import { TapIndent } from "../../tiptap-ui/tap-indent/tap-indent"
-import { LoadingSpinner } from "../notion-like/notion-like-editor"
-import { MobileToolbar } from "../notion-like/notion-like-editor-mobile-toolbar"
-import { NotionToolbarFloating } from "../notion-like/notion-like-editor-toolbar-floating"
+import Emoji, { gitHubEmojis } from "@tiptap/extension-emoji";
+import Mathematics from "@tiptap/extension-mathematics";
+import Paragraph from "@tiptap/extension-paragraph";
+import { Color, TextStyle } from "@tiptap/extension-text-style";
+import UniqueID from "@tiptap/extension-unique-id";
+import Youtube from "@tiptap/extension-youtube";
+import { TableHoverControls } from "@workspace/text-editor/tiptap/components/tiptap-ui/table-hover-controls/table-hover-controls";
+import {
+  AiProvider,
+  useAi,
+} from "@workspace/text-editor/tiptap/contexts/ai-context";
+import { AppProvider } from "@workspace/text-editor/tiptap/contexts/app-context";
+import { useCollab } from "@workspace/text-editor/tiptap/contexts/collab-context";
+import useUiEditorState from "@workspace/text-editor/tiptap/hooks/use-ui-editor-state";
+import { cn } from "@workspace/text-editor/tiptap/lib/tiptap-utils";
+import { UiState } from "../../tiptap-extension/ui-state-extension";
+import { AiMenu } from "../../tiptap-ui/ai-menu";
+import { CodeBlockLanguageDropdown } from "../../tiptap-ui/code-block-language-dropdown/CodeBlockLanguageDropdown";
+import { DragContextMenu } from "../../tiptap-ui/drag-context-menu";
+import { EmojiDropdownMenu } from "../../tiptap-ui/emoji-dropdown-menu";
+import { MathInputModal, useMathModal } from "../../tiptap-ui/math-input-modal";
+import { PasteModal } from "../../tiptap-ui/paste-modal/paste-modal";
+import { TapIndent } from "../../tiptap-ui/tap-indent/tap-indent";
+import { LoadingSpinner } from "../notion-like/notion-like-editor";
+import { MobileToolbar } from "../notion-like/notion-like-editor-mobile-toolbar";
+import { NotionToolbarFloating } from "../notion-like/notion-like-editor-toolbar-floating";
 
-import { Image } from "@tiptap/extension-image"
-import { MediaBrowserNiceDialog, NiceModal } from "@workspace/components-library"
-import VideoNodeExtension from "../../custom/video/video-node-extension"
-import { ImageIcon } from "../../tiptap-icons/image-icon"
-import { VideoIcon } from "../../tiptap-icons/video-icon"
-
-
+import { Image } from "@tiptap/extension-image";
+import {
+  MediaBrowserNiceDialog,
+  NiceModal,
+} from "@workspace/components-library";
+import VideoNodeExtension from "../../custom/video/video-node-extension";
+import { ImageIcon } from "../../tiptap-icons/image-icon";
+import { VideoIcon } from "../../tiptap-icons/video-icon";
 
 interface EditorProviderProps {
-  placeholder?: string
-  aiToken?: string | null
-  className?: ReturnType<typeof cn>
-  editable?: boolean
-  onChange?: (content: string) => void
-  onEditor?: (editor: Editor | null, meta: { reason: "create" | "destroy" }) => void
-  extraExtensions?: AnyExtension[]
-  extraSlashMenuConfig?: SlashMenuConfig
+  placeholder?: string;
+  aiToken?: string | null;
+  className?: ReturnType<typeof cn>;
+  editable?: boolean;
+  onChange?: (content: string) => void;
+  onEditor?: (
+    editor: Editor | null,
+    meta: { reason: "create" | "destroy" },
+  ) => void;
+  extraExtensions?: AnyExtension[];
+  extraSlashMenuConfig?: SlashMenuConfig;
 }
 
 function EditorProvider(props: EditorProviderProps) {
-  const { placeholder = "Start writing...", editable = true } = props
+  const { placeholder = "Start writing...", editable = true } = props;
 
   const extensions = React.useMemo(() => {
     return [
@@ -103,37 +118,47 @@ function EditorProvider(props: EditorProviderProps) {
       }),
       Emoji.configure({
         emojis: gitHubEmojis.filter(
-          (emoji) => !emoji.name.includes("regional")
+          (emoji) => !emoji.name.includes("regional"),
         ),
         forceFallbackImages: true,
       }),
       Mathematics.configure({
         inlineOptions: {
           onClick: (node, pos) => {
-            if (!editor) return
-            const latex = prompt('수식을 수정하세요:', node.attrs.latex)
+            if (!editor) return;
+            const latex = prompt("수식을 수정하세요:", node.attrs.latex);
             if (latex !== null) {
-              editor.chain().setNodeSelection(pos).updateInlineMath({ latex }).focus().run()
+              editor
+                .chain()
+                .setNodeSelection(pos)
+                .updateInlineMath({ latex })
+                .focus()
+                .run();
             }
           },
         },
         blockOptions: {
           onClick: (node, pos) => {
-            if (!editor) return
-            const latex = prompt('수식을 수정하세요:', node.attrs.latex)
+            if (!editor) return;
+            const latex = prompt("수식을 수정하세요:", node.attrs.latex);
             if (latex !== null) {
-              editor.chain().setNodeSelection(pos).updateBlockMath({ latex }).focus().run()
+              editor
+                .chain()
+                .setNodeSelection(pos)
+                .updateBlockMath({ latex })
+                .focus()
+                .run();
             }
           },
         },
         katexOptions: {
           throwOnError: false,
           macros: {
-            '\\R': '\\mathbb{R}',
-            '\\N': '\\mathbb{N}',
-            '\\Z': '\\mathbb{Z}',
-            '\\Q': '\\mathbb{Q}',
-            '\\C': '\\mathbb{C}',
+            "\\R": "\\mathbb{R}",
+            "\\N": "\\mathbb{N}",
+            "\\Z": "\\mathbb{Z}",
+            "\\Q": "\\mathbb{Q}",
+            "\\C": "\\mathbb{C}",
           },
         },
       }),
@@ -168,8 +193,8 @@ function EditorProvider(props: EditorProviderProps) {
       Image,
       VideoNodeExtension,
       ...(props.extraExtensions || []),
-    ]
-  }, [placeholder, props.extraExtensions])
+    ];
+  }, [placeholder, props.extraExtensions]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -254,10 +279,10 @@ function EditorProvider(props: EditorProviderProps) {
         props.onEditor(null, { reason: "destroy" });
       }
     },
-  })
+  });
 
   if (!editor) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
   return (
@@ -266,24 +291,25 @@ function EditorProvider(props: EditorProviderProps) {
         <EditorContentArea extraSlashMenuConfig={props.extraSlashMenuConfig} />
       </EditorContext.Provider>
     </div>
-  )
+  );
 }
-
 
 interface NotionContentEditorProps {
   // room: string
   initialContent?: string;
   onChange?: (content: string) => void;
-  onEditor?: (editor: Editor | null, meta: {
-    reason: "create" | "destroy"
-  }) => void;
+  onEditor?: (
+    editor: Editor | null,
+    meta: {
+      reason: "create" | "destroy";
+    },
+  ) => void;
   placeholder?: string;
   editable?: boolean;
-  className?: ReturnType<typeof cn>
-  extraExtensions?: AnyExtension[]
-  extraSlashMenuConfig?: SlashMenuConfig
+  className?: ReturnType<typeof cn>;
+  extraExtensions?: AnyExtension[];
+  extraSlashMenuConfig?: SlashMenuConfig;
 }
-
 
 /**
  * Full editor with all necessary providers, ready to use with just a room ID
@@ -299,96 +325,96 @@ export function NotionContentEditor(props: NotionContentEditorProps) {
       {/* //     </CollabProvider> */}
     </AppProvider>
     // </UserProvider>
-  )
+  );
 }
-
 
 /**
  * Internal component that handles the editor loading state
  */
 function NotionEditorContent(props: NotionContentEditorProps) {
-  const { provider, hasCollab } = useCollab()
-  const { aiToken, hasAi } = useAi()
+  const { provider, hasCollab } = useCollab();
+  const { aiToken, hasAi } = useAi();
 
   // Show loading only if collab or AI features are enabled but tokens are still loading
   if ((hasCollab && !provider) || (hasAi && !aiToken)) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
-  return (
-    <EditorProvider
-      aiToken={aiToken}
-      {...props}
-    />
-  )
+  return <EditorProvider aiToken={aiToken} {...props} />;
 }
 
 /**
  * EditorContent component that renders the actual editor
  */
 function EditorContentArea(props: { extraSlashMenuConfig?: SlashMenuConfig }) {
-  const { editor } = React.useContext(EditorContext)!
+  const { editor } = React.useContext(EditorContext)!;
   const {
     aiGenerationIsLoading,
     aiGenerationIsSelection,
     aiGenerationHasMessage,
-  } = useUiEditorState(editor)
+  } = useUiEditorState(editor);
 
   // 수식 모달 훅 사용
-  const { modalProps } = useMathModal()
+  const { modalProps } = useMathModal();
 
   // 붙여넣기 모달 상태
   const [pasteModalState, setPasteModalState] = React.useState({
     isOpen: false,
-    content: '',
+    content: "",
     position: null as { x: number; y: number } | null,
-  })
+  });
 
   // 붙여넣기 모달 이벤트 리스너
   React.useEffect(() => {
     const handleShowPasteModal = (event: CustomEvent) => {
-      const { content, position } = event.detail
+      const { content, position } = event.detail;
       setPasteModalState({
         isOpen: true,
         content,
         position,
-      })
-    }
+      });
+    };
 
-    window.addEventListener('show-paste-modal', handleShowPasteModal as EventListener)
+    window.addEventListener(
+      "show-paste-modal",
+      handleShowPasteModal as EventListener,
+    );
 
     return () => {
-      window.removeEventListener('show-paste-modal', handleShowPasteModal as EventListener)
-    }
-  }, [])
+      window.removeEventListener(
+        "show-paste-modal",
+        handleShowPasteModal as EventListener,
+      );
+    };
+  }, []);
 
   const handlePasteModalClose = React.useCallback(() => {
     setPasteModalState({
       isOpen: false,
-      content: '',
+      content: "",
       position: null,
-    })
-  }, [])
+    });
+  }, []);
 
   // Selection based effect to handle AI generation acceptance
   React.useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
 
     if (
       !aiGenerationIsLoading &&
       aiGenerationIsSelection &&
       aiGenerationHasMessage
     ) {
-      editor.commands.resetUiState()
-      editor.commands.setCodeBlock()
-      editor.commands.toggleCodeBlock()
+      editor.commands.resetUiState();
+      editor.commands.setCodeBlock();
+      editor.commands.toggleCodeBlock();
     }
   }, [
     aiGenerationHasMessage,
     aiGenerationIsLoading,
     aiGenerationIsSelection,
     editor,
-  ])
+  ]);
 
   // // 에디터 내용을 JSON으로 추출하는 함수
   // const getDocumentAsJson = React.useCallback(() => {
@@ -494,32 +520,30 @@ function EditorContentArea(props: { extraSlashMenuConfig?: SlashMenuConfig }) {
   // iframe 프로젝트 코드 안에서
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         // 또는 부모에게 알릴 수도 있음
-        window.parent.postMessage({ type: 'SAVE_PRESSED' }, '*');
+        window.parent.postMessage({ type: "SAVE_PRESSED" }, "*");
       }
-      window.parent.postMessage({ type: 'IFRAME_KEYDOWN' }, '*');
+      window.parent.postMessage({ type: "IFRAME_KEYDOWN" }, "*");
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     // Cleanup function
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
-  
 
   const slashMenuConfig = React.useMemo(() => {
     return {
       ...(props.extraSlashMenuConfig || {}),
-    }
-  }, [props.extraSlashMenuConfig])
+    };
+  }, [props.extraSlashMenuConfig]);
 
   if (!editor) {
-    return null
+    return null;
   }
 
   return (
@@ -577,6 +601,5 @@ function EditorContentArea(props: { extraSlashMenuConfig?: SlashMenuConfig }) {
         position={pasteModalState.position}
       />
     </>
-  )
+  );
 }
-

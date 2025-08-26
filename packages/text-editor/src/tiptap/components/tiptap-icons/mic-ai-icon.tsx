@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const MicAiIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -27,8 +27,8 @@ export const MicAiIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-MicAiIcon.displayName = "MicAiIcon"
+MicAiIcon.displayName = "MicAiIcon";

@@ -11,7 +11,12 @@ import {
 import { UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@workspace/ui/components/tabs";
 import GeneralSettings from "./general-settings";
 import PaymentSettings from "./payment-settings";
 import MailsSettings from "./mails-settings";
@@ -63,21 +68,23 @@ export default function Settings({ selectedTab }: SettingsProps) {
       >
         <TabsList className="flex flex-wrap gap-2 w-full h-auto justify-start">
           {items.map((item) => (
-            <TabsTrigger 
-              key={item} 
-              value={item} 
-              className="flex-none"
-            >
+            <TabsTrigger key={item} value={item} className="flex-none">
               {item}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        <TabsContent value={SITE_SETTINGS_SECTION_GENERAL} className="flex flex-col gap-8">
+        <TabsContent
+          value={SITE_SETTINGS_SECTION_GENERAL}
+          className="flex flex-col gap-8"
+        >
           <GeneralSettings />
         </TabsContent>
 
-        <TabsContent value={SITE_SETTINGS_SECTION_PAYMENT} className="flex flex-col gap-8">
+        <TabsContent
+          value={SITE_SETTINGS_SECTION_PAYMENT}
+          className="flex flex-col gap-8"
+        >
           <PaymentSettings />
         </TabsContent>
 
@@ -85,18 +92,24 @@ export default function Settings({ selectedTab }: SettingsProps) {
           <MailsSettings />
         </TabsContent>
 
-        <TabsContent value={SITE_CUSTOMISATIONS_SETTING_HEADER} className="flex flex-col gap-8">
+        <TabsContent
+          value={SITE_CUSTOMISATIONS_SETTING_HEADER}
+          className="flex flex-col gap-8"
+        >
           <CustomizationsSettings />
         </TabsContent>
 
-        <TabsContent value={SITE_APIKEYS_SETTING_HEADER} className="flex flex-col gap-8">
+        <TabsContent
+          value={SITE_APIKEYS_SETTING_HEADER}
+          className="flex flex-col gap-8"
+        >
           <ApiKeysSettings />
         </TabsContent>
 
         <TabsContent value="Domain Management" className="flex flex-col gap-8">
-          {checkPermission(profile.permissions, [UIConstants.permissions.manageSettings]) && (
-            <DomainManagement />
-          )}
+          {checkPermission(profile.permissions, [
+            UIConstants.permissions.manageSettings,
+          ]) && <DomainManagement />}
         </TabsContent>
       </Tabs>
     </div>

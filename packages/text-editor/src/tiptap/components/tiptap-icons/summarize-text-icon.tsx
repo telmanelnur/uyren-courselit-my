@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const SummarizeTextIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -29,8 +29,8 @@ export const SummarizeTextIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-SummarizeTextIcon.displayName = "SummarizeTextIcon"
+SummarizeTextIcon.displayName = "SummarizeTextIcon";

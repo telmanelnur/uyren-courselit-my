@@ -33,8 +33,6 @@ export const appRouter = router({
 // export type definition of API
 export type AppRouter = typeof appRouter;
 
-
-
 const createCaller = t.createCallerFactory(appRouter);
 
 export const trpcCaller = createCaller(createTRPCContext);

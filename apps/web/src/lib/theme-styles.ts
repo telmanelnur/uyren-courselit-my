@@ -2,22 +2,22 @@ import { Theme } from "@workspace/page-models";
 import convert, { HSL } from "color-convert";
 
 function formatHSL(hsl: HSL): string {
-    return `${hsl[0]} ${hsl[1]}% ${hsl[2]}%`;
+  return `${hsl[0]} ${hsl[1]}% ${hsl[2]}%`;
 }
 
 export function generateThemeStyles(theme: Theme): string {
-    const { colors } = theme?.theme;
-    if (!colors) {
-        return "";
-    }
+  const { colors } = theme?.theme;
+  if (!colors) {
+    return "";
+  }
 
-    const lightColors = colors.light;
-    const darkColors = colors.dark;
-    if (!lightColors || !darkColors) {
-        return "";
-    }
+  const lightColors = colors.light;
+  const darkColors = colors.dark;
+  if (!lightColors || !darkColors) {
+    return "";
+  }
 
-    return `
+  return `
         .courselit-theme {
             /* Light theme colors */
             --background: ${lightColors.background ? formatHSL(convert.hex.hsl(lightColors.background.replace("#", ""))) : ""};

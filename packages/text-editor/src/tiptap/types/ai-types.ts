@@ -1,5 +1,11 @@
 export interface AIProcessingRequest {
-  action: "improve" | "summarize" | "expand" | "translate" | "correct" | "custom";
+  action:
+    | "improve"
+    | "summarize"
+    | "expand"
+    | "translate"
+    | "correct"
+    | "custom";
   text: string;
   prompt?: string;
   language?: string;

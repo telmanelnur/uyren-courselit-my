@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const XIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -17,8 +17,8 @@ export const XIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-XIcon.displayName = "XIcon"
+XIcon.displayName = "XIcon";

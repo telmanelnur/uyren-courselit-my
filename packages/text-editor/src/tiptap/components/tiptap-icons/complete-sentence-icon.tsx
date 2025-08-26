@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const CompleteSentenceIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -35,8 +35,8 @@ export const CompleteSentenceIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-CompleteSentenceIcon.displayName = "CompleteSentenceIcon"
+CompleteSentenceIcon.displayName = "CompleteSentenceIcon";

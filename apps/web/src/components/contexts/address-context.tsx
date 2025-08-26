@@ -23,10 +23,15 @@ const AddressContext = createContext<AddressContextType>({
   },
 });
 
-export const AddressProvider = ({ children, initialAddress }: PropsWithChildren<{
+export const AddressProvider = ({
+  children,
+  initialAddress,
+}: PropsWithChildren<{
   initialAddress?: Address;
 }>) => {
-  const [address, setAddress] = useState<Address>(initialAddress || defaultState.address);
+  const [address, setAddress] = useState<Address>(
+    initialAddress || defaultState.address,
+  );
 
   return (
     <AddressContext.Provider value={{ address, setAddress }}>

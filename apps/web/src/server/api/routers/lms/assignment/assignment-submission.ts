@@ -1,6 +1,13 @@
 import { AssignmentSubmissionModel } from "@/models/lms";
-import { AuthorizationException, NotFoundException } from "@/server/api/core/exceptions";
-import { createDomainRequiredMiddleware, createPermissionMiddleware, protectedProcedure } from "@/server/api/core/procedures";
+import {
+  AuthorizationException,
+  NotFoundException,
+} from "@/server/api/core/exceptions";
+import {
+  createDomainRequiredMiddleware,
+  createPermissionMiddleware,
+  protectedProcedure,
+} from "@/server/api/core/procedures";
 import { ListInputSchema } from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
 import { documentIdValidator } from "@/server/api/core/validators";
@@ -9,27 +16,34 @@ import { checkPermission } from "@workspace/utils";
 import { RootFilterQuery } from "mongoose";
 import { z } from "zod";
 
-const {permissions} = UIConstants
+const { permissions } = UIConstants;
 
 export const assignmentSubmissionRouter = router({
   listSubmissions: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageAnyCourse]))
-    .input(ListInputSchema.extend({
-      filter: z.object({
-        assignmentId: z.string().optional(),
-        studentId: z.string().optional(),
-        status: z.enum(["submitted", "graded", "late", "overdue"]).optional(),
-      }).optional(),
-    }))
+    .input(
+      ListInputSchema.extend({
+        filter: z
+          .object({
+            assignmentId: z.string().optional(),
+            studentId: z.string().optional(),
+            status: z
+              .enum(["submitted", "graded", "late", "overdue"])
+              .optional(),
+          })
+          .optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const query: RootFilterQuery<typeof AssignmentSubmissionModel> = {
         domain: ctx.domainData.domainObj._id,
       };
-      if (input.filter?.assignmentId) query.assignmentId = input.filter.assignmentId;
+      if (input.filter?.assignmentId)
+        query.assignmentId = input.filter.assignmentId;
       if (input.filter?.studentId) query.studentId = input.filter.studentId;
       if (input.filter?.status) query.status = input.filter.status;
-      
+
       const includeCount = input.pagination?.includePaginationCount ?? true;
       const [items, total] = await Promise.all([
         AssignmentSubmissionModel.find(query)
@@ -39,23 +53,32 @@ export const assignmentSubmissionRouter = router({
               title: string;
               totalPoints: number;
             };
-          }>('assignment', '_id title totalPoints')
+          }>("assignment", "_id title totalPoints")
           .populate<{
             student: {
               userId: string;
               name: string;
               email: string;
             };
-          }>('student', 'userId name email')
+          }>("student", "userId name email")
           .skip(input.pagination?.skip || 0)
           .limit(input.pagination?.take || 20)
-          .sort(input.orderBy ? { [input.orderBy.field]: input.orderBy.direction === "asc" ? 1 : -1 } : { submittedAt: -1 })
+          .sort(
+            input.orderBy
+              ? {
+                  [input.orderBy.field]:
+                    input.orderBy.direction === "asc" ? 1 : -1,
+                }
+              : { submittedAt: -1 },
+          )
           .lean(),
-        includeCount ? AssignmentSubmissionModel.countDocuments(query) : Promise.resolve(0)
+        includeCount
+          ? AssignmentSubmissionModel.countDocuments(query)
+          : Promise.resolve(0),
       ]);
 
       return {
-        items: items.map(item => ({
+        items: items.map((item) => ({
           ...item,
           id: item._id.toString(),
           _id: undefined,
@@ -65,19 +88,21 @@ export const assignmentSubmissionRouter = router({
           includePaginationCount: input.pagination?.includePaginationCount,
           skip: input.pagination?.skip || 0,
           take: input.pagination?.take || 20,
-        }
+        },
       };
     }),
 
   getSubmissionById: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      id: documentIdValidator()
-    }))
+    .input(
+      z.object({
+        id: documentIdValidator(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const submission = await AssignmentSubmissionModel.findOne({
         _id: input.id,
-        domain: ctx.domainData.domainObj._id
+        domain: ctx.domainData.domainObj._id,
       })
         .populate<{
           assignment: {
@@ -86,19 +111,21 @@ export const assignmentSubmissionRouter = router({
             totalPoints: number;
             instructions: string;
           };
-        }>('assignment', '_id title totalPoints instructions')
+        }>("assignment", "_id title totalPoints instructions")
         .populate<{
           student: {
             userId: string;
             name: string;
             email: string;
           };
-        }>('student', 'userId name email')
+        }>("student", "userId name email")
         .lean();
 
       if (!submission) throw new NotFoundException("Submission not found");
 
-      const hasAccess = checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]);
+      const hasAccess = checkPermission(ctx.user.permissions, [
+        permissions.manageAnyCourse,
+      ]);
       if (!hasAccess) throw new AuthorizationException("No access");
 
       return {
@@ -111,23 +138,29 @@ export const assignmentSubmissionRouter = router({
   gradeSubmission: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageAnyCourse]))
-    .input(z.object({
-      id: documentIdValidator(),
-      data: z.object({
-        score: z.number().min(0),
-        feedback: z.string().optional(),
-        rubricScores: z.array(z.object({
-          criterion: z.string(),
+    .input(
+      z.object({
+        id: documentIdValidator(),
+        data: z.object({
           score: z.number().min(0),
-          maxScore: z.number().min(0),
           feedback: z.string().optional(),
-        })).optional(),
-      })
-    }))
+          rubricScores: z
+            .array(
+              z.object({
+                criterion: z.string(),
+                score: z.number().min(0),
+                maxScore: z.number().min(0),
+                feedback: z.string().optional(),
+              }),
+            )
+            .optional(),
+        }),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const submission = await AssignmentSubmissionModel.findOne({
         _id: input.id,
-        domain: ctx.domainData.domainObj._id
+        domain: ctx.domainData.domainObj._id,
       });
       if (!submission) throw new NotFoundException("Submission not found");
 
@@ -146,12 +179,14 @@ export const assignmentSubmissionRouter = router({
 
   createSubmission: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      assignmentId: z.string().min(1),
-      content: z.string().optional(),
-      attachments: z.array(z.string()).default([]),
-      submissionText: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        assignmentId: z.string().min(1),
+        content: z.string().optional(),
+        attachments: z.array(z.string()).default([]),
+        submissionText: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const submission = await AssignmentSubmissionModel.create({
         ...input,
@@ -165,14 +200,16 @@ export const assignmentSubmissionRouter = router({
 
   updateSubmission: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      id: documentIdValidator(),
-      data: z.object({
-        content: z.string().optional(),
-        attachments: z.array(z.string()).optional(),
-        submissionText: z.string().optional(),
-      })
-    }))
+    .input(
+      z.object({
+        id: documentIdValidator(),
+        data: z.object({
+          content: z.string().optional(),
+          attachments: z.array(z.string()).optional(),
+          submissionText: z.string().optional(),
+        }),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const submission = await AssignmentSubmissionModel.findOne({
         _id: input.id,
@@ -181,7 +218,7 @@ export const assignmentSubmissionRouter = router({
       });
       if (!submission) throw new NotFoundException("Submission not found");
 
-      Object.keys(input.data).forEach(key => {
+      Object.keys(input.data).forEach((key) => {
         (submission as any)[key] = (input.data as any)[key];
       });
       submission.updatedAt = new Date();
@@ -201,10 +238,10 @@ export const assignmentSubmissionRouter = router({
     .mutation(async ({ ctx, input }) => {
       const submission = await AssignmentSubmissionModel.findOne({
         _id: input,
-        domain: ctx.domainData.domainObj._id
+        domain: ctx.domainData.domainObj._id,
       });
       if (!submission) throw new NotFoundException("Submission not found");
-      
+
       await AssignmentSubmissionModel.findByIdAndDelete(input);
       return { success: true };
     }),

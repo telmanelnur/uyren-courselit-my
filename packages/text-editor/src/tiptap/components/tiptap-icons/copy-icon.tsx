@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const CopyIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -25,8 +25,8 @@ export const CopyIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-CopyIcon.displayName = "CopyIcon"
+CopyIcon.displayName = "CopyIcon";

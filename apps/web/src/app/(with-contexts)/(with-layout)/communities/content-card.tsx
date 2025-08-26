@@ -2,11 +2,16 @@
 
 import { useTheme } from "@/components/contexts/theme-context";
 import { GeneralRouterOutputs } from "@/server/api/types";
-import { ContentCard, ContentCardContent, ContentCardHeader, ContentCardImage } from "@workspace/components-library";
+import {
+  ContentCard,
+  ContentCardContent,
+  ContentCardHeader,
+  ContentCardImage,
+} from "@workspace/components-library";
 import {
   Badge,
   PageCardContent,
-  PageCardHeader
+  PageCardHeader,
 } from "@workspace/page-primitives";
 import {
   Tooltip,
@@ -27,7 +32,10 @@ export function CommunityContentCard({
   const { theme } = uiTheme;
 
   return (
-    <ContentCard className="overflow-hidden" href={`/dashboard/community/${community.communityId}`}>
+    <ContentCard
+      className="overflow-hidden"
+      href={`/dashboard/community/${community.communityId}`}
+    >
       <ContentCardImage
         src={community.featuredImage?.url || "/courselit_backdrop_square.webp"}
         alt={community.name}
@@ -47,9 +55,7 @@ export function CommunityContentCard({
                   <TooltipTrigger asChild>
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   </TooltipTrigger>
-                  <TooltipContent>
-                    Public
-                  </TooltipContent>
+                  <TooltipContent>Public</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <TooltipProvider>
@@ -73,15 +79,11 @@ export function CommunityContentCard({
         <div className="flex items-center justify-between gap-2 text-sm">
           <div className="flex items-center text-muted-foreground">
             <Users className="h-4 w-4 mr-2" />
-            <span>
-              {community.membersCount.toLocaleString()} members
-            </span>
+            <span>{community.membersCount.toLocaleString()} members</span>
           </div>
           {!publicView && (
             <div className="flex items-center text-muted-foreground">
-              <span>
-                {community.categories.length} categories
-              </span>
+              <span>{community.categories.length} categories</span>
             </div>
           )}
         </div>

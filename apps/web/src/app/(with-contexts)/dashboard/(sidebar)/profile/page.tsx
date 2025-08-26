@@ -50,33 +50,32 @@ export default function Page() {
   const { profile, setProfile } = useProfile();
 
   // TRPC mutations
-  const updateProfileMutation =
-    trpc.userModule.user.updateProfile.useMutation({
-      onSuccess: (data) => {
-        toast({
-          title: "Success",
-          description: data.message,
-        });
+  const updateProfileMutation = trpc.userModule.user.updateProfile.useMutation({
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message,
+      });
 
-        // Update profile context with new data
-        if (data.user && profile) {
-          setProfile({
-            ...profile,
-            name: data.user.name || "",
-            bio: data.user.bio || "",
-            avatar: data.user.avatar || null,
-            subscribedToUpdates: data.user.subscribedToUpdates,
-          });
-        }
-      },
-      onError: (error) => {
-        toast({
-          title: TOAST_TITLE_ERROR,
-          description: error.message,
-          variant: "destructive",
+      // Update profile context with new data
+      if (data.user && profile) {
+        setProfile({
+          ...profile,
+          name: data.user.name || "",
+          bio: data.user.bio || "",
+          avatar: data.user.avatar || null,
+          subscribedToUpdates: data.user.subscribedToUpdates,
         });
-      },
-    });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: TOAST_TITLE_ERROR,
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Initialize form data when profile loads
   useEffect(() => {
@@ -92,17 +91,17 @@ export default function Page() {
 
     const avatarData: Media | null = media
       ? {
-        storageProvider: "custom",
-        mediaId: media.mediaId,
-        originalFileName: media.originalFileName,
-        mimeType: media.mimeType,
-        size: media.size,
-        access: media.access,
-        thumbnail: media.thumbnail,
-        caption: media.caption,
-        file: media.file,
-        url: media.url,
-      }
+          storageProvider: "custom",
+          mediaId: media.mediaId,
+          originalFileName: media.originalFileName,
+          mimeType: media.mimeType,
+          size: media.size,
+          access: media.access,
+          thumbnail: media.thumbnail,
+          caption: media.caption,
+          file: media.file,
+          url: media.url,
+        }
       : null;
 
     updateProfileMutation.mutate({

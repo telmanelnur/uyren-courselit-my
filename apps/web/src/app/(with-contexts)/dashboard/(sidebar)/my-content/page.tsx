@@ -48,10 +48,11 @@ export default function Page() {
   const address = useAddress();
   const { theme } = useTheme();
 
-  const loadUserContentQuery = trpc.userModule.userContent.getProtectedUserContent.useQuery(
-    // { address: address.backend, userId: profile?.id || "" },
-    undefined
-  );
+  const loadUserContentQuery =
+    trpc.userModule.userContent.getProtectedUserContent.useQuery(
+      // { address: address.backend, userId: profile?.id || "" },
+      undefined,
+    );
 
   useEffect(() => {
     if (loadUserContentQuery.data) {
@@ -60,10 +61,10 @@ export default function Page() {
   }, [loadUserContentQuery.data]);
 
   const courses = data.filter(
-    (item) => item.entityType === Constants.MembershipEntityType.COURSE
+    (item) => item.entityType === Constants.MembershipEntityType.COURSE,
   );
   const communities = data.filter(
-    (item) => item.entityType === Constants.MembershipEntityType.COMMUNITY
+    (item) => item.entityType === Constants.MembershipEntityType.COMMUNITY,
   );
 
   const isLoading = loadUserContentQuery.isLoading;

@@ -40,21 +40,21 @@ export const MIMETYPE_PDF = ["application/pdf"];
 
 // Role-based access permissions
 export const permissions = {
-    manageCourse: "course:manage",
-    manageAnyCourse: "course:manage_any",
-    publishCourse: "course:publish",
-    enrollInCourse: "course:enroll",
-    manageMedia: "media:manage",
-    manageSite: "site:manage",
-    manageSettings: "setting:manage",
-    manageUsers: "user:manage",
-    manageCommunity: "community:manage",
+  manageCourse: "course:manage",
+  manageAnyCourse: "course:manage_any",
+  publishCourse: "course:publish",
+  enrollInCourse: "course:enroll",
+  manageMedia: "media:manage",
+  manageSite: "site:manage",
+  manageSettings: "setting:manage",
+  manageUsers: "user:manage",
+  manageCommunity: "community:manage",
 };
 export const roles = {
-    admin: "admin",
-    instructor: "instructor",
-    student: "student",
-}
+  admin: "admin",
+  instructor: "instructor",
+  student: "student",
+};
 
 export const COURSE_TYPE_COURSE = "course";
 export const COURSE_TYPE_DOWNLOAD = "download";
@@ -67,4 +67,4 @@ export const MAIL_RECIPIENTS_SPLIT_REGEX = /,\s*/;
 
 // Regex taken from: https://stackoverflow.com/a/8260383
 export const YOUTUBE_REGEX =
-    /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/; // eslint-disable-line no-useless-escape
+  /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/; // eslint-disable-line no-useless-escape

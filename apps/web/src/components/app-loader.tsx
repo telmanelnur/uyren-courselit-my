@@ -1,7 +1,7 @@
 import { CircularProgress } from "@workspace/components-library";
 
 const AppLoader = () => {
-    return <CircularProgress />;
+  return <CircularProgress />;
 };
 
 export default AppLoader;

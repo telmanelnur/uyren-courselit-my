@@ -61,7 +61,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     }
   }
 
-
   if (hasError) {
     return (
       <html lang="en">

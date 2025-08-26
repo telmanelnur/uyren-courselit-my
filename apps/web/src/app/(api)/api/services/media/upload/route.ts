@@ -11,15 +11,12 @@ export async function POST(request: NextRequest) {
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Connect to database
     await connectToDatabase();
-    const domainData = await getDomainData()
+    const domainData = await getDomainData();
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -28,8 +25,11 @@ export async function POST(request: NextRequest) {
     // Currently only cloudinary is supported
     if (storageType !== "cloudinary") {
       return NextResponse.json(
-        { error: "Unsupported storage type. Currently only 'cloudinary' is supported." },
-        { status: 400 }
+        {
+          error:
+            "Unsupported storage type. Currently only 'cloudinary' is supported.",
+        },
+        { status: 400 },
       );
     }
 
@@ -41,10 +41,7 @@ export async function POST(request: NextRequest) {
     const type = formData.get("type") as string;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Validate file size (10MB limit)
@@ -52,15 +49,12 @@ export async function POST(request: NextRequest) {
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "File size exceeds 10MB limit" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!domainData.domainObj) {
-      return NextResponse.json(
-        { error: "Domain not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Domain not found" }, { status: 404 });
     }
 
     // Upload using the appropriate service based on storage type
@@ -78,7 +72,7 @@ export async function POST(request: NextRequest) {
       default:
         return NextResponse.json(
           { error: "Unsupported storage type" },
-          { status: 400 }
+          { status: 400 },
         );
     }
 
@@ -106,7 +100,7 @@ export async function POST(request: NextRequest) {
     console.error("Upload error:", error);
     return NextResponse.json(
       { error: error.message || "Upload failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

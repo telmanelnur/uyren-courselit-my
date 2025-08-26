@@ -25,11 +25,11 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
       typographyStyles?.textOverflow,
       // Error state
       error && "text-red-500",
-      className
+      className,
     );
 
     return <ShadcnLabel ref={ref} className={classes} {...props} />;
-  }
+  },
 );
 
 Label.displayName = "Label";

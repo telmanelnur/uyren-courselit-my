@@ -10,7 +10,6 @@ import {
   PaginationLink,
   PaginationEllipsis,
 } from "@workspace/ui/components/pagination";
-import { ThemeStyle } from "@workspace/page-models";
 
 interface CoursePaginationProps {
   currentPage: number;
@@ -20,7 +19,6 @@ interface CoursePaginationProps {
   showInfo?: boolean;
   totalItems?: number;
   itemsPerPage?: number;
-  theme: ThemeStyle;
 }
 
 export function CoursePagination({
@@ -31,13 +29,12 @@ export function CoursePagination({
   showInfo = true,
   totalItems,
   itemsPerPage,
-  theme,
 }: CoursePaginationProps) {
   // Generate page numbers to show
   const getPageNumbers = () => {
     const delta = 2; // Pages to show around current page
     const pages: (number | string)[] = [];
-    
+
     if (totalPages <= 7) {
       // Show all pages if total is small
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -54,7 +51,7 @@ export function CoursePagination({
     // Add pages around current page
     const start = Math.max(2, currentPage - delta);
     const end = Math.min(totalPages - 1, currentPage + delta);
-    
+
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
@@ -90,11 +87,12 @@ export function CoursePagination({
       {showInfo && (
         <div className="text-sm text-gray-600">
           {itemRange ? (
-            <Text2 theme={theme}>
-              Showing {itemRange.start} to {itemRange.end} of {totalItems} courses
+            <Text2>
+              Showing {itemRange.start} to {itemRange.end} of {totalItems}{" "}
+              courses
             </Text2>
           ) : (
-            <Text2 theme={theme}>
+            <Text2>
               Page {currentPage} of {totalPages}
             </Text2>
           )}

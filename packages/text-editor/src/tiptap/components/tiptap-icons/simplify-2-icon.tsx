@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const Simplify2Icon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -17,8 +17,8 @@ export const Simplify2Icon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-Simplify2Icon.displayName = "Simplify2Icon"
+Simplify2Icon.displayName = "Simplify2Icon";

@@ -13,7 +13,13 @@ import {
 } from "@/lib/ui/lib/utils";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
-import { CommunityMedia, CommunityPost, Constants, Media, TextEditorContent } from "@workspace/common-models";
+import {
+  CommunityMedia,
+  CommunityPost,
+  Constants,
+  Media,
+  TextEditorContent,
+} from "@workspace/common-models";
 import { PaginatedTable, useToast } from "@workspace/components-library";
 import {
   Avatar,
@@ -125,7 +131,7 @@ export function CommunityForum({
     {
       enabled:
         !!community && membership?.status === Constants.MembershipStatus.ACTIVE,
-    }
+    },
   );
   useEffect(() => {
     if (loadPostListQuery.data) {
@@ -133,7 +139,7 @@ export function CommunityForum({
         loadPostListQuery.data.items.map((item) => ({
           ...item,
           updatedAt: new Date(item.updatedAt),
-        }))
+        })),
       );
       setTotalPosts(loadPostListQuery.data.total!);
     }
@@ -163,7 +169,7 @@ export function CommunityForum({
 
   const handleCategoryClick = (category: string) => {
     router.push(
-      `/dashboard/community${id ? `/${id}` : ""}?category=${category}`
+      `/dashboard/community${id ? `/${id}` : ""}?category=${category}`,
     );
   };
 
@@ -191,14 +197,14 @@ export function CommunityForum({
       prevPosts.map((post) =>
         post.postId === postId
           ? {
-            ...post,
-            likesCount: post.hasLiked
-              ? post.likesCount - 1
-              : post.likesCount + 1,
-            hasLiked: !post.hasLiked,
-          }
-          : post
-      )
+              ...post,
+              likesCount: post.hasLiked
+                ? post.likesCount - 1
+                : post.likesCount + 1,
+              hasLiked: !post.hasLiked,
+            }
+          : post,
+      ),
     );
     toggleLikeMutation.mutate({ postId, communityId: id! });
   };
@@ -207,8 +213,8 @@ export function CommunityForum({
     e?.stopPropagation();
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
-        post.postId === postId ? { ...post, pinned: !post.pinned } : post
-      )
+        post.postId === postId ? { ...post, pinned: !post.pinned } : post,
+      ),
     );
     togglePinMutation.mutate({ postId, communityId: id! });
   };
@@ -228,19 +234,19 @@ export function CommunityForum({
 
   const likeComment = (
     comments: CommentType[],
-    commentId: number
+    commentId: number,
   ): CommentType[] => {
     return comments.map((comment) =>
       comment.id === commentId
         ? {
-          ...comment,
-          likes: comment.hasLiked ? comment.likes - 1 : comment.likes + 1,
-          hasLiked: !comment.hasLiked,
-        }
+            ...comment,
+            likes: comment.hasLiked ? comment.likes - 1 : comment.likes + 1,
+            hasLiked: !comment.hasLiked,
+          }
         : {
-          ...comment,
-          replies: likeComment(comment.replies, commentId),
-        }
+            ...comment,
+            replies: likeComment(comment.replies, commentId),
+          },
     );
   };
 
@@ -268,34 +274,34 @@ export function CommunityForum({
   const addReplyToComment = (
     comments: CommentType[],
     parentCommentId: number,
-    content: string
+    content: string,
   ): CommentType[] => {
     return comments.map((comment) =>
       comment.id === parentCommentId
         ? {
-          ...comment,
-          replies: [
-            ...comment.replies,
-            {
-              id: Date.now(),
-              author: "Current User",
-              avatar: "/placeholder.svg",
-              content,
-              likes: 0,
-              hasLiked: false,
-              time: "Just now",
-              replies: [],
-            },
-          ],
-        }
+            ...comment,
+            replies: [
+              ...comment.replies,
+              {
+                id: Date.now(),
+                author: "Current User",
+                avatar: "/placeholder.svg",
+                content,
+                likes: 0,
+                hasLiked: false,
+                time: "Just now",
+                replies: [],
+              },
+            ],
+          }
         : {
-          ...comment,
-          replies: addReplyToComment(
-            comment.replies,
-            parentCommentId,
-            content
-          ),
-        }
+            ...comment,
+            replies: addReplyToComment(
+              comment.replies,
+              parentCommentId,
+              content,
+            ),
+          },
     );
   };
 
@@ -332,8 +338,6 @@ export function CommunityForum({
   //     }
   //   };
 
-
-
   const createPostMutation = trpc.communityModule.post.create.useMutation({
     onSuccess: () => {
       loadPostListQuery.refetch();
@@ -352,7 +356,7 @@ export function CommunityForum({
   });
 
   const createPost = async (
-    newPost: Pick<CommunityPost, "title" | "content" | "category">
+    newPost: Pick<CommunityPost, "title" | "content" | "category">,
   ) => {
     await createPostMutation.mutateAsync({
       data: {
@@ -376,7 +380,7 @@ export function CommunityForum({
 
   const uploadToServer = async (
     presignedUrl: string,
-    file: File
+    file: File,
   ): Promise<Media> => {
     const fD = new FormData();
     fD.append("caption", file.name);
@@ -403,7 +407,7 @@ export function CommunityForum({
     media: CommunityMedia,
     options?: {
       renderActualFile?: boolean;
-    }
+    },
   ) => {
     if (!media) return null;
 
@@ -519,7 +523,7 @@ export function CommunityForum({
   const deletePostMutation = trpc.communityModule.post.delete.useMutation({
     onSuccess: () => {
       setPosts((prevPosts) =>
-        prevPosts.filter((post) => post.postId !== postToDelete!.postId)
+        prevPosts.filter((post) => post.postId !== postToDelete!.postId),
       );
       setShowDeleteConfirmation(false);
       setPostToDelete(null);
@@ -637,7 +641,7 @@ export function CommunityForum({
           variant: "destructive",
         });
       },
-    }
+    },
   );
   const leaveCommunityMutation =
     trpc.communityModule.community.leave.useMutation({
@@ -699,11 +703,11 @@ export function CommunityForum({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {profile?.name &&
-            membership?.status.toLowerCase() ===
+          membership?.status.toLowerCase() ===
             Constants.MembershipStatus.ACTIVE ? (
             hasCommunityPermission(
               membership,
-              Constants.MembershipRole.POST
+              Constants.MembershipRole.POST,
             ) ? (
               <CreatePostDialog
                 categories={categories.filter((x) => x !== "All")}
@@ -718,7 +722,7 @@ export function CommunityForum({
               key={refreshCommunityStatus}
               paymentPlan={
                 community?.paymentPlans.find(
-                  (plan) => plan.planId === community?.defaultPaymentPlan
+                  (plan) => plan.planId === community?.defaultPaymentPlan,
                 )!
               }
             />
@@ -750,9 +754,9 @@ export function CommunityForum({
             canEdit={
               membership
                 ? hasCommunityPermission(
-                  membership,
-                  Constants.MembershipRole.MODERATE
-                )
+                    membership,
+                    Constants.MembershipRole.MODERATE,
+                  )
                 : false
             }
             initialBannerText={community?.banner}
@@ -803,7 +807,7 @@ export function CommunityForum({
                           {membership &&
                             hasCommunityPermission(
                               membership,
-                              Constants.MembershipRole.MODERATE
+                              Constants.MembershipRole.MODERATE,
                             ) && (
                               <Button
                                 variant="ghost"
@@ -910,7 +914,7 @@ export function CommunityForum({
                               {membership &&
                                 hasCommunityPermission(
                                   membership,
-                                  Constants.MembershipRole.MODERATE
+                                  Constants.MembershipRole.MODERATE,
                                 ) && (
                                   <DropdownMenuItem
                                     onClick={() => togglePin(post.postId)}
@@ -931,17 +935,17 @@ export function CommunityForum({
                               {((membership &&
                                 hasCommunityPermission(
                                   membership,
-                                  Constants.MembershipRole.MODERATE
+                                  Constants.MembershipRole.MODERATE,
                                 )) ||
                                 (profile &&
                                   post.user?.userId === profile?.userId)) && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleDeletePost(post)}
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                )}
+                                <DropdownMenuItem
+                                  onClick={() => handleDeletePost(post)}
+                                >
+                                  <Trash className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -1019,11 +1023,11 @@ export function CommunityForum({
                               prevPosts.map((p) =>
                                 p.postId === postId
                                   ? {
-                                    ...p,
-                                    commentsCount: count,
-                                  }
-                                  : p
-                              )
+                                      ...p,
+                                      commentsCount: count,
+                                    }
+                                  : p,
+                              ),
                             );
                           }}
                         />
@@ -1105,7 +1109,7 @@ export function CommunityForum({
               membership={membership}
               paymentPlan={
                 community?.paymentPlans.find(
-                  (plan) => plan.planId === community?.defaultPaymentPlan
+                  (plan) => plan.planId === community?.defaultPaymentPlan,
                 )!
               }
               joiningReasonText={community?.joiningReasonText}

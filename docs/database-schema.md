@@ -1,17 +1,21 @@
 # Database Schema Documentation
 
 ## Overview
+
 This document describes the MongoDB database schema used in the Uyren CourseLit application. The application uses Mongoose ODM with a multi-tenant architecture where each domain has its own data isolation.
 
 ## Core Architecture
 
 ### Multi-Tenancy
+
 - **Domain-based isolation**: All collections include a `domain` field (ObjectId) for data separation
 - **User isolation**: Users are scoped to specific domains
 - **Cross-domain operations**: Limited to system-level operations
 
 ### Common Fields
+
 Most models include these standard fields:
+
 - `_id`: MongoDB ObjectId (primary key)
 - `domain`: ObjectId reference to Domain collection
 - `createdAt`: Timestamp of creation
@@ -26,6 +30,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-logic/src/models/user/index.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -52,10 +57,12 @@ Most models include these standard fields:
 ```
 
 **Indexes**:
+
 - `{ domain: 1, email: 1 }` (unique)
 - `{ email: "text", name: "text" }` (text search)
 
 **Virtual Fields**:
+
 - `purchases`: Array of Progress documents
 
 ### 2. LMS Collections
@@ -67,6 +74,7 @@ Most models include these standard fields:
 **Schema**: `apps/web/src/models/lms/Quiz.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -87,10 +95,12 @@ Most models include these standard fields:
 ```
 
 **Indexes**:
+
 - `{ ownerId: 1, status: 1 }`
 - `{ courseId: 1, status: 1 }`
 
 **Virtual Fields**:
+
 - `owner`: Reference to User collection
 - `course`: Reference to Course collection
 
@@ -101,6 +111,7 @@ Most models include these standard fields:
 **Schema**: `apps/web/src/models/lms/Theme.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -115,6 +126,7 @@ Most models include these standard fields:
 ```
 
 **ThemeAsset Schema**:
+
 ```typescript
 {
   assetType: String, // Enum: ["stylesheet", "font", "script", "image"]
@@ -134,10 +146,12 @@ Most models include these standard fields:
 ```
 
 **Indexes**:
+
 - `{ ownerId: 1, status: 1 }`
 - `{ domain: 1, status: 1 }`
 
 **Virtual Fields**:
+
 - `owner`: Reference to User collection
 
 #### 2.3 Assignments Collection
@@ -147,6 +161,7 @@ Most models include these standard fields:
 **Schema**: `apps/web/src/models/lms/Assignment.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -173,6 +188,7 @@ Most models include these standard fields:
 **Schema**: `apps/web/src/models/lms/Question.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -196,6 +212,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/community.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -218,6 +235,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/community-post.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -244,6 +262,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/course.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -270,6 +289,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/lesson.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -295,6 +315,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/payment-plan.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -317,6 +338,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/membership.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -341,6 +363,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/notification.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -366,6 +389,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/email-template.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -388,6 +412,7 @@ Most models include these standard fields:
 **Schema**: `packages/common-models/src/media.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -414,6 +439,7 @@ Most models include these standard fields:
 **Schema**: `apps/web/src/models/Activity.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -436,6 +462,7 @@ Most models include these standard fields:
 **Schema**: `apps/web/src/models/ApiKey.ts`
 
 **Key Fields**:
+
 ```typescript
 {
   _id: ObjectId,
@@ -453,6 +480,7 @@ Most models include these standard fields:
 ## Data Relationships
 
 ### One-to-Many Relationships
+
 - **Domain → Users**: One domain can have many users
 - **Domain → Courses**: One domain can have many courses
 - **Domain → Communities**: One domain can have many communities
@@ -463,12 +491,15 @@ Most models include these standard fields:
 - **User → Memberships**: One user can have many memberships
 
 ### Many-to-Many Relationships
+
 - **Users ↔ Communities**: Through memberships
 - **Users ↔ Courses**: Through enrollments/progress
 - **Users ↔ Posts**: Through likes, comments
 
 ### Virtual Populations
+
 Mongoose virtual fields are used for:
+
 - **Owner references**: Linking documents to their creators
 - **Related data**: Fetching associated information without storing references
 - **Computed fields**: Dynamic data based on relationships
@@ -476,16 +507,19 @@ Mongoose virtual fields are used for:
 ## Indexing Strategy
 
 ### Primary Indexes
+
 - `_id`: Default MongoDB primary key
 - `domain`: Multi-tenancy isolation
 
 ### Performance Indexes
+
 - **User queries**: `{ domain: 1, email: 1 }`, `{ domain: 1, userId: 1 }`
 - **Content queries**: `{ domain: 1, status: 1 }`, `{ domain: 1, ownerId: 1 }`
 - **Search indexes**: Text indexes on searchable fields
 - **Compound indexes**: For complex query patterns
 
 ### Unique Constraints
+
 - **User emails**: `{ domain: 1, email: 1 }` (unique per domain)
 - **Course IDs**: `{ domain: 1, courseId: 1 }` (unique per domain)
 - **API Keys**: `{ key: 1 }` (globally unique)
@@ -493,12 +527,14 @@ Mongoose virtual fields are used for:
 ## Data Validation
 
 ### Schema Validation
+
 - **Required fields**: Enforced at Mongoose schema level
 - **Field types**: Strict typing with Mongoose
 - **Field constraints**: Min/max values, string lengths, enums
 - **Custom validators**: Business logic validation
 
 ### Business Rules
+
 - **Status transitions**: Controlled state changes
 - **Permission checks**: User access control
 - **Data integrity**: Referential integrity through ObjectIds
@@ -507,16 +543,19 @@ Mongoose virtual fields are used for:
 ## Security Considerations
 
 ### Data Isolation
+
 - **Domain separation**: Complete data isolation between tenants
 - **User scoping**: All queries filtered by domain
 - **Permission-based access**: Role-based data access control
 
 ### Input Validation
+
 - **Schema validation**: Mongoose schema validation
 - **TRPC validation**: Zod schema validation at API level
 - **Sanitization**: Input sanitization and escaping
 
 ### Access Control
+
 - **JWT authentication**: Secure token-based authentication
 - **Permission middleware**: TRPC permission checking
 - **Domain verification**: Domain ownership verification

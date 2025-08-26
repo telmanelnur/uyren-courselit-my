@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const MoreVerticalIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -31,8 +31,8 @@ export const MoreVerticalIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-MoreVerticalIcon.displayName = "MoreVerticalIcon"
+MoreVerticalIcon.displayName = "MoreVerticalIcon";

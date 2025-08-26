@@ -5,16 +5,18 @@ import UserModel from "@/models/User";
 import { Constants } from "@workspace/common-models";
 import { NotFoundException } from "../../core/exceptions";
 import { assertDomainExist } from "../../core/permissions";
-import { createDomainRequiredMiddleware, protectedProcedure } from "../../core/procedures";
+import {
+  createDomainRequiredMiddleware,
+  protectedProcedure,
+} from "../../core/procedures";
 import { router } from "../../core/trpc";
 
 const { MembershipStatus, MembershipEntityType } = Constants;
 
 export const userContentRouter = router({
   getProtectedUserContent: protectedProcedure
-    .use(
-      createDomainRequiredMiddleware()
-    ).query(async ({ ctx }) => {
+    .use(createDomainRequiredMiddleware())
+    .query(async ({ ctx }) => {
       const domainObj = await assertDomainExist(ctx);
       const user = await UserModel.findOne({
         userId: ctx.user.userId,
@@ -51,7 +53,7 @@ export const userContentRouter = router({
                 totalLessons: course.lessons?.length || 0,
                 completedLessonsCount:
                   user.purchases?.find(
-                    (progress: any) => progress.courseId === course.courseId
+                    (progress: any) => progress.courseId === course.courseId,
                   )?.completedLessons?.length || 0,
                 featuredImage: course.featuredImage,
               },
@@ -79,8 +81,6 @@ export const userContentRouter = router({
         }
       }
 
-
       return content;
-
     }),
 });

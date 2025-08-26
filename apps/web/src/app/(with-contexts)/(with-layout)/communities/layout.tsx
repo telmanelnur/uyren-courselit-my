@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 
 export async function generateMetadata(
   { params }: { params: any },
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
   return {
     title: `${MANAGE_COMMUNITIES_PAGE_HEADING} | ${(await parent)?.title?.absolute}`,

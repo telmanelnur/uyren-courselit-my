@@ -8,58 +8,52 @@ import { authOptions } from "@/lib/auth/options";
 import { Log } from "@/lib/logger";
 
 interface RequestPayload {
-    id: string;
+  id: string;
 }
 
 export async function POST(req: NextRequest) {
-    const body: RequestPayload = await req.json();
+  const body: RequestPayload = await req.json();
 
-    try {
-        const domainData = await getDomainData();
-        if (!domainData.domainObj) {
-            return Response.json(
-                { message: "Domain not found" },
-                { status: 404 },
-            );
-        }
-
-        const session = await getServerSession(authOptions);
-        const user = await getUser(session, domainData.domainObj._id);
-
-        if (!user) {
-            return Response.json({}, { status: 401 });
-        }
-
-        const { id } = body;
-
-        if (!id) {
-            return Response.json({ message: "Bad request" }, { status: 400 });
-        }
-
-        const invoice = await InvoiceModel.findOne({ invoiceId: id });
-
-        if (!invoice) {
-            return Response.json(
-                { message: "Item not found" },
-                { status: 404 },
-            );
-        }
-
-        const membership = await MembershipModel.findOne({
-            membershipId: invoice.membershipId,
-        });
-
-        if (!membership || membership.userId !== user.userId) {
-            return Response.json({}, { status: 401 });
-        }
-
-        return Response.json({ status: invoice.status });
-    } catch (err: any) {
-        Log.error(`Error verifying invoice: ${err.message}`, {
-            // domain: domainName,
-            body,
-            stack: err.stack,
-        });
-        return Response.json({ message: err.message }, { status: 500 });
+  try {
+    const domainData = await getDomainData();
+    if (!domainData.domainObj) {
+      return Response.json({ message: "Domain not found" }, { status: 404 });
     }
+
+    const session = await getServerSession(authOptions);
+    const user = await getUser(session, domainData.domainObj._id);
+
+    if (!user) {
+      return Response.json({}, { status: 401 });
+    }
+
+    const { id } = body;
+
+    if (!id) {
+      return Response.json({ message: "Bad request" }, { status: 400 });
+    }
+
+    const invoice = await InvoiceModel.findOne({ invoiceId: id });
+
+    if (!invoice) {
+      return Response.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    const membership = await MembershipModel.findOne({
+      membershipId: invoice.membershipId,
+    });
+
+    if (!membership || membership.userId !== user.userId) {
+      return Response.json({}, { status: 401 });
+    }
+
+    return Response.json({ status: invoice.status });
+  } catch (err: any) {
+    Log.error(`Error verifying invoice: ${err.message}`, {
+      // domain: domainName,
+      body,
+      stack: err.stack,
+    });
+    return Response.json({ message: err.message }, { status: 500 });
+  }
 }

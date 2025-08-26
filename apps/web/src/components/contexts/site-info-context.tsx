@@ -7,7 +7,7 @@ import {
   PropsWithChildren,
   SetStateAction,
   useContext,
-  useState
+  useState,
 } from "react";
 import { defaultState } from "./default-state";
 
@@ -28,7 +28,7 @@ export const SiteInfoProvider = ({
   initialSiteInfo,
 }: PropsWithChildren<{ initialSiteInfo?: SiteInfo }>) => {
   const [siteInfo, setSiteInfo] = useState<SiteInfo>(
-    initialSiteInfo || defaultState.siteinfo
+    initialSiteInfo || defaultState.siteinfo,
   );
 
   // useEffect(() => {

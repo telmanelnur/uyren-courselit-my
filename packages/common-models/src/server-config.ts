@@ -1,4 +1,4 @@
 export interface ServerConfig {
-    turnstileSiteKey: string;
-    queueServer: string;
+  turnstileSiteKey: string;
+  queueServer: string;
 }

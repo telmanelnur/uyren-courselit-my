@@ -36,7 +36,7 @@ const CommunitySchema = new mongoose.Schema<InternalCommunity>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 CommunitySchema.index({ domain: 1, name: 1 }, { unique: true });

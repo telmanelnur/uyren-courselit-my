@@ -22,44 +22,46 @@ import {
 } from "lucide-react";
 import { useToolbar } from "./toolbar-provider";
 import { cn } from "@workspace/ui/lib/utils";
-import { MediaBrowserNiceDialog, NiceModal } from "@workspace/components-library";
+import {
+  MediaBrowserNiceDialog,
+  NiceModal,
+} from "@workspace/components-library";
 import { TextEditorContent } from "@workspace/common-models";
 
 type AssetType = TextEditorContent["assets"][number];
 
-export function MediaDropdownToolbar({ 
-  className
-}: {
-  className?: string;
-}) {
+export function MediaDropdownToolbar({ className }: { className?: string }) {
   const { editor } = useToolbar();
   const [isOpen, setIsOpen] = useState(false);
 
-  const openMediaDialog = useCallback(async (fileType: string) => {
-    try {
-      const result = await NiceModal.show(MediaBrowserNiceDialog, {
-        selectMode: true,
-        selectedMedia: null,
-        initialFileType: fileType,
-      });
-      
-      if (result.reason === "submit" && editor) {
-        const asset: AssetType = {
-          url: result.data.url,
-          caption: result.data.caption || result.data.originalFileName || "",
-          media: result.data
-        };
-        editor.chain().focus().setMediaView(asset).run();
+  const openMediaDialog = useCallback(
+    async (fileType: string) => {
+      try {
+        const result = await NiceModal.show(MediaBrowserNiceDialog, {
+          selectMode: true,
+          selectedMedia: null,
+          initialFileType: fileType,
+        });
+
+        if (result.reason === "submit" && editor) {
+          const asset: AssetType = {
+            url: result.data.url,
+            caption: result.data.caption || result.data.originalFileName || "",
+            media: result.data,
+          };
+          editor.chain().focus().setMediaView(asset).run();
+        }
+
+        setIsOpen(false);
+        return result;
+      } catch (error) {
+        console.error("Failed to open media dialog:", error);
+        setIsOpen(false);
+        return null;
       }
-      
-      setIsOpen(false);
-      return result;
-    } catch (error) {
-      console.error("Failed to open media dialog:", error);
-      setIsOpen(false);
-      return null;
-    }
-  }, [editor]);
+    },
+    [editor],
+  );
 
   const generateUniqueId = () => {
     return Math.random().toString(36).substr(2, 9);
@@ -78,7 +80,7 @@ export function MediaDropdownToolbar({
               className={cn(
                 "h-8 w-8 p-0 sm:h-9 sm:w-9",
                 editor?.isActive("mediaView") && "bg-accent",
-                className
+                className,
               )}
             >
               <Plus className="h-4 w-4" />

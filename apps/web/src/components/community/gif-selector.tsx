@@ -36,7 +36,7 @@ export function GifSelector({ onGifSelect }: GifSelectorProps) {
 
   const debouncedFetchGifs = useCallback(
     debounce((searchTerm: string) => fetchGifs(searchTerm), 300),
-    []
+    [],
   );
 
   useEffect(() => {

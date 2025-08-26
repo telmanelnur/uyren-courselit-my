@@ -1,59 +1,59 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { type Editor } from "@tiptap/react"
-import type { Node } from "@tiptap/pm/model"
-import { NodeSelection } from "@tiptap/pm/state"
+import * as React from "react";
+import { type Editor } from "@tiptap/react";
+import type { Node } from "@tiptap/pm/model";
+import { NodeSelection } from "@tiptap/pm/state";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
-import { useHotkeys } from "react-hotkeys-hook"
-import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
+import { useHotkeys } from "react-hotkeys-hook";
+import { useIsMobile } from "@workspace/text-editor/tiptap/hooks/use-mobile";
 
 // --- Lib ---
-import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
+import { parseShortcutKeys } from "@workspace/text-editor/tiptap/lib/tiptap-utils";
 
 // --- Icons ---
-import { LinkIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/link-icon"
+import { LinkIcon } from "@workspace/text-editor/tiptap/components/tiptap-icons/link-icon";
 
 // --- UI Primitives ---
-import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
-import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge"
+import type { ButtonProps } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Button } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
+import { Badge } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/badge";
 
 export interface CopyAnchorLinkButtonProps extends Omit<ButtonProps, "type"> {
   /**
    * The Tiptap editor instance.
    */
-  editor?: Editor | null
+  editor?: Editor | null;
   /**
    * Optional text to display alongside the icon.
    */
-  text?: string
+  text?: string;
   /**
    * Whether the button should hide when no links are available.
    * @default false
    */
-  hideWhenUnavailable?: boolean
+  hideWhenUnavailable?: boolean;
   /**
    * Called when the copy operation finishes.
    * Provides a boolean indicating whether any links were found.
    */
-  onLinkNotFound?: (found: boolean) => void
+  onLinkNotFound?: (found: boolean) => void;
   /**
    * Called after links are extracted from the node.
    * Provides all extracted links, even if none were found (empty array).
    */
-  onExtractedLinks?: (links: string[]) => void
+  onExtractedLinks?: (links: string[]) => void;
   /**
    * Callback function called after a successful copy operation.
    */
-  onCopied?: () => void
+  onCopied?: () => void;
   /**
    * Optional show shortcut keys in the button.
    * @default false
    */
-  showShortcut?: boolean
+  showShortcut?: boolean;
 }
 
 /**
@@ -63,60 +63,60 @@ export interface UseCopyAnchorLinkConfig {
   /**
    * The Tiptap editor instance.
    */
-  editor?: Editor | null
+  editor?: Editor | null;
   /**
    * Whether the button should hide when no links are available.
    * @default false
    */
-  hideWhenUnavailable?: boolean
+  hideWhenUnavailable?: boolean;
   /**
    * Called when the copy operation finishes.
    * Provides a boolean indicating whether any links were found.
    */
-  onLinkNotFound?: (found: boolean) => void
+  onLinkNotFound?: (found: boolean) => void;
   /**
    * Called after links are extracted from the node.
    * Provides all extracted links, even if none were found (empty array).
    */
-  onExtractedLinks?: (links: string[]) => void
+  onExtractedLinks?: (links: string[]) => void;
   /**
    * Callback function called after a successful copy operation.
    */
-  onCopied?: () => void
+  onCopied?: () => void;
 }
 
 /**
  * Extracts links from a node
  */
 export function extractLinksFromNode(node: Node | null): string[] {
-  if (!node) return []
+  if (!node) return [];
 
-  const links: string[] = []
+  const links: string[] = [];
 
   try {
     if (node.type.name === "link" && node.attrs?.href) {
-      links.push(node.attrs.href)
+      links.push(node.attrs.href);
     }
 
     node.descendants?.((child) => {
       if (child.type.name === "link" && child.attrs?.href) {
-        links.push(child.attrs.href)
+        links.push(child.attrs.href);
       }
 
       if (child.marks) {
         child.marks.forEach((mark) => {
           if (mark.type.name === "link" && mark.attrs?.href) {
-            links.push(mark.attrs.href)
+            links.push(mark.attrs.href);
           }
-        })
+        });
       }
 
-      return true
-    })
+      return true;
+    });
 
-    return [...new Set(links)]
+    return [...new Set(links)];
   } catch {
-    return []
+    return [];
   }
 }
 
@@ -124,16 +124,16 @@ export function extractLinksFromNode(node: Node | null): string[] {
  * Checks if a node contains any links that can be copied
  */
 export function canCopyAnchorLink(editor: Editor | null): boolean {
-  if (!editor || !editor.isEditable) return false
+  if (!editor || !editor.isEditable) return false;
 
-  const { selection } = editor.state
+  const { selection } = editor.state;
   const node =
     selection instanceof NodeSelection
       ? selection.node
-      : selection.$anchor.node(1)
+      : selection.$anchor.node(1);
 
-  const links = extractLinksFromNode(node)
-  return links.length > 0
+  const links = extractLinksFromNode(node);
+  return links.length > 0;
 }
 
 /**
@@ -142,29 +142,29 @@ export function canCopyAnchorLink(editor: Editor | null): boolean {
 export async function copyAnchorLink(
   editor: Editor | null,
   onExtractedLinks?: (links: string[]) => void,
-  onLinkNotFound?: (notFound: boolean) => void
+  onLinkNotFound?: (notFound: boolean) => void,
 ): Promise<boolean> {
-  if (!editor || !editor.isEditable) return false
+  if (!editor || !editor.isEditable) return false;
 
-  const { selection } = editor.state
+  const { selection } = editor.state;
   const node =
     selection instanceof NodeSelection
       ? selection.node
-      : selection.$anchor.node(1)
+      : selection.$anchor.node(1);
 
-  const links = extractLinksFromNode(node)
-  const hasLinks = links.length > 0
+  const links = extractLinksFromNode(node);
+  const hasLinks = links.length > 0;
 
-  onExtractedLinks?.(links)
-  onLinkNotFound?.(!hasLinks)
+  onExtractedLinks?.(links);
+  onLinkNotFound?.(!hasLinks);
 
-  if (!hasLinks) return false
+  if (!hasLinks) return false;
 
   try {
-    await navigator.clipboard.writeText(links.join("\n"))
-    return true
+    await navigator.clipboard.writeText(links.join("\n"));
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -172,18 +172,18 @@ export async function copyAnchorLink(
  * Determines if the copy anchor link button should be shown
  */
 export function shouldShowButton(props: {
-  editor: Editor | null
-  hideWhenUnavailable: boolean
+  editor: Editor | null;
+  hideWhenUnavailable: boolean;
 }): boolean {
-  const { editor, hideWhenUnavailable } = props
+  const { editor, hideWhenUnavailable } = props;
 
-  if (!editor || !editor.isEditable) return false
+  if (!editor || !editor.isEditable) return false;
 
   if (hideWhenUnavailable && !editor.isActive("code")) {
-    return canCopyAnchorLink(editor)
+    return canCopyAnchorLink(editor);
   }
 
-  return true
+  return true;
 }
 
 /**
@@ -228,57 +228,57 @@ export function useCopyAnchorLink(config?: UseCopyAnchorLinkConfig) {
     onLinkNotFound,
     onExtractedLinks,
     onCopied,
-  } = config || {}
+  } = config || {};
 
-  const { editor } = useTiptapEditor(providedEditor)
-  const isMobile = useIsMobile()
-  const [isVisible, setIsVisible] = React.useState<boolean>(true)
-  const canCopyAnchorLinkState = canCopyAnchorLink(editor)
+  const { editor } = useTiptapEditor(providedEditor);
+  const isMobile = useIsMobile();
+  const [isVisible, setIsVisible] = React.useState<boolean>(true);
+  const canCopyAnchorLinkState = canCopyAnchorLink(editor);
 
   React.useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
 
     const handleSelectionUpdate = () => {
-      setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }))
-    }
+      setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }));
+    };
 
-    handleSelectionUpdate()
+    handleSelectionUpdate();
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("selectionUpdate", handleSelectionUpdate);
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
-    }
-  }, [editor, hideWhenUnavailable])
+      editor.off("selectionUpdate", handleSelectionUpdate);
+    };
+  }, [editor, hideWhenUnavailable]);
 
   const handleCopyAnchorLink = React.useCallback(async () => {
-    if (!editor) return false
+    if (!editor) return false;
 
     const success = await copyAnchorLink(
       editor,
       onExtractedLinks,
-      onLinkNotFound
-    )
+      onLinkNotFound,
+    );
 
     if (success) {
-      onCopied?.()
+      onCopied?.();
     }
 
-    return success
-  }, [editor, onExtractedLinks, onLinkNotFound, onCopied])
+    return success;
+  }, [editor, onExtractedLinks, onLinkNotFound, onCopied]);
 
   useHotkeys(
     "mod+shift+c",
     (event: KeyboardEvent) => {
-      event.preventDefault()
-      handleCopyAnchorLink()
+      event.preventDefault();
+      handleCopyAnchorLink();
     },
     {
       enabled: isVisible && canCopyAnchorLinkState,
       enableOnContentEditable: !isMobile,
       enableOnFormTags: true,
-    }
-  )
+    },
+  );
 
   return {
     isVisible,
@@ -286,15 +286,15 @@ export function useCopyAnchorLink(config?: UseCopyAnchorLinkConfig) {
     handleCopyAnchorLink,
     label: "Copy anchor link",
     shortcutKeys: "Ctrl+Shift+C",
-  }
+  };
 }
 
 export function CopyAnchorLinkShortcutBadge({
   shortcutKeys,
 }: {
-  shortcutKeys?: string
+  shortcutKeys?: string;
 }) {
-  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>
+  return <Badge>{parseShortcutKeys({ shortcutKeys })}</Badge>;
 }
 
 /**
@@ -319,9 +319,9 @@ export const CopyAnchorLinkButton = React.forwardRef<
       children,
       ...buttonProps
     },
-    ref
+    ref,
   ) => {
-    const { editor } = useTiptapEditor(providedEditor)
+    const { editor } = useTiptapEditor(providedEditor);
     const { isVisible, handleCopyAnchorLink, label, shortcutKeys } =
       useCopyAnchorLink({
         editor,
@@ -329,19 +329,19 @@ export const CopyAnchorLinkButton = React.forwardRef<
         onLinkNotFound,
         onExtractedLinks,
         onCopied,
-      })
+      });
 
     const handleClick = React.useCallback(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event)
-        if (event.defaultPrevented) return
-        await handleCopyAnchorLink()
+        onClick?.(event);
+        if (event.defaultPrevented) return;
+        await handleCopyAnchorLink();
       },
-      [handleCopyAnchorLink, onClick]
-    )
+      [handleCopyAnchorLink, onClick],
+    );
 
     if (!isVisible) {
-      return null
+      return null;
     }
 
     return (
@@ -366,8 +366,8 @@ export const CopyAnchorLinkButton = React.forwardRef<
           </>
         )}
       </Button>
-    )
-  }
-)
+    );
+  },
+);
 
-CopyAnchorLinkButton.displayName = "CopyAnchorLinkButton"
+CopyAnchorLinkButton.displayName = "CopyAnchorLinkButton";

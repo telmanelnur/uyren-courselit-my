@@ -15,12 +15,12 @@ const Logout = () => {
       try {
         // NextAuth will automatically handle Firebase logout through the callback
         await signOut({ callbackUrl: "/auth/login" });
-        
+
         toast({
           title: "Signed out successfully",
           description: "You have been logged out",
         });
-        
+
         // Redirect to login page
         router.replace("/auth/login");
       } catch (error) {
@@ -30,7 +30,7 @@ const Logout = () => {
           description: "There was an issue logging out. Please try again.",
           variant: "destructive",
         });
-        
+
         // Force redirect even if there's an error
         router.replace("/auth/login");
       }

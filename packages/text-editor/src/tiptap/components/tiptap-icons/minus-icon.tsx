@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const MinusIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -19,8 +19,8 @@ export const MinusIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-MinusIcon.displayName = "MinusIcon"
+MinusIcon.displayName = "MinusIcon";

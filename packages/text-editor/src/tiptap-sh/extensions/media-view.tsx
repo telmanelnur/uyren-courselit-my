@@ -42,8 +42,8 @@ export const MediaViewExtension = Node.create<MediaViewOptions>({
           height: null,
           align: "center" as "left" | "center" | "right",
           aspectRatio: null as number | null,
-        }
-      }
+        },
+      },
     };
   },
 
@@ -131,20 +131,20 @@ export const MediaViewExtension = Node.create<MediaViewOptions>({
     return {
       setMediaView:
         (asset: AssetType) =>
-          ({ commands }) => {
-            return commands.insertContent({
-              type: "mediaView",
-              attrs: {
-                asset: asset,
-                display: {
-                  width: "100%",
-                  height: null,
-                  align: "center" as "left" | "center" | "right",
-                  aspectRatio: null as number | null,
-                }
+        ({ commands }) => {
+          return commands.insertContent({
+            type: "mediaView",
+            attrs: {
+              asset: asset,
+              display: {
+                width: "100%",
+                height: null,
+                align: "center" as "left" | "center" | "right",
+                aspectRatio: null as number | null,
               },
-            });
-          },
+            },
+          });
+        },
     };
   },
 });

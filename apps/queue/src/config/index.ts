@@ -13,7 +13,7 @@ export const config = {
     host: process.env.HOST || "localhost",
     nodeEnv: process.env.NODE_ENV || "development",
   },
-  
+
   database: {
     mongoUri: process.env.MONGODB_URI || "",
     redis: {
@@ -23,7 +23,7 @@ export const config = {
       db: Number(process.env.REDIS_DB) || 0,
     },
   },
-  
+
   notification: {
     maxRetries: Number(process.env.NOTIFICATION_MAX_RETRIES) || 3,
     defaultPriority: Number(process.env.NOTIFICATION_DEFAULT_PRIORITY) || 5,
@@ -47,10 +47,12 @@ export const config = {
       user: process.env.SMTP_USER || process.env.MAIL_USER || "",
       pass: process.env.SMTP_PASSWORD || process.env.MAIL_PASS || "",
     },
-    from: process.env.EMAIL_FROM || process.env.MAIL_FROM || `${process.env.SUPER_ADMIN_NAME || "CourseKit"} <noreply@coursekit.com>`,
+    from:
+      process.env.EMAIL_FROM ||
+      process.env.MAIL_FROM ||
+      `${process.env.SUPER_ADMIN_NAME || "CourseKit"} <noreply@coursekit.com>`,
   },
 };
-
 
 // Environment validation
 const requiredEnvVars = [
@@ -58,13 +60,15 @@ const requiredEnvVars = [
   { key: "TRANSPORT_JWT_SECRET", value: config.transport.jwt.secret },
 ];
 
-const missingVars = requiredEnvVars.filter(env => !env.value);
+const missingVars = requiredEnvVars.filter((env) => !env.value);
 
 if (missingVars.length > 0) {
   console.error("❌ Missing required environment variables:");
-  missingVars.forEach(env => {
+  missingVars.forEach((env) => {
     console.error(`   ${env.key}`);
   });
-  console.error("\n💡 Create a .env file in the project root with these variables");
+  console.error(
+    "\n💡 Create a .env file in the project root with these variables",
+  );
   process.exit(1);
 }

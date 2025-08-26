@@ -45,7 +45,7 @@ export default function PermissionFilterEditor({
         label: permissionToCaptionMap[permission]!,
         value: permission,
       })),
-    []
+    [],
   );
 
   return (

@@ -1,12 +1,12 @@
 "use client";
 
 import {
-    User as FirebaseUser,
-    getRedirectResult,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signInWithRedirect,
-    UserCredential,
+  User as FirebaseUser,
+  getRedirectResult,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  UserCredential,
 } from "firebase/auth";
 import { signIn as nextAuthSignIn } from "next-auth/react";
 import { firebaseAuth } from "./firebase";
@@ -24,7 +24,7 @@ export class AuthClientService {
     try {
       const result: UserCredential = await signInWithPopup(
         firebaseAuth,
-        this.googleProvider
+        this.googleProvider,
       );
 
       const idToken = await result.user.getIdToken();
@@ -125,14 +125,14 @@ export class AuthClientService {
   /**
    * Get current user's Firebase profile data
    */
-  static getCurrentUserProfile(): { 
-    photoURL: string | null; 
-    displayName: string | null; 
-    email: string | null; 
+  static getCurrentUserProfile(): {
+    photoURL: string | null;
+    displayName: string | null;
+    email: string | null;
   } | null {
     const user = firebaseAuth.currentUser;
     if (!user) return null;
-    
+
     return {
       photoURL: user.photoURL,
       displayName: user.displayName,

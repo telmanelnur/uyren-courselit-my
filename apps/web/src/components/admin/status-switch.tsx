@@ -41,9 +41,9 @@ export function StatusSwitch({
           variant={status === "published" ? "default" : "secondary"}
           className={cn(
             "text-xs font-medium",
-            status === "published" 
-              ? "bg-primary text-primary-foreground" 
-              : "bg-secondary text-secondary-foreground"
+            status === "published"
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-secondary-foreground",
           )}
         >
           {status === "published" ? "Published" : "Draft"}

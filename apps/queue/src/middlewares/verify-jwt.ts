@@ -32,7 +32,7 @@ class AuthenticationError extends Error {
 export const verifyJWTMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   try {
     const authHeader = req.headers.authorization;
@@ -62,7 +62,6 @@ export const verifyJWTMiddleware = (
       [key: string]: any;
     };
 
-
     if (!decoded || !decoded.user) {
       throw new AuthenticationError("Invalid token");
     }
@@ -70,7 +69,9 @@ export const verifyJWTMiddleware = (
     req.user = decoded.user;
     next();
   } catch (err) {
-    logger.error(`JWT verification failed: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(
+      `JWT verification failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
 
     if (err instanceof AuthenticationError) {
       errorHandler(err, req, res, next);
@@ -79,7 +80,7 @@ export const verifyJWTMiddleware = (
         new AuthenticationError("Authentication failed"),
         req,
         res,
-        next
+        next,
       );
     }
   }

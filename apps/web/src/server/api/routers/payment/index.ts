@@ -4,5 +4,3 @@ import { paymentPlanRouter } from "./payment-plan";
 export const paymentModuleRouter = router({
   paymentPlan: paymentPlanRouter,
 });
-
-

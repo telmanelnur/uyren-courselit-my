@@ -49,7 +49,7 @@ const PageSchema = new mongoose.Schema<Page>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 PageSchema.index(
@@ -57,7 +57,7 @@ PageSchema.index(
     domain: 1,
     pageId: 1,
   },
-  { unique: true }
+  { unique: true },
 );
 
 const PageModel = createModel("Page", PageSchema);

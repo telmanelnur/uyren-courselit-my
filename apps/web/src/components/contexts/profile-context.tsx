@@ -11,7 +11,7 @@ import {
   SetStateAction,
   useContext,
   useEffect,
-  useState
+  useState,
 } from "react";
 import { useToast } from "@workspace/components-library";
 import { defaultState } from "./default-state";
@@ -63,13 +63,16 @@ export const ProfileProvider = ({
   useEffect(() => {
     if (error) {
       // Handle authentication errors (401/403) - trigger sign-out
-      if (error.data?.code === "UNAUTHORIZED" || error.data?.code === "FORBIDDEN") {
+      if (
+        error.data?.code === "UNAUTHORIZED" ||
+        error.data?.code === "FORBIDDEN"
+      ) {
         toast({
           title: "Session expired",
           description: "Please log in again to continue",
           variant: "destructive",
         });
-        
+
         // Sign out and redirect to login
         signOut({ callbackUrl: "/auth/login" });
         return;

@@ -16,7 +16,7 @@ export default function CommunitiesPage() {
     (value: number) => {
       router.push(`/communities?page=${value}`);
     },
-    [router]
+    [router],
   );
 
   return (
@@ -25,14 +25,15 @@ export default function CommunitiesPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-4">
-              <Header1 
+              <Header1
                 theme={theme.theme}
                 className="text-[42px] font-[700] text-foreground mb-4"
               >
                 <span className="text-brand-primary">Learning</span> Communities
               </Header1>
               <p className="text-[18px] text-muted-foreground max-w-2xl">
-                Connect with fellow learners, share knowledge, and grow together in our vibrant communities.
+                Connect with fellow learners, share knowledge, and grow together
+                in our vibrant communities.
               </p>
             </div>
             <CommunitiesList

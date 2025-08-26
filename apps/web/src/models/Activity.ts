@@ -26,7 +26,7 @@ const ActivitySchema = new mongoose.Schema<Activity>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 ActivitySchema.index({ domain: 1, type: 1, createdAt: 1 });

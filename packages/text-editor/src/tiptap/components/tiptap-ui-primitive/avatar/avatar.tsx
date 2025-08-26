@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/avatar/avatar.scss"
+import * as React from "react";
+import "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/avatar/avatar.scss";
 
-type ImageLoadingStatus = "idle" | "loading" | "loaded" | "error"
-type Size = "default" | "sm" | "lg" | "xl"
+type ImageLoadingStatus = "idle" | "loading" | "loaded" | "error";
+type Size = "default" | "sm" | "lg" | "xl";
 
 interface AvatarContextValue {
-  imageLoadingStatus: ImageLoadingStatus
-  onImageLoadingStatusChange: (status: ImageLoadingStatus) => void
-  size: Size
+  imageLoadingStatus: ImageLoadingStatus;
+  onImageLoadingStatusChange: (status: ImageLoadingStatus) => void;
+  size: Size;
 }
 
 interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
-  size?: Size
-  userColor?: string
+  size?: Size;
+  userColor?: string;
 }
 
 interface AvatarImageProps
@@ -22,89 +22,89 @@ interface AvatarImageProps
     React.ImgHTMLAttributes<HTMLImageElement>,
     "onLoadingStatusChange"
   > {
-  onLoadingStatusChange?: (status: ImageLoadingStatus) => void
+  onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
 }
 
 interface AvatarFallbackProps extends React.HTMLAttributes<HTMLSpanElement> {
-  delayMs?: number
+  delayMs?: number;
 }
 
 interface AvatarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
-  maxVisible?: number
-  children: React.ReactNode
+  maxVisible?: number;
+  children: React.ReactNode;
 }
 
 const AvatarContext = React.createContext<AvatarContextValue | undefined>(
-  undefined
-)
+  undefined,
+);
 
 const useAvatarContext = () => {
-  const context = React.useContext(AvatarContext)
+  const context = React.useContext(AvatarContext);
   if (!context) {
-    throw new Error("Avatar components must be used within an Avatar.Root")
+    throw new Error("Avatar components must be used within an Avatar.Root");
   }
-  return context
-}
+  return context;
+};
 
 const useImageLoadingStatus = (
   src?: string | Blob,
-  referrerPolicy?: React.HTMLAttributeReferrerPolicy
+  referrerPolicy?: React.HTMLAttributeReferrerPolicy,
 ): ImageLoadingStatus => {
   const [loadingStatus, setLoadingStatus] =
-    React.useState<ImageLoadingStatus>("idle")
+    React.useState<ImageLoadingStatus>("idle");
 
   React.useLayoutEffect(() => {
     if (!src) {
-      setLoadingStatus("error")
-      return
+      setLoadingStatus("error");
+      return;
     }
 
-    let isMounted = true
-    const image = new window.Image()
-    let objectUrlToRevoke: string | null = null
+    let isMounted = true;
+    const image = new window.Image();
+    let objectUrlToRevoke: string | null = null;
 
     const updateStatus = (status: ImageLoadingStatus) => () => {
-      if (!isMounted) return
-      setLoadingStatus(status)
-    }
+      if (!isMounted) return;
+      setLoadingStatus(status);
+    };
 
-    setLoadingStatus("loading")
-    image.onload = updateStatus("loaded")
-    image.onerror = updateStatus("error")
+    setLoadingStatus("loading");
+    image.onload = updateStatus("loaded");
+    image.onerror = updateStatus("error");
     if (src instanceof Blob) {
-      objectUrlToRevoke = URL.createObjectURL(src)
-      image.src = objectUrlToRevoke
+      objectUrlToRevoke = URL.createObjectURL(src);
+      image.src = objectUrlToRevoke;
     } else {
-      image.src = src
+      image.src = src;
     }
-    if (referrerPolicy) image.referrerPolicy = referrerPolicy
+    if (referrerPolicy) image.referrerPolicy = referrerPolicy;
 
     return () => {
-      isMounted = false
+      isMounted = false;
       if (objectUrlToRevoke) {
-        URL.revokeObjectURL(objectUrlToRevoke)
+        URL.revokeObjectURL(objectUrlToRevoke);
       }
-    }
-  }, [src, referrerPolicy])
+    };
+  }, [src, referrerPolicy]);
 
-  return loadingStatus
-}
+  return loadingStatus;
+};
 
 export const Avatar = React.forwardRef<HTMLSpanElement, AvatarProps>(
   (
     { children, className = "", size = "default", userColor, ...props },
-    ref
+    ref,
   ) => {
     const [imageLoadingStatus, setImageLoadingStatus] =
-      React.useState<ImageLoadingStatus>("idle")
+      React.useState<ImageLoadingStatus>("idle");
 
     // Memoize the callback to prevent unnecessary re-renders
     const onImageLoadingStatusChange = React.useCallback(
       (status: ImageLoadingStatus) => {
-        setImageLoadingStatus(status)
+        setImageLoadingStatus(status);
       },
-      []
-    )
+      [],
+    );
 
     const contextValue = React.useMemo(
       () => ({
@@ -112,12 +112,12 @@ export const Avatar = React.forwardRef<HTMLSpanElement, AvatarProps>(
         onImageLoadingStatusChange,
         size,
       }),
-      [imageLoadingStatus, onImageLoadingStatusChange, size]
-    )
+      [imageLoadingStatus, onImageLoadingStatusChange, size],
+    );
 
     const style = userColor
       ? ({ "--dynamic-user-color": userColor } as React.CSSProperties)
-      : undefined
+      : undefined;
 
     return (
       <AvatarContext.Provider value={contextValue}>
@@ -131,32 +131,32 @@ export const Avatar = React.forwardRef<HTMLSpanElement, AvatarProps>(
           <span className="tiptap-avatar-item">{children}</span>
         </span>
       </AvatarContext.Provider>
-    )
-  }
-)
+    );
+  },
+);
 
-Avatar.displayName = "Avatar"
+Avatar.displayName = "Avatar";
 
 export const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
   ({ onLoadingStatusChange, src, className = "", ...props }, ref) => {
-    const { onImageLoadingStatusChange } = useAvatarContext()
+    const { onImageLoadingStatusChange } = useAvatarContext();
     const normalizedSrc: string | Blob | undefined = src as unknown as
       | string
       | Blob
-      | undefined
+      | undefined;
     const imageLoadingStatus = useImageLoadingStatus(
       normalizedSrc,
-      props.referrerPolicy
-    )
+      props.referrerPolicy,
+    );
 
     React.useLayoutEffect(() => {
       if (imageLoadingStatus !== "idle") {
-        onLoadingStatusChange?.(imageLoadingStatus)
-        onImageLoadingStatusChange(imageLoadingStatus)
+        onLoadingStatusChange?.(imageLoadingStatus);
+        onImageLoadingStatusChange(imageLoadingStatus);
       }
-    }, [imageLoadingStatus, onLoadingStatusChange, onImageLoadingStatusChange])
+    }, [imageLoadingStatus, onLoadingStatusChange, onImageLoadingStatusChange]);
 
-    if (imageLoadingStatus !== "loaded") return null
+    if (imageLoadingStatus !== "loaded") return null;
 
     return (
       <img
@@ -165,27 +165,27 @@ export const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
         src={typeof normalizedSrc === "string" ? normalizedSrc : undefined}
         className={`tiptap-avatar-image ${className}`}
       />
-    )
-  }
-)
+    );
+  },
+);
 
-AvatarImage.displayName = "AvatarImage"
+AvatarImage.displayName = "AvatarImage";
 
 export const AvatarFallback = React.forwardRef<
   HTMLSpanElement,
   AvatarFallbackProps
 >(({ delayMs, className = "", children, ...props }, ref) => {
-  const context = useAvatarContext()
-  const [canRender, setCanRender] = React.useState(delayMs === undefined)
+  const context = useAvatarContext();
+  const [canRender, setCanRender] = React.useState(delayMs === undefined);
 
   React.useEffect(() => {
     if (delayMs !== undefined) {
-      const timerId = window.setTimeout(() => setCanRender(true), delayMs)
-      return () => window.clearTimeout(timerId)
+      const timerId = window.setTimeout(() => setCanRender(true), delayMs);
+      return () => window.clearTimeout(timerId);
     }
-  }, [delayMs])
+  }, [delayMs]);
 
-  if (!canRender || context.imageLoadingStatus === "loaded") return null
+  if (!canRender || context.imageLoadingStatus === "loaded") return null;
 
   return (
     <>
@@ -198,10 +198,10 @@ export const AvatarFallback = React.forwardRef<
         {children}
       </span>
     </>
-  )
-})
+  );
+});
 
-AvatarFallback.displayName = "AvatarFallback"
+AvatarFallback.displayName = "AvatarFallback";
 
 export const AvatarGroup: React.FC<AvatarGroupProps> = ({
   maxVisible,
@@ -209,13 +209,13 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
   className = "",
   ...props
 }) => {
-  const childrenArray = React.Children.toArray(children)
+  const childrenArray = React.Children.toArray(children);
   const visibleAvatars = maxVisible
     ? childrenArray.slice(0, maxVisible)
-    : childrenArray
-  const remainingCount = childrenArray.length - visibleAvatars.length
+    : childrenArray;
+  const remainingCount = childrenArray.length - visibleAvatars.length;
 
-  let avatarProps: AvatarProps = {}
+  let avatarProps: AvatarProps = {};
 
   React.Children.forEach(children, (child) => {
     if (
@@ -224,10 +224,10 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
       typeof child.type !== "string" &&
       (child.type as { displayName?: string }).displayName === "Avatar"
     ) {
-      avatarProps = { ...avatarProps, ...(child.props as AvatarProps) }
-      return
+      avatarProps = { ...avatarProps, ...(child.props as AvatarProps) };
+      return;
     }
-  })
+  });
 
   return (
     <div
@@ -242,7 +242,7 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
         </Avatar>
       )}
     </div>
-  )
-}
+  );
+};
 
-AvatarGroup.displayName = "AvatarGroup"
+AvatarGroup.displayName = "AvatarGroup";

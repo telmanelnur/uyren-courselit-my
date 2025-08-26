@@ -1,13 +1,13 @@
 import { USER_FILTER_DROPDOWN_LABEL } from "@/lib/ui/config/strings";
 import {
-    Address,
-    UserFilter as Filter,
-    UserFilterType,
+  Address,
+  UserFilter as Filter,
+  UserFilterType,
 } from "@workspace/common-models";
 import {
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
 } from "@workspace/ui/components/dropdown-menu";
 import dynamic from "next/dynamic";
 import { useState } from "react";
@@ -32,7 +32,7 @@ export default function FilterEditor({
   const [activeCategory, setActiveCategory] = useState<Filter["name"]>();
 
   const changeFilter = (
-    value: Pick<Filter, "condition" | "value" | "valueLabel"> | undefined
+    value: Pick<Filter, "condition" | "value" | "valueLabel"> | undefined,
   ) => {
     if (value) {
       dismissPopover({

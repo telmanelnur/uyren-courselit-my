@@ -45,11 +45,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       error && "border-red-300 focus:border-red-500 focus:ring-red-500",
       // User overrides
       inputStyles?.custom,
-      className
+      className,
     );
 
     return <ShadcnInput ref={ref} className={classes} {...props} />;
-  }
+  },
 );
 
 Input.displayName = "Input";

@@ -6,13 +6,17 @@ import { z } from "zod";
 
 // Short answer specific schema
 const shortAnswerSchema = z.object({
-  correctAnswers: z.array(z.string().min(1, "Answer cannot be empty")).min(1, "Correct answer is required"),
-  settings: z.object({
-    // caseSensitive: z.boolean().optional(),
-    // partialMatch: z.boolean().optional(),
-    // minAnswerLength: z.number().min(1).optional(),
-    // maxAnswerLength: z.number().max(1000).optional(),
-  }).optional(),
+  correctAnswers: z
+    .array(z.string().min(1, "Answer cannot be empty"))
+    .min(1, "Correct answer is required"),
+  settings: z
+    .object({
+      // caseSensitive: z.boolean().optional(),
+      // partialMatch: z.boolean().optional(),
+      // minAnswerLength: z.number().min(1).optional(),
+      // maxAnswerLength: z.number().max(1000).optional(),
+    })
+    .optional(),
 });
 
 export class ShortAnswerProvider extends BaseQuestionProvider<ShortAnswerQuestion> {
@@ -24,7 +28,10 @@ export class ShortAnswerProvider extends BaseQuestionProvider<ShortAnswerQuestio
     return shortAnswerSchema;
   }
 
-  protected validateAnswerSpecific(answer: QuestionAnswer, question: ShortAnswerQuestion): string[] {
+  protected validateAnswerSpecific(
+    answer: QuestionAnswer,
+    question: ShortAnswerQuestion,
+  ): string[] {
     const errors: string[] = [];
 
     if (!Array.isArray(answer)) {
@@ -53,39 +60,58 @@ export class ShortAnswerProvider extends BaseQuestionProvider<ShortAnswerQuestio
       const maxLength = question.settings?.maxAnswerLength || 500;
 
       if (ans.length < minLength) {
-        errors.push(`Answer ${index + 1} must be at least ${minLength} characters long`);
+        errors.push(
+          `Answer ${index + 1} must be at least ${minLength} characters long`,
+        );
       }
 
       if (ans.length > maxLength) {
-        errors.push(`Answer ${index + 1} must be no more than ${maxLength} characters long`);
+        errors.push(
+          `Answer ${index + 1} must be no more than ${maxLength} characters long`,
+        );
       }
     });
 
     return errors;
   }
 
-  protected normalizeAnswer(answer: QuestionAnswer, _question: ShortAnswerQuestion) {
+  protected normalizeAnswer(
+    answer: QuestionAnswer,
+    _question: ShortAnswerQuestion,
+  ) {
     return answer;
   }
 
-  isAnswerCorrect(answer: QuestionAnswer, question: ShortAnswerQuestion): boolean {
-    if (!Array.isArray(answer) || answer.length === 0 || !question.correctAnswers) return false;
-    
+  isAnswerCorrect(
+    answer: QuestionAnswer,
+    question: ShortAnswerQuestion,
+  ): boolean {
+    if (
+      !Array.isArray(answer) ||
+      answer.length === 0 ||
+      !question.correctAnswers
+    )
+      return false;
+
     const caseSensitive = question.settings?.caseSensitive ?? false;
     const partialMatch = question.settings?.partialMatch ?? true;
 
     return answer.some((ans) => {
       const answerStr = ans.trim();
-      
+
       return question.correctAnswers!.some((correct: string) => {
         const correctStr = correct.trim();
-        
+
         if (caseSensitive) {
-          return partialMatch ? answerStr.includes(correctStr) : answerStr === correctStr;
+          return partialMatch
+            ? answerStr.includes(correctStr)
+            : answerStr === correctStr;
         } else {
           const answerLower = answerStr.toLowerCase();
           const correctLower = correctStr.toLowerCase();
-          return partialMatch ? answerLower.includes(correctLower) : answerLower === correctLower;
+          return partialMatch
+            ? answerLower.includes(correctLower)
+            : answerLower === correctLower;
         }
       });
     });
@@ -103,7 +129,10 @@ export class ShortAnswerProvider extends BaseQuestionProvider<ShortAnswerQuestio
   }
 
   // Override to add short answer specific validation
-  getValidatedData(questionData: Partial<ShortAnswerQuestion>, ctx: MainContextType): Partial<ShortAnswerQuestion> {
+  getValidatedData(
+    questionData: Partial<ShortAnswerQuestion>,
+    ctx: MainContextType,
+  ): Partial<ShortAnswerQuestion> {
     // Ensure correct answers are properly formatted
     if (questionData.correctAnswers) {
       questionData.correctAnswers = questionData.correctAnswers
@@ -115,14 +144,17 @@ export class ShortAnswerProvider extends BaseQuestionProvider<ShortAnswerQuestio
   }
 
   // Process short answer for display
-  processQuestionForDisplay(question: ShortAnswerQuestion, hideAnswers: boolean = true): Partial<ShortAnswerQuestion> {
+  processQuestionForDisplay(
+    question: ShortAnswerQuestion,
+    hideAnswers: boolean = true,
+  ): Partial<ShortAnswerQuestion> {
     const processed = super.processQuestionForDisplay(question, hideAnswers);
-    
+
     if (hideAnswers) {
       delete (processed as Record<string, unknown>).correctAnswers;
       delete (processed as Record<string, unknown>).explanation;
     }
-    
+
     return processed;
   }
 }

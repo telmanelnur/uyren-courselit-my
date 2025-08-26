@@ -36,7 +36,7 @@ export function EnhancedPagination({
   const getPageNumbers = () => {
     const delta = 2; // Pages to show around current page
     const pages: (number | string)[] = [];
-    
+
     if (totalPages <= 7) {
       // Show all pages if total is small
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -53,7 +53,7 @@ export function EnhancedPagination({
     // Add pages around current page
     const start = Math.max(2, currentPage - delta);
     const end = Math.min(totalPages - 1, currentPage + delta);
-    
+
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
@@ -90,7 +90,8 @@ export function EnhancedPagination({
         <div className="text-sm text-gray-600">
           {itemRange ? (
             <Text2 theme={theme}>
-              Showing {itemRange.start} to {itemRange.end} of {totalItems} results
+              Showing {itemRange.start} to {itemRange.end} of {totalItems}{" "}
+              results
             </Text2>
           ) : (
             <Text2 theme={theme}>

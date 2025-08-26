@@ -1,32 +1,50 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@workspace/ui/components/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 
 import Resources from "@/components/resources";
 import currencies from "@/data/currencies.json";
 import {
-    APP_MESSAGE_SETTINGS_SAVED,
-    BUTTON_SAVE,
-    DOCUMENTATION_LINK_LABEL,
-    HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
-    SETTINGS_RESOURCE_PAYMENT,
-    SITE_ADMIN_SETTINGS_PAYMENT_METHOD,
-    SITE_ADMIN_SETTINGS_STRIPE_SECRET,
-    SITE_SETTINGS_CURRENCY,
-    SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT,
-    SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
-    TOAST_TITLE_ERROR,
-    TOAST_TITLE_SUCCESS
+  APP_MESSAGE_SETTINGS_SAVED,
+  BUTTON_SAVE,
+  DOCUMENTATION_LINK_LABEL,
+  HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
+  SETTINGS_RESOURCE_PAYMENT,
+  SITE_ADMIN_SETTINGS_PAYMENT_METHOD,
+  SITE_ADMIN_SETTINGS_STRIPE_SECRET,
+  SITE_SETTINGS_CURRENCY,
+  SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT,
+  SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
+  TOAST_TITLE_ERROR,
+  TOAST_TITLE_SUCCESS,
 } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UIConstants } from "@workspace/common-models";
 import { useToast } from "@workspace/components-library";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { capitalize } from "@workspace/utils";
 import { Copy, Info } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -34,9 +52,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useSettingsContext } from "./settings-context";
 
-const {
-  PAYMENT_METHOD_STRIPE,
-} = UIConstants;
+const { PAYMENT_METHOD_STRIPE } = UIConstants;
 
 const paymentSchema = z.object({
   currencyISOCode: z.string().min(1, "Currency is required"),
@@ -56,21 +72,22 @@ export default function PaymentSettings() {
   const { toast } = useToast();
   const [newSettings, setNewSettings] = useState(settings);
 
-  const updatePaymentMutation = trpc.siteModule.siteInfo.updatePaymentInfo.useMutation({
-    onSuccess: () => {
-      toast({
-        title: TOAST_TITLE_SUCCESS,
-        description: APP_MESSAGE_SETTINGS_SAVED,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: TOAST_TITLE_ERROR,
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const updatePaymentMutation =
+    trpc.siteModule.siteInfo.updatePaymentInfo.useMutation({
+      onSuccess: () => {
+        toast({
+          title: TOAST_TITLE_SUCCESS,
+          description: APP_MESSAGE_SETTINGS_SAVED,
+        });
+      },
+      onError: (error: any) => {
+        toast({
+          title: TOAST_TITLE_ERROR,
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
 
   const paymentForm = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
@@ -143,14 +160,21 @@ export default function PaymentSettings() {
   return (
     <div className="space-y-8">
       <Form {...paymentForm}>
-        <form onSubmit={paymentForm.handleSubmit(onSubmitPayment)} className="space-y-6">
+        <form
+          onSubmit={paymentForm.handleSubmit(onSubmitPayment)}
+          className="space-y-6"
+        >
           <FormField
             control={paymentForm.control}
             name="currencyISOCode"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{SITE_SETTINGS_CURRENCY}</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange} disabled={isDisabled}>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={isDisabled}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
@@ -158,7 +182,10 @@ export default function PaymentSettings() {
                   </FormControl>
                   <SelectContent>
                     {currencies.map((currency) => (
-                      <SelectItem key={currency.isoCode} value={currency.isoCode}>
+                      <SelectItem
+                        key={currency.isoCode}
+                        value={currency.isoCode}
+                      >
                         {currency.name}
                       </SelectItem>
                     ))}
@@ -187,8 +214,8 @@ export default function PaymentSettings() {
             )}
           />
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!paymentForm.formState.isDirty || isDisabled}
             className="w-full sm:w-auto"
           >
@@ -200,14 +227,19 @@ export default function PaymentSettings() {
       {/* Stripe Settings */}
       <div>
         <Form {...stripeForm}>
-          <form onSubmit={stripeForm.handleSubmit(onSubmitStripe)} className="space-y-6">
+          <form
+            onSubmit={stripeForm.handleSubmit(onSubmitStripe)}
+            className="space-y-6"
+          >
             <h3 className="text-lg font-semibold">Stripe Settings</h3>
             <FormField
               control={stripeForm.control}
               name="stripeKey"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}</FormLabel>
+                  <FormLabel>
+                    {SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} disabled={isDisabled} />
                   </FormControl>
@@ -231,8 +263,8 @@ export default function PaymentSettings() {
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={!stripeForm.formState.isDirty || isDisabled}
               className="w-full sm:w-auto"
             >
@@ -275,7 +307,9 @@ export default function PaymentSettings() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  copyToClipboard(`${window.location.origin}/api/payment/webhook`)
+                  copyToClipboard(
+                    `${window.location.origin}/api/payment/webhook`,
+                  )
                 }
                 disabled={isDisabled}
               >
@@ -285,8 +319,8 @@ export default function PaymentSettings() {
           </div>
           <div className="space-y-2">
             <Label>
-              Old Payment Webhook (Required for products but will be phased
-              out soon)
+              Old Payment Webhook (Required for products but will be phased out
+              soon)
             </Label>
             <div className="flex gap-2">
               <Input
@@ -298,7 +332,9 @@ export default function PaymentSettings() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  copyToClipboard(`${window.location.origin}/api/payment/webhook-old`)
+                  copyToClipboard(
+                    `${window.location.origin}/api/payment/webhook-old`,
+                  )
                 }
                 disabled={isDisabled}
               >

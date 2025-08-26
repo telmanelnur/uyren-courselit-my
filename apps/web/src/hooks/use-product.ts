@@ -4,11 +4,13 @@ import { trpc } from "@/utils/trpc";
 import { useToast } from "@workspace/components-library";
 import { useEffect, useState } from "react";
 
-type ProductWithAdminProps = GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getByCourseDetailed"];
+type ProductWithAdminProps =
+  GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getByCourseDetailed"];
 
-export default function useProduct(
-  id: string,
-): { product: ProductWithAdminProps | undefined | null; loaded: boolean } {
+export default function useProduct(id: string): {
+  product: ProductWithAdminProps | undefined | null;
+  loaded: boolean;
+} {
   const { toast } = useToast();
 
   const loadQuery =

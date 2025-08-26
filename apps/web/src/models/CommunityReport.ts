@@ -35,7 +35,7 @@ const CommunityReportSchema = new mongoose.Schema<InternalCommunityReport>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 CommunityReportSchema.statics.paginatedFind = async function (filter, options) {
@@ -53,12 +53,12 @@ CommunityReportSchema.statics.paginatedFind = async function (filter, options) {
 
 CommunityReportSchema.index(
   { communityId: 1, contentId: 1, userId: 1 },
-  { unique: true }
+  { unique: true },
 );
 
 const CommunityReportModel = createModel(
   "CommunityReport",
-  CommunityReportSchema
+  CommunityReportSchema,
 );
 
 export default CommunityReportModel;

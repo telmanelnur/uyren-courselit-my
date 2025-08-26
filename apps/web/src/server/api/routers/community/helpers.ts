@@ -28,10 +28,8 @@ const { permissions } = UIConstants;
 export async function fetchEntity(
   entityType: MembershipEntityType,
   entityId: string,
-  domainId: string
+  domainId: string,
 ) {
-
-
   if (entityType === membershipEntityType.COURSE) {
     return await CourseModel.findOne({
       domain: domainId,
@@ -49,20 +47,14 @@ export async function fetchEntity(
 
 export function checkEntityPermission(
   entityType: MembershipEntityType,
-  userPermissions: string[]
+  userPermissions: string[],
 ) {
   if (entityType === membershipEntityType.COURSE) {
-    if (
-      !checkPermission(userPermissions, [permissions.manageCourse])
-    ) {
+    if (!checkPermission(userPermissions, [permissions.manageCourse])) {
       throw new AuthorizationException("Not authorized to manage courses");
     }
   } else if (entityType === membershipEntityType.COMMUNITY) {
-    if (
-      !checkPermission(userPermissions, [
-        permissions.manageCommunity,
-      ])
-    ) {
+    if (!checkPermission(userPermissions, [permissions.manageCommunity])) {
       throw new AuthorizationException("Not authorized to manage communities");
     }
   }
@@ -80,7 +72,7 @@ export async function getPlans({
     planId: { $in: planIds },
     archived: false,
     internal: false,
-  })
+  });
 }
 
 export async function validatePaymentPlanInputs(
@@ -89,7 +81,7 @@ export async function validatePaymentPlanInputs(
   emiAmount?: number,
   emiTotalInstallments?: number,
   subscriptionMonthlyAmount?: number,
-  subscriptionYearlyAmount?: number
+  subscriptionYearlyAmount?: number,
 ) {
   if (type === Constants.PaymentPlanType.ONE_TIME && !oneTimeAmount) {
     throw new TRPCError({
@@ -127,10 +119,8 @@ export async function checkDuplicatePaymentPlans(
   type: PaymentPlanType,
   domainId: string,
   subscriptionMonthlyAmount?: number,
-  subscriptionYearlyAmount?: number
+  subscriptionYearlyAmount?: number,
 ) {
-
-
   const existingPlansForEntity = await PaymentPlanModel.find({
     domain: domainId,
     planId: { $in: entity.paymentPlans },
@@ -170,10 +160,8 @@ export async function getInternalPaymentPlan(domainId: string) {
 
 export async function createInternalPaymentPlan(
   domainId: string,
-  userId: string
+  userId: string,
 ) {
-
-
   return await PaymentPlanModel.create({
     domain: domainId,
     name: "Internal Payment Plan",
@@ -209,18 +197,14 @@ export async function addPostSubscription({
 
 export const getCommunityObjOrAssert = async (
   ctx: any,
-  communityId: string
+  communityId: string,
 ) => {
   const query: RootFilterQuery<typeof CommunityModel> = {
     domain: ctx.domainData.domainObj._id,
     communityId,
     deleted: false,
   };
-  if (
-    !checkPermission(ctx.user.permissions, [
-      permissions.manageCommunity,
-    ])
-  ) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
     query.enabled = true;
   }
   const community = await CommunityModel.findOne(query);
@@ -231,7 +215,7 @@ export const getCommunityObjOrAssert = async (
 };
 export async function getMembership(
   ctx: any,
-  communityId: mongoose.Types.ObjectId | string
+  communityId: mongoose.Types.ObjectId | string,
 ) {
   return await MembershipModel.findOne({
     domain: ctx.domainData.domainObj._id,
@@ -245,22 +229,22 @@ export async function getMembership(
 export async function toggleContentVisibility(
   contentId: string,
   type: string,
-  visible: boolean
+  visible: boolean,
 ) {
   if (type === Constants.CommunityReportType.POST) {
     await CommunityPostModel.updateOne(
       { postId: contentId },
-      { $set: { deleted: visible } }
+      { $set: { deleted: visible } },
     );
   } else if (type === Constants.CommunityReportType.COMMENT) {
     await CommunityCommentModel.updateOne(
       { commentId: contentId },
-      { $set: { deleted: visible } }
+      { $set: { deleted: visible } },
     );
   } else if (type === Constants.CommunityReportType.REPLY) {
     await CommunityCommentModel.updateOne(
       { "replies.replyId": contentId },
-      { $set: { "replies.$.deleted": visible } }
+      { $set: { "replies.$.deleted": visible } },
     );
   } else {
     throw new Error("Invalid content type");

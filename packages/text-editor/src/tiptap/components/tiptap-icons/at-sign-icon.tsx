@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const AtSignIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -19,8 +19,8 @@ export const AtSignIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-AtSignIcon.displayName = "AtSignIcon"
+AtSignIcon.displayName = "AtSignIcon";

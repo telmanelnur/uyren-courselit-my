@@ -25,7 +25,7 @@ class NotificationQueueManager {
   async addNotification(data: InternalNotification) {
     return await this.notificationQueue.add(
       "notification",
-      data
+      data,
       //      {
       //   priority: this.getPriority(data.n),
       // }

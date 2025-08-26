@@ -15,12 +15,12 @@ const OngoingSequenceSchema: Schema = new Schema<
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 OngoingSequenceSchema.index({ sequenceId: 1, userId: 1 }, { unique: true });
 
 export default createModel<OngoingSequence>(
   "OngoingSequence",
-  OngoingSequenceSchema
+  OngoingSequenceSchema,
 );

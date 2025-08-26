@@ -49,8 +49,8 @@ interface CommentProps {
   onDelete: (comment: CommunityComment | CommunityCommentReply) => void;
   depth?: number;
   membership:
-  | Pick<Membership, "status" | "role" | "rejectionReason">
-  | undefined;
+    | Pick<Membership, "status" | "role" | "rejectionReason">
+    | undefined;
 }
 
 export function Comment({
@@ -77,7 +77,7 @@ export function Comment({
   const { toast } = useToast();
 
   const handleDeletePost = (
-    comment: CommunityComment | CommunityCommentReply
+    comment: CommunityComment | CommunityCommentReply,
   ) => {
     setCommentToDelete(comment);
     setShowDeleteConfirmation(true);
@@ -92,7 +92,7 @@ export function Comment({
   };
 
   const handleReportPost = (
-    comment: CommunityComment | CommunityCommentReply
+    comment: CommunityComment | CommunityCommentReply,
   ) => {
     setCommentToReport(comment);
     setShowReportConfirmation(true);
@@ -173,7 +173,9 @@ export function Comment({
         <div className="flex-1">
           <div className="flex items-center gap-2 justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm">{comment.user?.name}</span>
+              <span className="font-semibold text-sm">
+                {comment.user?.name}
+              </span>
               <span className="text-xs text-muted-foreground">
                 {formattedLocaleDate(comment.updatedAt)}
               </span>
@@ -192,14 +194,14 @@ export function Comment({
                 <DropdownMenuContent>
                   {(hasCommunityPermission(
                     membership!,
-                    Constants.MembershipRole.MODERATE
+                    Constants.MembershipRole.MODERATE,
                   ) ||
                     profile.userId === comment.user?.userId) && (
-                      <DropdownMenuItem onClick={() => handleDeletePost(comment)}>
-                        <Trash className="h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem onClick={() => handleDeletePost(comment)}>
+                      <Trash className="h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
                   {profile.userId !== comment.user?.userId && (
                     <DropdownMenuItem onClick={() => handleReportPost(comment)}>
                       <FlagTriangleRight /> Report

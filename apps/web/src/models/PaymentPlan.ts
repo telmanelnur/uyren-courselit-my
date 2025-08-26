@@ -36,7 +36,7 @@ const PaymentPlanSchema = new mongoose.Schema<InternalPaymentPlan>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 PaymentPlanSchema.pre("save", async function (next) {
@@ -49,7 +49,7 @@ PaymentPlanSchema.pre("save", async function (next) {
 
     if (existingInternalPlan) {
       const error = new Error(
-        "Only one internal payment plan allowed per domain"
+        "Only one internal payment plan allowed per domain",
       );
       return next(error);
     }

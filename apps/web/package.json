@@ -32,7 +32,6 @@
     "@workspace/components-library": "workspace:*",
     "@workspace/icons": "workspace:*",
     "@workspace/page-blocks": "workspace:*",
-    "@workspace/page-models": "workspace:*",
     "@workspace/page-primitives": "workspace:*",
     "@workspace/text-editor": "workspace:*",
     "@workspace/ui": "workspace:*",

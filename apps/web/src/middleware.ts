@@ -41,7 +41,7 @@ function isProtectedRoute(pathname: string): boolean {
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(route + "/")
+    (route) => pathname === route || pathname.startsWith(route + "/"),
   );
 }
 
@@ -62,7 +62,6 @@ export async function middleware(req: NextRequest) {
       response.headers.set("x-domain-type", domainInfo.type);
       response.headers.set("x-domain-host", domainInfo.cleanHost || "");
       response.headers.set("x-domain-identifier", domainInfo.identifier!);
-
     } catch (error) {
       console.error("[MIDDLEWARE] Error analyzing domain:", error);
     }

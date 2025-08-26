@@ -1,73 +1,73 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { type Editor } from "@tiptap/react"
+import * as React from "react";
+import { type Editor } from "@tiptap/react";
 import {
   flip,
   offset,
   shift,
   useMergeRefs,
   type UseFloatingOptions,
-} from "@floating-ui/react"
-import { Selection } from "@tiptap/pm/state"
+} from "@floating-ui/react";
+import { Selection } from "@tiptap/pm/state";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
-import { useFloatingElement } from "@workspace/text-editor/tiptap/hooks/use-floating-element"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
+import { useFloatingElement } from "@workspace/text-editor/tiptap/hooks/use-floating-element";
 
 // --- Lib ---
 import {
   getSelectionBoundingRect,
   isSelectionValid,
-} from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils"
+} from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils";
 
-import { isElementWithinEditor } from "./floating-element-utils"
-import { isValidPosition } from "@workspace/text-editor/tiptap/lib/tiptap-utils"
+import { isElementWithinEditor } from "./floating-element-utils";
+import { isValidPosition } from "@workspace/text-editor/tiptap/lib/tiptap-utils";
 
 export interface FloatingElementProps
   extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * The Tiptap editor instance to attach to.
    */
-  editor?: Editor | null
+  editor?: Editor | null;
   /**
    * Controls whether the floating element should be visible.
    * @default undefined
    */
-  shouldShow?: boolean
+  shouldShow?: boolean;
   /**
    * Additional options to pass to the floating UI.
    */
-  floatingOptions?: Partial<UseFloatingOptions>
+  floatingOptions?: Partial<UseFloatingOptions>;
   /**
    * Z-index for the floating element.
    * @default 50
    */
-  zIndex?: number
+  zIndex?: number;
   /**
    * Callback fired when the visibility state changes.
    */
-  onOpenChange?: (open: boolean) => void
+  onOpenChange?: (open: boolean) => void;
   /**
    * Callback fired when the selection rectangle changes.
    * Provides access to the current position information.
    */
-  onRectChange?: (rect: DOMRect | null) => void
+  onRectChange?: (rect: DOMRect | null) => void;
   /**
    * Custom function to determine the position of the floating element.
    * @default getSelectionBoundingRect
    */
-  getBoundingClientRect?: (editor: Editor) => DOMRect | null
+  getBoundingClientRect?: (editor: Editor) => DOMRect | null;
   /**
    * Whether to update position on scroll events.
    * @default true
    */
-  updateOnScroll?: boolean
+  updateOnScroll?: boolean;
   /**
    * Whether to close the floating element when Escape key is pressed.
    * @default true
    */
-  closeOnEscape?: boolean
+  closeOnEscape?: boolean;
 }
 
 /**
@@ -93,28 +93,28 @@ export const FloatingElement = React.forwardRef<
       style: propStyle,
       ...props
     },
-    forwardedRef
+    forwardedRef,
   ) => {
     const [open, setOpen] = React.useState<boolean>(
-      shouldShow !== undefined ? shouldShow : false
-    )
+      shouldShow !== undefined ? shouldShow : false,
+    );
     const [selectionRect, setSelectionRect] = React.useState<DOMRect | null>(
-      null
-    )
+      null,
+    );
 
-    const floatingElementRef = React.useRef<HTMLDivElement | null>(null)
-    const preventHideRef = React.useRef(false)
-    const preventShowRef = React.useRef(false)
+    const floatingElementRef = React.useRef<HTMLDivElement | null>(null);
+    const preventHideRef = React.useRef(false);
+    const preventShowRef = React.useRef(false);
 
-    const { editor } = useTiptapEditor(providedEditor)
+    const { editor } = useTiptapEditor(providedEditor);
 
     const handleOpenChange = React.useCallback(
       (newOpen: boolean) => {
-        onOpenChange?.(newOpen)
-        setOpen(newOpen)
+        onOpenChange?.(newOpen);
+        setOpen(newOpen);
       },
-      [onOpenChange]
-    )
+      [onOpenChange],
+    );
 
     const handleFloatingOpenChange = (open: boolean) => {
       if (!open && editor) {
@@ -122,17 +122,17 @@ export const FloatingElement = React.forwardRef<
         // This lets the user place the cursor again and ensures the drag handle reappears,
         // as it's intentionally hidden during valid text selections.
         const tr = editor.state.tr.setSelection(
-          Selection.near(editor.state.doc.resolve(0))
-        )
-        editor.view.dispatch(tr)
+          Selection.near(editor.state.doc.resolve(0)),
+        );
+        editor.view.dispatch(tr);
       }
 
-      handleOpenChange(open)
-    }
+      handleOpenChange(open);
+    };
 
     React.useEffect(() => {
-      onRectChange?.(selectionRect)
-    }, [selectionRect, onRectChange])
+      onRectChange?.(selectionRect);
+    }, [selectionRect, onRectChange]);
 
     const { isMounted, ref, style, getFloatingProps } = useFloatingElement(
       open,
@@ -146,116 +146,116 @@ export const FloatingElement = React.forwardRef<
           enabled: true,
           escapeKey: true,
           outsidePress(event) {
-            const relatedTarget = event.target as Node
-            if (!relatedTarget) return false
+            const relatedTarget = event.target as Node;
+            if (!relatedTarget) return false;
 
-            return !isElementWithinEditor(editor, relatedTarget)
+            return !isElementWithinEditor(editor, relatedTarget);
           },
         },
         ...floatingOptions,
-      }
-    )
+      },
+    );
 
     const updateSelectionState = React.useCallback(() => {
-      if (!editor) return
+      if (!editor) return;
 
-      const newRect = getBoundingClientRect(editor)
+      const newRect = getBoundingClientRect(editor);
 
       if (newRect && shouldShow !== undefined && !preventShowRef.current) {
-        setSelectionRect(newRect)
-        handleOpenChange(shouldShow)
-        return
+        setSelectionRect(newRect);
+        handleOpenChange(shouldShow);
+        return;
       }
 
-      const shouldShowResult = isSelectionValid(editor)
+      const shouldShowResult = isSelectionValid(editor);
 
       if (
         newRect &&
         !preventShowRef.current &&
         (shouldShowResult || preventHideRef.current)
       ) {
-        setSelectionRect(newRect)
-        handleOpenChange(true)
+        setSelectionRect(newRect);
+        handleOpenChange(true);
       } else if (
         !preventHideRef.current &&
         (!shouldShowResult || preventShowRef.current || !editor.isEditable)
       ) {
-        handleOpenChange(false)
+        handleOpenChange(false);
       }
-    }, [editor, getBoundingClientRect, handleOpenChange, shouldShow])
+    }, [editor, getBoundingClientRect, handleOpenChange, shouldShow]);
 
     React.useEffect(() => {
-      if (!editor || !closeOnEscape) return
+      if (!editor || !closeOnEscape) return;
 
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === "Escape" && open) {
-          handleOpenChange(false)
-          return true
+          handleOpenChange(false);
+          return true;
         }
-        return false
-      }
+        return false;
+      };
 
-      editor.view.dom.addEventListener("keydown", handleKeyDown)
+      editor.view.dom.addEventListener("keydown", handleKeyDown);
       return () => {
-        editor.view.dom.removeEventListener("keydown", handleKeyDown)
-      }
-    }, [editor, open, closeOnEscape, handleOpenChange])
+        editor.view.dom.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [editor, open, closeOnEscape, handleOpenChange]);
 
     React.useEffect(() => {
-      if (!editor) return
+      if (!editor) return;
 
       const handleBlur = (event: FocusEvent) => {
         if (preventHideRef.current) {
-          preventHideRef.current = false
-          return
+          preventHideRef.current = false;
+          return;
         }
 
-        const relatedTarget = event.relatedTarget as Node
-        if (!relatedTarget) return
+        const relatedTarget = event.relatedTarget as Node;
+        if (!relatedTarget) return;
 
-        const isWithinEditor = isElementWithinEditor(editor, relatedTarget)
+        const isWithinEditor = isElementWithinEditor(editor, relatedTarget);
 
-        const floatingElement = floatingElementRef.current
+        const floatingElement = floatingElementRef.current;
         const isWithinFloatingElement =
           floatingElement &&
           (floatingElement === relatedTarget ||
-            floatingElement.contains(relatedTarget))
+            floatingElement.contains(relatedTarget));
 
         if (!isWithinEditor && !isWithinFloatingElement && open) {
-          handleOpenChange(false)
+          handleOpenChange(false);
         }
-      }
+      };
 
-      editor.view.dom.addEventListener("blur", handleBlur)
+      editor.view.dom.addEventListener("blur", handleBlur);
       return () => {
-        editor.view.dom.removeEventListener("blur", handleBlur)
-      }
-    }, [editor, handleOpenChange, open])
+        editor.view.dom.removeEventListener("blur", handleBlur);
+      };
+    }, [editor, handleOpenChange, open]);
 
     React.useEffect(() => {
-      if (!editor) return
+      if (!editor) return;
 
       const handleDrag = () => {
         if (open) {
-          handleOpenChange(false)
+          handleOpenChange(false);
         }
-      }
+      };
 
-      editor.view.dom.addEventListener("dragstart", handleDrag)
-      editor.view.dom.addEventListener("dragover", handleDrag)
+      editor.view.dom.addEventListener("dragstart", handleDrag);
+      editor.view.dom.addEventListener("dragover", handleDrag);
 
       return () => {
-        editor.view.dom.removeEventListener("dragstart", handleDrag)
-        editor.view.dom.removeEventListener("dragover", handleDrag)
-      }
-    }, [editor, open, handleOpenChange])
+        editor.view.dom.removeEventListener("dragstart", handleDrag);
+        editor.view.dom.removeEventListener("dragover", handleDrag);
+      };
+    }, [editor, open, handleOpenChange]);
 
     React.useEffect(() => {
-      if (!editor) return
+      if (!editor) return;
 
       const handleMouseDown = (event: MouseEvent) => {
         if (event.button === 0) {
-          preventShowRef.current = true
+          preventShowRef.current = true;
 
           // When the editor has an active selection and then the editor loses focus (e.g., by clicking outside),
           // clicking back on the content only refocuses the editor — it does not place the cursor at the clicked position.
@@ -265,70 +265,70 @@ export const FloatingElement = React.forwardRef<
           const pos = editor.view.posAtCoords({
             left: event.clientX,
             top: event.clientY,
-          })
+          });
 
           if (isValidPosition(pos?.pos)) {
             const tr = editor.state.tr.setSelection(
-              Selection.near(editor.state.doc.resolve(pos.pos))
-            )
-            editor.view.dispatch(tr)
+              Selection.near(editor.state.doc.resolve(pos.pos)),
+            );
+            editor.view.dispatch(tr);
           }
         }
-      }
+      };
 
       const handleMouseUp = () => {
         if (preventShowRef.current) {
-          preventShowRef.current = false
-          updateSelectionState()
+          preventShowRef.current = false;
+          updateSelectionState();
         }
-      }
+      };
 
-      editor.view.dom.addEventListener("mousedown", handleMouseDown)
-      editor.view.root.addEventListener("mouseup", handleMouseUp)
+      editor.view.dom.addEventListener("mousedown", handleMouseDown);
+      editor.view.root.addEventListener("mouseup", handleMouseUp);
 
       return () => {
-        editor.view.dom.removeEventListener("mousedown", handleMouseDown)
-        editor.view.root.removeEventListener("mouseup", handleMouseUp)
-      }
-    }, [editor, updateSelectionState])
+        editor.view.dom.removeEventListener("mousedown", handleMouseDown);
+        editor.view.root.removeEventListener("mouseup", handleMouseUp);
+      };
+    }, [editor, updateSelectionState]);
 
     React.useEffect(() => {
-      if (!editor) return
+      if (!editor) return;
 
       const updateIfOpen = () => {
-        if (open) updateSelectionState()
-      }
+        if (open) updateSelectionState();
+      };
 
-      editor.on("selectionUpdate", updateSelectionState)
-      window.addEventListener("resize", updateIfOpen)
+      editor.on("selectionUpdate", updateSelectionState);
+      window.addEventListener("resize", updateIfOpen);
 
       if (updateOnScroll) {
-        editor.view.root.addEventListener("scroll", updateIfOpen, true)
+        editor.view.root.addEventListener("scroll", updateIfOpen, true);
       }
 
       return () => {
-        editor.off("selectionUpdate", updateSelectionState)
-        window.removeEventListener("resize", updateIfOpen)
+        editor.off("selectionUpdate", updateSelectionState);
+        window.removeEventListener("resize", updateIfOpen);
 
         if (updateOnScroll) {
-          editor.view.root.removeEventListener("scroll", updateIfOpen, true)
+          editor.view.root.removeEventListener("scroll", updateIfOpen, true);
         }
-      }
-    }, [editor, open, updateOnScroll, updateSelectionState])
+      };
+    }, [editor, open, updateOnScroll, updateSelectionState]);
 
     React.useEffect(() => {
-      if (!editor) return
-      updateSelectionState()
-    }, [editor, updateSelectionState])
+      if (!editor) return;
+      updateSelectionState();
+    }, [editor, updateSelectionState]);
 
     const finalStyle = React.useMemo(
       () =>
         propStyle && Object.keys(propStyle).length > 0 ? propStyle : style,
-      [propStyle, style]
-    )
-    const mergedRef = useMergeRefs([ref, forwardedRef, floatingElementRef])
+      [propStyle, style],
+    );
+    const mergedRef = useMergeRefs([ref, forwardedRef, floatingElementRef]);
 
-    if (!editor || !isMounted || !open) return null
+    if (!editor || !isMounted || !open) return null;
 
     return (
       <div
@@ -339,8 +339,8 @@ export const FloatingElement = React.forwardRef<
       >
         {children}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-FloatingElement.displayName = "FloatingElement"
+FloatingElement.displayName = "FloatingElement";

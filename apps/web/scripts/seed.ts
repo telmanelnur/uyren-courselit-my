@@ -23,7 +23,7 @@ const UIConstants = {
     admin: "admin",
     instructor: "instructor",
     student: "student",
-  }
+  },
 };
 
 dotenv.config(); // Load .env as fallback
@@ -34,7 +34,7 @@ async function connectToDatabase() {
     process.env.MONGODB_URI || process.env.DB_CONNECTION_STRING;
   if (!MONGODB_URI) {
     throw new Error(
-      "MONGODB_URI or DB_CONNECTION_STRING environment variable is required"
+      "MONGODB_URI or DB_CONNECTION_STRING environment variable is required",
     );
   }
 
@@ -78,7 +78,7 @@ const UserSchema = new mongoose.Schema(
       required: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 UserSchema.index({ email: "text", name: "text" });
@@ -136,7 +136,7 @@ const DomainSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Create models
@@ -205,7 +205,7 @@ async function createUser({
   const user = await UserModel.findOneAndUpdate(
     { domain: domain._id, email: email.toLowerCase() },
     userData,
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 
   return user;
@@ -280,7 +280,7 @@ async function createRootDomain() {
     console.log(`✅ Created domain: ${rootDomainName} with ID: ${domain._id}`);
   } else {
     console.log(
-      `✅ Found existing domain: ${rootDomainName} with ID: ${domain._id}`
+      `✅ Found existing domain: ${rootDomainName} with ID: ${domain._id}`,
     );
   }
 
@@ -296,7 +296,7 @@ async function createSuperAdmin(
     name: string;
     email: string;
     firstRun?: boolean;
-  }
+  },
 ) {
   console.log("👤 Creating or finding super admin user...");
 
@@ -306,7 +306,7 @@ async function createSuperAdmin(
   if (!superAdminEmail) {
     console.error("❌ SUPER_ADMIN_EMAIL environment variable is required");
     console.log(
-      "💡 Please set SUPER_ADMIN_EMAIL=your-email@example.com in your environment"
+      "💡 Please set SUPER_ADMIN_EMAIL=your-email@example.com in your environment",
     );
     process.exit(1);
   }
@@ -322,10 +322,10 @@ async function createSuperAdmin(
   if (existingAdmin) {
     console.log(`✅ Super admin already exists with ID: ${existingAdmin._id}`);
     console.log(
-      `🔑 Current permissions: ${existingAdmin.permissions.join(", ")}`
+      `🔑 Current permissions: ${existingAdmin.permissions.join(", ")}`,
     );
     console.log(
-      `👥 Current roles: ${existingAdmin.roles?.join(", ") || "None"}`
+      `👥 Current roles: ${existingAdmin.roles?.join(", ") || "None"}`,
     );
     return existingAdmin;
   }
@@ -366,14 +366,14 @@ async function createSuperAdmin(
  * Sets all available permissions for the super admin user
  */
 async function setAllPermissionsForSuperAdmin(
-  superAdmin: Awaited<ReturnType<typeof createSuperAdmin>>
+  superAdmin: Awaited<ReturnType<typeof createSuperAdmin>>,
 ) {
   console.log("🔐 Setting all permissions for super admin...");
 
   // Define all available permissions
   const ALL_PERMISSIONS = [
     "course:manage",
-    "course:manage_any", 
+    "course:manage_any",
     "course:publish",
     "course:enroll",
     "media:manage",
@@ -384,11 +384,7 @@ async function setAllPermissionsForSuperAdmin(
   ];
 
   // Define all available roles
-  const ALL_ROLES = [
-    "admin",
-    "instructor", 
-    "student",
-  ];
+  const ALL_ROLES = ["admin", "instructor", "student"];
 
   // Update user with all permissions and roles
   const updatedUser = await UserModel.findByIdAndUpdate(
@@ -397,16 +393,18 @@ async function setAllPermissionsForSuperAdmin(
       $set: {
         permissions: ALL_PERMISSIONS,
         roles: ALL_ROLES,
-      }
+      },
     },
-    { new: true }
+    { new: true },
   );
 
   if (!updatedUser) {
     throw new Error("Failed to update super admin permissions");
   }
 
-  console.log(`✅ Granted all permissions (${updatedUser.permissions.length}) and roles (${updatedUser.roles.length})`);
+  console.log(
+    `✅ Granted all permissions (${updatedUser.permissions.length}) and roles (${updatedUser.roles.length})`,
+  );
 
   return updatedUser;
 }
@@ -416,7 +414,7 @@ async function setAllPermissionsForSuperAdmin(
  */
 async function seedDefaultData(
   domain: Awaited<ReturnType<typeof createRootDomain>>,
-  superAdmin: Awaited<ReturnType<typeof createSuperAdmin>>
+  superAdmin: Awaited<ReturnType<typeof createSuperAdmin>>,
 ) {
   console.log("🌱 Seeding default data...");
 

@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     console.error("Media list API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

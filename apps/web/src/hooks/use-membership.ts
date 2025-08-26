@@ -18,7 +18,7 @@ export const useMembership = (communityId?: string) => {
       },
       {
         enabled: !!communityId,
-      }
+      },
     );
 
   useEffect(() => {

@@ -6,26 +6,26 @@ import { Event } from ".";
 import { SequenceStatus } from "./sequence-status";
 
 interface From {
-    name: string;
-    email?: string;
+  name: string;
+  email?: string;
 }
 
 interface Trigger {
-    type: Event;
-    data?: string;
+  type: Event;
+  data?: string;
 }
 
 export interface Sequence {
-    sequenceId: string;
-    type: SequenceType;
-    title?: string;
-    emails: Email[];
-    report: SequenceReport;
-    from: From;
-    filter: UserFilterWithAggregator;
-    excludeFilter: UserFilterWithAggregator;
-    trigger: Trigger;
-    status: SequenceStatus;
-    emailsOrder: string[];
-    entrantsCount: number;
+  sequenceId: string;
+  type: SequenceType;
+  title?: string;
+  emails: Email[];
+  report: SequenceReport;
+  from: From;
+  filter: UserFilterWithAggregator;
+  excludeFilter: UserFilterWithAggregator;
+  trigger: Trigger;
+  status: SequenceStatus;
+  emailsOrder: string[];
+  entrantsCount: number;
 }

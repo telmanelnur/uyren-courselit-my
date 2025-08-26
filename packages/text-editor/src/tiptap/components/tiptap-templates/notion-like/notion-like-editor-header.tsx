@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { ThemeToggle } from "@workspace/text-editor/tiptap/components/tiptap-templates/notion-like/notion-like-editor-theme-toggle"
+import { ThemeToggle } from "@workspace/text-editor/tiptap/components/tiptap-templates/notion-like/notion-like-editor-theme-toggle";
 
 // --- Tiptap UI ---
-import { UndoRedoButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/undo-redo-button"
+import { UndoRedoButton } from "@workspace/text-editor/tiptap/components/tiptap-ui/undo-redo-button";
 
 // --- UI Primitives ---
-import { Spacer } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/spacer"
-import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator"
-import { ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
+import { Spacer } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/spacer";
+import { Separator } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/separator";
+import { ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
 
 // --- Styles ---
-import "@workspace/text-editor/tiptap/components/tiptap-templates/notion-like/notion-like-editor-header.scss"
+import "@workspace/text-editor/tiptap/components/tiptap-templates/notion-like/notion-like-editor-header.scss";
 
-import { CollaborationUsers } from "@workspace/text-editor/tiptap/components/tiptap-templates/notion-like/notion-like-editor-collaboration-users"
+import { CollaborationUsers } from "@workspace/text-editor/tiptap/components/tiptap-templates/notion-like/notion-like-editor-collaboration-users";
 
 export function NotionEditorHeader() {
   return (
@@ -34,5 +34,5 @@ export function NotionEditorHeader() {
         <CollaborationUsers />
       </div>
     </header>
-  )
+  );
 }

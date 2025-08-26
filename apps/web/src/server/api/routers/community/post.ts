@@ -20,11 +20,11 @@ import { z } from "zod";
 import {
   AuthorizationException,
   NotFoundException,
-  ValidationException
+  ValidationException,
 } from "../../core/exceptions";
 import {
   createDomainRequiredMiddleware,
-  protectedProcedure
+  protectedProcedure,
 } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
@@ -35,7 +35,6 @@ import {
   getMembership,
 } from "./helpers";
 
-
 const CreateSchema = getFormDataSchema({
   title: z.string().min(1),
   content: z.string().optional(),
@@ -43,13 +42,12 @@ const CreateSchema = getFormDataSchema({
   category: z.string(),
 });
 
-
 type PostUserType = Pick<InternalUser, "userId" | "name" | "avatar" | "email">;
 const formatPost = (
   post: InternalCommunityPost & {
     user?: PostUserType;
   },
-  user: User
+  user: User,
 ) => ({
   communityId: post.communityId,
   postId: post.postId,
@@ -112,7 +110,7 @@ async function getPostSubscribersExceptUserId({
 function hasPermissionToDelete(
   membership: Membership,
   comment: InternalCommunityComment,
-  replyId?: string
+  replyId?: string,
 ) {
   const ownerUserId = replyId
     ? comment.replies.find((r) => r.replyId === replyId)?.userId
@@ -133,23 +131,22 @@ export const postRouter = router({
           communityId: z.string(),
           category: z.string().optional(),
         }),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
-
       const query: RootFilterQuery<typeof CommunityPostModel> = {
         domain: ctx.domainData.domainObj._id as any,
         deleted: false,
       };
       const communityObj = await getCommunityObjOrAssert(
         ctx,
-        input.filter.communityId
+        input.filter.communityId,
       );
       query.communityId = communityObj.communityId as any;
       const member = await getMembership(ctx, communityObj.communityId);
       if (!member) {
         throw new AuthorizationException(
-          "You are not a member of this community"
+          "You are not a member of this community",
         );
       }
       if (input.filter.category) {
@@ -163,7 +160,7 @@ export const postRouter = router({
           orderBy: input.orderBy,
           // populate: [{ path: "userId", select: "userId name avatar email" }],
           includeCount: true,
-        }
+        },
       );
       // const [items, total] = await Promise.all([
       //   CommunityPostModel.find(query)
@@ -194,12 +191,12 @@ export const postRouter = router({
       getFormDataSchema({
         postId: z.string(),
         communityId: z.string(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const post = await CommunityPostModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -221,10 +218,9 @@ export const postRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(CreateSchema)
     .mutation(async ({ ctx, input }) => {
-
       const communityObj = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const member = await getMembership(ctx, communityObj.communityId);
       if (
@@ -278,7 +274,7 @@ export const postRouter = router({
             communityId: communityObj.communityId,
             postId: post.postId,
             stack: typedErr.stack as any,
-          }
+          },
         );
       }
 
@@ -320,10 +316,9 @@ export const postRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(z.object({ postId: z.string(), communityId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-
       const communityObj = await getCommunityObjOrAssert(
         ctx,
-        input.communityId
+        input.communityId,
       );
       const query: RootFilterQuery<typeof CommunityPostModel> = {
         domain: ctx.domainData.domainObj._id,
@@ -350,13 +345,12 @@ export const postRouter = router({
       z.object({
         communityId: z.string(),
         postId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-
       const communityObj = await getCommunityObjOrAssert(
         ctx,
-        input.communityId
+        input.communityId,
       );
       const post = await CommunityPostModel.findOne({
         postId: input.postId,
@@ -370,7 +364,7 @@ export const postRouter = router({
       const member = await getMembership(ctx, post.communityId);
       if (!member) {
         throw new AuthorizationException(
-          "You are not a member of this community"
+          "You are not a member of this community",
         );
       }
       let liked = false;
@@ -410,13 +404,12 @@ export const postRouter = router({
       z.object({
         communityId: z.string(),
         postId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-
       const communityObj = await getCommunityObjOrAssert(
         ctx,
-        input.communityId
+        input.communityId,
       );
       const post = await CommunityPostModel.findOne({
         postId: input.postId,
@@ -433,7 +426,7 @@ export const postRouter = router({
         !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
       ) {
         throw new AuthorizationException(
-          "You are not a member of this community"
+          "You are not a member of this community",
         );
       }
       post.pinned = !post.pinned;
@@ -449,14 +442,12 @@ export const postRouter = router({
           communityId: z.string(),
           postId: z.string(),
         }),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
-
-
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.filter.communityId
+        input.filter.communityId,
       );
       const member = await getMembership(ctx, community.communityId);
       if (!member) {
@@ -512,14 +503,12 @@ export const postRouter = router({
         content: z.string().min(1).max(5000),
         parentCommentId: z.string().optional(),
         parentReplyId: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-
-
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const post = await CommunityPostModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -536,7 +525,7 @@ export const postRouter = router({
         !hasCommunityPermission(member, Constants.MembershipRole.COMMENT)
       ) {
         throw new AuthorizationException(
-          "You are not a member of this community"
+          "You are not a member of this community",
         );
       }
 
@@ -553,7 +542,7 @@ export const postRouter = router({
         if (!comment) {
           throw new NotFoundException(
             "Comment",
-            String(input.data.parentCommentId)
+            String(input.data.parentCommentId),
           );
         }
 
@@ -625,14 +614,17 @@ export const postRouter = router({
 
       return {
         ...formatComment(comment, ctx.user as any),
-        user: await UserModel.findOne({
-          userId: comment.userId,
-        }, {
-          userId: 1,
-          name: 1,
-          avatar: 1,
-          email: 1,
-        }),
+        user: await UserModel.findOne(
+          {
+            userId: comment.userId,
+          },
+          {
+            userId: 1,
+            name: 1,
+            avatar: 1,
+            email: 1,
+          },
+        ),
       };
     }),
 
@@ -644,14 +636,12 @@ export const postRouter = router({
         postId: z.string(),
         commentId: z.string(),
         replyId: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-
-
       const community = await getCommunityObjOrAssert(
         ctx,
-        input.data.communityId
+        input.data.communityId,
       );
       const post = await CommunityPostModel.findOne({
         domain: ctx.domainData.domainObj._id,
@@ -677,7 +667,7 @@ export const postRouter = router({
         !hasPermissionToDelete(member, comment, input.data.replyId)
       ) {
         throw new AuthorizationException(
-          "You do not have permission to delete this comment"
+          "You do not have permission to delete this comment",
         );
       }
       if (input.data.replyId) {
@@ -685,7 +675,7 @@ export const postRouter = router({
           comment.replies.some((r) => r.parentReplyId === input.data.replyId)
         ) {
           const replyIndex = comment.replies.findIndex(
-            (r) => r.replyId === input.data.replyId
+            (r) => r.replyId === input.data.replyId,
           );
           if (!comment.replies[replyIndex]!.deleted) {
             comment.replies[replyIndex]!.deleted = true;
@@ -695,7 +685,7 @@ export const postRouter = router({
           }
         } else {
           comment.replies = comment.replies.filter(
-            (r) => r.replyId !== input.data.replyId
+            (r) => r.replyId !== input.data.replyId,
           );
           if (post.commentsCount > 0) {
             post.commentsCount = post.commentsCount - 1;
@@ -725,16 +715,21 @@ export const postRouter = router({
         }
       }
       await post.save();
-      return comment ? {
-        ...formatComment(comment, ctx.user as any),
-        user: await UserModel.findOne({
-          userId: comment.userId,
-        }, {
-          userId: 1,
-          name: 1,
-          avatar: 1,
-          email: 1,
-        }),
-      } : null;
+      return comment
+        ? {
+            ...formatComment(comment, ctx.user as any),
+            user: await UserModel.findOne(
+              {
+                userId: comment.userId,
+              },
+              {
+                userId: 1,
+                name: 1,
+                avatar: 1,
+                email: 1,
+              },
+            ),
+          }
+        : null;
     }),
 });

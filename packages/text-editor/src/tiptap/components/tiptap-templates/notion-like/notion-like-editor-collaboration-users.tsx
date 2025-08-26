@@ -1,50 +1,53 @@
-"use client"
+"use client";
 
-import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor"
-import { getAvatar } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils"
+import { useTiptapEditor } from "@workspace/text-editor/tiptap/hooks/use-tiptap-editor";
+import { getAvatar } from "@workspace/text-editor/tiptap/lib/tiptap-collab-utils";
 import {
   Avatar,
   AvatarFallback,
   AvatarGroup,
   AvatarImage,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/avatar"
-import { Button, ButtonGroup } from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/avatar";
+import {
+  Button,
+  ButtonGroup,
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
   CardItemGroup,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/dropdown-menu"
+} from "@workspace/text-editor/tiptap/components/tiptap-ui-primitive/dropdown-menu";
 
-type User = { clientId: number; id: string; name: string; color: string }
+type User = { clientId: number; id: string; name: string; color: string };
 
 type CollaborationUser = {
-  clientId: number
-  name?: string
-  color?: string
-}
+  clientId: number;
+  name?: string;
+  color?: string;
+};
 
 interface CollaborationStorage {
   collaborationCaret?: {
-    users?: CollaborationUser[]
-  }
+    users?: CollaborationUser[];
+  };
 }
 
 export function CollaborationUsers() {
-  const { editor } = useTiptapEditor()
+  const { editor } = useTiptapEditor();
 
   if (!editor || !editor.storage) {
-    return null
+    return null;
   }
 
-  const storage = editor.storage as CollaborationStorage
+  const storage = editor.storage as CollaborationStorage;
   if (!storage.collaborationCaret) {
-    return null
+    return null;
   }
 
   const collaborationUsers: User[] =
@@ -53,7 +56,7 @@ export function CollaborationUsers() {
       id: String(user.clientId),
       name: user.name || "Anonymous",
       color: user.color || "#000000",
-    })) || []
+    })) || [];
 
   return (
     <DropdownMenu>
@@ -99,5 +102,5 @@ export function CollaborationUsers() {
         </Card>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

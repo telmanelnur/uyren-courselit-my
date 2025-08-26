@@ -46,13 +46,13 @@ const CommunityPostSchema = new mongoose.Schema<InternalCommunityPost>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-CommunityPostSchema.virtual('user', {
-    ref: 'User',
-    localField: 'userId',
-    foreignField: '_id'
+CommunityPostSchema.virtual("user", {
+  ref: "User",
+  localField: "userId",
+  foreignField: "_id",
 });
 
 const CommunityPostModel = createModel("CommunityPost", CommunityPostSchema);

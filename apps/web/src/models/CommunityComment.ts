@@ -45,7 +45,7 @@ const ReplySchema = new mongoose.Schema<InternalReply>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const CommunityCommentSchema = new mongoose.Schema<InternalCommunityComment>(
@@ -68,12 +68,12 @@ const CommunityCommentSchema = new mongoose.Schema<InternalCommunityComment>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 CommunityCommentSchema.statics.paginatedFind = async function (
   filter,
-  options
+  options,
 ) {
   const page = options.page || 1;
   const limit = options.limit || 10;
@@ -92,7 +92,7 @@ CommunityCommentSchema.virtual("user", {
 
 const CommunityCommentModel = createModel(
   "CommunityComment",
-  CommunityCommentSchema
+  CommunityCommentSchema,
 );
 
 export default CommunityCommentModel;

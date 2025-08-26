@@ -53,7 +53,7 @@ export const defaultState: {
       thumbnail: "",
       caption: "",
     },
-    subscribedToUpdates: false
+    subscribedToUpdates: false,
   },
   message: {
     open: false,

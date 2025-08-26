@@ -22,13 +22,7 @@ async function resolveDomain(): Promise<Domain | null> {
   } else if (headers.type === "custom" && identifier) {
     domain = await DomainManager.getDomainByCustomDomain(identifier);
   } else {
-    // As a very last resort, attempt to infer by host header via DB
-    try {
-      await connectToDatabase();
-      domain = await DomainModel.findOne({ deleted: false })?.lean?.();
-    } catch (_) {
-      // Ignore
-    }
+    throw new Error("No domain found");
   }
   return (domain as any) || null;
 }
@@ -43,5 +37,3 @@ export const getSiteInfo = cache(async (): Promise<SiteInfo | undefined> => {
   if (!domain) return undefined;
   return (domain.settings as SiteInfo) || undefined;
 });
-
-

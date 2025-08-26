@@ -1,23 +1,23 @@
 import { Metadata, ResolvingMetadata } from "next";
-import UsersHub from "./users-hub";
+import UsersHub from "./_components/users-hub";
 
 export async function generateMetadata(
-    {
-        params,
-        searchParams,
-    }: {
-        params: any;
-        searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-    },
-    parent: ResolvingMetadata,
+  {
+    params,
+    searchParams,
+  }: {
+    params: any;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  },
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const tab = (await searchParams)?.["tab"] || "All users";
+  const tab = (await searchParams)?.["tab"] || "All users";
 
-    return {
-        title: `${tab} | ${(await parent)?.title?.absolute}`,
-    };
+  return {
+    title: `${tab} | ${(await parent)?.title?.absolute}`,
+  };
 }
 
 export default function Page() {
-    return <UsersHub />;
+  return <UsersHub />;
 }

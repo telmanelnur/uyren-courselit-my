@@ -10,22 +10,28 @@ import {
   ValidationException,
 } from "@/server/api/core/exceptions";
 import { checkOwnershipWithoutModel } from "@/server/api/core/permissions";
-import { createDomainRequiredMiddleware, createPermissionMiddleware, MainContextType, protectedProcedure, publicProcedure } from "@/server/api/core/procedures";
+import {
+  createDomainRequiredMiddleware,
+  createPermissionMiddleware,
+  MainContextType,
+  protectedProcedure,
+  publicProcedure,
+} from "@/server/api/core/procedures";
 import { getFormDataSchema } from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
-import { mediaWrappedFieldValidator, textEditorContentValidator } from "@/server/api/core/validators";
+import {
+  mediaWrappedFieldValidator,
+  textEditorContentValidator,
+} from "@/server/api/core/validators";
 import { deleteMedia } from "@/server/services/media";
 import { Constants, UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { z } from "zod";
 import { getPrevNextCursor } from "./helpers";
 
-const { permissions } = UIConstants
+const { permissions } = UIConstants;
 
-const getLessonOrThrow = async (
-  id: string,
-  ctx: MainContextType,
-) => {
+const getLessonOrThrow = async (id: string, ctx: MainContextType) => {
   const lesson = await LessonModel.findOne({
     lessonId: id,
     domain: ctx.domainData.domainObj._id,
@@ -39,12 +45,10 @@ const getLessonOrThrow = async (
     if (!checkOwnershipWithoutModel(lesson, ctx)) {
       throw new NotFoundException("Lesson", id);
     } else {
-      if (
-        !checkPermission(ctx.user.permissions, [
-          permissions.manageCourse,
-        ])
-      ) {
-        throw new AuthorizationException("You are not allowed to update this lesson");
+      if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+        throw new AuthorizationException(
+          "You are not allowed to update this lesson",
+        );
       }
     }
   }
@@ -90,16 +94,18 @@ const updateLesson = async ({
   lessonData,
   ctx,
 }: {
-  lessonData: Partial<Pick<
-    Lesson,
-    | "title"
-    | "content"
-    | "media"
-    | "downloadable"
-    | "requiresEnrollment"
-    | "type"
-  >> & { lessonId: string },
-  ctx: MainContextType,
+  lessonData: Partial<
+    Pick<
+      Lesson,
+      | "title"
+      | "content"
+      | "media"
+      | "downloadable"
+      | "requiresEnrollment"
+      | "type"
+    >
+  > & { lessonId: string };
+  ctx: MainContextType;
 }) => {
   let lesson = await getLessonOrThrow(lessonData.lessonId, ctx);
   lessonData.lessonId = lessonData.lessonId;
@@ -118,25 +124,29 @@ const updateLesson = async ({
 export const lessonRouter = router({
   getById: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      lessonId: z.string().min(1),
-    }))
+    .input(
+      z.object({
+        lessonId: z.string().min(1),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       return getLessonOrThrow(input.lessonId, ctx as MainContextType);
     }),
   create: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageCourse]))
-    .input(getFormDataSchema({
-      title: z.string().min(1).max(100),
-      content: textEditorContentValidator(),
-      type: z.nativeEnum(Constants.LessonType),
-      downloadable: z.boolean(),
-      requiresEnrollment: z.boolean(),
-      media: mediaWrappedFieldValidator().optional(),
-      groupId: z.string().min(1),
-      courseId: z.string().min(1),
-    }))
+    .input(
+      getFormDataSchema({
+        title: z.string().min(1).max(100),
+        content: textEditorContentValidator(),
+        type: z.nativeEnum(Constants.LessonType),
+        downloadable: z.boolean(),
+        requiresEnrollment: z.boolean(),
+        media: mediaWrappedFieldValidator().optional(),
+        groupId: z.string().min(1),
+        courseId: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       lessonValidator(input.data);
 
@@ -145,7 +155,8 @@ export const lessonRouter = router({
         domain: ctx.domainData.domainObj._id,
       });
       if (!course) throw new NotFoundException("Course", input.data.courseId);
-      if (course.isBlog) throw new ConflictException(responses.cannot_add_to_blogs); // TODO: refactor this
+      if (course.isBlog)
+        throw new ConflictException(responses.cannot_add_to_blogs); // TODO: refactor this
       const group = course.groups.find(
         (group) => group.groupId === input.data.groupId,
       );
@@ -168,20 +179,21 @@ export const lessonRouter = router({
       await course.save();
 
       return lesson;
-
     }),
   update: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(getFormDataSchema({
-      title: z.string().min(1).max(100).optional(),
-      content: textEditorContentValidator().optional(),
-      type: z.nativeEnum(Constants.LessonType).optional(),
-      downloadable: z.boolean().optional(),
-      requiresEnrollment: z.boolean().optional(),
-      media: mediaWrappedFieldValidator().nullable().optional(),
-    }).extend({
-      id: z.string().min(1),
-    }))
+    .input(
+      getFormDataSchema({
+        title: z.string().min(1).max(100).optional(),
+        content: textEditorContentValidator().optional(),
+        type: z.nativeEnum(Constants.LessonType).optional(),
+        downloadable: z.boolean().optional(),
+        requiresEnrollment: z.boolean().optional(),
+        media: mediaWrappedFieldValidator().nullable().optional(),
+      }).extend({
+        id: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return updateLesson({
         lessonData: {
@@ -198,9 +210,11 @@ export const lessonRouter = router({
     }),
   delete: protectedProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      id: z.string().min(1),
-    }))
+    .input(
+      z.object({
+        id: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const lesson = await getLessonOrThrow(input.id, ctx as any);
       let course = await CourseModel.findOne({
@@ -227,14 +241,16 @@ export const lessonRouter = router({
   searchAssignmentEntities: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageAnyCourse]))
-    .input(z.object({
-      search: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        search: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { search } = input;
       const assignments = await AssignmentModel.find({
         domain: ctx.domainData.domainObj._id,
-        title: search ? { $regex: search, $options: "i" } : undefined
+        title: search ? { $regex: search, $options: "i" } : undefined,
       });
       const quizzes = await QuizModel.find({
         domain: ctx.domainData.domainObj._id,
@@ -248,10 +264,12 @@ export const lessonRouter = router({
 
   publicGetById: publicProcedure
     .use(createDomainRequiredMiddleware())
-    .input(z.object({
-      courseId: z.string().min(1),
-      lessonId: z.string().min(1),
-    }))
+    .input(
+      z.object({
+        courseId: z.string().min(1),
+        lessonId: z.string().min(1),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const course = await CourseModel.findOne({
         courseId: input.courseId,
@@ -268,7 +286,11 @@ export const lessonRouter = router({
       if (!lesson) {
         throw new NotFoundException("Lesson", input.lessonId);
       }
-      const { nextLesson, prevLesson } = await getPrevNextCursor(lesson.courseId, ctx.domainData.domainObj._id, lesson.lessonId);
+      const { nextLesson, prevLesson } = await getPrevNextCursor(
+        lesson.courseId,
+        ctx.domainData.domainObj._id,
+        lesson.lessonId,
+      );
       return {
         lessonId: lesson.lessonId,
         title: lesson.title,
@@ -280,7 +302,7 @@ export const lessonRouter = router({
         meta: {
           nextLesson: nextLesson || null,
           prevLesson: prevLesson || null,
-        }
+        },
       };
     }),
 });

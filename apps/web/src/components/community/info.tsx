@@ -237,7 +237,7 @@ export function CommunityInfo({
         {membership &&
           hasCommunityPermission(
             membership,
-            Constants.MembershipRole.MODERATE
+            Constants.MembershipRole.MODERATE,
           ) &&
           membership.status === Constants.MembershipStatus.ACTIVE && (
             <Link href={`/dashboard/community/${id}/manage`}>

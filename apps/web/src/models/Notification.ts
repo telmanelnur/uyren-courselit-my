@@ -62,7 +62,7 @@ const NotificationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 NotificationSchema.statics.paginate = async function (userId, options) {

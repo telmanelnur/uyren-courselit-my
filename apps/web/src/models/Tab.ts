@@ -1,4 +1,4 @@
 export default interface Tab {
-    text: string;
-    url: string;
+  text: string;
+  url: string;
 }

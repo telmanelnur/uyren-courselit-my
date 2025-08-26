@@ -65,7 +65,7 @@ export function ReportsTable({ communityId }: { communityId: string }) {
 
   const handleStatusChange = (report: ReportType) => {
     const nextStatus = getNextStatusForCommunityReport(
-      report.status.toLowerCase() as CommunityReportStatus
+      report.status.toLowerCase() as CommunityReportStatus,
     );
     if (nextStatus === Constants.CommunityReportStatus.REJECTED) {
       setCurrentReportId(report.reportId);
@@ -80,7 +80,7 @@ export function ReportsTable({ communityId }: { communityId: string }) {
 
   const updateReportStatus = async (
     id: string,
-    rejectionReason: string = ""
+    rejectionReason: string = "",
   ) => {
     updateStatusMutation
       .mutateAsync({
@@ -99,8 +99,8 @@ export function ReportsTable({ communityId }: { communityId: string }) {
                   status: response.status,
                   rejectionReason: response.rejectionReason,
                 }
-              : r
-          )
+              : r,
+          ),
         );
       });
   };
@@ -206,7 +206,7 @@ export function ReportsTable({ communityId }: { communityId: string }) {
                   </TableCell>
                   <TableCell>
                     {getStatusBadge(
-                      report.status.toLowerCase() as CommunityReportStatus
+                      report.status.toLowerCase() as CommunityReportStatus,
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-gray-500">

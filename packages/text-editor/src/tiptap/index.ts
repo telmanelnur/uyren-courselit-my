@@ -10,20 +10,47 @@ export * from "./components/tiptap-templates/notion-like/notion-like-editor";
 export * from "./components/tiptap-templates/simple/theme-toggle";
 
 // UI Components
-export { BlockquoteButton, useBlockquote } from "./components/tiptap-ui/blockquote-button";
-export { CodeBlockButton, useCodeBlock } from "./components/tiptap-ui/code-block-button";
-export { ColorHighlightButton, useColorHighlight } from "./components/tiptap-ui/color-highlight-button";
+export {
+  BlockquoteButton,
+  useBlockquote,
+} from "./components/tiptap-ui/blockquote-button";
+export {
+  CodeBlockButton,
+  useCodeBlock,
+} from "./components/tiptap-ui/code-block-button";
+export {
+  ColorHighlightButton,
+  useColorHighlight,
+} from "./components/tiptap-ui/color-highlight-button";
 export { ColorHighlightPopover } from "./components/tiptap-ui/color-highlight-popover";
-export { HeadingButton, useHeading } from "./components/tiptap-ui/heading-button";
-export { HeadingDropdownMenu, useHeadingDropdownMenu } from "./components/tiptap-ui/heading-dropdown-menu";
-export { ImageUploadButton, useImageUpload } from "./components/tiptap-ui/image-upload-button";
-export { LinkPopover, useLinkPopover } from "./components/tiptap-ui/link-popover";
+export {
+  HeadingButton,
+  useHeading,
+} from "./components/tiptap-ui/heading-button";
+export {
+  HeadingDropdownMenu,
+  useHeadingDropdownMenu,
+} from "./components/tiptap-ui/heading-dropdown-menu";
+export {
+  ImageUploadButton,
+  useImageUpload,
+} from "./components/tiptap-ui/image-upload-button";
+export {
+  LinkPopover,
+  useLinkPopover,
+} from "./components/tiptap-ui/link-popover";
 export { ListButton, useList } from "./components/tiptap-ui/list-button";
 export { ListDropdownMenu } from "./components/tiptap-ui/list-dropdown-menu";
 export { useListDropdownMenu } from "./components/tiptap-ui/list-dropdown-menu/use-list-dropdown-menu";
 export { MarkButton, useMark } from "./components/tiptap-ui/mark-button";
-export { TextAlignButton, useTextAlign } from "./components/tiptap-ui/text-align-button";
-export { UndoRedoButton, useUndoRedo } from "./components/tiptap-ui/undo-redo-button";
+export {
+  TextAlignButton,
+  useTextAlign,
+} from "./components/tiptap-ui/text-align-button";
+export {
+  UndoRedoButton,
+  useUndoRedo,
+} from "./components/tiptap-ui/undo-redo-button";
 
 // UI Primitives
 export * from "./components/tiptap-ui-primitive/badge";
@@ -77,7 +104,6 @@ export { TrashIcon } from "./components/tiptap-icons/trash-icon";
 export { UnderlineIcon } from "./components/tiptap-icons/underline-icon";
 export { Undo2Icon } from "./components/tiptap-icons/undo2-icon";
 export { ImageIcon } from "./components/tiptap-icons/image-icon";
-
 
 // MY
 export { SparklesIcon } from "./components/tiptap-icons/sparkles-icon";

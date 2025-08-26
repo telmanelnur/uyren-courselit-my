@@ -1,1 +1,1 @@
-export * from "./copy-anchor-link-button"
+export * from "./copy-anchor-link-button";
