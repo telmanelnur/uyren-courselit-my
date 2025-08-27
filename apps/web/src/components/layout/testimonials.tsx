@@ -3,52 +3,49 @@
 import { useState } from "react"
 import { Star } from "lucide-react"
 import { ScrollAnimation } from "@/components/scroll-animation"
+import { useTranslation } from "react-i18next"
 
 export default function TestimonialsSection() {
+  const { t } = useTranslation("common")
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
 
   const testimonials = [
     {
-      quote:
-        "Uyren.AI completely changed how I approach learning. The AI-powered courses helped me understand complex programming concepts in a way that traditional methods never could.",
+      quote: t("testimonials_1_quote"),
       author: "Aigerim K.",
-      role: "Computer Science Student",
+      role: t("testimonials_1_role"),
       image: "/placeholder.svg?height=80&width=80&text=AK",
       stars: 5,
       rotation: "-rotate-12",
     },
     {
-      quote:
-        "The personalized learning path and instant feedback made all the difference. I went from struggling with coding to landing my first tech internship!",
+      quote: t("testimonials_2_quote"),
       author: "Daniyar T.",
-      role: "Software Engineering Student",
+      role: t("testimonials_2_role"),
       image: "/placeholder.svg?height=80&width=80&text=DT",
       stars: 5,
       rotation: "rotate-6",
     },
     {
-      quote:
-        "The hands-on projects and real-world applications at Uyren.AI prepared me for the tech industry better than any traditional program could.",
+      quote: t("testimonials_3_quote"),
       author: "Aida S.",
-      role: "Data Science Graduate",
+      role: t("testimonials_3_role"),
       image: "/placeholder.svg?height=80&width=80&text=AS",
       stars: 5,
       rotation: "-rotate-3",
     },
     {
-      quote:
-        "Amazing platform! The AI tutoring system understood exactly where I was struggling and provided targeted help. My grades improved dramatically.",
+      quote: t("testimonials_4_quote"),
       author: "Nurlan B.",
-      role: "AI/ML Student",
+      role: t("testimonials_4_role"),
       image: "/placeholder.svg?height=80&width=80&text=NB",
       stars: 5,
       rotation: "rotate-8",
     },
     {
-      quote:
-        "Uyren.AI's innovative approach to education opened doors I never thought possible. The skills I learned here got me into my dream university program.",
+      quote: t("testimonials_5_quote"),
       author: "Zhanel M.",
-      role: "University Freshman",
+      role: t("testimonials_5_role"),
       image: "/placeholder.svg?height=80&width=80&text=ZM",
       stars: 5,
       rotation: "-rotate-6",
@@ -59,9 +56,9 @@ export default function TestimonialsSection() {
     <section className="py-20 bg-white relative overflow-hidden">
       <div className="container mx-auto px-4">
         <ScrollAnimation variant="fadeUp" className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-foreground mb-4">What Students Say</h2>
+          <h2 className="text-4xl font-bold text-foreground mb-4">{t("testimonials_title")}</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Hear from students who've experienced the Uyren.AI difference
+            {t("testimonials_subtitle")}
           </p>
         </ScrollAnimation>
 
@@ -97,19 +94,16 @@ export default function TestimonialsSection() {
                         : "shadow-lg border-border/50"
                   }`}
                 >
-                  {/* Stars */}
                   <div className="flex mb-4">
                     {[...Array(testimonial.stars)].map((_, i) => (
                       <Star key={i} className="h-4 w-4 text-brand-primary fill-current" />
                     ))}
                   </div>
 
-                  {/* Quote */}
                   <p className="text-muted-foreground mb-6 text-sm leading-relaxed line-clamp-4">
                     "{testimonial.quote}"
                   </p>
 
-                  {/* Author */}
                   <div className="flex items-center mt-auto">
                     <div className="w-12 h-12 rounded-full overflow-hidden mr-3 flex-shrink-0">
                       <img

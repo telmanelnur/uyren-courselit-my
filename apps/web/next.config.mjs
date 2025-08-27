@@ -1,19 +1,15 @@
 const remotePatterns = [
-  {
-    protocol: "https",
-    hostname: "**",
-  },
+  { protocol: "https", hostname: "**" }
 ];
-
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui", "@workspace/icons", "@workspace/components-library"],
-
-
-  images: {
-    remotePatterns,
+  images: { remotePatterns },
+  i18n: {
+    locales: ["en", "ru", "kz"],
+    defaultLocale: "en",
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

@@ -1,0 +1,186 @@
+[
+    {
+      "id": "1",
+      "title": "Жасанды интеллектке кіріспе",
+      "description": "Жасанды интеллект пен машинамен оқытудың негізгі принциптерін үйреніңіз.",
+      "lessons_count": 3,
+      "duration": "45м",
+      "tags": ["ЖИ", "Бастауыш", "Машинамен оқыту"],
+      "image": "/images/ai.jpg",
+      "level": "Бастауыш",
+      "created_at": "2023-09-01",
+      "groups": [
+        {
+          "id": "1-g1",
+          "title": "Кіріспе",
+          "lessonsOrder": ["1-1", "1-2", "1-3"],
+          "lessons": [
+            {
+              "id": "1-1",
+              "courseId": "1",
+              "title": "Жасанды интеллект дегеніміз не?",
+              "duration": "10м",
+              "type": "video",
+              "is_preview": true,
+              "meta": { "nextLesson": "1-2" }
+            },
+            {
+              "id": "1-2",
+              "courseId": "1",
+              "title": "ЖИ тарихы",
+              "duration": "15м",
+              "type": "text",
+              "is_preview": false,
+              "meta": { "prevLesson": "1-1", "nextLesson": "1-3" },
+              "content": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Жасанды интеллект (ЖИ) 1950 жылдардан бері айтарлықтай дамыды, бастапқыда символдық ЖИ-ден басталып, бүгінгі таңда машинамен оқыту мен терең оқытуға дейін жетті."
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "1-3",
+              "courseId": "1",
+              "title": "Машинамен оқытудың негіздері",
+              "duration": "20м",
+              "type": "video",
+              "is_preview": false,
+              "meta": { "prevLesson": "1-2" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "React-қа кіріспе",
+      "description": "Заманауи интерфейстер құрыңыз және компоненттік архитектураны үйреніңіз.",
+      "lessons_count": 3,
+      "duration": "52м",
+      "tags": ["React", "Frontend", "JavaScript"],
+      "image": "/images/react.jpg",
+      "level": "Бастауыш",
+      "created_at": "2023-10-01",
+      "groups": [
+        {
+          "id": "2-g1",
+          "title": "Бастау",
+          "lessonsOrder": ["2-1", "2-2", "2-3"],
+          "lessons": [
+            {
+              "id": "2-1",
+              "courseId": "2",
+              "title": "React-қа кіріспе",
+              "duration": "12м",
+              "type": "video",
+              "is_preview": true,
+              "meta": { "nextLesson": "2-2" }
+            },
+            {
+              "id": "2-2",
+              "courseId": "2",
+              "title": "JSX және компоненттер",
+              "duration": "18м",
+              "type": "video",
+              "is_preview": false,
+              "meta": { "prevLesson": "2-1", "nextLesson": "2-3" }
+            },
+            {
+              "id": "2-3",
+              "courseId": "2",
+              "title": "Props және State",
+              "duration": "22м",
+              "type": "text",
+              "is_preview": false,
+              "meta": { "prevLesson": "2-2" },
+              "content": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Props компоненттер арасында деректерді жіберу үшін қолданылады, ал state компоненттің ішкі деректерін уақыт өте келе өзгерту үшін пайдаланылады."
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "TypeScript тереңдетілген",
+      "description": "TypeScript генераиктері, декораторлары және терең үлгілерін меңгеріңіз.",
+      "lessons_count": 3,
+      "duration": "83м",
+      "tags": ["TypeScript", "Бағдарламалау"],
+      "image": "/images/typescript.jpg",
+      "level": "Кеңейтілген",
+      "created_at": "2023-11-01",
+      "groups": [
+        {
+          "id": "3-g1",
+          "title": "Негізгі түсініктер",
+          "lessonsOrder": ["3-1", "3-2", "3-3"],
+          "lessons": [
+            {
+              "id": "3-1",
+              "courseId": "3",
+              "title": "Генераиктерді терең түсіну",
+              "duration": "25м",
+              "type": "video",
+              "is_preview": true,
+              "meta": { "nextLesson": "3-2" }
+            },
+            {
+              "id": "3-2",
+              "courseId": "3",
+              "title": "Декораторларды түсіндіру",
+              "duration": "30м",
+              "type": "text",
+              "is_preview": false,
+              "meta": { "prevLesson": "3-1", "nextLesson": "3-3" },
+              "content": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "TypeScript-дегі декораторлар сыныптарға, әдістерге немесе қасиеттерге жобалау кезінде арнайы әрекеттерді қосуға мүмкіндік береді."
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "3-3",
+              "courseId": "3",
+              "title": "Кеңейтілген Utility Types",
+              "duration": "28м",
+              "type": "video",
+              "is_preview": false,
+              "meta": { "prevLesson": "3-2" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+  

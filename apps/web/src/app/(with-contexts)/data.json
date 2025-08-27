@@ -1,3 +1,176 @@
-{
-    "courses": []
-}
+[
+  {
+    "id": "1",
+    "title": "Intro to AI",
+    "description": "Learn the basics of artificial intelligence and machine learning.",
+    "lessons_count": 3,
+    "duration": "45m",
+    "tags": ["AI", "Beginner", "Machine Learning"],
+    "image": "/images/ai.jpg",
+    "level": "Beginner",
+    "created_at": "2023-09-01",
+    "groups": [
+      {
+        "id": "1-g1",
+        "title": "Introduction",
+        "lessonsOrder": ["1-1", "1-2", "1-3"],
+        "lessons": [
+          {
+            "id": "1-1",
+            "courseId": "1",
+            "title": "What is AI?",
+            "duration": "10m",
+            "type": "video",
+            "is_preview": true,
+            "meta": { "nextLesson": "1-2" }
+          },
+          {
+            "id": "1-2",
+            "courseId": "1",
+            "title": "History of AI",
+            "duration": "15m",
+            "type": "text",
+            "is_preview": false,
+            "meta": { "prevLesson": "1-1", "nextLesson": "1-3" },
+            "content": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    { "type": "text", "text": "Artificial Intelligence (AI) has evolved significantly since the 1950s, starting with symbolic AI and moving towards machine learning and deep learning today." }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "1-3",
+            "courseId": "1",
+            "title": "Machine Learning Basics",
+            "duration": "20m",
+            "type": "video",
+            "is_preview": false,
+            "meta": { "prevLesson": "1-2" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "title": "React for Beginners",
+    "description": "Build modern UIs with React and learn component-based architecture.",
+    "lessons_count": 3,
+    "duration": "52m",
+    "tags": ["React", "Frontend", "JavaScript"],
+    "image": "/images/react.jpg",
+    "level": "Beginner",
+    "created_at": "2023-10-01",
+    "groups": [
+      {
+        "id": "2-g1",
+        "title": "Getting Started",
+        "lessonsOrder": ["2-1", "2-2", "2-3"],
+        "lessons": [
+          {
+            "id": "2-1",
+            "courseId": "2",
+            "title": "Introduction to React",
+            "duration": "12m",
+            "type": "video",
+            "is_preview": true,
+            "meta": { "nextLesson": "2-2" }
+          },
+          {
+            "id": "2-2",
+            "courseId": "2",
+            "title": "JSX and Components",
+            "duration": "18m",
+            "type": "video",
+            "is_preview": false,
+            "meta": { "prevLesson": "2-1", "nextLesson": "2-3" }
+          },
+          {
+            "id": "2-3",
+            "courseId": "2",
+            "title": "Props and State",
+            "duration": "22m",
+            "type": "text",
+            "is_preview": false,
+            "meta": { "prevLesson": "2-2" },
+            "content": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    { "type": "text", "text": "Props are used to pass data between components, while state is used to manage internal component data that changes over time." }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Advanced TypeScript",
+    "description": "Master TypeScript generics, decorators, and advanced patterns.",
+    "lessons_count": 3,
+    "duration": "83m",
+    "tags": ["TypeScript", "Programming"],
+    "image": "/images/typescript.jpg",
+    "level": "Advanced",
+    "created_at": "2023-11-01",
+    "groups": [
+      {
+        "id": "3-g1",
+        "title": "Core Concepts",
+        "lessonsOrder": ["3-1", "3-2", "3-3"],
+        "lessons": [
+          {
+            "id": "3-1",
+            "courseId": "3",
+            "title": "Generics Deep Dive",
+            "duration": "25m",
+            "type": "video",
+            "is_preview": true,
+            "meta": { "nextLesson": "3-2" }
+          },
+          {
+            "id": "3-2",
+            "courseId": "3",
+            "title": "Decorators Explained",
+            "duration": "30m",
+            "type": "text",
+            "is_preview": false,
+            "meta": { "prevLesson": "3-1", "nextLesson": "3-3" },
+            "content": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    { "type": "text", "text": "Decorators in TypeScript allow you to attach special behavior to classes, methods, or properties at design time." }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "3-3",
+            "courseId": "3",
+            "title": "Advanced Utility Types",
+            "duration": "28m",
+            "type": "video",
+            "is_preview": false,
+            "meta": { "prevLesson": "3-2" }
+          }
+        ]
+      }
+    ]
+  }
+]

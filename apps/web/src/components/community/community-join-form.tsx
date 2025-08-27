@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useTranslation } from "next-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { CheckCircle, ExternalLink } from "lucide-react"
 
 export function CommunityJoinForm() {
+  const { t } = useTranslation("common")
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,32 +24,22 @@ export function CommunityJoinForm() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const tracks = ["Programming", "Analytics", "AI", "Data Science"]
+  const tracks = [
+    t("track_programming"),
+    t("track_analytics"),
+    t("track_ai"),
+    t("track_data_science"),
+  ]
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required"
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email"
-    }
-
-    if (!formData.track) {
-      newErrors.track = "Please select a track"
-    }
-
-    if (!formData.contribution.trim()) {
-      newErrors.contribution = "Please tell us how you want to contribute"
-    }
-
-    if (!formData.agreeToRules) {
-      newErrors.agreeToRules = "You must agree to the community rules"
-    }
+    if (!formData.name.trim()) newErrors.name = t("error_name_required")
+    if (!formData.email.trim()) newErrors.email = t("error_email_required")
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = t("error_email_invalid")
+    if (!formData.track) newErrors.track = t("error_track_required")
+    if (!formData.contribution.trim()) newErrors.contribution = t("error_contribution_required")
+    if (!formData.agreeToRules) newErrors.agreeToRules = t("error_agree_rules")
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -55,23 +47,17 @@ export function CommunityJoinForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!validateForm()) return
 
     setIsLoading(true)
-
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500))
-
     setIsLoading(false)
     setIsSubmitted(true)
   }
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }))
   }
 
   if (isSubmitted) {
@@ -81,9 +67,9 @@ export function CommunityJoinForm() {
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          <h3 className="text-2xl font-bold text-black mb-4">Welcome to the Community!</h3>
+          <h3 className="text-2xl font-bold text-black mb-4">{t("join_success_title")}</h3>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Thanks for joining us, {formData.name}! We've sent you a welcome email with next steps.
+            {t("join_success_desc", { name: formData.name })}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -91,7 +77,7 @@ export function CommunityJoinForm() {
               onClick={() => window.open("https://discord.gg/", "_blank")}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Join Discord
+              {t("join_discord")}
             </Button>
             <Button
               variant="outline"
@@ -99,7 +85,7 @@ export function CommunityJoinForm() {
               onClick={() => window.open("https://t.me/uyrenai", "_blank")}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Join Telegram
+              {t("join_telegram")}
             </Button>
           </div>
         </CardContent>
@@ -114,7 +100,7 @@ export function CommunityJoinForm() {
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="name" className="block text-sm font-semibold text-black mb-2">
-                Name *
+                {t("form_name")} *
               </label>
               <Input
                 id="name"
@@ -122,14 +108,14 @@ export function CommunityJoinForm() {
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 className={`${errors.name ? "border-red-500" : "border-gray-300"} focus:border-brand-primary`}
-                placeholder="Your full name"
+                placeholder={t("form_name_placeholder")}
               />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-black mb-2">
-                Email *
+                {t("form_email")} *
               </label>
               <Input
                 id="email"
@@ -137,7 +123,7 @@ export function CommunityJoinForm() {
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={`${errors.email ? "border-red-500" : "border-gray-300"} focus:border-brand-primary`}
-                placeholder="your@email.com"
+                placeholder={t("form_email_placeholder")}
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
@@ -146,7 +132,7 @@ export function CommunityJoinForm() {
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="track" className="block text-sm font-semibold text-black mb-2">
-                Primary Track *
+                {t("form_track")} *
               </label>
               <select
                 id="track"
@@ -156,7 +142,7 @@ export function CommunityJoinForm() {
                   errors.track ? "border-red-500" : "border-gray-300"
                 }`}
               >
-                <option value="">Select a track</option>
+                <option value="">{t("form_track_placeholder")}</option>
                 {tracks.map((track) => (
                   <option key={track} value={track}>
                     {track}
@@ -168,7 +154,7 @@ export function CommunityJoinForm() {
 
             <div>
               <label htmlFor="country" className="block text-sm font-semibold text-black mb-2">
-                Country (Optional)
+                {t("form_country")}
               </label>
               <Input
                 id="country"
@@ -176,21 +162,21 @@ export function CommunityJoinForm() {
                 value={formData.country}
                 onChange={(e) => handleInputChange("country", e.target.value)}
                 className="border-gray-300 focus:border-brand-primary"
-                placeholder="Kazakhstan"
+                placeholder={t("form_country_placeholder")}
               />
             </div>
           </div>
 
           <div>
             <label htmlFor="contribution" className="block text-sm font-semibold text-black mb-2">
-              How do you want to contribute? *
+              {t("form_contribution")} *
             </label>
             <Textarea
               id="contribution"
               value={formData.contribution}
               onChange={(e) => handleInputChange("contribution", e.target.value)}
               className={`${errors.contribution ? "border-red-500" : "border-gray-300"} focus:border-brand-primary`}
-              placeholder="Tell us about your goals, what you'd like to learn, or how you'd like to help others..."
+              placeholder={t("form_contribution_placeholder")}
               rows={4}
             />
             {errors.contribution && <p className="text-red-500 text-sm mt-1">{errors.contribution}</p>}
@@ -205,7 +191,7 @@ export function CommunityJoinForm() {
               className="mt-1 w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary"
             />
             <label htmlFor="agreeToRules" className="text-sm text-gray-700 leading-relaxed">
-              I agree to the community rules and guidelines outlined above. *
+              {t("form_agree_rules")} *
             </label>
           </div>
           {errors.agreeToRules && <p className="text-red-500 text-sm">{errors.agreeToRules}</p>}
@@ -216,7 +202,7 @@ export function CommunityJoinForm() {
               disabled={isLoading}
               className="flex-1 bg-brand-primary hover:bg-brand-primary-hover text-white py-3"
             >
-              {isLoading ? "Joining..." : "Join Community"}
+              {isLoading ? t("form_joining") : t("form_join_community")}
             </Button>
             <Button
               type="button"
@@ -224,7 +210,7 @@ export function CommunityJoinForm() {
               className="flex-1 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white py-3 bg-transparent"
               onClick={() => window.open("https://discord.gg/", "_blank")}
             >
-              Join Discord
+              {t("join_discord")}
             </Button>
           </div>
         </form>

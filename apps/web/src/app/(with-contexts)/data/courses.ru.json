@@ -1,0 +1,177 @@
+[
+    {
+      "id": "1",
+      "title": "Введение в ИИ",
+      "description": "Изучите основы искусственного интеллекта и машинного обучения.",
+      "lessons_count": 3,
+      "duration": "45м",
+      "tags": ["ИИ", "Начинающий", "Машинное обучение"],
+      "image": "/images/ai.jpg",
+      "level": "Beginner",
+      "created_at": "2023-09-01",
+      "groups": [
+        {
+          "id": "1-g1",
+          "title": "Введение",
+          "lessonsOrder": ["1-1", "1-2", "1-3"],
+          "lessons": [
+            {
+              "id": "1-1",
+              "courseId": "1",
+              "title": "Что такое ИИ?",
+              "duration": "10м",
+              "type": "video",
+              "is_preview": true,
+              "meta": { "nextLesson": "1-2" }
+            },
+            {
+              "id": "1-2",
+              "courseId": "1",
+              "title": "История ИИ",
+              "duration": "15м",
+              "type": "text",
+              "is_preview": false,
+              "meta": { "prevLesson": "1-1", "nextLesson": "1-3" },
+              "content": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      { "type": "text", "text": "Искусственный интеллект (ИИ) значительно развился с 1950-х годов, начиная с символического ИИ и переходя к машинному обучению и глубокому обучению." }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "1-3",
+              "courseId": "1",
+              "title": "Основы машинного обучения",
+              "duration": "20м",
+              "type": "video",
+              "is_preview": false,
+              "meta": { "prevLesson": "1-2" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "React для начинающих",
+      "description": "Создавайте современные интерфейсы с помощью React и изучите компонентную архитектуру.",
+      "lessons_count": 3,
+      "duration": "52м",
+      "tags": ["React", "Frontend", "JavaScript"],
+      "image": "/images/react.jpg",
+      "level": "Beginner",
+      "created_at": "2023-10-01",
+      "groups": [
+        {
+          "id": "2-g1",
+          "title": "Начало работы",
+          "lessonsOrder": ["2-1", "2-2", "2-3"],
+          "lessons": [
+            {
+              "id": "2-1",
+              "courseId": "2",
+              "title": "Введение в React",
+              "duration": "12м",
+              "type": "video",
+              "is_preview": true,
+              "meta": { "nextLesson": "2-2" }
+            },
+            {
+              "id": "2-2",
+              "courseId": "2",
+              "title": "JSX и компоненты",
+              "duration": "18м",
+              "type": "video",
+              "is_preview": false,
+              "meta": { "prevLesson": "2-1", "nextLesson": "2-3" }
+            },
+            {
+              "id": "2-3",
+              "courseId": "2",
+              "title": "Props и состояние",
+              "duration": "22м",
+              "type": "text",
+              "is_preview": false,
+              "meta": { "prevLesson": "2-2" },
+              "content": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      { "type": "text", "text": "Props используются для передачи данных между компонентами, а state управляет внутренними данными компонента, которые изменяются со временем." }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Продвинутый TypeScript",
+      "description": "Освойте generics, decorators и продвинутые паттерны TypeScript.",
+      "lessons_count": 3,
+      "duration": "83м",
+      "tags": ["TypeScript", "Программирование"],
+      "image": "/images/typescript.jpg",
+      "level": "Advanced",
+      "created_at": "2023-11-01",
+      "groups": [
+        {
+          "id": "3-g1",
+          "title": "Основные концепции",
+          "lessonsOrder": ["3-1", "3-2", "3-3"],
+          "lessons": [
+            {
+              "id": "3-1",
+              "courseId": "3",
+              "title": "Глубокое изучение Generics",
+              "duration": "25м",
+              "type": "video",
+              "is_preview": true,
+              "meta": { "nextLesson": "3-2" }
+            },
+            {
+              "id": "3-2",
+              "courseId": "3",
+              "title": "Объяснение Decorators",
+              "duration": "30м",
+              "type": "text",
+              "is_preview": false,
+              "meta": { "prevLesson": "3-1", "nextLesson": "3-3" },
+              "content": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      { "type": "text", "text": "Decorators в TypeScript позволяют добавлять специальное поведение к классам, методам или свойствам на этапе проектирования." }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "3-3",
+              "courseId": "3",
+              "title": "Продвинутые Utility Types",
+              "duration": "28м",
+              "type": "video",
+              "is_preview": false,
+              "meta": { "prevLesson": "3-2" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+  

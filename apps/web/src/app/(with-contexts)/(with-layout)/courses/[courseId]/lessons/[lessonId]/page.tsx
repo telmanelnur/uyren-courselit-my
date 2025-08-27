@@ -1,195 +1,164 @@
 "use client"
 
-import { trpc } from "@/utils/trpc"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
-import {
-  ArrowLeft,
-  ArrowRight,
-  FileText
-} from "lucide-react"
+import { ArrowLeft, ArrowRight, FileText } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useRef } from "react"
 import dynamic from "next/dynamic"
 import CourseLessonsSidebar from "../../../_components/course-lessons-sidebar"
 import { TextEditorContent } from "@workspace/common-models"
+import { useTranslation } from "next-i18next"
 
-// Dynamic import for LessonContentEditor
+
+interface LessonMeta {
+  prevLesson?: string
+  nextLesson?: string
+}
+
+interface Lesson {
+  id: string
+  courseId: string
+  title: string
+  duration: string
+  type: string
+  is_preview: boolean
+  meta: LessonMeta
+  content?: TextEditorContent
+}
+
+interface Group {
+  id: string
+  title: string
+  lessons: Lesson[]
+}
+
+interface Course {
+  id: string
+  title: string
+  groups: Group[]
+}
+
+
 const LessonContentEditor = dynamic(
-  () => import("@/components/editors/tiptap/templates/lesson-content/lesson-content-editor").then(mod => ({ default: mod.LessonContentEditor })),
+  () =>
+    import("@/components/editors/tiptap/templates/lesson-content/lesson-content-editor").then(
+      mod => ({ default: mod.LessonContentEditor })
+    ),
   { ssr: false }
 )
 
 export default function LessonDetailPage() {
+  const { t, i18n } = useTranslation("common")
+  let coursesDataJson
+
+  if (i18n.language === "ru") {
+    coursesDataJson = require("../../../../../data/courses.ru.json")
+  } else if (i18n.language === "kz") {
+    coursesDataJson = require("../../../../../data/courses.kz.json")
+  } else {
+    coursesDataJson = require("../../../../../data/courses.en.json")
+  }
+  
+  const coursesData: Course[] = coursesDataJson as Course[]
+  
   const params = useParams()
   const courseId = params.courseId as string
   const lessonId = params.lessonId as string
   const editorRef = useRef<any>(null)
 
-  // Load lesson data from tRPC
-  const loadLessonQuery = trpc.lmsModule.courseModule.lesson.publicGetById.useQuery({
-    courseId,
-    lessonId,
-  }, {
-    enabled: !!(courseId && lessonId),
-  })
+  const course = coursesData.find(c => c.id === courseId) || null
+  const lessons = course?.groups.flatMap(g => g.lessons) || []
+  const lesson = lessons.find(l => l.id === lessonId) || null
 
-  // Load course data to get lesson groups and navigation
-  const loadCourseQuery = trpc.lmsModule.courseModule.course.getByCourseDetailed.useQuery({
-    courseId,
-  }, {
-    enabled: !!courseId,
-  })
-
-  const isLoading = loadLessonQuery.isLoading || loadCourseQuery.isLoading
-  const lesson = loadLessonQuery.data
-  const course = loadCourseQuery.data
-  const lessonError = loadLessonQuery.error
-  const courseError = loadCourseQuery.error
-
-  // Handle errors
-  if (lessonError) {
+  if (!course || !lesson) {
     return (
-      <main className="bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Error Loading Lesson</h1>
-            <p className="text-muted-foreground mb-6">{lessonError.message}</p>
-            <Button asChild>
-              <Link href={`/courses/${courseId}`}>Back to Course</Link>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t("lesson_not_found")}</h1>
+          <p className="text-gray-600 mb-4">{t("lesson_not_exist_access")}</p>
+          <Link href={`/courses/${courseId || ""}`}>
+            <Button className="bg-brand-primary hover:bg-brand-primary-hover">
+              {t("back_to_course")}
             </Button>
-          </div>
+          </Link>
         </div>
-      </main>
+      </div>
     )
   }
 
-  if (courseError) {
-    return (
-      <main className="bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Error Loading Course</h1>
-            <p className="text-muted-foreground mb-6">{courseError.message}</p>
-            <Button asChild>
-              <Link href="/courses">Back to Courses</Link>
-            </Button>
-          </div>
-        </div>
-      </main>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <main className="bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="h-8 bg-muted rounded animate-pulse" />
-              <div className="h-12 bg-muted rounded animate-pulse" />
-              <div className="h-6 bg-muted rounded animate-pulse" />
-              <div className="h-96 bg-muted rounded animate-pulse" />
-            </div>
-            <div className="space-y-6">
-              <div className="h-64 bg-muted rounded animate-pulse" />
-            </div>
-          </div>
-        </div>
-      </main>
-    )
-  }
-
-  if (!lesson) {
-    return (
-      <main className="bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Lesson Not Found</h1>
-            <p className="text-muted-foreground mb-6">The lesson you're looking for doesn't exist or you don't have access to it.</p>
-            <Button asChild>
-              <Link href={`/courses/${courseId}`}>Back to Course</Link>
-            </Button>
-          </div>
-        </div>
-      </main>
-    )
-  }
-
-  const getTypeIcon = (type: string) => {
-    switch (type?.toLowerCase()) {
-      case "text":
-        return <FileText className="h-4 w-4" />
-      default:
-        return <FileText className="h-4 w-4" />
-    }
-  }
+  const getTypeIcon = (type: string) => <FileText className="h-4 w-4" />
 
   return (
-    <main className="bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link href="/courses" className="hover:text-foreground">
-                Courses
-              </Link>
-              <span>/</span>
-              <Link href={`/courses/${courseId}`} className="hover:text-foreground">
-                {course?.title || "Course"}
-              </Link>
-              <span>/</span>
-              <span className="text-foreground">{lesson.title}</span>
-            </div>
+    <div className="min-h-screen bg-white m--lesson-page">
+      {/* Breadcrumb */}
+      <section className="py-4 border-b bg-gray-50/50 m--breadcrumb-section">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 m--breadcrumbs">
+            <Link href="/courses" className="hover:text-brand-primary transition-colors">
+              {t("courses")}
+            </Link>
+            <span>/</span>
+            <Link href={`/courses/${courseId}`} className="hover:text-brand-primary transition-colors">
+              {course.title}
+            </Link>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">{lesson.title}</span>
+          </div>
+        </div>
+      </section>
 
-            {/* Lesson Header */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                {getTypeIcon(lesson.type)}
-                <Badge variant="secondary" className="capitalize">
-                  {lesson.type}
-                </Badge>
+      {/* Main Content */}
+      <section className="py-8 m--lesson-main">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-4 gap-8 m--lesson-layout">
+            {/* Content Area */}
+            <div className="lg:col-span-3 space-y-6 m--lesson-content">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6 m--lesson-header">
+                <Link
+                  href={`/courses/${courseId}`}
+                  className="inline-flex items-center text-gray-600 hover:text-brand-primary transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t("back_to_course")}
+                </Link>
+                <div className="flex items-center gap-2">
+                  {getTypeIcon(lesson.type)}
+                  <Badge
+                    variant="outline"
+                    className="border-brand-primary text-brand-primary capitalize"
+                  >
+                    {lesson.type ? t(`lesson_type.${lesson.type.toLowerCase()}`) : t("content")}
+                  </Badge>
+                </div>
               </div>
 
-              <h1 className="text-3xl font-bold text-foreground">{lesson.title}</h1>
-              {lesson.media?.caption && (
-                <p className="text-lg text-muted-foreground">{lesson.media.caption}</p>
-              )}
-            </div>
+              {/* Title */}
+              <div className="m--lesson-title-section">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4 m--lesson-title">
+                  {lesson.title}
+                </h1>
+              </div>
 
-            {/* Lesson Content */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  {/* Attached Image/Thumbnail */}
-                  {lesson.media?.thumbnail && (
-                    <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                      <img
-                        src={lesson.media.thumbnail}
-                        alt={lesson.media.caption || "Lesson thumbnail"}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-
-                  {/* Lesson Content - immediately render LessonContentEditor */}
-                  {lesson.type?.toLowerCase() === "text" ? (
-                    lesson.content ? (
+              {/* Lesson Content */}
+              <Card className="border-0 shadow-sm m--lesson-content-card">
+                <CardContent className="p-8">
+                  <div className="space-y-6">
+                    {lesson.type?.toLowerCase() === "text" ? (
                       <LessonContentEditor
                         ref={editorRef}
                         editable={false}
-                        placeholder="Loading lesson content..."
+                        placeholder={t("loading_lesson_content")}
                         onEditor={(editor, meta) => {
-                          if (meta.reason === "create" && lesson?.content && lesson.type === "text") {
+                          if (meta.reason === "create" && lesson.type === "text") {
                             try {
-                              // Set content when editor is ready
-                              console.log("Setting lesson content:", lesson.content)
                               const c = lesson.content as TextEditorContent
-                              editor?.commands.setContent(c.content)
+                              if (c?.content) {
+                                editor?.commands.setContent(c.content)
+                              }
                             } catch (error) {
                               console.error("Error setting lesson content:", error)
                             }
@@ -197,63 +166,86 @@ export default function LessonDetailPage() {
                         }}
                       />
                     ) : (
-                      <div className="text-muted-foreground">
-                        <p>Text content not available.</p>
+                      <div className="bg-muted rounded-lg p-8 text-center">
+                        <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                        <h4 className="text-lg font-semibold mb-2">{t("content")}</h4>
+                        <p className="text-gray-600">{t("text_lessons_only")}</p>
                       </div>
-                    )
-                  ) : (
-                    <div className="bg-muted rounded-lg p-8 text-center">
-                      <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                      <h4 className="text-lg font-semibold mb-2">Content</h4>
-                      <p className="text-muted-foreground">Only text lessons are supported at this time.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between">
-              {lesson.meta?.prevLesson ? (
-                <Link href={`/courses/${courseId}/lessons/${lesson.meta.prevLesson}`}>
-                  <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-                    <ArrowLeft className="h-4 w-4" />
-                    Previous Lesson
-                  </Button>
-                </Link>
-              ) : (
-                <div />
-              )}
+              {/* Lessons Section */}
+              <Card className="border border-gray-200 shadow-sm m--lessons-list">
+                <CardContent className="p-6 space-y-4">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("course_lessons")}</h2>
+                  {lessons.map((l, i) => (
+                    <Link
+                      key={l.id}
+                      href={`/courses/${courseId}/lessons/${l.id}`}
+                      className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm">
+                          {i + 1}
+                        </div>
+                        <span className="text-gray-800 font-medium">{l.title}</span>
+                      </div>
+                      <span className="text-sm text-gray-500">{l.duration}</span>
+                    </Link>
+                  ))}
+                </CardContent>
+              </Card>
 
-              {lesson.meta?.nextLesson ? (
-                <Link href={`/courses/${courseId}/lessons/${lesson.meta.nextLesson}`}>
-                  <Button className="flex items-center gap-2 bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))] text-white">
-                    Next Lesson
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              ) : (
-                <Link href={`/courses/${courseId}`}>
-                  <Button className="flex items-center gap-2 bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))] text-white">
-                    Back to Course
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+              {/* Navigation */}
+              <div className="flex justify-between items-center pt-8 border-t m--lesson-navigation">
+                {lesson.meta?.prevLesson ? (
+                  <Link
+                    href={`/courses/${courseId}/lessons/${lesson.meta.prevLesson}`}
+                    className="flex items-center text-brand-primary hover:text-brand-primary-hover transition-colors"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    {t("previous_lesson")}
+                  </Link>
+                ) : (
+                  <div></div>
+                )}
+
+                {lesson.meta?.nextLesson ? (
+                  <Link
+                    href={`/courses/${courseId}/lessons/${lesson.meta.nextLesson}`}
+                    className="flex items-center text-brand-primary hover:text-brand-primary-hover transition-colors"
+                  >
+                    {t("next_lesson")}
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/courses/${courseId}`}
+                    className="flex items-center text-brand-primary hover:text-brand-primary-hover transition-colors"
+                  >
+                    {t("back_to_course")}
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="m--lesson-sidebar">
+              {course && (
+                <CourseLessonsSidebar
+                  course={course as any}
+                  currentLessonId={lessonId}
+                  showPricing={false}
+                  showCourseInfo={false}
+                />
               )}
             </div>
           </div>
-
-          {/* Sidebar - Course Lessons */}
-          {course && (
-            <CourseLessonsSidebar
-              course={course as any}
-              currentLessonId={lessonId}
-              showPricing={false}
-              showCourseInfo={false}
-            />
-          )}
         </div>
-      </div>
-    </main>
+      </section>
+    </div>
   )
 }

@@ -14,6 +14,8 @@ import { Toaster } from "sonner";
 import { getAddressFromHeaders } from "@/lib/ui/lib/utils";
 import { headers } from "next/headers";
 import { defaultState } from "@/components/contexts/default-state";
+import TranslationWrapper from "@/components/providers/translation-wrapper";
+
 
 export default async function Layout({
   children,
@@ -40,7 +42,9 @@ export default async function Layout({
               >
                 <ProfileProvider>
                   <NiceModalProvider>
-                    {children}
+                    <TranslationWrapper>
+                      {children}
+                    </TranslationWrapper>
                   </NiceModalProvider>
                 </ProfileProvider>
               </NextThemesProvider>

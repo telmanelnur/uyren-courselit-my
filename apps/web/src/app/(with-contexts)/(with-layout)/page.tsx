@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslation, Trans } from "react-i18next"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/layout/footer"
 import Testimonials from "@/components/layout/testimonials"
@@ -5,58 +8,60 @@ import { ScrollAnimation, ScrollGroup } from "@/components/scroll-animation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Play, Star, ArrowRight } from "lucide-react"
+import { Play, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
 export default function HomePage() {
+  const { t } = useTranslation("common")
+
   const features = [
     {
       icon: "/img/gears.svg",
-      title: "Systematic approach",
-      description: "Courses are divided into modules, assignments, and final projects. Clear structure over chaos."
+      title: t("feature_systematic_title"),
+      description: t("feature_systematic_desc"),
     },
     {
       icon: "/img/python.svg",
-      title: "Built-in practice",
-      description: "Each topic comes with tasks and case studies. Learning means solving, not just watching."
+      title: t("feature_practice_title"),
+      description: t("feature_practice_desc"),
     },
     {
       icon: "/img/chart-line-up.svg",
-      title: "Growth through understanding",
-      description: "No cramming. Only deep, truly engineering-level thinking."
+      title: t("feature_growth_title"),
+      description: t("feature_growth_desc"),
     },
     {
       icon: "/img/support.svg",
-      title: "Feedback",
-      description: "Smart chatbot and expert support. Answers come when they're really needed."
-    }
-  ];
+      title: t("feature_feedback_title"),
+      description: t("feature_feedback_desc"),
+    },
+  ]
 
   const stats = [
-    { number: "10+", label: "Years of\nExperience" },
-    { number: "200+", label: "Students\nEnrolled" },
-    { number: "40+", label: "Popular\nCourses" }
-  ];
+    { number: "10+", label: t("stats_years_experience") },
+    { number: "200+", label: t("stats_students_enrolled") },
+    { number: "40+", label: t("stats_popular_courses") },
+  ]
 
   const courses = [
     {
       slug: "python-course",
       image: "/img/python-course.jpeg",
-      title: "Intro to Python Programming",
-      level: "Level: Beginner · Core Skill"
+      title: t("course_python_title"),
+      level: t("course_python_level"),
     },
     {
       slug: "data-analytics-course",
       image: "/img/data-analytics.jpeg",
-      title: "Data Analytics Introduction",
-      level: "Level: Beginner · Core Skill"
-    }
-  ];
+      title: t("course_data_title"),
+      level: t("course_data_level"),
+    },
+  ]
 
   return (
     <div className="page-transition">
-     <Navigation />
+      <Navigation />
 
       {/* Hero Section */}
       <section className="relative bg-background py-20 overflow-hidden">
@@ -65,13 +70,13 @@ export default function HomePage() {
             <ScrollAnimation variant="fadeUp" delay={0.2}>
               <div className="space-y-6">
                 <Badge className="mb-4 bg-orange-100 text-orange-800 hover:bg-orange-200 text-sm font-semibold px-4 py-2">
-                  AI-Powered Education Platform
+                  {t("badge_ai_platform")}
                 </Badge>
                 <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
-                  <span className="text-brand-primary font-bold">Create</span> a future with real skills
+                  <Trans i18nKey="hero_title" t={t} components={{ 0: <span className="text-brand-primary font-bold" /> }} />
                 </h1>
                 <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
-                  Learn what actually matters: Python, ML, science. No fluff. Just challenges, structure, and growth.
+                  {t("hero_subtitle")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
                   <Link href="/courses">
@@ -79,7 +84,7 @@ export default function HomePage() {
                       size="lg"
                       className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     >
-                      Start Learning
+                      {t("hero_start_learning")}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
@@ -89,7 +94,7 @@ export default function HomePage() {
                     className="border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent hover:scale-105 flex items-center"
                   >
                     <Play className="mr-2 h-5 w-5" />
-                    Watch Lecture
+                    {t("hero_watch_lecture")}
                   </Button>
                 </div>
               </div>
@@ -97,19 +102,13 @@ export default function HomePage() {
 
             <ScrollAnimation variant="fadeRight" delay={0.4}>
               <div className="relative">
-                {/* <div className="absolute -inset-4 bg-gradient-to-r from-orange-400 to-red-400 rounded-lg blur opacity-20 animate-pulse"></div>  */}
                 <div className="hidden md:block">
                   <Image
                     src="/img/banner_copy.png"
                     alt="Banner"
                     width={800}
                     height={600}
-                    // className="relative rounded-lg shadow-2xl hover:scale-105 transition-transform duration-500"
                   />
-                </div>
-                <div className="md:hidden w-full relative">
-                  {/* <div className="bg-[url('/img/banner_copy.png')] bg-cover bg-center rounded-lg" style={{ paddingTop: "100%" }} />
-                  <div className="absolute inset-0 bg-background/60 rounded-lg"></div> */}
                 </div>
               </div>
             </ScrollAnimation>
@@ -145,10 +144,10 @@ export default function HomePage() {
           <ScrollAnimation variant="fadeUp">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6">
-                <span className="text-brand-primary">More</span> than just video lessons
+                <Trans i18nKey="features_title" t={t} components={{ 0: <span className="text-brand-primary" /> }} />
               </h2>
               <p className="text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Courses built with a system: theory, practice, support. Every module is a step toward real growth.
+                {t("features_subtitle")}
               </p>
             </div>
           </ScrollAnimation>
@@ -165,7 +164,6 @@ export default function HomePage() {
                           alt={feature.title} 
                           width={30} 
                           height={30} 
-                          className="text-brand-primary group-hover:text-white" 
                         />
                       </div>
                       <h3 className="text-xl font-bold text-foreground mb-4">{feature.title}</h3>
@@ -187,7 +185,7 @@ export default function HomePage() {
           <ScrollAnimation variant="fadeUp">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6">
-                <span className="text-brand-primary">Courses</span> that lead to real results
+                <Trans i18nKey="courses_title" t={t} components={{ 0: <span className="text-brand-primary" /> }} />
               </h2>
             </div>
           </ScrollAnimation>
@@ -196,10 +194,7 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               {courses.map((course, index) => (
                 <ScrollAnimation key={index} variant="fadeUp">
-                  <Link 
-                    href={`/courses/${course.slug}`} 
-                    className="block h-full group"
-                  >
+                  <Link href={`/courses/${course.slug}`} className="block h-full group">
                     <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 bg-card group hover:scale-105">
                       <CardContent className="p-6">
                         <Image 
@@ -217,7 +212,7 @@ export default function HomePage() {
                             height={24} 
                             className="w-6 h-6 p-1 border border-muted-foreground rounded"
                           />
-                          <p className="text-sm font-medium text-foreground">Uyren Academy</p>
+                          <p className="text-sm font-medium text-foreground">{t("courses_provider")}</p>
                         </div>
                         <h3 className="text-xl font-bold text-foreground mb-2">{course.title}</h3>
                         <p className="text-muted-foreground">{course.level}</p>
@@ -236,7 +231,7 @@ export default function HomePage() {
                   size="lg"
                   className="bg-transparent border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 hover:scale-105"
                 >
-                  Explore More Courses
+                  {t("courses_explore_more")}
                 </Button>
               </Link>
             </div>
@@ -251,9 +246,9 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center relative z-10">
           <ScrollAnimation variant="fadeUp">
             <div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">Ready to Start Your Journey?</h2>
+              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">{t("cta_title")}</h2>
               <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-                Take the first step towards future-ready learning. Our team will help you start your journey.
+                {t("cta_subtitle")}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/courses">
@@ -261,7 +256,7 @@ export default function HomePage() {
                     size="lg"
                     className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
-                    Start Learning
+                    {t("cta_start_learning")}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
@@ -271,7 +266,7 @@ export default function HomePage() {
                     size="lg"
                     className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent hover:scale-105"
                   >
-                    Contact Us
+                    {t("cta_contact_us")}
                   </Button>
                 </Link>
               </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslation } from "next-i18next"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -11,19 +12,19 @@ import { CheckCircle, Users, GraduationCap, Heart, FileText, UserCheck, Clock, A
 import { GrantApplicationForm } from "@/components/grant-application-form"
 
 export default function GrantsPage() {
+  const { t } = useTranslation("common")
   const [showApplicationForm, setShowApplicationForm] = useState(false)
 
   const grantTypes = [
     {
-      title: "100% Grant",
-      description:
-        "Full access to all materials for eligible learners facing documented financial hardship or exceptional merit.",
+      title: t("grant_100_title"),
+      description: t("grant_100_desc"),
       icon: <Award className="h-8 w-8 text-brand-primary" />,
       highlight: true,
     },
     {
-      title: "Up to 50% Discount",
-      description: "Partial aid based on social/financial circumstances and motivation.",
+      title: t("grant_50_title"),
+      description: t("grant_50_desc"),
       icon: <Heart className="h-8 w-8 text-brand-primary" />,
       highlight: false,
     },
@@ -31,100 +32,94 @@ export default function GrantsPage() {
 
   const audiences = [
     {
-      title: "High School Students",
-      subtitle: "Grades 9–12",
-      description: "Passing an entry test. Achievements considered (olympiads, projects, portfolio).",
+      title: t("audience_highschool_title"),
+      subtitle: t("audience_highschool_subtitle"),
+      description: t("audience_highschool_desc"),
       icon: <GraduationCap className="h-6 w-6" />,
     },
     {
-      title: "University & College Students",
-      subtitle: "Current enrollment",
-      description: "100% Grant for difficult situations. Up to 50% based on application and verified data.",
+      title: t("audience_university_title"),
+      subtitle: t("audience_university_subtitle"),
+      description: t("audience_university_desc"),
       icon: <Users className="h-6 w-6" />,
     },
     {
-      title: "Motivated Learners",
-      subtitle: "Limited resources",
-      description: "Up to 50% discount. Requirement: Short interview + application form.",
+      title: t("audience_motivated_title"),
+      subtitle: t("audience_motivated_subtitle"),
+      description: t("audience_motivated_desc"),
       icon: <Heart className="h-6 w-6" />,
     },
   ]
 
   const steps = [
     {
-      title: "Apply Online",
-      description: "Fill out application form with basic info, motivation, and documents",
+      title: t("step_apply_title"),
+      description: t("step_apply_desc"),
       icon: <FileText className="h-6 w-6" />,
     },
     {
-      title: "Entry Test",
-      description: "Short online test for high school students; auto-graded",
+      title: t("step_test_title"),
+      description: t("step_test_desc"),
       icon: <CheckCircle className="h-6 w-6" />,
     },
     {
-      title: "Review & Verification",
-      description: "Merit + need evaluation; optional interview",
+      title: t("step_review_title"),
+      description: t("step_review_desc"),
       icon: <UserCheck className="h-6 w-6" />,
     },
     {
-      title: "Decision & Onboarding",
-      description: "Email decision; accepted learners get platform access",
+      title: t("step_decision_title"),
+      description: t("step_decision_desc"),
       icon: <Award className="h-6 w-6" />,
     },
     {
-      title: "Keep Your Aid",
-      description: "Maintain progress/attendance; periodic check-ins",
+      title: t("step_maintain_title"),
+      description: t("step_maintain_desc"),
       icon: <Clock className="h-6 w-6" />,
     },
   ]
 
   const testimonials = [
     {
-      name: "Aruzhan K.",
-      role: "Computer Science Student",
-      content:
-        "The AI programming course changed my perspective completely. The grant made it possible for me to access world-class education.",
+      name: t("testimonial_aruzhan_name"),
+      role: t("testimonial_aruzhan_role"),
+      content: t("testimonial_aruzhan_content"),
       avatar: "AK",
     },
     {
-      name: "Nursultan T.",
-      role: "High School Graduate",
-      content:
-        "Thanks to Uyren.AI's support, I'm now confident in data science. The personalized learning approach is incredible.",
+      name: t("testimonial_nursultan_name"),
+      role: t("testimonial_nursultan_role"),
+      content: t("testimonial_nursultan_content"),
       avatar: "NT",
     },
     {
-      name: "Aigerim S.",
-      role: "University Student",
-      content:
-        "The financial aid program opened doors I never thought possible. The AI tutoring system is like having a personal mentor.",
+      name: t("testimonial_aigerim_name"),
+      role: t("testimonial_aigerim_role"),
+      content: t("testimonial_aigerim_content"),
       avatar: "AS",
     },
   ]
 
   const faqs = [
     {
-      question: "Who is eligible?",
-      answer:
-        "Learners with strong motivation and/or verified financial need. We consider academic achievements, personal circumstances, and commitment to learning.",
+      question: t("faq_eligible_question"),
+      answer: t("faq_eligible_answer"),
     },
     {
-      question: "Do I need to take a test?",
-      answer:
-        "High school applicants must take an entry test. University students and other learners are evaluated case by case based on their application.",
+      question: t("faq_test_question"),
+      answer: t("faq_test_answer"),
     },
     {
-      question: "How long does it take?",
-      answer: "Typical review takes 7–10 business days. We'll keep you updated throughout the process via email.",
+      question: t("faq_duration_question"),
+      answer: t("faq_duration_answer"),
     },
     {
-      question: "Can I reapply?",
-      answer: "Yes, you can reapply after 60 days with updated information or if your circumstances have changed.",
+      question: t("faq_reapply_question"),
+      answer: t("faq_reapply_answer"),
     },
     {
-      question: "Will my data be safe?",
-      answer:
-        "We securely store and review only what's needed for the application process. Your privacy is our priority.",
+      question: t("faq_data_question"),
+      answer: t("faq_data_answer"),
     },
   ]
 
@@ -139,26 +134,23 @@ export default function GrantsPage() {
           <div className="container mx-auto max-w-4xl text-center relative z-10">
             <div className="animate-fade-in-up">
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                Education should be <span className="text-brand-primary">accessible</span>.
+                {t("grants_hero_title")} <span className="text-brand-primary">{t("grants_hero_title_highlight")}</span>
               </h1>
-              <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-                At Uyren.AI, we believe everyone deserves a chance to learn — regardless of financial situation. Our
-                grants and discounts support motivated learners ready to prove themselves.
-              </p>
+              <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">{t("grants_hero_desc")}</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   size="lg"
                   className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-3 text-lg font-semibold transition-all duration-300 transform hover:scale-105"
                   onClick={() => setShowApplicationForm(true)}
                 >
-                  Apply for a Grant
+                  {t("btn_apply_grant")}
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   className="border-white text-white hover:bg-white hover:text-black px-8 py-3 text-lg font-semibold transition-all duration-300 bg-transparent"
                 >
-                  See Eligibility
+                  {t("btn_see_eligibility")}
                 </Button>
               </div>
             </div>
@@ -169,30 +161,25 @@ export default function GrantsPage() {
         <section className="py-20 px-4">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-black mb-4">What We Offer</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Flexible financial support designed to make AI education accessible to everyone
-              </p>
+              <h2 className="text-4xl font-bold text-black mb-4">{t("section_what_we_offer_title")}</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t("section_what_we_offer_desc")}</p>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
               {grantTypes.map((grant, index) => (
                 <Card
                   key={index}
-                  className={`group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 ${
-                    grant.highlight ? "ring-2 ring-brand-primary" : ""
-                  }`}
+                  className={`group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 ${grant.highlight ? "ring-2 ring-brand-primary" : ""
+                    }`}
                 >
                   <CardHeader className="text-center pb-4">
                     <div className="mx-auto mb-4 p-3 bg-brand-primary/10 rounded-full w-fit">{grant.icon}</div>
                     <CardTitle className="text-2xl font-bold text-black mb-2">
                       {grant.title}
-                      {grant.highlight && <Badge className="ml-2 bg-brand-primary text-white">Most Popular</Badge>}
+                      {grant.highlight && <Badge className="ml-2 bg-brand-primary text-white">{t("most_popular")}</Badge>}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-gray-600 text-lg leading-relaxed">
-                      {grant.description}
-                    </CardDescription>
+                    <CardDescription className="text-gray-600 text-lg leading-relaxed">{grant.description}</CardDescription>
                   </CardContent>
                 </Card>
               ))}
@@ -204,17 +191,12 @@ export default function GrantsPage() {
         <section className="py-20 px-4 bg-gray-50">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-black mb-4">Who Can Apply</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                We support learners from all backgrounds and educational levels
-              </p>
+              <h2 className="text-4xl font-bold text-black mb-4">{t("section_who_can_apply_title")}</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t("section_who_can_apply_desc")}</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               {audiences.map((audience, index) => (
-                <Card
-                  key={index}
-                  className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                >
+                <Card key={index} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-3">
                       <div className="p-2 bg-brand-primary/10 rounded-lg">{audience.icon}</div>
@@ -227,7 +209,7 @@ export default function GrantsPage() {
                   <CardContent>
                     <CardDescription className="text-gray-600 leading-relaxed">{audience.description}</CardDescription>
                     <Button variant="ghost" className="mt-4 text-brand-primary hover:text-brand-primary-hover p-0">
-                      View details <ChevronRight className="h-4 w-4 ml-1" />
+                      {t("btn_view_details")} <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </CardContent>
                 </Card>
@@ -236,19 +218,16 @@ export default function GrantsPage() {
           </div>
         </section>
 
+
         {/* How It Works */}
         <section className="py-20 px-4">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-black mb-4">How It Works</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Simple, transparent process from application to acceptance
-              </p>
+              <h2 className="text-4xl font-bold text-black mb-4">{t("section_how_it_works_title")}</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t("section_how_it_works_desc")}</p>
             </div>
             <div className="relative">
-              {/* Connecting line for all steps */}
               <div className="absolute left-6 top-12 bottom-12 w-0.5 bg-gray-300 z-0 hidden md:block"></div>
-              
               {steps.map((step, index) => (
                 <div key={index} className="flex items-start gap-6 mb-12 last:mb-0 relative">
                   <div className="flex-shrink-0 flex flex-col items-center z-10">
@@ -264,37 +243,36 @@ export default function GrantsPage() {
               ))}
             </div>
           </div>
-          </section>
+        </section>
+
         {/* Selection Criteria */}
         <section className="py-20 px-4 bg-gray-50">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-black mb-4">Selection Criteria</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                We evaluate applications based on merit and need
-              </p>
+              <h2 className="text-4xl font-bold text-black mb-4">{t("section_selection_criteria_title")}</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t("section_selection_criteria_desc")}</p>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="hover:shadow-xl transition-all duration-300">
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-black flex items-center gap-3">
                     <Award className="h-6 w-6 text-brand-primary" />
-                    Merit
+                    {t("criteria_merit_title")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3 text-gray-600">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" />
-                      Entry test score and academic performance
+                      {t("criteria_merit_item_1")}
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" />
-                      Achievements (olympiads, projects, portfolio)
+                      {t("criteria_merit_item_2")}
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" />
-                      Motivation and commitment to learning
+                      {t("criteria_merit_item_3")}
                     </li>
                   </ul>
                 </CardContent>
@@ -303,22 +281,22 @@ export default function GrantsPage() {
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-black flex items-center gap-3">
                     <Heart className="h-6 w-6 text-brand-primary" />
-                    Need
+                    {t("criteria_need_title")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3 text-gray-600">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" />
-                      Financial context and family situation
+                      {t("criteria_need_item_1")}
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" />
-                      Special conditions (health, circumstances)
+                      {t("criteria_need_item_2")}
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-5 w-5 text-brand-primary mt-0.5 flex-shrink-0" />
-                      Supporting documentation and verification
+                      {t("criteria_need_item_3")}
                     </li>
                   </ul>
                 </CardContent>
@@ -331,17 +309,12 @@ export default function GrantsPage() {
         <section className="py-20 px-4">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-black mb-4">What Our Students Say</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Real stories from learners who received grants and transformed their futures
-              </p>
+              <h2 className="text-4xl font-bold text-black mb-4">{t("section_testimonials_title")}</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t("section_testimonials_desc")}</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((testimonial, index) => (
-                <Card
-                  key={index}
-                  className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                >
+                <Card key={index} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <CardContent className="pt-6">
                     <p className="text-gray-600 mb-6 leading-relaxed italic">"{testimonial.content}"</p>
                     <div className="flex items-center gap-3">
@@ -360,27 +333,25 @@ export default function GrantsPage() {
           </div>
         </section>
 
-          {/* Final CTA */}
+        {/* Final CTA */}
         <section className="py-20 px-4 bg-gradient-to-br from-black via-gray-900 to-black">
           <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl font-bold text-white mb-4">Ready to apply?</h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Take the first step — we'll support your journey.
-            </p>
+            <h2 className="text-4xl font-bold text-white mb-4">{t("cta_ready_to_apply")}</h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">{t("cta_ready_desc")}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
                 className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-3 text-lg font-semibold transition-all duration-300 transform hover:scale-105"
                 onClick={() => setShowApplicationForm(true)}
               >
-                Apply for a Grant
+                {t("btn_apply_grant")}
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 className="border-white text-white hover:bg-white hover:text-black px-8 py-3 text-lg font-semibold transition-all duration-300 bg-transparent"
               >
-                Contact Support
+                {t("btn_contact_support")}
               </Button>
             </div>
           </div>
@@ -390,8 +361,8 @@ export default function GrantsPage() {
         <section className="py-20 px-4 bg-gray-50">
           <div className="container mx-auto max-w-4xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-black mb-4">Frequently Asked Questions</h2>
-              <p className="text-xl text-gray-600">Everything you need to know about our grant program</p>
+              <h2 className="text-4xl font-bold text-black mb-4">{t("section_faq_title")}</h2>
+              <p className="text-xl text-gray-600">{t("section_faq_desc")}</p>
             </div>
             <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, index) => (
@@ -405,6 +376,7 @@ export default function GrantsPage() {
             </Accordion>
           </div>
         </section>
+
 
 
         {/* Application Form Modal */}
