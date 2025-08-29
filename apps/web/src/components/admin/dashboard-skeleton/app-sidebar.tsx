@@ -144,6 +144,11 @@ function getSidebarItems(
             isActive: path === "/dashboard/lms/quizzes",
           },
           {
+            title: "Reviews",
+            url: "/dashboard/lms/reviews",
+            isActive: path === "/dashboard/lms/reviews",
+          },
+          {
             title: "Assignments",
             url: "/dashboard/lms/assignments",
             isActive: path === "/dashboard/lms/assignments",

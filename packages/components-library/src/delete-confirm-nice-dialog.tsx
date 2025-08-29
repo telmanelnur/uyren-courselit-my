@@ -11,7 +11,7 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import NiceModal, { NiceModalHocProps } from "./nice-modal";
 
-export interface DeleteConfirmDialogProps<T = any> extends NiceModalHocProps {
+interface DeleteConfirmDialogProps<T = any> extends NiceModalHocProps {
   title?: string;
   message?: string;
   data?: T;

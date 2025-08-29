@@ -21,6 +21,28 @@ const nextConfig = {
     locales: ['en-US', 'ru', 'kz'],
     localeDetection: false
   },
+
+
+    webpack(config) {
+      config.module.rules.push({
+        test: /\.svg$/i,
+        use: ["@svgr/webpack"],
+      });
+  
+      return config;
+    },
+  
+    experimental: {
+      appDir: true,
+      turbo: {
+        rules: {
+          '*.svg': {
+            loaders: ['@svgr/webpack'],
+            as: '*.js'
+          }
+        },
+      },
+    },
 }
 
 export default nextConfig

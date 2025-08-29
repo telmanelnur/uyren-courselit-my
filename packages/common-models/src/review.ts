@@ -5,8 +5,6 @@ export interface Review {
   reviewId: string;
   title: string;
   content: TextEditorContent;
-  authorName: string;
-  authorEmail?: string;
   rating: number;
   targetType: string; // e.g., "course", "product", "website", "blog", etc.
   targetId?: string; // ID of the target object

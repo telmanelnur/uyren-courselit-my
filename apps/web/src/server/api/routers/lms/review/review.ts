@@ -40,9 +40,9 @@ const checkReviewOwnership = (
         };
     },
 ) => {
-    if (!review) return false;
+    if (!review || !review.authorId) return false;
 
-    return review.authorId.toString() === ctx.user.userId || review.authorId.toString() === ctx.user._id?.toString();
+    return review.authorId!.toString() === ctx.user.userId || review.authorId!.toString() === ctx.user._id?.toString();
 };
 
 const getReviewOrThrow = async (
@@ -177,7 +177,7 @@ export const reviewRouter = router({
                         avatar?: any;
                     };
                 }>({
-                    path: "authorId",
+                    path: "author",
                     select: "userId name avatar -_id",
                 })
                 .lean();
@@ -216,8 +216,6 @@ export const reviewRouter = router({
             getFormDataSchema({
                 title: z.string().min(1, "Title is required").max(200, "Title too long"),
                 content: textEditorContentValidator(),
-                authorName: z.string().min(1, "Author name is required").max(100, "Author name too long"),
-                authorEmail: z.string().email("Invalid email").optional(),
                 rating: z.number().min(1, "Rating must be at least 1").max(10, "Rating cannot exceed 10"),
                 targetType: z.string().min(1, "Target type is required").default("website"),
                 targetId: z.string().optional(),
@@ -225,15 +223,14 @@ export const reviewRouter = router({
                 isFeatured: z.boolean().optional().default(false),
                 featuredImage: mediaWrappedFieldValidator().optional(),
                 tags: z.array(z.string()).optional().default([]),
+                authorId: z.string().nullable().optional(),
             }),
         )
         .mutation(async ({ ctx, input }) => {
-            const review = await ReviewModel.create({
+            const reviewData: any = {
                 domain: ctx.domainData.domainObj._id,
                 title: input.data.title,
                 content: input.data.content,
-                authorName: input.data.authorName,
-                authorEmail: input.data.authorEmail,
                 rating: input.data.rating,
                 targetType: input.data.targetType,
                 targetId: input.data.targetId,
@@ -241,8 +238,12 @@ export const reviewRouter = router({
                 isFeatured: input.data.isFeatured,
                 featuredImage: input.data.featuredImage,
                 tags: input.data.tags,
-                authorId: ctx.user.userId,
-            });
+            };
+
+            // Set authorId - if provided use that, otherwise use current user
+            reviewData.authorId = input.data.authorId ?? ctx.user.userId;
+
+            const review = await ReviewModel.create(reviewData);
 
             Log.info("Review created", { reviewId: review.reviewId, userId: ctx.user.userId });
             return review;
@@ -261,8 +262,6 @@ export const reviewRouter = router({
                 reviewId: z.string().min(1, "Review ID is required"),
                 title: z.string().min(1, "Title is required").max(200, "Title too long").optional(),
                 content: textEditorContentValidator().optional(),
-                authorName: z.string().min(1, "Author name is required").max(100, "Author name too long").optional(),
-                authorEmail: z.string().email("Invalid email").optional(),
                 rating: z.number().min(1, "Rating must be at least 1").max(10, "Rating cannot exceed 10").optional(),
                 targetType: z.string().min(1, "Target type is required").optional(),
                 targetId: z.string().optional(),
@@ -270,6 +269,7 @@ export const reviewRouter = router({
                 isFeatured: z.boolean().optional(),
                 featuredImage: mediaWrappedFieldValidator().optional(),
                 tags: z.array(z.string()).optional(),
+                authorId: z.string().nullable().optional(),
             }),
         )
         .mutation(async ({ ctx, input }) => {
@@ -287,8 +287,6 @@ export const reviewRouter = router({
             const updateData: any = {};
             if (input.data.title !== undefined) updateData.title = input.data.title;
             if (input.data.content !== undefined) updateData.content = input.data.content;
-            if (input.data.authorName !== undefined) updateData.authorName = input.data.authorName;
-            if (input.data.authorEmail !== undefined) updateData.authorEmail = input.data.authorEmail;
             if (input.data.rating !== undefined) updateData.rating = input.data.rating;
             if (input.data.targetType !== undefined) updateData.targetType = input.data.targetType;
             if (input.data.targetId !== undefined) updateData.targetId = input.data.targetId;
@@ -296,6 +294,7 @@ export const reviewRouter = router({
             if (input.data.isFeatured !== undefined) updateData.isFeatured = input.data.isFeatured;
             if (input.data.featuredImage !== undefined) updateData.featuredImage = input.data.featuredImage;
             if (input.data.tags !== undefined) updateData.tags = input.data.tags;
+            if (input.data.authorId !== undefined) updateData.authorId = input.data.authorId;
 
             const updatedReview = await ReviewModel.findOneAndUpdate(
                 {
@@ -381,7 +380,6 @@ export const reviewRouter = router({
                 reviewId: review.reviewId,
                 title: review.title,
                 content: review.content,
-                authorName: review.authorName,
                 rating: review.rating,
                 targetType: review.targetType,
                 targetId: review.targetId,

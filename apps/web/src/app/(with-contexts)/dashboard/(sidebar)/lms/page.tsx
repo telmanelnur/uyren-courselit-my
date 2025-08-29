@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { ClipboardList, FileText, Plus, Users, Target } from "lucide-react";
+import { ClipboardList, FileText, Plus, Users, Target, Star } from "lucide-react";
 import Link from "next/link";
 
 export default function LMSPage() {
@@ -26,6 +26,18 @@ export default function LMSPage() {
         total: 0,
         active: 0,
         draft: 0,
+      },
+    },
+    {
+      title: "Reviews",
+      description:
+        "Manage customer reviews and testimonials for your products and courses",
+      icon: Star,
+      href: "/dashboard/lms/reviews",
+      stats: {
+        total: 0,
+        published: 0,
+        featured: 0,
       },
     },
     {

@@ -8,19 +8,21 @@ import { APP_MESSAGE_SETTINGS_SAVED, BUTTON_SAVE } from "@/lib/ui/config/strings
 import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createColumnHelper } from "@tanstack/react-table";
-import { ComboBox2, NiceModal, NiceModalHocProps, useToast } from "@workspace/components-library";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@workspace/ui/components/alert-dialog";
+import { ComboBox2, DeleteConfirmNiceDialog, NiceModal, NiceModalHocProps, useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
 import { Form } from "@workspace/ui/components/form";
 import { Separator } from "@workspace/ui/components/separator";
-import { BookOpen, Import, Star, Trash2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { BookOpen, Edit, Import, Star, Trash2 } from "lucide-react";
 import React, { useCallback, useMemo, useRef } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { BannerSettings } from "./banner-settings";
 import { GeneralSettings } from "./general-settings";
+import { Media, TextEditorContent } from "@workspace/common-models";
+import { truncate } from "@workspace/utils";
 
 type SelectItemType = {
   key: string;
@@ -81,8 +83,8 @@ const CourseImportDialog = NiceModal.create<
           multiple={false}
         />
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-          <Button onClick={handleImport} disabled={!selectedCourse}>Import</Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
+          <Button type="button" onClick={handleImport} disabled={!selectedCourse}>Import</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -131,9 +133,12 @@ const ReviewImportDialog = NiceModal.create<
     });
     return response.items.map(review => ({
       key: `${review.reviewId}`,
-      title: `${review.authorName} - ${review.content.content.substring(0, 30)}...`,
+      title: `${review.author.name} - ${review.content.content.substring(0, 30)}...`,
       rating: review.rating,
       author: review.author,
+      targetType: review.targetType,
+      targetId: review.targetId,
+      content: review.content,
     }));
   }, [trpcUtils]);
 
@@ -154,8 +159,8 @@ const ReviewImportDialog = NiceModal.create<
           multiple={false}
         />
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-          <Button onClick={handleImport} disabled={!selectedReview}>Import</Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
+          <Button type="button" onClick={handleImport} disabled={!selectedReview}>Import</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -182,13 +187,12 @@ const mainPageSchema = z.object({
   })),
   featuredReviews: z.array(z.object({
     reviewId: z.string().min(1, "Review ID is required").max(50, "Review ID too long"),
-    authorName: z.string().min(1, "Author name is required").max(100, "Author name too long"),
     rating: z.number().min(1, "Rating must be at least 1").max(10, "Rating cannot exceed 10"),
-    content: z.string().min(1, "Review content is required").max(1000, "Review content too long"),
+    content: z.any(), // TextEditorContent type
     targetType: z.string().min(1, "Target type is required").max(50, "Target type too long").optional(),
     targetId: z.string().max(50, "Target ID too long").optional(),
-    authorId: z.string().optional(),
     order: z.number().min(0, "Order must be at least 0").max(1000, "Order too high").optional(),
+    author: z.any().optional(),
   })),
 });
 
@@ -255,33 +259,7 @@ export default function MainPageSettings() {
     }
   }, [mutateSettings, toast]);
 
-  const handleAddCourse = useCallback(() => {
-    const newOrder = courseCountRef.current;
-    appendCourse({
-      courseId: `course-${Date.now()}`,
-      title: "",
-      slug: "",
-      shortDescription: "",
-      level: "beginner",
-      duration: 0,
-      isFeatured: false,
-      order: newOrder,
-    });
-  }, [appendCourse]);
 
-  const handleAddReview = useCallback(() => {
-    const newOrder = reviewCountRef.current;
-    appendReview({
-      reviewId: `review-${Date.now()}`,
-      authorName: "",
-      rating: 5,
-      content: "",
-      targetType: "website",
-      targetId: "",
-      authorId: "",
-      order: newOrder,
-    });
-  }, [appendReview]);
 
   const handleRemoveCourse = useCallback((index: number) => removeCourse(index), [removeCourse]);
   const handleRemoveReview = useCallback((index: number) => removeReview(index), [removeReview]);
@@ -300,16 +278,16 @@ export default function MainPageSettings() {
     });
   }, [appendCourse, courseFields.length]);
 
-  const handleImportReview = useCallback((review: any) => {
+  const handleImportReview = useCallback((review: FeaturedReviewItemType) => {
     const newOrder = reviewFields.length;
+    console.log(review);
     appendReview({
       reviewId: review.key,
-      authorName: review.authorName,
       rating: review.rating,
       content: review.content,
-      targetType: "course",
-      targetId: "",
-      authorId: review.author?.userId || "",
+      targetType: review.targetType,
+      targetId: review.targetId,
+      author: review.author,
       order: newOrder,
     });
   }, [appendReview, reviewFields.length]);
@@ -366,6 +344,25 @@ export default function MainPageSettings() {
   );
 }
 
+type FeaturedReviewItemType = {
+  originalIndex: number;
+  key: string;
+  targetType: string;
+  targetId: string;
+  title: string;
+  slug: string;
+  level: string;
+  isFeatured: boolean;
+  content: TextEditorContent;
+  author: {
+    userId: string;
+    name: string;
+    avatar: Media;
+  };
+  rating: number;
+  order: number;
+};
+
 // Featured Courses Section Component
 const FeaturedCoursesSection = React.memo(({ courseFields, onRemove, onImport }: {
   courseFields: any[];
@@ -384,21 +381,24 @@ const FeaturedCoursesSection = React.memo(({ courseFields, onRemove, onImport }:
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm"><Trash2 className="h-4 w-4" /></Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remove Course</AlertDialogTitle>
-              <AlertDialogDescription>Are you sure you want to remove this course? This action cannot be undone.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onRemove(row.original.originalIndex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remove</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm"
+          onClick={() => {
+            NiceModal.show(DeleteConfirmNiceDialog, {
+              title: "Remove Course",
+              message: `Are you sure you want to remove "${row.original.title || 'this course'}"? This action cannot be undone.`,
+              data: row.original.originalIndex,
+            }).then((result) => {
+              if (result.reason === "confirm") {
+                onRemove(result.data);
+              }
+            });
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       ),
     }),
   ], [columnHelper, onRemove]);
@@ -432,7 +432,7 @@ const FeaturedCoursesSection = React.memo(({ courseFields, onRemove, onImport }:
             <DataTableSortList table={courseTable.table} />
           </DataTableToolbar>
         </DataTable>
-        <Button variant="outline" onClick={handleImportClick} className="flex items-center gap-2">
+        <Button type="button" variant="outline" onClick={handleImportClick} className="flex items-center gap-2">
           <Import className="h-4 w-4" />
           Import Course
         </Button>
@@ -445,34 +445,56 @@ const FeaturedCoursesSection = React.memo(({ courseFields, onRemove, onImport }:
 const FeaturedReviewsSection = React.memo(({ reviewFields, onRemove, onImport }: {
   reviewFields: any[];
   onRemove: (index: number) => void;
-  onImport: (review: any) => void;
+  onImport: (review: FeaturedReviewItemType) => void;
 }) => {
-  const columnHelper = useMemo(() => createColumnHelper<any>(), []);
+  const columnHelper = useMemo(() => createColumnHelper<FeaturedReviewItemType>(), []);
   const reviewData = useMemo(() => reviewFields.map((review, index) => ({ ...review, originalIndex: index })), [reviewFields]);
 
   const reviewColumns = useMemo(() => [
-    columnHelper.accessor("authorName", { header: "Author", cell: ({ row }) => row.original.authorName || "" }),
-    columnHelper.accessor("content", { header: "Content", cell: ({ row }) => row.original.content || "" }),
+    columnHelper.display({
+      id: "author",
+      header: "Author",
+      cell: ({ row }) => (
+        <Avatar className="h-8 w-8">
+          <AvatarImage
+            src={row.original.author?.avatar?.url || "/courselit_backdrop_square.webp"}
+            alt={row.original.author?.name || "Author"}
+          />
+          <AvatarFallback>
+            {(row.original.author?.name || "").charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      ),
+    }),
+    columnHelper.accessor("content", { header: "Content", cell: ({ row }) => {
+      if (row.original.content.type === "doc") {
+        return <div dangerouslySetInnerHTML={{ __html: row.original.content.content }} />;
+      }
+      return truncate(`Unsupported: ${row.original.content}`, 30);
+    }}),
     columnHelper.accessor("rating", { header: "Rating", cell: ({ row }) => row.original.rating || 5 }),
     columnHelper.display({
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm"><Trash2 className="h-4 w-4" /></Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remove Review</AlertDialogTitle>
-              <AlertDialogDescription>Are you sure you want to remove this review? This action cannot be undone.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onRemove(row.original.originalIndex)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remove</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm"
+          onClick={() => {
+            NiceModal.show(DeleteConfirmNiceDialog, {
+              title: "Remove Review",
+              message: `Are you sure you want to remove the review by "${row.original.author?.name || 'this author'}"? This action cannot be undone.`,
+              data: row.original.originalIndex,
+            }).then((result) => {
+              if (result.reason === "confirm") {
+                onRemove(result.data);
+              }
+            });
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       ),
     }),
   ], [columnHelper, onRemove]);
@@ -489,7 +511,7 @@ const FeaturedReviewsSection = React.memo(({ reviewFields, onRemove, onImport }:
 
   const handleImportClick = useCallback(async () => {
     const result = await NiceModal.show(ReviewImportDialog, {});
-    if (result.reason === "submit") onImport(result.data);
+    if (result.reason === "submit") onImport(result.data as any);
   }, [onImport]);
 
   return (
@@ -506,7 +528,7 @@ const FeaturedReviewsSection = React.memo(({ reviewFields, onRemove, onImport }:
             <DataTableSortList table={reviewTable.table} />
           </DataTableToolbar>
         </DataTable>
-        <Button variant="outline" onClick={handleImportClick} className="flex items-center gap-2">
+        <Button type="button" variant="outline" onClick={handleImportClick} className="flex items-center gap-2">
           <Import className="h-4 w-4" />
           Import Review
         </Button>

@@ -11,28 +11,36 @@ import Image from "next/image";
 import Link from "next/link";
 import { Trans, useTranslation } from "react-i18next";
 import { TestimonialsSection } from "./_components/testonomials";
+import { useMemo } from "react";
+import { trpc } from "@/utils/trpc";
+import GearsIcon from "@/../public/img/gears.svg";
+import PythonIcon from "@/../public/img/python.svg";
+import ChartLineUpIcon from "@/../public/img/chart-line-up.svg";
+import SupportIcon from "@/../public/img/support.svg";
+import "./home.css"
+
 
 export default function HomePage() {
   const { t } = useTranslation("common")
 
   const features = [
     {
-      icon: "/img/gears.svg",
+      icon: GearsIcon,
       title: t("feature_systematic_title"),
       description: t("feature_systematic_desc"),
     },
     {
-      icon: "/img/python.svg",
+      icon: PythonIcon,
       title: t("feature_practice_title"),
       description: t("feature_practice_desc"),
     },
     {
-      icon: "/img/chart-line-up.svg",
+      icon: ChartLineUpIcon,
       title: t("feature_growth_title"),
       description: t("feature_growth_desc"),
     },
     {
-      icon: "/img/support.svg",
+      icon: SupportIcon,
       title: t("feature_feedback_title"),
       description: t("feature_feedback_desc"),
     },
@@ -45,71 +53,123 @@ export default function HomePage() {
     { number: "40+", label: t("stats_ai_powered_courses") },
   ]
 
-  const courses = [
-    {
-      slug: "python-course",
-      image: "/img/python-course.jpeg",
-      title: t("course_python_title"),
-      level: t("course_python_level"),
-      duration: "8 weeks",
-      rating: 4.9,
-      students: 1200,
-      price: "Free",
-    },
-    {
-      slug: "data-analytics-course",
-      image: "/img/data-analytics.jpeg",
-      title: t("course_data_title"),
-      level: t("course_data_level"),
-      duration: "6 weeks",
-      rating: 4.8,
-      students: 850,
-      price: "Free",
-    },
-    {
-      slug: "machine-learning-course",
-      image: "/img/python-course.jpeg",
-      title: "Machine Learning Fundamentals",
-      level: "Intermediate",
-      duration: "10 weeks",
-      rating: 4.7,
-      students: 650,
-      price: "Free",
-    },
-    {
-      slug: "web-development-course",
-      image: "/img/data-analytics.jpeg",
-      title: "Web Development with React",
-      level: "Beginner",
-      duration: "7 weeks",
-      rating: 4.6,
-      students: 950,
-      price: "Free",
-    },
-    {
-      slug: "ai-ethics-course",
-      image: "/img/python-course.jpeg",
-      title: "AI Ethics & Responsible Development",
-      level: "Advanced",
-      duration: "5 weeks",
-      rating: 4.9,
-      students: 420,
-      price: "Free",
-    },
-    {
-      slug: "data-science-course",
-      image: "/img/data-analytics.jpeg",
-      title: "Data Science Essentials",
-      level: "Intermediate",
-      duration: "9 weeks",
-      rating: 4.8,
-      students: 780,
-      price: "Free",
-    },
-  ]
+  const { data: mainPageSettings, isLoading } = trpc.siteModule.websiteSettings.getPublicWebsiteSettings.useQuery();
+
+  // Use featured courses from settings or fallback to hardcoded ones
+  const courses = useMemo(() => {
+    if (mainPageSettings?.mainPage.featuredCourses && mainPageSettings.mainPage.featuredCourses.length > 0) {
+      return mainPageSettings.mainPage.featuredCourses
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(course => ({
+          slug: course.slug,
+          image: "/img/python-course.jpeg", // Default image
+          title: course.title,
+          level: course.level || "Beginner",
+          duration: course.duration ? `${course.duration} weeks` : "8 weeks",
+          rating: 4.9,
+          students: 1200,
+          price: "Free",
+          shortDescription: course.shortDescription,
+        }));
+    }
+    
+    // Fallback to hardcoded courses
+    return [
+      {
+        slug: "python-course",
+        image: "/img/python-course.jpeg",
+        title: t("course_python_title"),
+        level: t("course_python_level"),
+        duration: "8 weeks",
+        rating: 4.9,
+        students: 1200,
+        price: "Free",
+      },
+      {
+        slug: "data-analytics-course",
+        image: "/img/data-analytics.jpeg",
+        title: t("course_data_title"),
+        level: t("course_data_level"),
+        duration: "6 weeks",
+        rating: 4.8,
+        students: 850,
+        price: "Free",
+      },
+      {
+        slug: "machine-learning-course",
+        image: "/img/python-course.jpeg",
+        title: "Machine Learning Fundamentals",
+        level: "Intermediate",
+        duration: "10 weeks",
+        rating: 4.7,
+        students: 650,
+        price: "Free",
+      },
+      {
+        slug: "web-development-course",
+        image: "/img/data-analytics.jpeg",
+        title: "Web Development with React",
+        level: "Beginner",
+        duration: "7 weeks",
+        rating: 4.6,
+        students: 950,
+        price: "Free",
+      },
+      {
+        slug: "ai-ethics-course",
+        image: "/img/python-course.jpeg",
+        title: "AI Ethics & Responsible Development",
+        level: "Advanced",
+        duration: "5 weeks",
+        rating: 4.9,
+        students: 420,
+        price: "Free",
+      },
+      {
+        slug: "data-science-course",
+        image: "/img/data-analytics.jpeg",
+        title: "Data Science Essentials",
+        level: "Intermediate",
+        duration: "9 weeks",
+        rating: 4.8,
+        students: 780,
+        price: "Free",
+      },
+    ];
+  }, [mainPageSettings?.mainPage.featuredCourses, t]);
+
+  // Use featured reviews from settings or fallback to hardcoded ones
+  const testimonials = useMemo(() => {
+     return mainPageSettings?.mainPage.featuredReviews
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((review) => ({
+          content: review.content,
+          author: review.author,
+          role: "Student",
+          rating: review.rating,
+        })) || [];
+  }, [mainPageSettings?.mainPage.featuredReviews, t]);
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="page-transition">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <div className="animate-pulse space-y-8">
+            <div className="h-96 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="h-96 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div className="page-transition">
+    <div className="home-page page-transition">
       <Header />
 
       {/* Hero Section */}
@@ -131,7 +191,7 @@ export default function HomePage() {
                   <Link href="/courses">
                     <Button
                       size="lg"
-                      className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                       {t("hero_start_learning")}
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -140,7 +200,7 @@ export default function HomePage() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent hover:scale-105 flex items-center"
+                    className="border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent flex items-center"
                   >
                     <Play className="mr-2 h-5 w-5" />
                     {t("hero_watch_lecture")}
@@ -172,7 +232,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {stats.map((stat, index) => (
                 <ScrollAnimation key={index} variant="scale">
-                  <div className="text-center group hover:scale-105 transition-transform duration-300">
+                  <div className="text-center group transition-all duration-300">
                     <div className="text-3xl lg:text-4xl font-bold text-brand-primary mb-2 group-hover:animate-bounce">
                       {stat.number}
                     </div>
@@ -205,15 +265,18 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {features.map((feature, index) => (
                 <ScrollAnimation key={index} variant="fadeUp">
-                  <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 bg-background group hover:scale-105 hover:-translate-y-1 border border-transparent hover:border-brand-primary/20 hover:bg-background/80">
+                  <Card className="h-full hover:shadow-xl transition-all duration-300 bg-background group/item border border-transparent hover:border-brand-primary/20 hover:bg-background/80">
                     <CardContent className="p-6">
-                      <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-brand-primary group-hover:text-white transition-all duration-300 group-hover:rotate-12">
-                        <Image
+                      <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 group-hover/item:bg-brand-primary transition-all duration-300">
+                        {/* <Image
                           src={feature.icon}
                           alt={feature.title}
                           width={24}
                           height={24}
-                        />
+                        /> */}
+                        {
+                          <feature.icon className="w-6 h-6 fill-brand-primary group-hover/item:fill-white" />
+                        }
                       </div>
                       <h3 className="text-lg font-bold text-foreground mb-3">{feature.title}</h3>
                       <p className="text-muted-foreground text-sm leading-relaxed">
@@ -247,7 +310,7 @@ export default function HomePage() {
               {courses.map((course, index) => (
                 <ScrollAnimation key={index} variant="fadeUp">
                   <Link href={`/courses/${course.slug}`} className="block group">
-                    <Card className="pt-0 h-full hover:shadow-xl transition-all duration-300 border-0 bg-card group hover:scale-95 hover:-translate-y-1 border border-transparent hover:border-brand-primary/20 hover:bg-card/80 overflow-hidden">
+                    <Card className="pt-0 h-full hover:shadow-xl transition-all duration-300 bg-card group border border-transparent hover:border-brand-primary/20 hover:bg-card/80 overflow-hidden">
                       <CardContent className="p-0">
                         <div className="relative">
                           <Image
@@ -255,7 +318,7 @@ export default function HomePage() {
                             alt={course.title}
                             width={300}
                             height={160}
-                            className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-32 object-cover transition-transform duration-300"
                           />
                           <div className="absolute top-2 right-2 bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-full">
                             {course.price}
@@ -277,6 +340,12 @@ export default function HomePage() {
                           <h3 className="text-lg font-bold text-foreground line-clamp-2 group-hover:text-brand-primary transition-colors">
                             {course.title}
                           </h3>
+
+                          {/* {course.shortDescription && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {course.shortDescription}
+                            </p>
+                          )} */}
 
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">{course.level}</span>
@@ -310,7 +379,7 @@ export default function HomePage() {
               <Link href="/courses">
                 <Button
                   size="lg"
-                  className="bg-transparent border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 hover:scale-105"
+                  className="bg-transparent border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300"
                 >
                   {t("courses_explore_more")}
                 </Button>
@@ -335,7 +404,7 @@ export default function HomePage() {
                 <Link href="/courses">
                   <Button
                     size="lg"
-                    className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     {t("cta_start_learning")}
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -345,7 +414,7 @@ export default function HomePage() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent hover:scale-105"
+                    className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent"
                   >
                     {t("cta_contact_us")}
                   </Button>
@@ -357,7 +426,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <TestimonialsSection />
+      <TestimonialsSection testimonials={testimonials} />
 
       <Footer />
     </div>

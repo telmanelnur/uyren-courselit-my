@@ -1,3 +1,4 @@
+import { TextEditorContent } from "./custom/text-editor-content";
 import { Media } from "./media";
 
 export interface FeaturedCourse {
@@ -13,9 +14,13 @@ export interface FeaturedCourse {
 
 export interface FeaturedReview {
   reviewId: string;
-  authorName: string;
+  author: {
+    userId: string;
+    name: string;
+    avatar: Media;
+  };
   rating: number;
-  content: string;
+  content: TextEditorContent;
   targetType?: string;
   targetId?: string;
   order?: number;

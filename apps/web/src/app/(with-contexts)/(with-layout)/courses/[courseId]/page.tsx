@@ -134,9 +134,9 @@ function CourseDetailsContent() {
                   {course.title}
                 </h1>
 
-                <p className="text-lg text-muted-foreground leading-relaxed m--course-description">
+                {/* <p className="text-lg text-muted-foreground leading-relaxed m--course-description">
                   {course.description}
-                </p>
+                </p> */}
 
                 <div className="flex flex-wrap items-center gap-4 text-sm m--course-meta">
                   <div className="flex items-center gap-1">
@@ -180,9 +180,9 @@ function CourseDetailsContent() {
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                       📖 {t("about_course")}
                     </h3>
-                    <div className="prose prose-gray max-w-none">
+                    {/* <div className="prose prose-gray max-w-none">
                       <p className="text-gray-700 leading-relaxed text-base">{course.description}</p>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Tags/Objectives */}

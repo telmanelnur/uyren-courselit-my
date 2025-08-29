@@ -20,9 +20,16 @@ const WebsiteSettingsSchema = new Schema<WebsiteSettings & { domain: mongoose.Ty
         }],
         featuredReviews: [{
             reviewId: { type: String, required: true },
-            authorName: { type: String, required: true },
+            author: {
+                userId: { type: String, required: true },
+                name: { type: String, required: true },
+                avatar: { type: Schema.Types.Mixed },
+            },
             rating: { type: Number, required: true, min: 1, max: 10 },
-            content: { type: String, required: true },
+            content: {
+                type: Schema.Types.Mixed,
+                required: true,
+             },
             courseId: { type: String },
             order: { type: Number, min: 0, default: 0 },
         }],

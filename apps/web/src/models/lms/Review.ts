@@ -13,8 +13,6 @@ const ReviewSchema = new mongoose.Schema<InternalReview>(
     reviewId: { type: String, required: true, default: generateUniqueId },
     title: { type: String, required: true },
     content: { type: mongoose.Schema.Types.Mixed, required: true },
-    authorName: { type: String, required: true },
-    authorEmail: { type: String, required: false },
     rating: { type: Number, required: true, min: 1, max: 10 },
     targetType: { type: String, required: true, default: "website" },
     targetId: { type: String, required: false },

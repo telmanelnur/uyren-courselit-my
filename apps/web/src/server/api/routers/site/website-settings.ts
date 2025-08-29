@@ -13,6 +13,7 @@ import {
 import { getFormDataSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
 import { UIConstants } from "@workspace/common-models";
+import { textEditorContentValidator } from "../../core/validators";
 
 const { permissions } = UIConstants;
 
@@ -36,7 +37,23 @@ const createWebsiteSettings = async (domainObj: Domain) => {
 };
 
 export const websiteSettingsRouter = router({
-  // Get website settings for current domain
+  // Get website settings for current domain (public)
+  getPublicWebsiteSettings: publicProcedure
+    .use(createDomainRequiredMiddleware())
+    .query(async ({ ctx }) => {
+      let websiteSettings = await WebsiteSettingsModel.findOne({
+        domain: ctx.domainData.domainObj._id,
+      }).lean();
+      if (!websiteSettings) {
+        await createWebsiteSettings(ctx.domainData.domainObj);
+        websiteSettings = await WebsiteSettingsModel.findOne({
+          domain: ctx.domainData.domainObj._id,
+        }).lean();
+      }
+      return websiteSettings;
+    }),
+
+  // Get website settings for current domain (protected)
   getWebsiteSettings: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .query(async ({ ctx }) => {
@@ -74,9 +91,9 @@ export const websiteSettingsRouter = router({
           })).optional(),
           featuredReviews: z.array(z.object({
             reviewId: z.string().min(1, "Review ID is required"),
-            authorName: z.string().min(1, "Author name is required"),
+            author: z.any().optional(),
             rating: z.number().min(1, "Rating must be at least 1").max(10, "Rating cannot exceed 10"),
-            content: z.string().min(1, "Review content is required"),
+            content: textEditorContentValidator(),
             courseId: z.string().optional(),
             order: z.number().min(0, "Order must be at least 0").optional(),
           })).optional(),
