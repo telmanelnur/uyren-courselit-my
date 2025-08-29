@@ -167,10 +167,6 @@ export const mediaRouter: any = router({
   getStats: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .query(async ({ ctx }) => {
-      if (!ctx.domainData.domainObj) {
-        throw new Error("Domain not found");
-      }
-
       const stats = await MediaModel.aggregate([
         {
           $match: {

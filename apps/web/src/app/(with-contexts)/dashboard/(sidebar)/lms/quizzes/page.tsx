@@ -9,7 +9,7 @@ import { useDataTable } from "@/components/data-table/use-data-table";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { type ColumnDef } from "@tanstack/react-table";
-import { useDebounce } from "@workspace/components-library";
+import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";

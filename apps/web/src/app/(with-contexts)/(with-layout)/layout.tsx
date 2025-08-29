@@ -1,9 +1,13 @@
-import HomepageLayout from "./home-page-layout";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 
 export default async function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <HomepageLayout>{children}</HomepageLayout>;
+  return (
+    <ThemeProvider>
+      {children}
+    </ThemeProvider>
+  )
 }

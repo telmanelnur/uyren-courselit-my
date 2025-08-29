@@ -246,6 +246,11 @@ function getSidebarItems(
           url: "/dashboard/settings?tab=API%20Keys",
           isActive: `${path}?tab=${tab}` === "/dashboard/settings?tab=API Keys",
         },
+        {
+          title: "Website Settings",
+          url: "/dashboard/settings/website-settings",
+          isActive: path === "/dashboard/settings/website-settings",
+        },
       ];
       navMainItems.push({
         title: SIDEBAR_MENU_SETTINGS,

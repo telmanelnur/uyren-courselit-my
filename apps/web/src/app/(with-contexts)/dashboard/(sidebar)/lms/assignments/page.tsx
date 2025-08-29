@@ -9,7 +9,6 @@ import { useDataTable } from "@/components/data-table/use-data-table";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { type ColumnDef } from "@tanstack/react-table";
-import { useDebounce } from "@workspace/components-library";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -20,13 +19,13 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
+import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import {
+  Archive,
   Edit,
   Eye,
   FileText,
-  MoreHorizontal,
-  Trash2,
-  Archive,
+  MoreHorizontal
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -259,9 +258,9 @@ export default function Page() {
             ?.value,
         )
           ? ((
-              tableState.columnFilters.find((filter) => filter.id === "status")
-                ?.value as string[]
-            )[0] as "published" | "draft" | "archived")
+            tableState.columnFilters.find((filter) => filter.id === "status")
+              ?.value as string[]
+          )[0] as "published" | "draft" | "archived")
           : undefined,
       },
     };

@@ -1,25 +1,15 @@
 import constants from "@/config/constants";
 import { createModel } from "@workspace/common-logic";
-import { Domain as PublicDomain, Typeface } from "@workspace/common-models";
+import { Domain as PublicDomain } from "@workspace/common-models";
 import mongoose from "mongoose";
 import SettingsSchema from "./SiteInfo";
-import TypefaceSchema from "./Typeface";
-const { typeface } = constants;
+
 
 export interface Domain extends PublicDomain {
   _id: mongoose.Types.ObjectId;
   lastEditedThemeId?: string;
 }
 
-export const defaultTypeface: Typeface = {
-  section: "default",
-  typeface: typeface,
-  fontWeights: [300, 400, 500, 700],
-  fontSize: 0,
-  lineHeight: 0,
-  letterSpacing: 0,
-  case: "captilize",
-};
 
 const DomainSchema = new mongoose.Schema<Domain>(
   {
@@ -30,22 +20,6 @@ const DomainSchema = new mongoose.Schema<Domain>(
     settings: SettingsSchema,
     themeId: { type: String },
     lastEditedThemeId: { type: String },
-    sharedWidgets: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
-    },
-    draftSharedWidgets: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
-    },
-    typefaces: {
-      type: [TypefaceSchema],
-      default: [defaultTypeface],
-    },
-    draftTypefaces: {
-      type: [TypefaceSchema],
-      default: [defaultTypeface],
-    },
     firstRun: { type: Boolean, required: true, default: false },
     tags: { type: [String], default: [] },
     checkSubscriptionStatusAfter: { type: Date },

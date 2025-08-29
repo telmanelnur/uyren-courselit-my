@@ -1,5 +1,11 @@
 "use client";
 
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { trpc } from "@/utils/trpc";
+import { loadStripe } from "@stripe/stripe-js";
+import { useMutation } from "@tanstack/react-query";
+import { Constants } from "@workspace/common-models";
+import { useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -9,28 +15,21 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { formatCurrency } from "@workspace/utils";
 import {
   Badge,
   BookOpen,
   CheckCircle,
   Clock,
   CreditCard,
-  Users,
-  Star,
   FileText,
-  PlayCircle,
+  Star,
+  Users
 } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { trpc } from "@/utils/trpc";
-import { Skeleton } from "@workspace/ui/components/skeleton";
-import { useSiteInfo } from "@/components/contexts/site-info-context";
-import { formatCurrency } from "@workspace/utils";
-import { Constants } from "@workspace/common-models";
-import { loadStripe } from "@stripe/stripe-js";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useToast } from "@workspace/components-library";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface PaymentPlan {
   planId: string;
@@ -495,11 +494,10 @@ export default function CheckoutView() {
                 return (
                   <Card
                     key={plan.planId}
-                    className={`cursor-pointer transition-all duration-200 ${
-                      selectedPlan === plan.planId
+                    className={`cursor-pointer transition-all duration-200 ${selectedPlan === plan.planId
                         ? "ring-2 ring-[rgb(var(--brand-primary))] shadow-lg"
                         : "hover:shadow-md"
-                    } ${plan.popular ? "border-[rgb(var(--brand-primary))]" : ""}`}
+                      } ${plan.popular ? "border-[rgb(var(--brand-primary))]" : ""}`}
                     onClick={() => handlePlanSelect(plan.planId)}
                   >
                     <CardHeader className="text-center pb-4">
@@ -514,9 +512,9 @@ export default function CheckoutView() {
                           {priceInfo.isFree
                             ? "Free"
                             : formatCurrency(
-                                priceInfo.amount,
-                                siteInfo.currencyISOCode,
-                              )}
+                              priceInfo.amount,
+                              siteInfo.currencyISOCode,
+                            )}
                         </span>
                         {priceInfo.period && (
                           <span className="text-sm text-[rgb(var(--brand-gray))]">
@@ -611,9 +609,9 @@ export default function CheckoutView() {
                         {getPlanPrice(selectedPlanData).isFree
                           ? "Free"
                           : formatCurrency(
-                              getPlanPrice(selectedPlanData).amount,
-                              siteInfo.currencyISOCode,
-                            )}
+                            getPlanPrice(selectedPlanData).amount,
+                            siteInfo.currencyISOCode,
+                          )}
                       </span>
                     </div>
 
@@ -625,9 +623,9 @@ export default function CheckoutView() {
                         {getPlanPrice(selectedPlanData).isFree
                           ? "Free"
                           : formatCurrency(
-                              getPlanPrice(selectedPlanData).amount,
-                              siteInfo.currencyISOCode,
-                            )}
+                            getPlanPrice(selectedPlanData).amount,
+                            siteInfo.currencyISOCode,
+                          )}
                       </span>
                     </div>
 

@@ -204,7 +204,7 @@ export const productRouter = router({
       ListInputSchema.extend({
         filter: z
           .object({
-            filterBy: z.array(z.nativeEnum(Constants.CourseType)).optional(),
+            type: z.array(z.nativeEnum(Constants.CourseType)).optional(),
             tags: z.array(z.string()).optional(),
             ids: z.array(z.string()).optional(),
           })
@@ -215,7 +215,7 @@ export const productRouter = router({
     .query(async ({ ctx, input }) => {
       let query = getProductsQuery(
         ctx as any,
-        input.filter.filterBy,
+        input.filter.type,
         input.filter.tags,
         input.filter.ids,
         true,
@@ -239,7 +239,6 @@ export const productRouter = router({
         InternalCourse,
         | "title"
         | "slug"
-        | "description"
         | "type"
         | "creatorId"
         | "updatedAt"
@@ -252,6 +251,7 @@ export const productRouter = router({
         | "pageId"
         | "level"
         | "duration"
+        | "shortDescription"
       > & {
         paymentPlans: PaymentPlan[];
         lessonsCount: number;
@@ -266,7 +266,6 @@ export const productRouter = router({
         products.push({
           title: course.title,
           slug: course.slug,
-          description: course.description,
           type: course.type,
           creatorId: course.creatorId,
           updatedAt: course.updatedAt,
@@ -281,6 +280,7 @@ export const productRouter = router({
           lessonsCount: course.lessons.length,
           level: course.level,
           duration: course.duration,
+          shortDescription: course.shortDescription,
         });
       }
 

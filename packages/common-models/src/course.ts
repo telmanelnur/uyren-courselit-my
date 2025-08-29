@@ -42,4 +42,5 @@ export interface Course {
   themeId?: string; // Reference to existing Theme model
   level: CourseLevel;
   duration: number;
+  shortDescription: string;
 }

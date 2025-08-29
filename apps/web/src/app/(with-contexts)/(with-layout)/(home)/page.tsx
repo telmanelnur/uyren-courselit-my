@@ -1,0 +1,365 @@
+"use client"
+
+import Footer from "@/components/layout/footer";
+import Header from "@/components/layout/header";
+import { ScrollAnimation, ScrollGroup } from "@/components/public/scroll-animation";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent } from "@workspace/ui/components/card";
+import { ArrowRight, Play } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { Trans, useTranslation } from "react-i18next";
+import { TestimonialsSection } from "./_components/testonomials";
+
+export default function HomePage() {
+  const { t } = useTranslation("common")
+
+  const features = [
+    {
+      icon: "/img/gears.svg",
+      title: t("feature_systematic_title"),
+      description: t("feature_systematic_desc"),
+    },
+    {
+      icon: "/img/python.svg",
+      title: t("feature_practice_title"),
+      description: t("feature_practice_desc"),
+    },
+    {
+      icon: "/img/chart-line-up.svg",
+      title: t("feature_growth_title"),
+      description: t("feature_growth_desc"),
+    },
+    {
+      icon: "/img/support.svg",
+      title: t("feature_feedback_title"),
+      description: t("feature_feedback_desc"),
+    },
+  ]
+
+  const stats = [
+    { number: "10+", label: t("stats_years_experience") },
+    { number: "200+", label: t("stats_students_enrolled") },
+    { number: "40+", label: t("stats_popular_courses") },
+    { number: "40+", label: t("stats_ai_powered_courses") },
+  ]
+
+  const courses = [
+    {
+      slug: "python-course",
+      image: "/img/python-course.jpeg",
+      title: t("course_python_title"),
+      level: t("course_python_level"),
+      duration: "8 weeks",
+      rating: 4.9,
+      students: 1200,
+      price: "Free",
+    },
+    {
+      slug: "data-analytics-course",
+      image: "/img/data-analytics.jpeg",
+      title: t("course_data_title"),
+      level: t("course_data_level"),
+      duration: "6 weeks",
+      rating: 4.8,
+      students: 850,
+      price: "Free",
+    },
+    {
+      slug: "machine-learning-course",
+      image: "/img/python-course.jpeg",
+      title: "Machine Learning Fundamentals",
+      level: "Intermediate",
+      duration: "10 weeks",
+      rating: 4.7,
+      students: 650,
+      price: "Free",
+    },
+    {
+      slug: "web-development-course",
+      image: "/img/data-analytics.jpeg",
+      title: "Web Development with React",
+      level: "Beginner",
+      duration: "7 weeks",
+      rating: 4.6,
+      students: 950,
+      price: "Free",
+    },
+    {
+      slug: "ai-ethics-course",
+      image: "/img/python-course.jpeg",
+      title: "AI Ethics & Responsible Development",
+      level: "Advanced",
+      duration: "5 weeks",
+      rating: 4.9,
+      students: 420,
+      price: "Free",
+    },
+    {
+      slug: "data-science-course",
+      image: "/img/data-analytics.jpeg",
+      title: "Data Science Essentials",
+      level: "Intermediate",
+      duration: "9 weeks",
+      rating: 4.8,
+      students: 780,
+      price: "Free",
+    },
+  ]
+
+  return (
+    <div className="page-transition">
+      <Header />
+
+      {/* Hero Section */}
+      <section className="relative bg-background py-16 overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <ScrollAnimation variant="fadeUp" delay={0.2}>
+              <div className="space-y-6">
+                <Badge className="mb-4 bg-orange-100 text-orange-800 hover:bg-orange-200 text-sm font-semibold px-4 py-2">
+                  {t("badge_ai_platform")}
+                </Badge>
+                <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
+                  <Trans i18nKey="hero_title" t={t} components={{ "primary-label": <span className="text-brand-primary font-bold" /> }} />
+                </h1>
+                <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
+                  {t("hero_subtitle")}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                  <Link href="/courses">
+                    <Button
+                      size="lg"
+                      className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    >
+                      {t("hero_start_learning")}
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent hover:scale-105 flex items-center"
+                  >
+                    <Play className="mr-2 h-5 w-5" />
+                    {t("hero_watch_lecture")}
+                  </Button>
+                </div>
+              </div>
+            </ScrollAnimation>
+
+            <ScrollAnimation variant="fadeRight" delay={0.4}>
+              <div className="relative">
+                <div className="hidden md:block">
+                  <Image
+                    src="/img/banner_copy.png"
+                    alt="Banner"
+                    width={800}
+                    height={600}
+                  />
+                </div>
+              </div>
+            </ScrollAnimation>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-12 bg-card">
+        <div className="container mx-auto px-4">
+          <ScrollGroup staggerDelay={0.1}>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {stats.map((stat, index) => (
+                <ScrollAnimation key={index} variant="scale">
+                  <div className="text-center group hover:scale-105 transition-transform duration-300">
+                    <div className="text-3xl lg:text-4xl font-bold text-brand-primary mb-2 group-hover:animate-bounce">
+                      {stat.number}
+                    </div>
+                    <div className="text-muted-foreground font-medium text-xs lg:text-sm whitespace-pre-line">
+                      {stat.label}
+                    </div>
+                  </div>
+                </ScrollAnimation>
+              ))}
+            </div>
+          </ScrollGroup>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <ScrollAnimation variant="fadeUp">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
+                <Trans i18nKey="features_title" t={t} components={{ "primary-label": <span className="text-brand-primary" /> }} />
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                {t("features_subtitle")}
+              </p>
+            </div>
+          </ScrollAnimation>
+
+          <ScrollGroup staggerDelay={0.1}>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {features.map((feature, index) => (
+                <ScrollAnimation key={index} variant="fadeUp">
+                  <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 bg-background group hover:scale-105 hover:-translate-y-1 border border-transparent hover:border-brand-primary/20 hover:bg-background/80">
+                    <CardContent className="p-6">
+                      <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-brand-primary group-hover:text-white transition-all duration-300 group-hover:rotate-12">
+                        <Image
+                          src={feature.icon}
+                          alt={feature.title}
+                          width={24}
+                          height={24}
+                        />
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground mb-3">{feature.title}</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </ScrollAnimation>
+              ))}
+            </div>
+          </ScrollGroup>
+        </div>
+      </section>
+
+      {/* Courses Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <ScrollAnimation variant="fadeUp">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
+                <Trans i18nKey="courses_title" t={t} components={{ "primary-label": <span className="text-brand-primary" /> }} />
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Master in-demand skills with our AI-powered courses designed for real-world success
+              </p>
+            </div>
+          </ScrollAnimation>
+
+          <ScrollGroup staggerDelay={0.1}>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {courses.map((course, index) => (
+                <ScrollAnimation key={index} variant="fadeUp">
+                  <Link href={`/courses/${course.slug}`} className="block group">
+                    <Card className="pt-0 h-full hover:shadow-xl transition-all duration-300 border-0 bg-card group hover:scale-95 hover:-translate-y-1 border border-transparent hover:border-brand-primary/20 hover:bg-card/80 overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="relative">
+                          <Image
+                            src={course.image}
+                            alt={course.title}
+                            width={300}
+                            height={160}
+                            className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute top-2 right-2 bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-full">
+                            {course.price}
+                          </div>
+                        </div>
+
+                        <div className="p-4 space-y-2">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Image
+                              src="/img/logo.svg"
+                              alt="logo"
+                              width={16}
+                              height={16}
+                              className="w-4 h-4 p-0.5 border border-muted-foreground rounded"
+                            />
+                            <p className="text-xs text-muted-foreground">{t("courses_provider")}</p>
+                          </div>
+
+                          <h3 className="text-lg font-bold text-foreground line-clamp-2 group-hover:text-brand-primary transition-colors">
+                            {course.title}
+                          </h3>
+
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{course.level}</span>
+                            <span className="text-muted-foreground">{course.duration}</span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2">
+                            <div className="flex items-center gap-1">
+                              <div className="flex text-yellow-400">
+                                {[...Array(5)].map((_, i) => (
+                                  <svg key={i} className={`w-3 h-3 ${i < Math.floor(course.rating) ? 'fill-current' : 'fill-gray-300'}`} viewBox="0 0 20 20">
+                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                                  </svg>
+                                ))}
+                              </div>
+                              <span className="text-xs text-muted-foreground ml-1">{course.rating}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{course.students.toLocaleString()} students</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </ScrollAnimation>
+              ))}
+            </div>
+          </ScrollGroup>
+
+          <ScrollAnimation variant="fadeUp">
+            <div className="text-center">
+              <Link href="/courses">
+                <Button
+                  size="lg"
+                  className="bg-transparent border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 hover:scale-105"
+                >
+                  {t("courses_explore_more")}
+                </Button>
+              </Link>
+            </div>
+          </ScrollAnimation>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-gray-900 to-black"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-primary/10 via-transparent to-transparent"></div>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <ScrollAnimation variant="fadeUp">
+            <div>
+              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">{t("cta_title")}</h2>
+              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                {t("cta_subtitle")}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/courses">
+                  <Button
+                    size="lg"
+                    className="bg-brand-primary hover:bg-brand-primary-hover text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  >
+                    {t("cta_start_learning")}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-4 text-lg font-bold rounded-full transition-all duration-300 bg-transparent hover:scale-105"
+                  >
+                    {t("cta_contact_us")}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </ScrollAnimation>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <TestimonialsSection />
+
+      <Footer />
+    </div>
+  )
+}

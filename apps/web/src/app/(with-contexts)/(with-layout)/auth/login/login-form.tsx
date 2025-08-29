@@ -1,8 +1,6 @@
 "use client";
 
-import { useTheme } from "@/components/contexts/theme-context";
 import { useFirebaseAuth } from "@/hooks/use-auth";
-import { Section } from "@workspace/page-primitives";
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -15,7 +13,6 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
-  const { theme } = useTheme();
   const firebaseAuth = useFirebaseAuth();
   const router = useRouter();
 
@@ -29,7 +26,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
   return (
     <div className="bg-background min-h-screen">
-      <Section theme={theme.theme} className="py-8 px-4 sm:px-6 lg:px-8">
+      <div className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           <div className="flex flex-col items-center justify-center gap-6 min-h-[70vh]">
             {/* Header */}
@@ -96,7 +93,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
             </Card>
           </div>
         </div>
-      </Section>
+      </div>
     </div>
   );
 }

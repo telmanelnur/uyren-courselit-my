@@ -1,28 +1,30 @@
 "use client";
 
 import {
+  SITE_APIKEYS_SETTING_HEADER,
+  SITE_CUSTOMISATIONS_SETTING_HEADER,
+  SITE_MAILS_HEADER,
   SITE_SETTINGS_PAGE_HEADING,
   SITE_SETTINGS_SECTION_GENERAL,
   SITE_SETTINGS_SECTION_PAYMENT,
-  SITE_MAILS_HEADER,
-  SITE_CUSTOMISATIONS_SETTING_HEADER,
-  SITE_APIKEYS_SETTING_HEADER,
 } from "@/lib/ui/config/strings";
 import { UIConstants } from "@workspace/common-models";
-import { checkPermission } from "@workspace/utils";
-import { useRouter } from "next/navigation";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@workspace/ui/components/tabs";
-import GeneralSettings from "./general-settings";
-import PaymentSettings from "./payment-settings";
-import MailsSettings from "./mails-settings";
-import CustomizationsSettings from "./customizations-settings";
+import { checkPermission } from "@workspace/utils";
+import { useRouter } from "next/navigation";
+
 import ApiKeysSettings from "./api-keys-settings";
+import CustomizationsSettings from "./customizations-settings";
 import DomainManagement from "./domain-management";
+import GeneralSettings from "./general-settings";
+import MailsSettings from "./mails-settings";
+import PaymentSettings from "./payment-settings";
+
 import { useProfile } from "@/components/contexts/profile-context";
 
 interface SettingsProps {
@@ -105,6 +107,7 @@ export default function Settings({ selectedTab }: SettingsProps) {
         >
           <ApiKeysSettings />
         </TabsContent>
+
 
         <TabsContent value="Domain Management" className="flex flex-col gap-8">
           {checkPermission(profile.permissions, [

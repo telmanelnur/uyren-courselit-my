@@ -13,8 +13,8 @@ import {
   TableBody,
   TableHead,
   TableRow,
-  Tooltip,
 } from "@workspace/components-library";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { Eye, Settings } from "lucide-react";
 import { useState } from "react";
 
@@ -88,19 +88,30 @@ export default function List() {
                   <td align="right">
                     <div className="flex space-x-2 justify-end">
                       <Link href={`/p/${community.pageId}`}>
-                        <Tooltip title="View page">
-                          <Button variant="soft">
-                            <Eye width={16} />{" "}
-                          </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="soft">
+                              <Eye width={16} />{" "}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            View page
+                          </TooltipContent>
                         </Tooltip>
+
                       </Link>
                       <Link
                         href={`/dashboard/community/${community._id || community.id}/manage`}
                       >
-                        <Tooltip title="Settings">
-                          <Button variant="soft">
-                            <Settings width={16} />{" "}
-                          </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="soft">
+                              <Settings width={16} />{" "}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Settings
+                          </TooltipContent>
                         </Tooltip>
                       </Link>
                     </div>

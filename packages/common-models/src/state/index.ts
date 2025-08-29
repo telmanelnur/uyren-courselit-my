@@ -3,7 +3,6 @@ import Auth from "../auth";
 import Message from "../message";
 import Profile from "../profile";
 import SiteInfo from "../site-info";
-import { Typeface } from "../typeface";
 import { ServerConfig } from "../server-config";
 // import { Theme } from "@workspacepage-models";
 
@@ -13,8 +12,6 @@ export default interface State {
   networkAction: boolean;
   profile: Profile;
   address: Address;
-  // theme: Theme;
-  typefaces: Typeface[];
   message: Message;
   config: ServerConfig;
 }

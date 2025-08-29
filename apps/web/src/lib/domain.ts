@@ -12,8 +12,7 @@ export {
   parseHost,
 } from "./domain-utils";
 
-const useRedis = process.env.USER_REDIS === "true";
-console.log("useRedis", useRedis);
+const useRedis = process.env.USE_REDIS === "true";
 
 const mainIdentifiers = [
   "main",

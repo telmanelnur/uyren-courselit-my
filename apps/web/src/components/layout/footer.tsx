@@ -1,117 +1,90 @@
-"use client";
+"use client"
 
-import { useSiteInfo } from "@/components/contexts/site-info-context";
-import Link from "next/link";
-import Image from "next/image";
+import Link from "next/link"
+import { Linkedin, Mail, Phone, MapPin, Instagram, Facebook, Send } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
-export default function Footer() {
-  const { siteInfo } = useSiteInfo();
-
-  const quickLinks = [
-    { name: "Courses", href: "/courses" },
-    { name: "Blog", href: "/blog" },
-  ];
-
-  const supportLinks = [
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
-  ];
+export function Footer() {
+  const { t } = useTranslation("common")
 
   return (
-    <footer className="bg-card border-t border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              {siteInfo?.logo?.file ? (
-                <Image
-                  src={siteInfo.logo.file}
-                  alt={siteInfo.logo.caption || siteInfo.title || "Logo"}
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
-                    {siteInfo?.title?.charAt(0) || "U"}
-                  </span>
-                </div>
-              )}
-              <span className="text-xl font-bold text-foreground">
-                {siteInfo?.title || "Uyren Academy"}
-              </span>
+    <footer className="bg-black text-white relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-90"></div>
+
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-3">
+              <h2 className="text-3xl font-bold text-brand-primary">UYREN.AI</h2>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {siteInfo?.subtitle ||
-                "Learn what actually matters: Python, ML, science. No fluff. Just challenges, structure, and growth."}
-            </p>
+            <p className="text-gray-300 text-sm leading-relaxed">{t("footer_about")}</p>
+            <div className="flex space-x-4">
+              <div className="p-2 bg-gray-800 rounded-full hover:bg-brand-primary transition-all duration-300 cursor-pointer group">
+                <Linkedin className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+              </div>
+              <div className="p-2 bg-gray-800 rounded-full hover:bg-brand-primary transition-all duration-300 cursor-pointer group">
+                <Send className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+              </div>
+              <div className="p-2 bg-gray-800 rounded-full hover:bg-brand-primary transition-all duration-300 cursor-pointer group">
+                <Instagram className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+              </div>
+              <div className="p-2 bg-gray-800 rounded-full hover:bg-brand-primary transition-all duration-300 cursor-pointer group">
+                <Facebook className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+              </div>
+              <div className="p-2 bg-gray-800 rounded-full hover:bg-brand-primary transition-all duration-300 cursor-pointer group">
+                <Mail className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+              </div>
+            </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-foreground">
-              Quick Links
-            </h3>
-            <ul className="space-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-muted-foreground hover:text-brand-primary transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <h3 className="font-bold text-xl mb-6 text-brand-primary">{t("footer_quick_links")}</h3>
+            <div className="space-y-3">
+              <Link href="/" className="block text-gray-300 hover:text-brand-primary transition-colors duration-300 hover:translate-x-1 transform">{t("nav_home")}</Link>
+              <Link href="/about" className="block text-gray-300 hover:text-brand-primary transition-colors duration-300 hover:translate-x-1 transform">{t("nav_about")}</Link>
+              <Link href="/courses" className="block text-gray-300 hover:text-brand-primary transition-colors duration-300 hover:translate-x-1 transform">{t("nav_courses")}</Link>
+              <Link href="/grants" className="block text-gray-300 hover:text-brand-primary transition-colors duration-300 hover:translate-x-1 transform">{t("nav_grants")}</Link>
+              <Link href="/community" className="block text-gray-300 hover:text-brand-primary transition-colors duration-300 hover:translate-x-1 transform">{t("nav_community")}</Link>
+              <Link href="/sponsorship" className="block text-gray-300 hover:text-brand-primary transition-colors duration-300 hover:translate-x-1 transform">{t("nav_sponsorship")}</Link>
+            </div>
           </div>
 
-          {/* Support */}
+          {/* Contact */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-foreground">
-              Support
-            </h3>
-            <ul className="space-y-2">
-              {supportLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-muted-foreground hover:text-brand-primary transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <h3 className="font-bold text-xl mb-6 text-brand-primary">{t("footer_contact")}</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 group">
+                <div className="p-2 bg-gray-800 rounded-full group-hover:bg-brand-primary transition-colors duration-300">
+                  <MapPin className="h-4 w-4 text-brand-primary group-hover:text-white" />
+                </div>
+                <span className="text-gray-300 text-sm leading-relaxed">{t("footer_address")}</span>
+              </div>
+              <div className="flex items-center space-x-3 group">
+                <div className="p-2 bg-gray-800 rounded-full group-hover:bg-brand-primary transition-colors duration-300">
+                  <Phone className="h-4 w-4 text-brand-primary group-hover:text-white" />
+                </div>
+                <span className="text-gray-300 text-sm">+7 777 377 7270</span>
+              </div>
+              <div className="flex items-center space-x-3 group">
+                <div className="p-2 bg-gray-800 rounded-full group-hover:bg-brand-primary transition-colors duration-300">
+                  <Mail className="h-4 w-4 text-brand-primary group-hover:text-white" />
+                </div>
+                <span className="text-gray-300 text-sm">uyrengroup@gmail.com</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="border-t border-border mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-muted-foreground text-sm">
-              © {new Date().getFullYear()} {siteInfo?.title || "Uyren Academy"}
-              . All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link
-                href="/privacy"
-                className="text-muted-foreground hover:text-brand-primary text-sm transition-colors duration-200"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/terms"
-                className="text-muted-foreground hover:text-brand-primary text-sm transition-colors duration-200"
-              >
-                Terms
-              </Link>
-            </div>
+        <div className="border-t border-gray-800 mt-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-gray-400 text-sm">{t("footer_rights")}</p>
+            <p className="text-gray-400 text-sm">{t("footer_tagline")}</p>
           </div>
         </div>
       </div>
     </footer>
-  );
+  )
 }
+
+export default Footer

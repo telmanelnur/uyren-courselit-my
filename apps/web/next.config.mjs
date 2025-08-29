@@ -1,3 +1,4 @@
+
 const remotePatterns = [
   {
     protocol: "https",
@@ -13,6 +14,12 @@ const nextConfig = {
 
   images: {
     remotePatterns,
+  },
+
+  i18n: {
+    defaultLocale: 'en-US',
+    locales: ['en-US', 'ru', 'kz'],
+    localeDetection: false
   },
 }
 

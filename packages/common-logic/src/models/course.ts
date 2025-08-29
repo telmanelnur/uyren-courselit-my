@@ -93,6 +93,8 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
       required: false,
       default: null,
     },
+
+    shortDescription: { type: String, required: false },
   },
   {
     timestamps: true,

@@ -3,21 +3,25 @@ import { SITE_SETTINGS_DEFAULT_TITLE } from "@/lib/ui/config/strings";
 import { getSiteInfo as getServerSiteInfo } from "@/server/lib/site-info";
 import { TRPCReactProvider } from "@/server/provider";
 import { TRPCError } from "@trpc/server";
-// import "@workspace/components-library/styles.css";
-// import "@workspace/page-blocks/styles.css";
-// import "@workspace/page-primitives/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import NotFound from "./not-found";
+import { getT } from "./i18n/server";
+
 
 import "@/lib/global-client";
-// import "remirror/styles/all.css";
+// import "@workspace/components-library/styles.css";
 import "@/styles/globals.css";
-
 const inter = Inter({ subsets: ["latin"] });
+
+
+// export async function generateStaticParams() {
+//   return languages.map((lng) => ({ lng }))
+// }
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteInfo = await getServerSiteInfo();
+  // const { t } = await getT();
 
   return {
     title: `${siteInfo?.title || SITE_SETTINGS_DEFAULT_TITLE}`,
@@ -61,11 +65,14 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     }
   }
 
+  const { i18n } = await getT();
+  const cls = `${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans ${inter.className}`
+
   if (hasError) {
     return (
       <html lang="en">
         <body
-          className={`${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.sourceSans3.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.sourceSerif4.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans ${inter.className}`}
+          className={cls}
         >
           <NotFound />
         </body>
@@ -74,10 +81,10 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={i18n.language} suppressHydrationWarning>
       <head>{/* <style>{themeStyles}</style> */}</head>
       <body
-        className={`${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.sourceSans3.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.sourceSerif4.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans ${inter.className}`}
+        className={cls}
       >
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>

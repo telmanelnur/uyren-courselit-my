@@ -5,11 +5,6 @@
 
 /* forpackages.componet-library */
 @source "../../../components-library/src/**/*.{ts,tsx}";
-/* for packages.page-blocks */
-@source "../../../page-blocks/src/**/*.{ts,tsx}";
-/* for packages.page-primitives */
-@source "../../../page-primitives/src/**/*.{ts,tsx}";
-
 
 
 @import "tw-animate-css";

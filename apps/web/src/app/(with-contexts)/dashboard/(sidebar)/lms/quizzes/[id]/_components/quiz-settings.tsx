@@ -157,7 +157,7 @@ export default function QuizSettings() {
       const response = await trpcUtils.lmsModule.courseModule.course.list.fetch(
         {
           pagination: {
-            take: 100,
+            take: 15,
             skip: 0,
           },
           search: {

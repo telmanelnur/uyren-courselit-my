@@ -13,9 +13,7 @@ export default async function Layout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        {/* <ThemeProvider> */}
         {children}
-        {/* </ThemeProvider> */}
       </SidebarInset>
     </SidebarProvider>
   );

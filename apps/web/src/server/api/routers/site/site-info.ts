@@ -175,7 +175,6 @@ export const siteInfoRouter = router({
         "settings.paypalSecret": 0,
         "settings.razorpaySecret": 0,
         "settings.razorpayWebhookSecret": 0,
-        draftTypefaces: 0,
         lastEditedThemeId: 0,
       };
 
@@ -328,7 +327,6 @@ export const siteInfoRouter = router({
         ctx.user &&
         checkPermission(ctx.user.permissions, [permissions.manageSite]);
       if (!isSiteEditor) {
-        exclusionProjection.draftTypefaces = 0;
         exclusionProjection.lastEditedThemeId = 0;
       }
       const domain = await DomainModel.findById(

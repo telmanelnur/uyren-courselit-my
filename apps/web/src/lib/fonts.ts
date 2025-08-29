@@ -1,26 +1,25 @@
 import {
-  Open_Sans,
-  Montserrat,
-  Lato,
-  Poppins,
-  Source_Sans_3,
-  Raleway,
-  Noto_Sans,
-  Merriweather,
-  Inter,
   Alegreya,
-  Roboto,
-  Mulish,
-  Nunito,
-  Rubik,
-  Playfair_Display,
-  Oswald,
-  PT_Sans,
-  Work_Sans,
-  Roboto_Slab,
-  Source_Serif_4,
   Bebas_Neue,
+  Inter,
+  Lato,
+  Merriweather,
+  Montserrat,
+  Mulish,
+  Noto_Sans,
+  Nunito,
+  Open_Sans,
+  Oswald,
+  Playfair_Display,
+  Poppins,
+  PT_Sans,
   Quicksand,
+  // Source_Sans_3,
+  Raleway,
+  Roboto,
+  Roboto_Slab,
+  Rubik,
+  Work_Sans
 } from "next/font/google";
 
 export const openSans = Open_Sans({
@@ -42,11 +41,6 @@ export const lato = Lato({
 export const poppins = Poppins({
   variable: "--font-poppins",
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  subsets: ["latin"],
-});
-
-export const sourceSans3 = Source_Sans_3({
-  variable: "--font-source-sans-3",
   subsets: ["latin"],
 });
 
@@ -131,12 +125,6 @@ export const workSans = Work_Sans({
 export const robotoSlab = Roboto_Slab({
   variable: "--font-roboto-slab",
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  subsets: ["latin"],
-});
-
-export const sourceSerif4 = Source_Serif_4({
-  variable: "--font-source-serif-4",
-  weight: ["200", "300", "400", "500", "600", "700", "900"],
   subsets: ["latin"],
 });
 

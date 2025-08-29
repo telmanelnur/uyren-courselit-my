@@ -3,11 +3,6 @@
 import { PopoverClose } from "@radix-ui/react-popover";
 import { Button } from "@workspace/ui/components/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@workspace/ui/components/popover";
-import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -15,10 +10,15 @@ import {
   CommandItem,
   CommandList,
 } from "@workspace/ui/components/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover";
+import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import { cn } from "@workspace/ui/lib/utils";
-import { Check, ChevronsUpDown, LoaderIcon, Plus, Edit } from "lucide-react";
+import { Check, ChevronsUpDown, Edit, LoaderIcon, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useDebounce } from "./hooks/user-debounce";
 
 interface Props<T extends object> {
   title?: string;
@@ -140,7 +140,7 @@ const ComboBox2 = <T extends object>({
           className={cn(
             "w-full justify-between",
             (!value || (Array.isArray(value) && value.length === 0)) &&
-              "text-muted-foreground",
+            "text-muted-foreground",
           )}
           disabled={disabled}
         >

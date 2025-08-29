@@ -8,7 +8,6 @@
   },
   "exports": {
     "./tiptap": "./src/tiptap/index.ts",
-    "./tiptap/*": "./src/tiptap/*",
     "./tiptap-sh": "./src/tiptap-sh/index.ts"
   },
   "dependencies": {

@@ -9,7 +9,6 @@ import type {
   MembershipRole,
   PaymentPlan,
   Profile,
-  Typeface,
 } from "@workspace/common-models";
 import { Constants, UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
@@ -79,25 +78,6 @@ export const isLessonCompleted = ({
   return tmp.completedLessons.some((lesson) => lesson === lessonId);
 };
 
-export const generateFontString = (typefaces: Typeface[]): string => {
-  const fontStringPieces = [];
-
-  for (const typeface of typefaces) {
-    if (typeface.typeface !== "Roboto") {
-      fontStringPieces.push(
-        `family=${typeface.typeface.replace(
-          /\s/g,
-          "+",
-        )}:wght@${typeface.fontWeights.join(";")}`,
-      );
-    }
-  }
-
-  const fontString = fontStringPieces.join("&");
-  return fontString
-    ? `https://fonts.googleapis.com/css2?${fontString}&display=swap`
-    : "";
-};
 
 const swapMembers = (arr: any[], index1: number, index2: number): any[] => {
   if (index1 < 0 || index1 > arr.length - 1) {

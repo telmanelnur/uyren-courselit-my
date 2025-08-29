@@ -1,16 +1,15 @@
 // EntityCardComponent.tsx
-import React, { useCallback, useState } from "react";
-import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
-import { ComboBox, ComboBox2, NiceModal } from "@workspace/components-library";
+import { trpc } from "@/utils/trpc";
+import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import { ComboBox2, NiceModal } from "@workspace/components-library";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@workspace/ui/components/dialog";
-import { trpc } from "@/utils/trpc";
+import { useCallback, useState } from "react";
 
 export interface AssignmentLinkAttrs {
   label: string;
@@ -32,7 +31,7 @@ export function AssignmentLinkNodeComponent({
     console.log("handleSelectDialog");
     NiceModal.show(AssignmentSelectNiceDialog, {
       open: true,
-      onClose: () => {},
+      onClose: () => { },
     });
   }, []);
 

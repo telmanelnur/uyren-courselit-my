@@ -3,9 +3,6 @@
 import DashboardContent from "@/components/admin/dashboard-content";
 import type { ContentItem } from "@/components/admin/my-content/content";
 import { MyContentCard } from "@/components/admin/my-content/content-card";
-import { useAddress } from "@/components/contexts/address-context";
-import { useProfile } from "@/components/contexts/profile-context";
-import { useTheme } from "@/components/contexts/theme-context";
 import { SkeletonCard } from "@/components/skeleton-card";
 import { MY_CONTENT_HEADER } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
@@ -44,15 +41,8 @@ const breadcrumbs = [{ label: MY_CONTENT_HEADER, href: "#" }];
 
 export default function Page() {
   const [data, setData] = useState<ContentItem[]>([]);
-  const { profile } = useProfile();
-  const address = useAddress();
-  const { theme } = useTheme();
 
-  const loadUserContentQuery =
-    trpc.userModule.userContent.getProtectedUserContent.useQuery(
-      // { address: address.backend, userId: profile?.id || "" },
-      undefined,
-    );
+  const loadUserContentQuery = trpc.userModule.userContent.getProtectedUserContent.useQuery();
 
   useEffect(() => {
     if (loadUserContentQuery.data) {

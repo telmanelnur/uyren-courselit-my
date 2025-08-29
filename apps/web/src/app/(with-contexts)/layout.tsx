@@ -3,9 +3,8 @@ import { defaultState } from "@/components/contexts/default-state";
 import { ProfileProvider } from "@/components/contexts/profile-context";
 import { ServerConfigProvider } from "@/components/contexts/server-config-context";
 import { SiteInfoProvider } from "@/components/contexts/site-info-context";
-import { ThemeProvider } from "@/components/contexts/theme-context";
 import { ThemeProvider as NextThemesProvider } from "@/components/next-theme-provider";
-import SessionWrapper from "@/components/providers/session-wrapper";
+import SessionWrapper from "@/components/layout/session-wrapper";
 import { authOptions } from "@/lib/auth/options";
 import { getAddressFromHeaders } from "@/lib/ui/lib/utils";
 import { getSiteInfo as getServerSiteInfo } from "@/server/lib/site-info";
@@ -15,6 +14,7 @@ import { getServerSession } from "next-auth";
 import { headers } from "next/headers";
 import React from "react";
 import { Toaster } from "sonner";
+import TranslationWrapper from "@/components/layout/translation-wrapper";
 
 export default async function Layout({
   children,
@@ -25,15 +25,15 @@ export default async function Layout({
   const address = await getAddressFromHeaders(headers);
   const siteInfo = await getServerSiteInfo();
   return (
-    <SessionWrapper session={session}>
-      <AddressProvider
-        initialAddress={{
-          frontend: address,
-          backend: address,
-        }}
-      >
-        <SiteInfoProvider initialSiteInfo={formatInitialSiteInfo(siteInfo)}>
-          <ThemeProvider>
+    <TranslationWrapper>
+      <SessionWrapper session={session}>
+        <AddressProvider
+          initialAddress={{
+            frontend: address,
+            backend: address,
+          }}
+        >
+          <SiteInfoProvider initialSiteInfo={formatInitialSiteInfo(siteInfo)}>
             <ServerConfigProvider initialConfig={defaultState.config}>
               <NextThemesProvider
                 attribute="class"
@@ -46,11 +46,11 @@ export default async function Layout({
                 </ProfileProvider>
               </NextThemesProvider>
             </ServerConfigProvider>
-          </ThemeProvider>
-        </SiteInfoProvider>
-        <Toaster />
-      </AddressProvider>
-    </SessionWrapper>
+          </SiteInfoProvider>
+          <Toaster />
+        </AddressProvider>
+      </SessionWrapper>
+    </TranslationWrapper>
   );
 }
 

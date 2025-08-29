@@ -1,30 +1,23 @@
 import {
   Address,
+  Message,
   Profile,
   ServerConfig,
   SiteInfo,
-  Typeface,
 } from "@workspace/common-models";
-import { Theme } from "@workspace/page-models";
 
 export const defaultState: {
   siteinfo: SiteInfo;
   networkAction: boolean;
   profile: Profile;
   address: Address;
-  typefaces: Typeface[];
   config: ServerConfig;
-  theme: Theme;
-  [x: string]: any;
+  message: Message;
 } = {
   siteinfo: {
-    title: "",
-    subtitle: "",
-    logo: {
-      file: "",
-      thumbnail: "",
-      caption: "",
-    },
+    title: "Uyren AI",
+    subtitle: "AI-Powered Learning",
+    logo: undefined,
     currencyISOCode: "",
     paymentMethod: "",
     stripeKey: "",
@@ -64,14 +57,8 @@ export const defaultState: {
     backend: "",
     frontend: "",
   },
-  typefaces: [],
   config: {
     turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
     queueServer: process.env.QUEUE_SERVER || "",
-  },
-  theme: {
-    id: "",
-    name: "",
-    theme: {} as any, // Simplified for now - will be properly typed later
   },
 };
