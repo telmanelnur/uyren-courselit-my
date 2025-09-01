@@ -8,7 +8,7 @@ export default {
   domainNameForSingleTenancy: "main",
   schoolNameForSingleTenancy: "My school",
   dbConnectionString:
-    process.env.DB_CONNECTION_STRING ||
+    process.env.MONGODB_URI ||
     `mongodb://localhost/${process.env.NODE_ENV === "test" ? "test" : "app"}`,
 
   // product types

@@ -30,11 +30,10 @@ dotenv.config(); // Load .env as fallback
 
 // Create a minimal DB connection function to avoid workspace import issues
 async function connectToDatabase() {
-  const MONGODB_URI =
-    process.env.MONGODB_URI || process.env.DB_CONNECTION_STRING;
+  const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
     throw new Error(
-      "MONGODB_URI or DB_CONNECTION_STRING environment variable is required",
+      "MONGODB_URI environment variable is required",
     );
   }
 
