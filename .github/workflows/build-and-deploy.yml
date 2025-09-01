@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+  IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
 
 jobs:
   build-and-push:
@@ -31,8 +31,8 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
         
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -45,7 +45,7 @@ jobs:
       id: web-meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -58,7 +58,7 @@ jobs:
       id: queue-meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -189,13 +189,13 @@ jobs:
           
           # Pull latest images with the specified tag
           print_status "Pulling latest images with tag: $IMAGE_TAG"
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:$IMAGE_TAG
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue:$IMAGE_TAG
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:$IMAGE_TAG
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue:$IMAGE_TAG
           
           # Tag images as latest for docker-compose
           print_status "Tagging images as latest..."
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:latest
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue:latest
           
           # Start services with new images
           print_status "Starting services with new images..."
