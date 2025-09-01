@@ -33,7 +33,7 @@ services:
   #   restart: unless-stopped
 
   mongodb:
-    image: mongo:7
+    image: mongo
     container_name: courselit-mongo-dev
     ports:
       - "27017:27017"

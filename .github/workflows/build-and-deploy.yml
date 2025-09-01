@@ -2,8 +2,9 @@ name: Build and Deploy
 
 on:
   push:
-    # tags:
-    #   - 'v*'
+    branches: [main, master]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 env:
@@ -11,11 +12,16 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      web-image: ${{ steps.web-meta.outputs.tags }}
+      queue-image: ${{ steps.queue-meta.outputs.tags }}
     
     steps:
     - name: Checkout
@@ -35,17 +41,31 @@ jobs:
           image=moby/buildkit:v0.12.0
         buildkitd-flags: --debug
         
-    - name: Extract metadata
-      id: meta
+    - name: Extract metadata for web image
+      id: web-meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web
         tags: |
           type=ref,event=branch
           type=ref,event=pr
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+      
+    - name: Extract metadata for queue image
+      id: queue-meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
       
     - name: Build and push web image
       uses: docker/build-push-action@v5
@@ -53,11 +73,14 @@ jobs:
         context: .
         file: ./docker/Dockerfile.web
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        tags: ${{ steps.web-meta.outputs.tags }}
+        labels: ${{ steps.web-meta.outputs.labels }}
+        cache-from: type=gha,scope=web
+        cache-to: type=gha,mode=max,scope=web
         platforms: linux/amd64
+        build-args: |
+          NEXT_PUBLIC_APP_DOMAIN=${{ secrets.NEXT_PUBLIC_APP_DOMAIN }}
+          NEXT_PUBLIC_SERVER_DOMAIN=${{ secrets.NEXT_PUBLIC_SERVER_DOMAIN }}
         
     - name: Build and push queue image
       uses: docker/build-push-action@v5
@@ -65,12 +88,18 @@ jobs:
         context: .
         file: ./docker/Dockerfile.queue
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        tags: ${{ steps.queue-meta.outputs.tags }}
+        labels: ${{ steps.queue-meta.outputs.labels }}
+        cache-from: type=gha,scope=queue
+        cache-to: type=gha,mode=max,scope=queue
         platforms: linux/amd64
-        
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    
+    steps:
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -78,7 +107,104 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd /path/to/project
-          cd docker
-          chmod +x deploy.sh
-          ./deploy.sh ${{ github.ref_name }}
+          set -euo pipefail
+          
+          # Configuration
+          PROJECT_DIR="/home/ubuntu/courselit"
+          DOCKER_DIR="$PROJECT_DIR/docker"
+          COMPOSE_FILE="$DOCKER_DIR/docker-compose.prod.yml"
+          ENV_FILE="$DOCKER_DIR/.env.prod"
+          
+          # Colors for output
+          RED='\033[0;31m'
+          GREEN='\033[0;32m'
+          YELLOW='\033[1;33m'
+          BLUE='\033[0;34m'
+          NC='\033[0m'
+          
+          print_status() { echo -e "${BLUE}[INFO]${NC} $1"; }
+          print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+          print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+          print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+          
+          print_status "Starting deployment at $(date)"
+          
+          # Navigate to project directory
+          cd $PROJECT_DIR || {
+            print_error "Failed to navigate to project directory: $PROJECT_DIR"
+            exit 1
+          }
+          
+          # Check if docker-compose file exists
+          if [ ! -f "$COMPOSE_FILE" ]; then
+            print_error "Docker compose file not found: $COMPOSE_FILE"
+            exit 1
+          fi
+          
+          # Check if environment file exists
+          if [ ! -f "$ENV_FILE" ]; then
+            print_warning "Environment file not found: $ENV_FILE"
+            print_warning "Using default environment variables"
+          fi
+          
+          # Determine image tag
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            IMAGE_TAG="${{ github.ref_name }}"
+          else
+            IMAGE_TAG="latest"
+          fi
+          
+          print_status "Deploying with image tag: $IMAGE_TAG"
+          
+          # Stop existing services
+          print_status "Stopping existing services..."
+          docker-compose -f $COMPOSE_FILE down || {
+            print_warning "Failed to stop services, continuing..."
+          }
+          
+          # Pull latest images with the specified tag
+          print_status "Pulling latest images with tag: $IMAGE_TAG"
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:$IMAGE_TAG
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue:$IMAGE_TAG
+          
+          # Tag images as latest for docker-compose
+          print_status "Tagging images as latest..."
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/queue:latest
+          
+          # Start services with new images
+          print_status "Starting services with new images..."
+          if [ -f "$ENV_FILE" ]; then
+            IMAGE_TAG=$IMAGE_TAG docker-compose -f $COMPOSE_FILE --env-file $ENV_FILE up -d
+          else
+            IMAGE_TAG=$IMAGE_TAG docker-compose -f $COMPOSE_FILE up -d
+          fi
+          
+          # Wait for services to start
+          print_status "Waiting for services to start..."
+          sleep 10
+          
+          # Check service status
+          print_status "Checking service status..."
+          docker-compose -f $COMPOSE_FILE ps
+          
+          # Health check
+          print_status "Performing health checks..."
+          sleep 5
+          
+          # Check if web service is responding
+          if curl -f http://localhost:3000 > /dev/null 2>&1; then
+            print_success "Web service is healthy"
+          else
+            print_warning "Web service health check failed"
+          fi
+          
+          # Check if queue service is responding
+          if curl -f http://localhost:3001 > /dev/null 2>&1; then
+            print_success "Queue service is healthy"
+          else
+            print_warning "Queue service health check failed"
+          fi
+          
+          print_success "Deployment completed successfully!"
+          print_success "Version $IMAGE_TAG is now running on the VPS"

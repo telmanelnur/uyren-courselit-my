@@ -18,7 +18,9 @@ const nextConfig = {
               as: '*.js',
             },
           }, 
-    }
+    },
+    // Enable standalone output for Docker
+    output: process.env.NEXT_FOR_DOCKER ? 'standalone' : undefined,
 };
 
 export default nextConfig;
