@@ -31,6 +31,29 @@ WORKDIR /app
 
 COPY --from=deps /app/ ./
 
+# Build-time environment variables (temporary values)
+ARG NODE_ENV=production
+ARG HOST=localhost
+ARG PORT=3001
+ARG MONGODB_URI=mongodb://temp:temp@temp:27017/temp
+ARG REDIS_HOST=localhost
+ARG REDIS_PORT=6379
+ARG TRANSPORT_JWT_SECRET=temp-build-jwt-secret
+ARG SMTP_HOST=smtp.temp.com
+ARG SMTP_PORT=587
+ARG EMAIL_FROM=temp@temp.com
+
+ENV NODE_ENV=$NODE_ENV
+ENV HOST=$HOST
+ENV PORT=$PORT
+ENV MONGODB_URI=$MONGODB_URI
+ENV REDIS_HOST=$REDIS_HOST
+ENV REDIS_PORT=$REDIS_PORT
+ENV TRANSPORT_JWT_SECRET=$TRANSPORT_JWT_SECRET
+ENV SMTP_HOST=$SMTP_HOST
+ENV SMTP_PORT=$SMTP_PORT
+ENV EMAIL_FROM=$EMAIL_FROM
+
 # Build queue app using Turbo
 RUN pnpm turbo build --filter=@apps/queue
 

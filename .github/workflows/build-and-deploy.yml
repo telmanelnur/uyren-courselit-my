@@ -79,18 +79,22 @@ jobs:
         cache-to: type=gha,mode=max,scope=web
         platforms: linux/amd64
         build-args: |
-          FIREBASE_CLIENT_EMAIL=temp-build@temp-project.iam.gserviceaccount.com
-          FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\ntemp-build-private-key\n-----END PRIVATE KEY-----
-          NEXT_PUBLIC_APP_DOMAIN=temp-build-domain
-          NEXT_PUBLIC_SERVER_DOMAIN=temp-build-server
-          NEXT_PUBLIC_FB_API_KEY=temp-build-key
-          NEXT_PUBLIC_FB_AUTH_DOMAIN=temp-build.firebaseapp.com
-          NEXT_PUBLIC_FB_PROJECT_ID=temp-build-project
-          NEXT_PUBLIC_FB_STORAGE_BUCKET=temp-build.appspot.com
-          NEXT_PUBLIC_FB_MESSAGING_SENDER_ID=123456789
-          NEXT_PUBLIC_FB_APP_ID=temp-build-app-id
-          NEXT_PUBLIC_API_URL=http://temp-build-api
+          FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
+          NEXT_PUBLIC_APP_DOMAIN=${{ secrets.NEXT_PUBLIC_APP_DOMAIN }}
+          NEXT_PUBLIC_SERVER_DOMAIN=${{ secrets.NEXT_PUBLIC_SERVER_DOMAIN }}
+          NEXT_PUBLIC_FB_API_KEY=${{ secrets.NEXT_PUBLIC_FB_API_KEY }}
+          NEXT_PUBLIC_FB_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FB_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FB_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FB_PROJECT_ID }}
+          NEXT_PUBLIC_FB_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FB_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FB_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FB_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FB_APP_ID=${{ secrets.NEXT_PUBLIC_FB_APP_ID }}
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXTAUTH_URL=http://temp-build-auth
+          CLOUDINARY_CLOUD_NAME=temp-build-cloud
+          CLOUDINARY_API_KEY=temp-build-api-key
+          CLOUDINARY_API_SECRET=temp-build-api-secret
+          
         
     - name: Build and push queue image
       uses: docker/build-push-action@v5
@@ -103,6 +107,17 @@ jobs:
         cache-from: type=gha,scope=queue
         cache-to: type=gha,mode=max,scope=queue
         platforms: linux/amd64
+        build-args: |
+          NODE_ENV=production
+          HOST=localhost
+          PORT=3001
+          MONGODB_URI=mongodb://temp:temp@temp:27017/temp
+          REDIS_HOST=localhost
+          REDIS_PORT=6379
+          TRANSPORT_JWT_SECRET=temp-build-jwt-secret
+          SMTP_HOST=smtp.temp.com
+          SMTP_PORT=587
+          EMAIL_FROM=temp@temp.com
 
   deploy:
     needs: build-and-push
