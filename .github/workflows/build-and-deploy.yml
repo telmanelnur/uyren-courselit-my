@@ -79,15 +79,18 @@ jobs:
         cache-to: type=gha,mode=max,scope=web
         platforms: linux/amd64
         build-args: |
-          NEXT_PUBLIC_APP_DOMAIN=${{ secrets.NEXT_PUBLIC_APP_DOMAIN }}
-          NEXT_PUBLIC_SERVER_DOMAIN=${{ secrets.NEXT_PUBLIC_SERVER_DOMAIN }}
-          NEXT_PUBLIC_FB_API_KEY=${{ secrets.NEXT_PUBLIC_FB_API_KEY }}
-          NEXT_PUBLIC_FB_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FB_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FB_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FB_PROJECT_ID }}
-          NEXT_PUBLIC_FB_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FB_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FB_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FB_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FB_APP_ID=${{ secrets.NEXT_PUBLIC_FB_APP_ID }}
-          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          FIREBASE_CLIENT_EMAIL=temp-build@temp-project.iam.gserviceaccount.com
+          FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\ntemp-build-private-key\n-----END PRIVATE KEY-----
+          NEXT_PUBLIC_APP_DOMAIN=temp-build-domain
+          NEXT_PUBLIC_SERVER_DOMAIN=temp-build-server
+          NEXT_PUBLIC_FB_API_KEY=temp-build-key
+          NEXT_PUBLIC_FB_AUTH_DOMAIN=temp-build.firebaseapp.com
+          NEXT_PUBLIC_FB_PROJECT_ID=temp-build-project
+          NEXT_PUBLIC_FB_STORAGE_BUCKET=temp-build.appspot.com
+          NEXT_PUBLIC_FB_MESSAGING_SENDER_ID=123456789
+          NEXT_PUBLIC_FB_APP_ID=temp-build-app-id
+          NEXT_PUBLIC_API_URL=http://temp-build-api
+          NEXTAUTH_URL=http://temp-build-auth
         
     - name: Build and push queue image
       uses: docker/build-push-action@v5
