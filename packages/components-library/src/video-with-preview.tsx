@@ -148,7 +148,7 @@ export function VideoWithPreview({
     }
 
     // Fall back to placeholder
-    return "/placeholder.svg?height=480&width=854";
+    return "/courselit_backdrop.webp?height=480&width=854";
   };
 
   // Lock body scroll when modal is open
@@ -243,7 +243,7 @@ export function VideoWithPreview({
             onClick={handleThumbnailClick}
           >
             <img
-              src={getThumbnailUrl() || "/placeholder.svg"}
+              src={getThumbnailUrl() || "/courselit_backdrop.webp"}
               alt={`Thumbnail for ${title}`}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />

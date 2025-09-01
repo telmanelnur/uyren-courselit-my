@@ -1,8 +1,14 @@
 import { authOptions } from "@/lib/auth/options";
+import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import React from "react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Dashboard",
+  };
+}
 
 export default async function Layout({
   children,
@@ -14,5 +20,5 @@ export default async function Layout({
     redirect("/login?redirect=/dashboard");
   }
 
-  return <NuqsAdapter>{children}</NuqsAdapter>;
+  return children;
 }

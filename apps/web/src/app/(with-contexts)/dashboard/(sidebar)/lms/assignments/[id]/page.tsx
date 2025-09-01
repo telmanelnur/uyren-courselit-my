@@ -1,6 +1,18 @@
+import { Metadata, ResolvingMetadata } from "next";
 import { AssignmentModel } from "@/models/lms";
 import { connectToDatabase } from "@workspace/common-logic";
 import AssignmentClientWrapper from "./_components/assignment-client-wrapper";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = await params;
+  const title = id === "new" ? "New Assignment" : `Assignment ${id}`;
+  return {
+    title: `${title} | Assignments | LMS | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 async function getAssignmentData(id: string) {
   if (id === "new") {

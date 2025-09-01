@@ -87,7 +87,7 @@ export default function SponsorshipPage() {
                         </Badge>
                         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                             {t("sponsorship.hero_title")}{" "}
-                            <span className="text-brand-primary bg-clip-text text-transparent">UyrenAI</span>
+                            <span className="text-brand-primary bg-clip-text">UyrenAI</span>
                         </h1>
                         <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
                             {t("sponsorship.hero_desc")}

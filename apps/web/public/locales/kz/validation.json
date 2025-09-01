@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "error": {
+      "invalid_email": "Жарамсыз email мекенжайы",
+      "user_not_found": "Есеп табылмады",
+      "wrong_password": "Қате құпия сөз",
+      "invalid_credential": "Жарамсыз деректер",
+      "email_already_in_use": "Email қолданыста",
+      "weak_password": "Әлсіз құпия сөз",
+      "too_many_requests": "Тым көп әрекет",
+      "network_error": "Желі қатесі",
+      "popup_blocked": "Қалқыма терезе бұғатталған",
+      "unknown": "Аутентификация қатесі"
+    }
+  }
+}

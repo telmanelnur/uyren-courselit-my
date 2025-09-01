@@ -3,6 +3,7 @@ import {
   AuthorizationException,
   NotFoundException,
 } from "@/server/api/core/exceptions";
+import { regradeQuizAttempt } from "@/server/actions/quiz-attempt";
 import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
@@ -163,9 +164,9 @@ export const quizAttemptRouter = router({
           .sort(
             input.orderBy
               ? {
-                  [input.orderBy.field]:
-                    input.orderBy.direction === "asc" ? 1 : -1,
-                }
+                [input.orderBy.field]:
+                  input.orderBy.direction === "asc" ? 1 : -1,
+              }
               : { createdAt: -1 },
           )
           .lean(),
@@ -216,6 +217,45 @@ export const quizAttemptRouter = router({
         }>("quiz", "quizId title totalPoints")
         .lean();
 
+      if (!attempt) throw new NotFoundException("Quiz attempt not found");
+
+      return attempt;
+    }),
+
+  regrade: protectedProcedure
+    .use(createDomainRequiredMiddleware())
+    .use(createPermissionMiddleware([permissions.manageAnyCourse]))
+    .input(documentIdValidator())
+    .mutation(async ({ ctx, input }) => {
+      const result = await regradeQuizAttempt(input);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      // Return the updated attempt data
+      const attempt = await QuizAttemptModel.findOne({
+        _id: input,
+        domain: ctx.domainData.domainObj._id,
+      })
+        .populate<{
+          user: {
+            userId: string;
+            name: string;
+            email: string;
+          };
+        }>("user", "userId name email")
+        .populate<{
+          quiz: {
+            quizId: string;
+            title: string;
+            totalPoints: number;
+          };
+        }>("quiz", "quizId title totalPoints")
+        .lean();
+
+      if (!attempt) throw new NotFoundException("Quiz attempt not found");
+      
       return attempt;
     }),
 });

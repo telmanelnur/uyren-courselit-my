@@ -6,6 +6,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   UserCredential,
 } from "firebase/auth";
 import { signIn as nextAuthSignIn } from "next-auth/react";
@@ -57,6 +59,83 @@ export class AuthClientService {
     } catch (error) {
       console.error("Error initiating Google redirect:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Sign in with email and password
+   */
+  static async signInWithEmail(email: string, password: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      const result: UserCredential = await signInWithEmailAndPassword(
+        firebaseAuth,
+        email,
+        password
+      );
+
+      const idToken = await result.user.getIdToken();
+
+      // Use NextAuth to create session with Firebase token
+      const response = await nextAuthSignIn("credentials", {
+        idToken,
+        redirect: false,
+      });
+
+      if (response?.error) {
+        return { success: false, error: response.error };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error?.message || "Failed to sign in with email",
+      };
+    }
+  }
+
+  /**
+   * Sign up with email and password
+   */
+  static async signUpWithEmail(email: string, password: string, name?: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      const result: UserCredential = await createUserWithEmailAndPassword(
+        firebaseAuth,
+        email,
+        password
+      );
+
+      // Update display name if provided
+      if (name && result.user) {
+        await (result.user as any).updateProfile({
+          displayName: name,
+        });
+      }
+
+      const idToken = await result.user.getIdToken();
+
+      // Use NextAuth to create session with Firebase token
+      const response = await nextAuthSignIn("credentials", {
+        idToken,
+        redirect: false,
+      });
+
+      if (response?.error) {
+        return { success: false, error: response.error };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error?.message || "Failed to sign up with email",
+      };
     }
   }
 

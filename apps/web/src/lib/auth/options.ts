@@ -125,6 +125,11 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           if (error instanceof Error) {
             Log.error("Firebase ID Token verification failed", error);
+            console.error("Auth error details:", {
+              message: error.message,
+              stack: error.stack,
+              timestamp: new Date().toISOString(),
+            });
           }
           return null;
         }
@@ -179,13 +184,14 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/auth/login",
-    error: "/auth/login",
+    signIn: "/auth/sign-in",
+    error: "/auth/sign-in",
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  debug: process.env.NODE_ENV === "development",
   secret: process.env.NEXTAUTH_SECRET,
 };
 

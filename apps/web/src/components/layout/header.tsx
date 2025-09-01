@@ -129,12 +129,12 @@ export default function Header() {
           <Branding
             title={siteInfo?.title || "Uyren Academy"}
             subtitle={siteInfo?.subtitle}
-            icon={siteInfo?.logo?.file ? <Image src={siteInfo.logo.file} alt={siteInfo.logo.caption || siteInfo.title || "Logo"} width={40} height={40} className="h-10 w-10 object-contain" /> : <span className="text-white font-bold text-lg">U</span>}
+            icon={siteInfo?.logo?.url ? <Image src={siteInfo.logo.url} alt={siteInfo.logo.caption || siteInfo.title || "Logo"} width={40} height={40} className="h-10 w-10 object-contain" /> : <span className="text-white font-bold text-lg">U</span>}
             onClick={handleNavigation}
           />
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-4 lg:space-x-8">
             {navigationItems.map((item) => {
               const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
               return (
@@ -143,7 +143,7 @@ export default function Header() {
                   href={item.href}
                   onClick={(e) => handleNavigation(item.href, e)}
                   className={cn(
-                    "relative py-2 px-1 text-gray-700 transition-all duration-300 hover:text-brand-primary group",
+                    "relative py-2 px-1 text-gray-700 text-sm transition-all duration-300 hover:text-brand-primary group",
                     isActive ? "font-bold text-brand-primary" : "font-medium",
                   )}
                 >
@@ -186,9 +186,9 @@ export default function Header() {
 
             {/* Get Started */}
             {!isAuthenticated ? (
-              <Link href="/auth/login" onClick={(e) => handleNavigation("/register", e)}>
+              <Link href="/auth/sign-in" onClick={(e) => handleNavigation("/auth/sign-in", e)}>
                 <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:scale-105">
-                  {t("nav_get_started")}
+                  {t("nav_get_started")}  
                 </Button>
               </Link>
             ) : (
@@ -300,7 +300,7 @@ export default function Header() {
 
             {
               !isAuthenticated ? (
-                <Link href="/register" onClick={(e) => handleNavigation("/register", e)}>
+                <Link href="/auth/sign-in" onClick={(e) => handleNavigation("/auth/sign-in", e)}>
                   <Button className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white py-2 rounded-lg font-medium transition-all duration-300">
                     {t("nav_get_started")}
                   </Button>
@@ -333,13 +333,13 @@ const Branding = (props: {
       className="flex items-center space-x-3 group transition-all duration-300"
       onClick={(e) => props.onClick("/", e)}
     >
-      <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-primary-hover rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+      <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-primary-hover rounded-full flex items-center justify-center transition-transform duration-300">
         <span className="text-white font-bold text-lg">
           {props.icon}
         </span>
       </div>
       <div>
-        <div className="text-lg font-bold text-gray-900">UyrenAI</div>
+        <div className="text-lg font-bold text-gray-900">{props.title}</div>
         <div className="text-xs text-brand-primary">{props.subtitle}</div>
       </div>
     </Link >

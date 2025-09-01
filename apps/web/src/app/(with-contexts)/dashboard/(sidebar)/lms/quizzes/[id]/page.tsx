@@ -1,6 +1,18 @@
+import { Metadata, ResolvingMetadata } from "next";
 import { QuizModel } from "@/models/lms";
 import { connectToDatabase } from "@workspace/common-logic";
 import QuizClientWrapper from "./_components/quiz-client-wrapper";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = await params;
+  const title = id === "new" ? "New Quiz" : `Quiz ${id}`;
+  return {
+    title: `${title} | Quizzes | LMS | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 async function getQuizData(id: string) {
   if (id === "new") {

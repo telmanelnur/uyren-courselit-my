@@ -304,20 +304,6 @@ const setupCourse = async ({
   type: "course" | "download";
   ctx: MainContextType;
 }) => {
-  // console.log("existing pages | ", slugify(title.toLowerCase()), "|", await PageModel.find({ domain: ctx.domainData.domainObj._id }).lean(), "|",
-  //   await PageModel.find({
-  //     domain: ctx.domainData.domainObj._id,
-  //     pageId: slugify(title.toLowerCase()),
-  //   }).lean(),
-  // );
-  // const page = await PageModel.create({
-  //   domain: ctx.domainData.domainObj._id,
-  //   name: title,
-  //   creatorId: ctx.user.userId,
-  //   pageId: slugify(title.toLowerCase()),
-  // });
-  // console.log("page", page);
-
   const course = await CourseModel.create({
     domain: ctx.domainData.domainObj._id,
     title: title,
@@ -529,6 +515,15 @@ export const courseRouter = router({
           path: "attachedPaymentPlans",
           // select: "planId name type -_id",
         })
+        .populate<{
+          attachedTheme: {
+            _id: string;
+            name: string;
+          };
+        }>({
+          path: "attachedTheme",
+          select: "name _id",
+        })
         .lean();
 
       if (!course) {
@@ -588,6 +583,12 @@ export const courseRouter = router({
       if (input.filter.status) {
         query.status = input.filter.status;
       }
+      if(input.search?.q) {
+        query.$or = [
+          { "user.name": { $regex: input.search?.q, $options: "i" } },
+          { "user.email": { $regex: input.search?.q, $options: "i" } },
+        ];
+      }
 
       const paginationMeta = paginate(input.pagination);
       const orderBy = input.orderBy || {
@@ -598,7 +599,7 @@ export const courseRouter = router({
         [orderBy.field]: orderBy.direction === "asc" ? 1 : -1,
       };
       const [items, total] = await Promise.all([
-        MembershipModel.find(query as any)
+        MembershipModel.find(query)
           .skip(paginationMeta.skip)
           .limit(paginationMeta.take)
           .sort(sortObject)
@@ -608,42 +609,46 @@ export const courseRouter = router({
           : Promise.resolve(null),
       ]);
 
-      return await Promise.all(
-        items.map(async (member) => {
-          const user = await UserModel.findOne({
-            domain: ctx.domainData.domainObj._id,
-            userId: member.userId,
-          }).lean();
-          const purchase = user?.purchases?.find(
-            (purchase) => purchase.courseId === course.courseId,
-          );
-          return {
-            userId: member.userId,
-            status: member.status,
-            subscriptionMethod: member.subscriptionMethod,
-            subscriptionId: member.subscriptionId,
-            completedLessons: purchase?.completedLessons,
-            createdAt: purchase?.createdAt,
-            updatedAt: purchase?.updatedAt,
-            downloaded: purchase?.downloaded,
-            user: user
-              ? {
-                  userId: user.userId,
-                  email: user.email,
-                  name: user.name,
-                  avatar: user.avatar,
-                }
-              : undefined,
-            // status: member.status,
-            // subscriptionMethod: member.subscriptionMethod,
-            // subscriptionId: member.subscriptionId,
-            // completedLessons: purchase?.completedLessons,
-            // createdAt: purchase?.createdAt,
-            // updatedAt: purchase?.updatedAt,
-            // downloaded: purchase?.downloaded,
-          };
-        }),
-      );
+      return {
+        items: await Promise.all(
+          items.map(async (member) => {
+            const user = await UserModel.findOne({
+              domain: ctx.domainData.domainObj._id,
+              userId: member.userId,
+            }).lean();
+            const purchase = user?.purchases?.find(
+              (purchase) => purchase.courseId === course.courseId,
+            );
+            return {
+              userId: member.userId,
+              status: member.status,
+              subscriptionMethod: member.subscriptionMethod,
+              subscriptionId: member.subscriptionId,
+              completedLessons: purchase?.completedLessons,
+              createdAt: purchase?.createdAt,
+              updatedAt: purchase?.updatedAt,
+              downloaded: purchase?.downloaded,
+              user: user
+                ? {
+                    userId: user.userId,
+                    email: user.email,
+                    name: user.name,
+                    avatar: user.avatar,
+                  }
+                : undefined,
+              // status: member.status,
+              // subscriptionMethod: member.subscriptionMethod,
+              // subscriptionId: member.subscriptionId,
+              // completedLessons: purchase?.completedLessons,
+              // createdAt: purchase?.createdAt,
+              // updatedAt: purchase?.updatedAt,
+              // downloaded: purchase?.downloaded,
+            };
+          }),
+        ),
+        total,
+        meta: paginationMeta,
+      };
     }),
 
   create: protectedProcedure
@@ -678,9 +683,10 @@ export const courseRouter = router({
         // type: z.nativeEnum(Constants.CourseType).optional(),
         published: z.boolean().optional(),
         privacy: z.nativeEnum(Constants.ProductAccessType).optional(),
+        shortDescription: z.string().optional(),
         description: textEditorContentValidator().optional(),
         featuredImage: mediaWrappedFieldValidator().nullable().optional(),
-        themeId: documentIdValidator().optional(),
+        themeId: z.string().nullish(),
       }).extend({
         courseId: z.string(),
       }),
@@ -699,8 +705,11 @@ export const courseRouter = router({
         updateData.description = input.data.description;
       if (input.data.featuredImage !== undefined)
         updateData.featuredImage = input.data.featuredImage;
-      if (input.data.themeId !== undefined)
+      if (input.data.themeId !== undefined) {
         updateData.themeId = input.data.themeId;
+      }
+      if (input.data.shortDescription !== undefined)
+        updateData.shortDescription = input.data.shortDescription;
 
       const updatedCourse = await CourseModel.findOneAndUpdate(
         { courseId: input.courseId },

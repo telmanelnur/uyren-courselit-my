@@ -116,7 +116,6 @@ export async function finalizePurchase({
   }
 
   if (event) {
-    console.log("event", event);
     // await triggerSequences({ user, event, data: membership.entityId });
   }
 }

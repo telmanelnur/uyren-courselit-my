@@ -1,13 +1,4 @@
-import {
-  Button,
-  Menu2,
-  MenuItem,
-  Table,
-  TableBody,
-  TableHead,
-  TableRow,
-  useToast,
-} from "@workspace/components-library";
+import { useToast } from "@workspace/components-library";
 import {
   BTN_NEW_TAG,
   DELETE_TAG_POPUP_DESC,
@@ -24,15 +15,46 @@ import {
 } from "@/lib/ui/config/strings";
 import { useEffect, useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { MoreVert } from "@workspace/icons";
+import { MoreVertical, Plus } from "lucide-react";
 import { GeneralRouterOutputs } from "@/server/api/types";
+import { Button } from "@workspace/ui/components/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog";
+import { useRouter } from "next/navigation";
 
 type TagWithDetailType =
   GeneralRouterOutputs["userModule"]["tag"]["withDetails"][number];
 
 export default function Tags() {
   const [tags, setTags] = useState<TagWithDetailType[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [untagDialogOpen, setUntagDialogOpen] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   // tRPC queries/mutations
   const tagsQuery = trpc.userModule.tag.withDetails.useQuery();
@@ -43,10 +65,14 @@ export default function Tags() {
     if (tagsQuery.data) setTags(tagsQuery.data);
   }, [tagsQuery.data]);
 
-  const deleteTag = async (tag: string) => {
+  const handleDeleteTag = async () => {
+    if (!selectedTag) return;
+    
     try {
-      const response = await deleteTagMutation.mutateAsync({ data: { tag } });
+      const response = await deleteTagMutation.mutateAsync({ data: { tag: selectedTag } });
       setTags(response);
+      setDeleteDialogOpen(false);
+      setSelectedTag(null);
     } catch (err: any) {
       toast({
         title: TOAST_TITLE_ERROR,
@@ -56,10 +82,14 @@ export default function Tags() {
     }
   };
 
-  const untagUsers = async (tag: string) => {
+  const handleUntagUsers = async () => {
+    if (!selectedTag) return;
+    
     try {
-      const response = await untagUsersMutation.mutateAsync({ data: { tag } });
+      const response = await untagUsersMutation.mutateAsync({ data: { tag: selectedTag } });
       setTags(response);
+      setUntagDialogOpen(false);
+      setSelectedTag(null);
     } catch (err: any) {
       toast({
         title: TOAST_TITLE_ERROR,
@@ -67,55 +97,104 @@ export default function Tags() {
         variant: "destructive",
       });
     }
+  };
+
+  const openDeleteDialog = (tag: string) => {
+    setSelectedTag(tag);
+    setDeleteDialogOpen(true);
+  };
+
+  const openUntagDialog = (tag: string) => {
+    setSelectedTag(tag);
+    setUntagDialogOpen(true);
   };
 
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-semibold mb-4">{USERS_TAG_HEADER}</h1>
-        <div>
-          <Button
-            component="link"
-            variant="soft"
-            href="/dashboard/users/tags/new"
-          >
-            {BTN_NEW_TAG}
-          </Button>
-        </div>
+        <Button onClick={() => router.push("/dashboard/users/tags/new")}>
+          <Plus className="h-4 w-4 mr-2" />
+          {BTN_NEW_TAG}
+        </Button>
       </div>
-      <Table aria-label="Tags">
-        <TableHead>
-          <td>{TAG_TABLE_HEADER_NAME}</td>
-          <td align="right">{TAG_TABLE_HEADER_SUBS_COUNT}</td>
-          <td align="right">{PRODUCTS_TABLE_HEADER_ACTIONS}</td>
-        </TableHead>
-        <TableBody>
-          {tags.map((tag) => (
-            <TableRow key={tag.tag}>
-              <td className="py-2 max-w-[200px] overflow-y-auto">{tag.tag}</td>
-              <td align="right">{tag.count}</td>
-              <td align="right">
-                <Menu2 icon={<MoreVert />} variant="soft">
-                  <MenuItem
-                    component="dialog"
-                    title={`${UNTAG_POPUP_HEADER} "${tag.tag}"`}
-                    triggerChildren={TAGS_TABLE_CONTEXT_MENU_UNTAG}
-                    description={UNTAG_POPUP_DESC}
-                    onClick={() => untagUsers(tag.tag)}
-                  />
-                  <MenuItem
-                    component="dialog"
-                    title={`${DELETE_TAG_POPUP_HEADER} "${tag.tag}"`}
-                    triggerChildren={TAGS_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
-                    description={DELETE_TAG_POPUP_DESC}
-                    onClick={() => deleteTag(tag.tag)}
-                  />
-                </Menu2>
-              </td>
+      
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{TAG_TABLE_HEADER_NAME}</TableHead>
+              <TableHead className="text-right">{TAG_TABLE_HEADER_SUBS_COUNT}</TableHead>
+              <TableHead className="text-right">{PRODUCTS_TABLE_HEADER_ACTIONS}</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {tags.map((tag) => (
+              <TableRow key={tag.tag}>
+                <TableCell className="py-2 max-w-[200px] overflow-y-auto">{tag.tag}</TableCell>
+                <TableCell className="text-right">{tag.count}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => openUntagDialog(tag.tag)}>
+                        {TAGS_TABLE_CONTEXT_MENU_UNTAG}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openDeleteDialog(tag.tag)}>
+                        {TAGS_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Untag Users Dialog */}
+      <AlertDialog open={untagDialogOpen} onOpenChange={setUntagDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {UNTAG_POPUP_HEADER} "{selectedTag}"
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {UNTAG_POPUP_DESC}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUntagUsers}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Tag Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {DELETE_TAG_POPUP_HEADER} "{selectedTag}"
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {DELETE_TAG_POPUP_DESC}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTag}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

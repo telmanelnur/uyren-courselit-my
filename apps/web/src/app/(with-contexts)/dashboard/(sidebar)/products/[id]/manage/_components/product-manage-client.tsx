@@ -16,8 +16,10 @@ import {
   TOAST_TITLE_ERROR,
   TOAST_TITLE_SUCCESS,
 } from "@/lib/ui/config/strings";
+import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Editor } from "@tiptap/react";
 import { Constants, Media, Profile } from "@workspace/common-models";
 import {
   ComboBox2,
@@ -48,10 +50,11 @@ import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Separator } from "@workspace/ui/components/separator";
 import { Switch } from "@workspace/ui/components/switch";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { Trash2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -68,14 +71,15 @@ const ProductSchema = z.object({
     .string()
     .min(1, "Title is required")
     .max(255, "Title must be less than 255 characters"),
+  shortDescription: z.string().max(500, "Short description must be less than 500 characters").optional(),
   description: z.any().optional(),
-  themeId: z.string().optional(),
+  themeId: z.string().nullable(),
 });
 
 type ProductFormDataType = z.infer<typeof ProductSchema>;
 
 interface ProductManageClientProps {
-  product: any;
+  product: GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getByCourseDetailed"];
 }
 
 export default function ProductManageClient({
@@ -96,9 +100,9 @@ export default function ProductManageClient({
       editorType: "tiptap" as const,
     },
   });
-
-  const [featuredImage, setFeaturedImage] = useState(
-    product.featuredImage || {},
+  const editorRef = useRef<Editor | null>(null);
+  const [featuredImage, setFeaturedImage] = useState<Media | null>(
+    product.featuredImage || null,
   );
   const [published, setPublished] = useState(product.published || false);
   const [isPrivate, setPrivate] = useState(
@@ -107,7 +111,7 @@ export default function ProductManageClient({
   const [selectedTheme, setSelectedTheme] = useState<{
     key: string;
     title: string;
-  } | null>(product.themeId ? { key: product.themeId, title: "" } : null);
+  } | null>(null);
 
   const {
     paymentPlans,
@@ -126,24 +130,25 @@ export default function ProductManageClient({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
       title: product.title || "",
+      shortDescription: product.shortDescription || "",
       description: product.description || "",
-      themeId: product.themeId || "",
+      themeId: product.themeId || null,
     },
   });
 
   const trpcUtils = trpc.useUtils();
   const fetchThemes = useCallback(
-    async (search: string, offset: number, size: number) => {
+    async (search: string) => {
       try {
         const response = await trpcUtils.lmsModule.themeModule.theme.list.fetch(
           {
-            pagination: { skip: offset, take: size },
+            pagination: { skip: 0, take: 15 },
             search: search ? { q: search } : undefined,
             filter: { status: "published" },
           },
         );
-        return response.items.map((theme: any) => ({
-          key: theme._id,
+        return response.items.map((theme) => ({
+          key: theme._id.toString(),
           title: theme.name,
         }));
       } catch (error) {
@@ -194,8 +199,9 @@ export default function ProductManageClient({
     if (product) {
       setPaymentPlans(product.attachedPaymentPlans || []);
       setDefaultPaymentPlan(product?.defaultPaymentPlan || "");
+      setSelectedTheme(product.attachedTheme ? { key: product.attachedTheme._id, title: product.attachedTheme.name } : null);
     }
-  }, [product, setPaymentPlans, setDefaultPaymentPlan]);
+  }, [product, setPaymentPlans, setDefaultPaymentPlan, setSelectedTheme]);
 
   const handleSubmit = async (data: ProductFormDataType) => {
     try {
@@ -203,6 +209,7 @@ export default function ProductManageClient({
         courseId: product.courseId,
         data: {
           title: data.title,
+          shortDescription: data.shortDescription,
           description: editorContent,
           themeId: data.themeId,
         },
@@ -265,11 +272,7 @@ export default function ProductManageClient({
           setEditorContent(parsedDesc);
         }
       } catch (error) {
-        // If parsing fails, use as plain text
-        setEditorContent({
-          ...editorContent,
-          content: product.description,
-        });
+        console.error("Error initializing editor content:", error);
       }
     }
   }, [product.description]);
@@ -278,15 +281,8 @@ export default function ProductManageClient({
   useEffect(() => {
     if (product.themeId) {
       form.setValue("themeId", product.themeId);
-      // Fetch the theme name to display
-      fetchThemes("", 0, 100).then((themes) => {
-        const theme = themes.find((t) => t.key === product.themeId);
-        if (theme) {
-          setSelectedTheme(theme);
-        }
-      });
     }
-  }, [product.themeId, form, fetchThemes]);
+  }, [product.themeId, form]);
 
   const breadcrumbs = [
     { label: "Products", href: "/dashboard/products" },
@@ -299,7 +295,7 @@ export default function ProductManageClient({
 
   return (
     <DashboardContent breadcrumbs={breadcrumbs}>
-      <div className="space-y-8">
+      <div className="flex flex-col gap-6">
         <HeaderTopbar
           header={{
             title: "Manage",
@@ -310,7 +306,7 @@ export default function ProductManageClient({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-8"
+            className="space-y-6"
           >
             <FormField
               control={form.control}
@@ -328,16 +324,44 @@ export default function ProductManageClient({
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="shortDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-semibold">
+                    Short Description
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Enter a brief description for your product (max 500 characters)..."
+                      maxLength={500}
+                    />
+                  </FormControl>
+                  <div className="text-xs text-muted-foreground text-right">
+                    {field.value?.length || 0}/500
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormItem>
-              <FormLabel className="text-base font-semibold">
+              <FormLabel 
+              className="text-base font-semibold"
+              onClick={() => {
+                editorRef.current!.commands.focus('end')
+              }}
+              >
                 Description
               </FormLabel>
-              <FormControl>
-                <DescriptionEditor
-                  placeholder="Enter a description for your product..."
+              <DescriptionEditor
+                  placeholder="Enter a detailed description for your product..."
                   onEditor={(editor, meta) => {
                     if (meta.reason === "create") {
-                      editor!.commands.setMyContent(editorContent);
+                      editorRef.current = editor;
+                      editorRef.current!.commands.setMyContent(editorContent);
                     }
                   }}
                   onChange={(content) => {
@@ -347,7 +371,6 @@ export default function ProductManageClient({
                     });
                   }}
                 />
-              </FormControl>
               <FormMessage />
             </FormItem>
 
@@ -367,17 +390,17 @@ export default function ProductManageClient({
                       searchFn={fetchThemes}
                       renderText={(item) => item.title}
                       onChange={(item) => {
-                        setSelectedTheme(item);
-                        field.onChange(item?.key || "");
+                        setSelectedTheme(item || null);
+                        field.onChange(item?.key || null);
                       }}
                       multiple={false}
                       showCreateButton={true}
                       showEditButton={true}
                       onCreateClick={() => {
-                        router.push("/dashboard/lms/themes/new");
+                        window.open(`/dashboard/lms/themes/new`, '_blank');
                       }}
                       onEditClick={(item) => {
-                        router.push(`/dashboard/lms/themes/${item.key}`);
+                        window.open(`/dashboard/lms/themes/${item.key}`, '_blank');
                       }}
                     />
                   </FormControl>
@@ -416,7 +439,7 @@ export default function ProductManageClient({
             address={address}
             mediaId={(featuredImage && featuredImage.mediaId) || ""}
             onRemove={() => {
-              setFeaturedImage({});
+              setFeaturedImage(null);
               saveFeaturedImage();
             }}
             type="course"

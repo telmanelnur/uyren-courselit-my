@@ -1,5 +1,4 @@
-"use client";
-
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -11,6 +10,15 @@ import {
 } from "@workspace/ui/components/card";
 import { ClipboardList, FileText, Plus, Users, Target, Star } from "lucide-react";
 import Link from "next/link";
+
+export async function generateMetadata(
+  _: any,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  return {
+    title: `Learning Management System | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 export default function LMSPage() {
   const breadcrumbs = [{ label: "LMS", href: "#" }];

@@ -1,6 +1,6 @@
 "use client";
 
-import { CommunitiesList } from "@/app/(with-contexts)/(with-layout)/communities/communities-list";
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import Resources from "@/components/resources";
 import {
@@ -13,6 +13,15 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 const { permissions } = UIConstants;
+
+export async function generateMetadata(
+  _: any,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  return {
+    title: `Communities | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 const breadcrumbs = [{ label: MANAGE_COMMUNITIES_PAGE_HEADING, href: "#" }];
 

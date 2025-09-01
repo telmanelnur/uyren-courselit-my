@@ -280,7 +280,6 @@ export default function MainPageSettings() {
 
   const handleImportReview = useCallback((review: FeaturedReviewItemType) => {
     const newOrder = reviewFields.length;
-    console.log(review);
     appendReview({
       reviewId: review.key,
       rating: review.rating,

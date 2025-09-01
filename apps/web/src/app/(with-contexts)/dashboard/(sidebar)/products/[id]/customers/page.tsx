@@ -14,8 +14,7 @@ import {
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { ColumnDef } from "@tanstack/react-table";
-import { ComboBox, useToast } from "@workspace/components-library";
-import { TooltipTrigger } from "@workspace/text-editor/tiptap";
+import { useToast } from "@workspace/components-library";
 import {
   Avatar,
   AvatarFallback,
@@ -38,13 +37,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Tooltip, TooltipContent } from "@workspace/ui/components/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import { capitalize, truncate } from "@workspace/utils";
-import { ArrowLeft, Copy, UserPlus } from "lucide-react";
+import { ArrowLeft, Copy, MoreHorizontal, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -55,7 +55,7 @@ interface CustomerFormData {
 }
 
 type ItemType =
-  GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getMembers"][number];
+  GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getMembers"]["items"][number];
 type QueryParams = Parameters<
   typeof trpc.lmsModule.courseModule.course.getMembers.useQuery
 >[0];
@@ -70,6 +70,11 @@ export default function ProductCustomersPage() {
     tags: [],
   });
   const [savingCustomer, setSavingCustomer] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [parsedData, setParsedData] = useState<Array<ItemType>>([]);
+  const [parsedPageination, setParsedPagination] = useState({
+    pageCount: 1,
+  });
   const { toast } = useToast();
 
   const { data: product, isLoading: productLoading } =
@@ -86,47 +91,203 @@ export default function ProductCustomersPage() {
   const inviteCustomerMutation =
     trpc.userModule.user.inviteCustomer.useMutation();
 
-  const handleCustomerSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  
+  const handleCopyToClipboard = useCallback((text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: TOAST_TITLE_SUCCESS,
+      description: "Copied to clipboard",
+    });
+  }, [toast]);
 
-    if (!customerFormData.email.trim()) {
-      toast({
-        title: TOAST_TITLE_ERROR,
-        description: "Email is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setSavingCustomer(true);
-      const response = await inviteCustomerMutation.mutateAsync({
-        data: {
-          email: customerFormData.email,
-          tags: customerFormData.tags,
-          courseId: productId,
+  const columns: ColumnDef<ItemType>[] = useMemo(() => {
+    return [
+      {
+        accessorKey: "username",
+        header: "Customer Name",
+        cell: ({ row }) => {
+          const member = row.original;
+          return (
+            <Link href={`/dashboard/users/${member.user?.userId}`}>
+              <div className="flex items-center space-x-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={
+                      member.user?.avatar?.thumbnail ||
+                      "/courselit_backdrop_square.webp"
+                    }
+                    alt={member.user?.name || member.user?.email}
+                  />
+                  <AvatarFallback>
+                    {(member.user?.name || member.user?.email || " ").charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{member.user?.name || member.user?.email}</span>
+              </div>
+            </Link>
+          );
         },
-      });
-
-      if (response) {
-        setCustomerFormData({ email: "", tags: [] });
-        setCustomerDialogOpen(false);
-        const message = `${response.email} has been invited.`;
-        toast({
-          title: TOAST_TITLE_SUCCESS,
-          description: message,
-        });
-      }
-    } catch (err: any) {
-      toast({
-        title: TOAST_TITLE_ERROR,
-        description: err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setSavingCustomer(false);
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+          const member = row.original;
+          return (
+            <Badge
+              variant={
+                member.status.toLowerCase() === "pending"
+                  ? "secondary"
+                  : member.status.toLowerCase() === "active"
+                    ? "default"
+                    : "destructive"
+              }
+            >
+              {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Created",
+        cell: ({ row }) => {
+          const date = row.getValue("createdAt") as string;
+          return (
+            <div className="text-sm text-muted-foreground">
+              {new Date(date).toLocaleDateString()}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "subscription",
+        header: "Subscription",
+        cell: ({ row }) => {
+          const member = row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger>
+                  {member.subscriptionId
+                    ? truncate(member.subscriptionId, 10)
+                    : "-"}
+                </TooltipTrigger>
+                <TooltipContent>
+                  {`Method: ${capitalize(member.subscriptionMethod || "")}`}
+                </TooltipContent>
+              </Tooltip>
+              {member.subscriptionId && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        handleCopyToClipboard(member.subscriptionId || "")
+                      }
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy Subscription ID</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }) => {
+              const quiz = row.original;
+              return (
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                          <DropdownMenuItem >
+                              {/* <Link href={`/dashboard/lms/quizzes/${quiz._id}`}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit Quiz
+                              </Link> */}
+                          </DropdownMenuItem>
+                          {/* {quiz.status !== "archived" && (
+                              <DropdownMenuItem
+                                  onClick={() => handleArchive(quiz)}
+                                  className="text-orange-600"
+                              >
+                                  <Archive className="h-4 w-4 mr-2" />
+                                  Archive Quiz
+                              </DropdownMenuItem>
+                          )} */}
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+              );
+          },
+      },
+    ];
+  }, [handleCopyToClipboard]);
+  const { table } = useDataTable({
+    columns,
+    data: parsedData,
+    pageCount: parsedPageination.pageCount,
+    enableGlobalFilter: true,
+    initialState: {
+      sorting: [{ id: "createdAt", desc: true }],
+    },
+  });
+  const tableState = table.getState();
+  const queryParams = useMemo(() => {
+    const parsed: QueryParams = {
+      pagination: {
+        skip: tableState.pagination.pageIndex * tableState.pagination.pageSize,
+        take: tableState.pagination.pageSize,
+      },
+      filter: {
+        courseId: productId,
+        // status: Array.isArray(
+        //     tableState.columnFilters.find((filter) => filter.id === "status")?.value
+        // )
+        //     ? (tableState.columnFilters.find((filter) => filter.id === "status")?.value as string[])[0] as any;
+        //     : undefined,
+      },
+    };
+    if (tableState.sorting[0]) {
+      parsed.orderBy = {
+        field: tableState.sorting[0].id as any,
+        direction: tableState.sorting[0].desc ? "desc" : "asc",
+      };
     }
-  };
+    if (debouncedSearchQuery) {
+      parsed.search = {
+        q: debouncedSearchQuery,
+      };
+    }
+    return parsed;
+  }, [
+    tableState.sorting,
+    tableState.pagination,
+    tableState.columnFilters,
+    tableState.globalFilter,
+    debouncedSearchQuery,
+  ]);
+  const loadListQuery =
+    trpc.lmsModule.courseModule.course.getMembers.useQuery(queryParams);
+  useEffect(() => {
+    if (!loadListQuery.data) return;
+    const parsed = loadListQuery.data.items || [];
+    setParsedData(parsed);
+    // setParsedPagination({
+    //     pageCount: Math.ceil(loadListQuery.data.total / loadListQuery.data.meta.take),
+    // });
+  }, [loadListQuery.data]);
 
   if (productLoading) {
     return (
@@ -180,236 +341,47 @@ export default function ProductCustomersPage() {
     { label: "Customers", href: "#" },
   ];
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [parsedData, setParsedData] = useState<Array<ItemType>>([]);
-  const [parsedPageination, setParsedPagination] = useState({
-    pageCount: 1,
-  });
-  const handleCopyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: TOAST_TITLE_SUCCESS,
-      description: "Copied to clipboard",
-    });
-  }, []);
-  const columns: ColumnDef<ItemType>[] = useMemo(() => {
-    return [
-      {
-        accessorKey: "username",
-        header: "Customer Name",
-        cell: ({ row }) => {
-          const member = row.original;
-          return (
-            <Link href={`/dashboard/users/${member.user?.userId}`}>
-              <div className="flex items-center space-x-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={
-                      member.user?.avatar?.thumbnail ||
-                      "/courselit_backdrop_square.webp"
-                    }
-                    alt={member.user?.name || member.user?.email}
-                  />
-                  <AvatarFallback>
-                    {(member.user?.name || member.user?.email || " ").charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                {/* <Avatar className="h-8 w-8">
-                                                  <AvatarImage
-                                                      src={
-                                                          member.user?.avatar
-                                                              ?.thumbnail
-                                                      }
-                                                      alt={member.user?.name}
-                                                  />
-                                                  <AvatarFallback>
-                                                      {(
-                                                          member.user?.name ||
-                                                          member.user?.email
-                                                      )
-                                                          .split(" ")
-                                                          .map((n) => n[0])
-                                                          .join("")}
-                                                  </AvatarFallback>
-                                              </Avatar> */}
-                <span>{member.user?.name || member.user?.email}</span>
-              </div>
-            </Link>
-          );
-        },
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => {
-          const member = row.original;
-          return (
-            <Badge
-              variant={
-                member.status.toLowerCase() === "pending"
-                  ? "secondary"
-                  : member.status.toLowerCase() === "active"
-                    ? "default"
-                    : "destructive"
-              }
-            >
-              {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-            </Badge>
-          );
-        },
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Created",
-        cell: ({ row }) => {
-          const date = row.getValue("createdAt") as string;
-          return (
-            <div className="text-sm text-muted-foreground">
-              {new Date(date).toLocaleDateString()}
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "updatedAt",
-        header: "Updated",
-        cell: ({ row }) => {
-          const date = row.getValue("updatedAt") as string;
-          return (
-            <div className="text-sm text-muted-foreground">
-              {new Date(date).toLocaleDateString()}
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "subscription",
-        header: "Subscription",
-        cell: ({ row }) => {
-          const member = row.original;
-          return (
-            <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger>
-                  {member.subscriptionId
-                    ? truncate(member.subscriptionId, 10)
-                    : "-"}
-                </TooltipTrigger>
-                <TooltipContent>
-                  {`Method: ${capitalize(member.subscriptionMethod || "")}`}
-                </TooltipContent>
-              </Tooltip>
-              {member.subscriptionId && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        handleCopyToClipboard(member.subscriptionId || "")
-                      }
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy Subscription ID</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          );
-        },
-      },
-      // {
-      //     id: "actions",
-      //     header: "Actions",
-      //     cell: ({ row }) => {
-      //         const quiz = row.original;
-      //         return (
-      //             <DropdownMenu>
-      //                 <DropdownMenuTrigger asChild>
-      //                     <Button variant="ghost" size="icon">
-      //                         <MoreHorizontal className="h-4 w-4" />
-      //                         <span className="sr-only">Open menu</span>
-      //                     </Button>
-      //                 </DropdownMenuTrigger>
-      //                 <DropdownMenuContent align="end">
-      //                     <DropdownMenuItem asChild>
-      //                         <Link href={`/dashboard/lms/quizzes/${quiz._id}`}>
-      //                             <Edit className="h-4 w-4 mr-2" />
-      //                             Edit Quiz
-      //                         </Link>
-      //                     </DropdownMenuItem>
-      //                     {quiz.status !== "archived" && (
-      //                         <DropdownMenuItem
-      //                             onClick={() => handleArchive(quiz)}
-      //                             className="text-orange-600"
-      //                         >
-      //                             <Archive className="h-4 w-4 mr-2" />
-      //                             Archive Quiz
-      //                         </DropdownMenuItem>
-      //                     )}
-      //                 </DropdownMenuContent>
-      //             </DropdownMenu>
-      //         );
-      //     },
-      // },
-    ];
-  }, []);
-  const { table } = useDataTable({
-    columns,
-    data: parsedData,
-    pageCount: parsedPageination.pageCount,
-    enableGlobalFilter: true,
-    initialState: {
-      sorting: [{ id: "createdAt", desc: true }],
-    },
-  });
-  const tableState = table.getState();
-  const queryParams = useMemo(() => {
-    const parsed: QueryParams = {
-      pagination: {
-        skip: tableState.pagination.pageIndex * tableState.pagination.pageSize,
-        take: tableState.pagination.pageSize,
-      },
-      filter: {
-        courseId: productId,
-        // status: Array.isArray(
-        //     tableState.columnFilters.find((filter) => filter.id === "status")?.value
-        // )
-        //     ? (tableState.columnFilters.find((filter) => filter.id === "status")?.value as string[])[0] as any;
-        //     : undefined,
-      },
-    };
-    if (tableState.sorting[0]) {
-      parsed.orderBy = {
-        field: tableState.sorting[0].id as any,
-        direction: tableState.sorting[0].desc ? "desc" : "asc",
-      };
+  const handleCustomerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!customerFormData.email.trim()) {
+      toast({
+        title: TOAST_TITLE_ERROR,
+        description: "Email is required",
+        variant: "destructive",
+      });
+      return;
     }
-    if (debouncedSearchQuery) {
-      parsed.search = {
-        q: debouncedSearchQuery,
-      };
+
+    try {
+      setSavingCustomer(true);
+      const response = await inviteCustomerMutation.mutateAsync({
+        data: {
+          email: customerFormData.email,
+          tags: customerFormData.tags,
+          courseId: productId,
+        },
+      });
+
+      if (response) {
+        setCustomerFormData({ email: "", tags: [] });
+        setCustomerDialogOpen(false);
+        const message = `${response.email} has been invited.`;
+        toast({
+          title: TOAST_TITLE_SUCCESS,
+          description: message,
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: TOAST_TITLE_ERROR,
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingCustomer(false);
     }
-    return parsed;
-  }, [
-    tableState.sorting,
-    tableState.pagination,
-    tableState.columnFilters,
-    tableState.globalFilter,
-    debouncedSearchQuery,
-  ]);
-  const loadListQuery =
-    trpc.lmsModule.courseModule.course.getMembers.useQuery(queryParams);
-  useEffect(() => {
-    if (!loadListQuery.data) return;
-    const parsed = loadListQuery.data || [];
-    setParsedData(parsed);
-    // setParsedPagination({
-    //     pageCount: Math.ceil(loadListQuery.data.total / loadListQuery.data.meta.take),
-    // });
-  }, [loadListQuery.data]);
+  };
 
   return (
     <DashboardContent breadcrumbs={breadcrumbs}>
@@ -459,7 +431,7 @@ export default function ProductCustomersPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>{USER_TAGS_SUBHEADER}</Label>
-                      <ComboBox
+                      {/* <ComboBox2
                         key={
                           JSON.stringify(systemTags) +
                           JSON.stringify(customerFormData.tags)
@@ -473,7 +445,7 @@ export default function ProductCustomersPage() {
                             tags: values,
                           }))
                         }
-                      />
+                      /> */}
                     </div>
                     <DialogFooter>
                       <Button

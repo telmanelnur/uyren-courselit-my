@@ -74,7 +74,7 @@ export function NewProduct() {
           title: "Success",
           description: "Product created successfully",
         });
-        router.replace(`/dashboard/product/${response.courseId}`);
+        router.replace(`/dashboard/products/${response.courseId}`);
       },
       onError: (err: any) => {
         toast({

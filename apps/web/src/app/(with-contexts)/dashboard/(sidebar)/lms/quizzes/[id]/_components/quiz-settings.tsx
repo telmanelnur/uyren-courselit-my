@@ -279,12 +279,10 @@ export default function QuizSettings() {
                           showCreateButton={true}
                           showEditButton={true}
                           onCreateClick={() => {
-                            // Navigate to course creation page
-                            router.push("/dashboard/products/new");
+                            window.open(`/dashboard/products/new`, '_blank');
                           }}
                           onEditClick={(item) => {
-                            // Navigate to course edit page
-                            router.push(`/dashboard/product/${item.key}`);
+                            window.open(`/dashboard/products/${item.key}`, '_blank');
                           }}
                         />
                       </FormControl>

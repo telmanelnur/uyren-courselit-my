@@ -1,51 +1,83 @@
-// EntityCardComponent.tsx
 import { trpc } from "@/utils/trpc";
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { ComboBox2, NiceModal } from "@workspace/components-library";
+import { ComboBox2, NiceModal, NiceModalHocProps } from "@workspace/components-library";
+import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle
 } from "@workspace/ui/components/dialog";
-import { useCallback, useState } from "react";
+import { Edit } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
 export interface AssignmentLinkAttrs {
   label: string;
-  entityId: string | null;
+  obj: {
+    type: "quiz" | "assignment";
+    id: string;
+    title: string;
+  } | null;
+  link?: string;
 }
 
 export function AssignmentLinkNodeComponent({
   node,
   updateAttributes,
+  editor,
 }: NodeViewProps & {
-  data: {
-    label: string;
-    entityId: string;
-  };
+  updateAttributes: (attrs: Partial<AssignmentLinkAttrs>) => void;
 }) {
-  const { label, entityId } = node.attrs.data;
+  const { label, obj, link } = node.attrs as AssignmentLinkAttrs;
+
+  console.log("obj", obj, typeof obj);
 
   const handleSelectDialog = useCallback(() => {
-    console.log("handleSelectDialog");
     NiceModal.show(AssignmentSelectNiceDialog, {
-      open: true,
-      onClose: () => { },
+      args: {
+        obj: obj || null,
+      }
+    }).then(response => {
+      if (response.reason === "submit" && response.data) {
+        const selectedItem = response.data as SelectItemType;
+        let link = "";
+        if (selectedItem.type === "assignment") {
+          link = `/assignment/${selectedItem.key}`;
+        } else if (selectedItem.type === "quiz") {
+          link = `/quiz/${selectedItem.key}`;
+        }
+        updateAttributes({ 
+          obj: {
+            type: selectedItem.type,
+            id: selectedItem.key,
+            title: selectedItem.title
+          },
+          label: `${selectedItem.title} (${selectedItem.type})`,
+          link: link,
+        });
+      }
     });
-  }, []);
-
+  }, [updateAttributes]);
   return (
     <NodeViewWrapper
       as="div"
       className="entity-card border rounded p-3 bg-white shadow"
     >
-      <div
-        className="cursor-pointer text-blue-600 underline"
-        onClick={handleSelectDialog}
-      >
-        {label}
-      </div>
+        <div className="flex items-center justify-between">
+          <Link href={link || '#'} target="_blank">
+            {label}
+          </Link>
+          {
+            editor.isEditable ? (
+              <Button type="button" onClick={handleSelectDialog} variant="ghost" size="icon">
+                <Edit />
+              </Button>
+            ) : null
+          }
+        </div>
     </NodeViewWrapper>
   );
 }
@@ -53,10 +85,13 @@ export function AssignmentLinkNodeComponent({
 type SelectItemType = {
   key: string;
   title: string;
-  type: string;
+  type: "quiz" | "assignment";
 };
 
-const AssignmentSelectNiceDialog = NiceModal.create((_: any) => {
+const AssignmentSelectNiceDialog = NiceModal.create<
+NiceModalHocProps & { args: { obj: AssignmentLinkAttrs["obj"] | null } },
+{ reason: "cancel"; data: null } | { reason: "submit"; data: any }
+>(({ args}) => {
   const { visible, hide, resolve } = NiceModal.useModal();
 
   const handleClose = () => {
@@ -64,12 +99,6 @@ const AssignmentSelectNiceDialog = NiceModal.create((_: any) => {
     hide();
   };
 
-  // const handleSubmit = useCallback((media: Media) => {
-  //     resolve({ reason: 'submit', data: media });
-  //     hide();
-  // }, [hide]);
-
-  const [options, setOptions] = useState<SelectItemType[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<SelectItemType | null>(
     null,
   );
@@ -84,24 +113,37 @@ const AssignmentSelectNiceDialog = NiceModal.create((_: any) => {
           search: search,
         },
       );
-    console.log("data", response);
     const data: SelectItemType[] = [];
     response.assignments.forEach((assignment) => {
       data.push({
-        key: assignment.id,
+        key: assignment._id.toString(),
         title: assignment.title,
         type: "assignment",
       });
     });
     response.quizzes.forEach((quiz) => {
       data.push({
-        key: quiz.id.toString(),
+        key: quiz._id.toString(),
         title: quiz.title,
         type: "quiz",
       });
     });
     return data;
   }, []);
+
+  const handleSubmit = useCallback(() => {
+    resolve({ reason: "submit", data: selectedOptions });
+    hide();
+  }, [selectedOptions, resolve, hide]);
+
+  useEffect(() => {
+    console.log("args.obj", args.obj, typeof args.obj);
+    setSelectedOptions(args.obj ? {
+      key: args.obj.id,
+      title: args.obj.title,
+      type: args.obj.type,
+    } : null);
+  }, [args.obj]);
 
   return (
     <Dialog
@@ -141,6 +183,9 @@ const AssignmentSelectNiceDialog = NiceModal.create((_: any) => {
             }}
           />
         </DialogDescription>
+        <DialogFooter>
+          <Button onClick={handleSubmit} variant="default">Save</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

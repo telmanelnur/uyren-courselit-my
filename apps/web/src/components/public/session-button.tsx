@@ -16,7 +16,7 @@ export default function SessionButton() {
   const handleSignOut = async () => {
     try {
       // NextAuth will automatically handle Firebase logout through the callback
-      await signOut({ callbackUrl: "/auth/login" });
+      await signOut();
 
       toast({
         title: "Signed out successfully",

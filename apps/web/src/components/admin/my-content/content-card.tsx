@@ -30,7 +30,7 @@ export function MyContentCard({ item }: ContentCardProps) {
       key={item.entity.id}
       href={
         isCourse
-          ? `/course/${item.entity.slug}/${item.entity.id}`
+          ? `/courses/${item.entity.id}`
           : `/dashboard/community/${item.entity.id}`
       }
     >

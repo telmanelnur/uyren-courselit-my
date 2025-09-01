@@ -1,6 +1,18 @@
+import { Metadata, ResolvingMetadata } from "next";
 import { ThemeModel } from "@/models/lms";
 import { connectToDatabase } from "@workspace/common-logic";
 import ThemeClientWrapper from "./_components/theme-client-wrapper";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = await params;
+  const title = id === "new" ? "New Theme" : `Theme ${id}`;
+  return {
+    title: `${title} | Themes | LMS | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 async function getThemeData(id: string) {
   if (id === "new") {

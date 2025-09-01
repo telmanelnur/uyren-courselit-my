@@ -5,13 +5,15 @@ import { TRPCReactProvider } from "@/server/provider";
 import { TRPCError } from "@trpc/server";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import NotFound from "./not-found";
+import NoSubdomainPage from "./_components/no-subdomain-page";
 import { getT } from "./i18n/server";
 
 
 import "@/lib/global-client";
 // import "@workspace/components-library/styles.css";
 import "@/styles/globals.css";
+
+
 const inter = Inter({ subsets: ["latin"] });
 
 
@@ -55,10 +57,13 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
+
+
 export default async function RootLayout({ children }: RootLayoutProps) {
   let hasError = false;
+  let serverSiteInfo: any = null;
   try {
-    await getServerSiteInfo();
+    serverSiteInfo = await getServerSiteInfo();
   } catch (error) {
     if (error instanceof TRPCError) {
       hasError = true;
@@ -67,14 +72,14 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 
   const { i18n } = await getT();
   const cls = `${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans ${inter.className}`
-
-  if (hasError) {
+  if (hasError || !serverSiteInfo) {
     return (
-      <html lang="en">
-        <body
-          className={cls}
-        >
-          <NotFound />
+      <html lang={i18n.language} suppressHydrationWarning>
+        <head>{/* <style>{themeStyles}</style> */}</head>
+        <body className={cls}>
+          <TRPCReactProvider>
+            <NoSubdomainPage />
+          </TRPCReactProvider>
         </body>
       </html>
     );

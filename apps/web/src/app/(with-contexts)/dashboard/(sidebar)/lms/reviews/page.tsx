@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import HeaderTopbar from "@/components/admin/layout/header-topbar";
 import { DataTable } from "@/components/data-table/data-table";
@@ -24,6 +25,15 @@ import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import { Archive, Edit, MoreHorizontal, Plus, Star, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReviewFormDialog } from "./_components/review-form-dialog";
+
+export async function generateMetadata(
+  _: any,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  return {
+    title: `Reviews | LMS | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 const breadcrumbs = [
   { label: "LMS", href: "#" },

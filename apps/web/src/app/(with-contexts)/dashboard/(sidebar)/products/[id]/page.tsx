@@ -16,7 +16,7 @@ import {
 } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
 import { Constants } from "@workspace/common-models";
-import { Tooltip as TooltipCL, useToast } from "@workspace/components-library";
+import { useToast } from "@workspace/components-library";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -52,7 +52,9 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import SalesCard from "./_components/sales-card";
 import MetricCard from "./_components/metric-card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 const { ActivityType } = Constants;
+
 
 export default function ProductPage() {
   const [timeRange, setTimeRange] = useState("7d");
@@ -137,11 +139,14 @@ export default function ProductPage() {
           <div className="space-y-1">
             <h1 className="text-4xl font-semibold flex items-center gap-2">
               {product?.title || <Skeleton className="h-9 w-64" />}
-              <TooltipCL title="Share product" className="font-normal!">
-                <Button variant="ghost" onClick={handleShareClick} size="sm">
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </TooltipCL>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" onClick={handleShareClick} size="sm">
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share product</TooltipContent>
+              </Tooltip>
             </h1>
             <div className="flex items-center gap-2">
               {product ? (
@@ -241,7 +246,7 @@ export default function ProductPage() {
           entityId={productId}
         />
 
-        <Link href={`/dashboard/product/${productId}/customers`}>
+        <Link href={`/dashboard/products/${productId}/customers`}>
           <MetricCard
             title="Customers"
             icon={<Users className="h-4 w-4 text-muted-foreground" />}

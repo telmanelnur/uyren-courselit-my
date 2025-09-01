@@ -4,6 +4,7 @@ import {
   createDomainRequiredMiddleware,
   MainContextType,
   protectedProcedure,
+  publicProcedure,
 } from "@/server/api/core/procedures";
 import { ListInputSchema } from "@/server/api/core/schema";
 import { router } from "@/server/api/core/trpc";
@@ -198,7 +199,7 @@ export const productRouter = router({
       };
     }),
 
-  publicList: protectedProcedure
+  publicList: publicProcedure
     .use(createDomainRequiredMiddleware())
     .input(
       ListInputSchema.extend({

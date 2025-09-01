@@ -19,7 +19,7 @@ import {
 import { useRouter, useParams } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/utils/trpc";
-import { useToast, ComboBox } from "@workspace/components-library";
+import { useToast } from "@workspace/components-library";
 import {
   BTN_INVITE,
   TOAST_TITLE_ERROR,
@@ -65,7 +65,7 @@ import { truncate } from "@workspace/utils";
 import Link from "next/link";
 
 type MemberType =
-  GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getMembers"][number] & {
+  GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getMembers"]["items"][number] & {
     progressInPercentage?: number;
   };
 
@@ -133,7 +133,7 @@ export default function ProductCustomersClient({
 
   useEffect(() => {
     if (!loadMembersQuery.data) return;
-    const computed = loadMembersQuery.data.map((member: any) => ({
+    const computed = loadMembersQuery.data.items.map((member) => ({
       ...member,
       progressInPercentage:
         product?.type === Constants.CourseType.COURSE &&
@@ -252,9 +252,9 @@ export default function ProductCustomersClient({
                       required
                     />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>{USER_TAGS_SUBHEADER}</Label>
-                    <ComboBox
+                    <ComboBox2
                       key={
                         JSON.stringify(systemTags) +
                         JSON.stringify(customerFormData.tags)
@@ -269,7 +269,7 @@ export default function ProductCustomersClient({
                         }))
                       }
                     />
-                  </div>
+                  </div> */}
                   <DialogFooter>
                     <Button
                       type="button"

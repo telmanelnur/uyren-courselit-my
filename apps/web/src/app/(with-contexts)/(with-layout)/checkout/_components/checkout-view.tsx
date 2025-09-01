@@ -6,6 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useMutation } from "@tanstack/react-query";
 import { Constants } from "@workspace/common-models";
 import { useToast } from "@workspace/components-library";
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -18,18 +19,21 @@ import { Separator } from "@workspace/ui/components/separator";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { formatCurrency } from "@workspace/utils";
 import {
-  Badge,
   BookOpen,
   CheckCircle,
   Clock,
   CreditCard,
   FileText,
   Star,
-  Users
+  Users,
+  AlertCircle,
+  XCircle
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
 
 interface PaymentPlan {
   planId: string;
@@ -45,6 +49,7 @@ interface PaymentPlan {
 }
 
 export default function CheckoutView() {
+  const { t } = useTranslation("common");
   const searchParams = useSearchParams();
   const router = useRouter();
   const courseId = searchParams.get("id");
@@ -62,6 +67,19 @@ export default function CheckoutView() {
     error: courseError,
   } = trpc.lmsModule.courseModule.course.publicGetByCourseId.useQuery(
     { courseId: courseId! },
+    { enabled: !!courseId && courseType === "course" },
+  );
+
+  // Fetch current user's membership status for this course
+  const {
+    data: membershipStatus,
+    isLoading: isMembershipLoading,
+    error: membershipError,
+  } = trpc.userModule.user.getMembershipStatus.useQuery(
+    {
+      entityId: courseId!,
+      entityType: Constants.MembershipEntityType.COURSE,
+    },
     { enabled: !!courseId && courseType === "course" },
   );
 
@@ -186,7 +204,7 @@ export default function CheckoutView() {
           description: "Please log in to enroll in this course.",
           variant: "destructive",
         });
-        router.push("/auth/login");
+        router.push(`/auth/sign-in?redirect=/checkout?id=${course!.courseId}&type=${courseType}`);   
         return;
       }
 
@@ -270,7 +288,7 @@ export default function CheckoutView() {
           description: "Please log in to purchase this course.",
           variant: "destructive",
         });
-        router.push("/auth/login");
+        router.push(`/auth/sign-in?redirect=/checkout?id=${course!.courseId}&type=${courseType}`);
         return;
       }
 
@@ -337,8 +355,74 @@ export default function CheckoutView() {
     [],
   );
 
+  // Check if user can proceed with checkout
+  const canProceedWithCheckout = useMemo(() => {
+    if (!membershipStatus) return true; // No existing membership, can proceed
+    if (membershipStatus === Constants.MembershipStatus.ACTIVE) return false; // Already enrolled
+    if (membershipStatus === Constants.MembershipStatus.PENDING) return false; // Payment pending
+    if (membershipStatus === Constants.MembershipStatus.PAYMENT_FAILED) return true; // Can retry
+    if (membershipStatus === Constants.MembershipStatus.EXPIRED) return true; // Can re-enroll
+    if (membershipStatus === Constants.MembershipStatus.REJECTED) return true; // Can re-apply
+    return true; // Default case
+  }, [membershipStatus]);
+
+  // Get membership status message
+  const getMembershipStatusMessage = useCallback(() => {
+    if (!membershipStatus) return null;
+    
+    switch (membershipStatus) {
+      case Constants.MembershipStatus.ACTIVE:
+        return {
+          type: "default" as const,
+          title: "Already Enrolled",
+          description: "You are already enrolled in this course. You can access it from your dashboard.",
+          icon: CheckCircle,
+        };
+      case Constants.MembershipStatus.PENDING:
+        return {
+          type: "default" as const,
+          title: "Payment Pending",
+          description: "You have a pending payment for this course. Please complete your payment or contact support if you need assistance.",
+          icon: Clock,
+        };
+      case Constants.MembershipStatus.PAYMENT_FAILED:
+        return {
+          type: "destructive" as const,
+          title: "Payment Failed",
+          description: "Your previous payment attempt failed. You can try again or contact support for assistance.",
+          icon: XCircle,
+        };
+      case Constants.MembershipStatus.EXPIRED:
+        return {
+          type: "default" as const,
+          title: "Membership Expired",
+          description: "Your previous membership has expired. You can re-enroll to regain access.",
+          icon: AlertCircle,
+        };
+      case Constants.MembershipStatus.REJECTED:
+        return {
+          type: "destructive" as const,
+          title: "Enrollment Rejected",
+          description: "Your previous enrollment request was rejected. You can try enrolling again.",
+          icon: XCircle,
+        };
+      default:
+        return null;
+    }
+  }, [membershipStatus]);
+
   const handleCheckout = useCallback(async () => {
     if (!selectedPlanData || !course) return;
+
+    // Prevent checkout if user already has active or pending membership
+    if (!canProceedWithCheckout) {
+      toast({
+        title: "Cannot Proceed",
+        description: "You already have an active enrollment or pending payment for this course.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (getPlanPrice(selectedPlanData).isFree) {
       freeEnrollmentMutation.mutate();
@@ -351,8 +435,8 @@ export default function CheckoutView() {
     freeEnrollmentMutation,
     stripePaymentMutation,
     getPlanPrice,
+    canProceedWithCheckout,
     toast,
-    router,
   ]);
 
   if (courseError) {
@@ -360,17 +444,17 @@ export default function CheckoutView() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Course Not Found
+            {t("checkout_course_not_found")}
           </h1>
           <p className="text-gray-600">
-            The course you're looking for doesn't exist or is not available.
+            {t("checkout_course_not_exist")}
           </p>
         </div>
       </div>
     );
   }
 
-  if (isCourseLoading) {
+  if (isCourseLoading || isMembershipLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
@@ -409,10 +493,10 @@ export default function CheckoutView() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-2xl font-bold text-gray-600 mb-4">
-            Course Not Available
+            {t("checkout_course_not_available")}
           </h1>
           <p className="text-gray-600">
-            Please check the course ID and try again.
+            {t("checkout_check_course_id")}
           </p>
         </div>
       </div>
@@ -422,71 +506,105 @@ export default function CheckoutView() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
+        {/* Membership Status Alert */}
+        {membershipStatus && getMembershipStatusMessage() && (
+          <div className="mb-6">
+            <Alert variant={getMembershipStatusMessage()!.type}>
+              {(() => {
+                const IconComponent = getMembershipStatusMessage()!.icon;
+                return <IconComponent className="h-4 w-4" />;
+              })()}
+              <AlertTitle>{getMembershipStatusMessage()!.title}</AlertTitle>
+              <AlertDescription>
+                {getMembershipStatusMessage()!.description}
+                {membershipStatus === Constants.MembershipStatus.ACTIVE && (
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 ml-1"
+                    onClick={() => router.push(`/courses/${course!.courseId}`)}
+                  >
+                    Go to course
+                  </Button>
+                )}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Product Info */}
+          {/* Product Info - Matching Course Details Design */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardContent className="p-6">
-                <Image
-                  src={course.featuredImage?.url || "/courselit_backdrop.webp"}
-                  alt={course.title}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                  width={300}
-                  height={300}
-                />
-                <h3 className="text-xl font-semibold text-[rgb(var(--brand-dark))] mb-2">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm sticky top-4">
+              <div className="p-6">
+                {/* Featured Image */}
+                <div className="relative w-full h-48 rounded-lg overflow-hidden mb-4">
+                  <Image
+                    src={course.featuredImage?.url || "/courselit_backdrop.webp"}
+                    alt={course.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                  />
+                </div>
+                
+                {/* Course Title */}
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
                   {course.title}
                 </h3>
-                {course.description && (
-                  <p
-                    className="text-[rgb(var(--brand-gray))] text-sm mb-4 overflow-hidden"
-                    style={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                    }}
-                  >
-                    {typeof course.description === "string"
-                      ? course.description
-                      : "Course description available"}
-                  </p>
+                
+                {/* Course Tags */}
+                {course.tags && course.tags.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {course.tags.map((tag, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="outline" 
+                        className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 transition-colors text-xs"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+              </div>
                 )}
 
-                <div className="space-y-2 text-sm">
-                  {course.customers && (
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-[rgb(var(--brand-primary))]" />
-                      <span>{course.customers.toLocaleString()} students</span>
+                {/* Essential Course Info with Gradient Icons */}
+                <div className="space-y-3 text-sm text-gray-600">
+                  {course.level && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
+                        <Star className="w-4 h-4 text-white" />
+                      </div>
+                      <span>{t("checkout_level")}: {course.level}</span>
                     </div>
                   )}
                   {course.duration && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[rgb(var(--brand-primary))]" />
-                      <span>{course.duration} weeks</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
+                        <Clock className="w-4 h-4 text-white" />
+                      </div>
+                      <span>{course.duration} {t("weeks")}</span>
                     </div>
                   )}
-                  {course.level && (
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-[rgb(var(--brand-primary))]" />
-                      <span>{course.level} level</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
+                      <BookOpen className="w-4 h-4 text-white" />
                     </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[rgb(var(--brand-primary))]" />
-                    <span>By {course.creatorName}</span>
+                    <span>{t("checkout_by")} {course.creatorName}</span>
                   </div>
                   {course.attachedLessons && (
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[rgb(var(--brand-primary))]" />
-                      <span>{course.attachedLessons.length} lessons</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-white" />
+                      </div>
+                      <span>{course.attachedLessons.length} {t("lessons")}</span>
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
-          {/* Payment Plans */}
+          {/* Payment Plans - Enhanced Design */}
           <div className="lg:col-span-2">
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
               {processedPlans.map((plan) => {
@@ -494,30 +612,31 @@ export default function CheckoutView() {
                 return (
                   <Card
                     key={plan.planId}
-                    className={`cursor-pointer transition-all duration-200 ${selectedPlan === plan.planId
-                        ? "ring-2 ring-[rgb(var(--brand-primary))] shadow-lg"
-                        : "hover:shadow-md"
-                      } ${plan.popular ? "border-[rgb(var(--brand-primary))]" : ""}`}
+                    className={`cursor-pointer transition-all duration-300 bg-card border border-transparent hover:border-brand-primary/20 hover:bg-card/80 hover:shadow-xl ${
+                      selectedPlan === plan.planId
+                        ? "ring-2 ring-brand-primary shadow-lg border-brand-primary/20"
+                        : ""
+                    } ${plan.popular ? "border-brand-primary/40" : ""}`}
                     onClick={() => handlePlanSelect(plan.planId)}
                   >
                     <CardHeader className="text-center pb-4">
                       {plan.popular && (
-                        <Badge className="bg-[rgb(var(--brand-primary))] text-white mb-2 w-fit mx-auto">
-                          Most Popular
+                        <Badge className="bg-brand-primary text-white mb-2 w-fit mx-auto">
+                          {t("checkout_most_popular")}
                         </Badge>
                       )}
                       <CardTitle className="text-lg">{plan.name}</CardTitle>
                       <div className="flex items-center justify-center gap-2">
-                        <span className="text-2xl font-bold text-[rgb(var(--brand-primary))]">
+                        <span className="text-2xl font-bold text-brand-primary">
                           {priceInfo.isFree
-                            ? "Free"
+                            ? t("checkout_free")
                             : formatCurrency(
                               priceInfo.amount,
                               siteInfo.currencyISOCode,
                             )}
                         </span>
                         {priceInfo.period && (
-                          <span className="text-sm text-[rgb(var(--brand-gray))]">
+                          <span className="text-sm text-muted-foreground">
                             {priceInfo.period}
                           </span>
                         )}
@@ -542,29 +661,30 @@ export default function CheckoutView() {
               })}
             </div>
 
-            {/* Payment Method Info */}
+            {/* Payment Method Info - Enhanced Styling */}
             <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-2 text-gray-600">
-                <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">💳</span>
+              <div className="flex items-center gap-3 text-gray-600">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">💳</span>
                 </div>
                 <p className="text-sm">
-                  <strong>Payment Methods:</strong> We accept all major credit
-                  cards, debit cards, and digital wallets through Stripe's
-                  secure payment gateway.
+                  <strong>{t("checkout_payment_methods")}:</strong> {t("checkout_payment_description")}
                 </p>
               </div>
             </div>
 
-            {/* Free Course Join Reason */}
+            {/* Free Course Join Reason - Enhanced Card */}
             {selectedPlanData && getPlanPrice(selectedPlanData).isFree && (
-              <Card className="mb-6">
+              <Card className="mb-6 bg-card border border-gray-200">
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    Tell us about yourself
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-sm">👤</span>
+                    </div>
+                    {t("checkout_tell_us_about_yourself")}
                   </CardTitle>
                   <CardDescription>
-                    Help us understand why you're interested in this free course
+                    {t("checkout_help_us_understand")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -574,14 +694,14 @@ export default function CheckoutView() {
                         htmlFor="joinReason"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        Why do you want to join this course? *
+                        {t("checkout_why_join_course")} *
                       </label>
                       <textarea
                         id="joinReason"
-                        placeholder="Tell us about your learning goals, background, or what you hope to achieve..."
+                        placeholder={t("checkout_join_reason_placeholder")}
                         value={joinReason}
                         onChange={(e) => setJoinReason(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand-primary))] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-colors"
                         rows={4}
                       />
                     </div>
@@ -590,94 +710,128 @@ export default function CheckoutView() {
               </Card>
             )}
 
-            {/* Checkout Summary */}
+            {/* Checkout Summary - Enhanced Design */}
             {selectedPlanData && (
-              <Card>
+              <Card className="bg-card border border-gray-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    Order Summary
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
+                      <CreditCard className="w-4 h-4 text-white" />
+                    </div>
+                    {t("checkout_order_summary")}
                   </CardTitle>
+                  <CardDescription>
+                    {t("checkout_order_summary_desc")}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">
-                        {selectedPlanData.name}
-                      </span>
-                      <span className="font-bold text-[rgb(var(--brand-primary))]">
-                        {getPlanPrice(selectedPlanData).isFree
-                          ? "Free"
-                          : formatCurrency(
-                            getPlanPrice(selectedPlanData).amount,
-                            siteInfo.currencyISOCode,
-                          )}
-                      </span>
+                <CardContent className="p-0">
+                  <div className="space-y-1">
+                    {/* Plan Details */}
+                    <div className="p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-sm border-2 border-brand-primary/30 flex items-center justify-center bg-white">
+                            <CheckCircle className="h-3 w-3 text-brand-primary" />
+                          </div>
+                          <span className="font-medium">{selectedPlanData.name}</span>
+                        </div>
+                        <span className="font-bold text-brand-primary">
+                          {getPlanPrice(selectedPlanData).isFree
+                            ? t("checkout_free")
+                            : formatCurrency(
+                              getPlanPrice(selectedPlanData).amount,
+                              siteInfo.currencyISOCode,
+                            )}
+                        </span>
+                      </div>
                     </div>
 
                     <Separator />
 
-                    <div className="flex justify-between items-center font-bold text-lg">
-                      <span>Total</span>
-                      <span className="text-[rgb(var(--brand-primary))]">
-                        {getPlanPrice(selectedPlanData).isFree
-                          ? "Free"
-                          : formatCurrency(
-                            getPlanPrice(selectedPlanData).amount,
-                            siteInfo.currencyISOCode,
-                          )}
-                      </span>
+                    {/* Total */}
+                    <div className="p-4 bg-muted/30">
+                      <div className="flex items-center justify-between font-bold text-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-sm border-2 border-brand-primary/30 flex items-center justify-center bg-white">
+                            <CreditCard className="h-3 w-3 text-brand-primary" />
+                          </div>
+                          <span>{t("checkout_total")}</span>
+                        </div>
+                        <span className="text-brand-primary">
+                          {getPlanPrice(selectedPlanData).isFree
+                            ? t("checkout_free")
+                            : formatCurrency(
+                              getPlanPrice(selectedPlanData).amount,
+                              siteInfo.currencyISOCode,
+                            )}
+                        </span>
+                      </div>
                     </div>
 
-                    <Button
-                      onClick={handleCheckout}
-                      disabled={
-                        isProcessing ||
-                        !selectedPlan ||
-                        (getPlanPrice(selectedPlanData).isFree &&
-                          !joinReason.trim())
-                      }
-                      className="w-full bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))] text-white"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          {getPlanPrice(selectedPlanData).isFree
-                            ? "Processing Enrollment..."
-                            : "Redirecting to Payment..."}
-                        </>
-                      ) : getPlanPrice(selectedPlanData).isFree ? (
-                        "Enroll for Free"
-                      ) : (
-                        `Proceed to Payment - ${formatCurrency(getPlanPrice(selectedPlanData).amount, siteInfo.currencyISOCode)}`
-                      )}
-                    </Button>
+                    {/* Checkout Button */}
+                    <div className="p-4">
+                      <Button
+                        onClick={handleCheckout}
+                        disabled={
+                          isProcessing ||
+                          !selectedPlan ||
+                          !canProceedWithCheckout ||
+                          (getPlanPrice(selectedPlanData).isFree &&
+                            !joinReason.trim())
+                        }
+                        className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white transition-all duration-300"
+                      >
+                        {isProcessing ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            {getPlanPrice(selectedPlanData).isFree
+                              ? t("checkout_processing_enrollment")
+                              : t("checkout_redirecting_to_payment")}
+                          </>
+                        ) : !canProceedWithCheckout ? (
+                          membershipStatus === Constants.MembershipStatus.ACTIVE 
+                            ? "Already Enrolled" 
+                            : "Payment Pending"
+                        ) : getPlanPrice(selectedPlanData).isFree ? (
+                          t("checkout_enroll_for_free")
+                        ) : (
+                          `${t("checkout_proceed_to_payment")} - ${formatCurrency(getPlanPrice(selectedPlanData).amount, siteInfo.currencyISOCode)}`
+                        )}
+                      </Button>
+                    </div>
 
+                    {/* Security Info */}
                     {!getPlanPrice(selectedPlanData).isFree && (
-                      <div className="space-y-2">
-                        <p className="text-xs text-[rgb(var(--brand-gray))] text-center">
-                          Secure payment powered by Stripe. Your payment
-                          information is encrypted and secure.
-                        </p>
-                        <div className="flex items-center justify-center gap-2 text-xs text-[rgb(var(--brand-gray))]">
-                          <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">
-                              S
+                      <>
+                        <Separator />
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-center justify-center gap-3 mb-2">
+                            <div className="w-6 h-6 rounded-sm border-2 border-brand-primary/30 flex items-center justify-center bg-white">
+                              <CheckCircle className="h-3 w-3 text-brand-primary" />
+                            </div>
+                            <span className="text-xs font-medium text-muted-foreground">
+                              {t("checkout_secure_payment_description")}
                             </span>
                           </div>
-                          <span>SSL Secured</span>
-                          <div className="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">
-                              ✓
-                            </span>
+                          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
+                                <span className="text-white text-xs font-bold">S</span>
+                              </div>
+                              <span>{t("checkout_ssl_secured")}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
+                                <span className="text-white text-xs font-bold">✓</span>
+                              </div>
+                              <span>{t("checkout_pci_compliant")}</span>
+                            </div>
                           </div>
-                          <span>PCI Compliant</span>
+                          <p className="text-xs text-muted-foreground text-center">
+                            {t("checkout_after_payment_description")}
+                          </p>
                         </div>
-                        <p className="text-xs text-[rgb(var(--brand-gray))] text-center mt-2">
-                          After successful payment, you'll be redirected back to
-                          complete your enrollment.
-                        </p>
-                      </div>
+                      </>
                     )}
                   </div>
                 </CardContent>

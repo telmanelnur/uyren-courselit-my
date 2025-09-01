@@ -3,7 +3,6 @@
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { useDataTable } from "@/components/data-table/use-data-table";
-import { useDialogControl } from "@/hooks/use-dialog-control";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { ColumnDef } from "@tanstack/react-table";
@@ -22,12 +21,12 @@ import {
   Eye,
   FileQuestion,
   MoreHorizontal,
+  RefreshCw,
   Trash2,
   User,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuizContext } from "./quiz-context";
-import SubmissionDetailDialog from "./submission-detail-dialog";
 import {
   DeleteConfirmNiceDialog,
   NiceModal,
@@ -42,9 +41,9 @@ export default function QuizSubmissions() {
   const [parsedData, setParsedData] = useState<QuizAttemptType[]>([]);
   const [parsedPagination, setParsedPagination] = useState({ pageCount: 0 });
 
-  const submissionDialog = useDialogControl<QuizAttemptType>();
   const { toast } = useToast();
   const trpcUtils = trpc.useUtils();
+  
   const deleteSubmissionMutation =
     trpc.lmsModule.quizModule.quizAttempt.delete.useMutation({
       onSuccess: () => {
@@ -56,28 +55,38 @@ export default function QuizSubmissions() {
       },
     });
 
-  const handleViewSubmission = useCallback(
-    async (submission: QuizAttemptType) => {
-      try {
-        // Fetch detailed submission data by ID
-        const detailedSubmission =
-          await trpcUtils.lmsModule.quizModule.quizAttempt.getById.fetch({
-            id: submission._id.toString(),
-          });
-
-        if (detailedSubmission) {
-          submissionDialog.open(detailedSubmission);
-        }
-      } catch (error) {
-        console.error("Failed to fetch submission details:", error);
+  const regradeAttemptMutation =
+    trpc.lmsModule.quizModule.quizAttempt.regrade.useMutation({
+      onSuccess: () => {
+        trpcUtils.lmsModule.quizModule.quizAttempt.list.invalidate();
         toast({
-          title: "Error",
-          description: "Failed to load submission details",
+          title: "Regrade Complete",
+          description: "Quiz attempt has been regraded successfully",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Regrade Failed",
+          description: error.message,
           variant: "destructive",
         });
-      }
+      },
+    });
+
+  const handleViewResults = useCallback(
+    (submission: QuizAttemptType) => {
+      // Open existing results page in new tab
+      const resultsUrl = `/quiz/${quiz?._id}/attempts/${submission._id}/results`;
+      window.open(resultsUrl, '_blank');
     },
-    [submissionDialog, trpcUtils, toast],
+    [quiz?._id],
+  );
+
+  const handleRegradeAttempt = useCallback(
+    (submission: QuizAttemptType) => {
+      regradeAttemptMutation.mutate(submission._id.toString());
+    },
+    [regradeAttemptMutation],
   );
 
   const handleDeleteSubmission = useCallback(
@@ -244,9 +253,16 @@ export default function QuizSubmissions() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleViewSubmission(attempt)}>
+                <DropdownMenuItem onClick={() => handleViewResults(attempt)}>
                   <Eye className="h-4 w-4 mr-2" />
-                  View Submission
+                  View Results
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleRegradeAttempt(attempt)}
+                  disabled={regradeAttemptMutation.isPending}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Regrade
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleDeleteSubmission(attempt)}
@@ -261,7 +277,7 @@ export default function QuizSubmissions() {
         },
       },
     ];
-  }, [quiz?.totalPoints, handleViewSubmission, handleDeleteSubmission]);
+  }, [quiz?.totalPoints, handleViewResults, handleRegradeAttempt, handleDeleteSubmission, regradeAttemptMutation.isPending]);
 
   const { table } = useDataTable({
     columns,
@@ -351,7 +367,6 @@ export default function QuizSubmissions() {
           </div>
         </CardContent>
       </Card>
-      <SubmissionDetailDialog control={submissionDialog} />
     </div>
   );
 }

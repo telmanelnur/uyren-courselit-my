@@ -1,32 +1,29 @@
 "use client";
 
 import DashboardContent from "@/components/admin/dashboard-content";
-import { useAddress } from "@/components/contexts/address-context";
-import useProduct from "@/hooks/use-product";
 import {
+  BTN_CONTINUE,
+  BUTTON_CANCEL_TEXT,
   BUTTON_NEW_LESSON_TEXT,
   BUTTON_NEW_LESSON_TEXT_DOWNLOAD,
+  BUTTON_SAVE,
   COURSE_CONTENT_HEADER,
   EDIT_SECTION_HEADER,
   LESSON_GROUP_DELETED,
   MANAGE_COURSES_PAGE_HEADING,
+  NEW_SECTION_HEADER,
   TOAST_TITLE_ERROR,
   TOAST_TITLE_SUCCESS,
-  NEW_SECTION_HEADER,
-  BTN_CONTINUE,
-  BUTTON_CANCEL_TEXT,
-  BUTTON_SAVE,
 } from "@/lib/ui/config/strings";
-import { truncate } from "@workspace/utils";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import {
   Constants,
+  DripType,
   Group,
   LessonType,
-  DripType,
 } from "@workspace/common-models";
-import { DragAndDrop, useToast } from "@workspace/components-library";
+import { DeleteConfirmNiceDialog, DragAndDrop, NiceModal, useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -34,8 +31,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@workspace/ui/components/dialog";
 import {
   DropdownMenu,
@@ -44,31 +40,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@workspace/ui/components/tooltip";
-import {
-  ChevronDown,
-  ChevronRight,
-  Droplets,
-  FileText,
-  HelpCircle,
-  MoreHorizontal,
-  Plus,
-  Video,
-  Edit,
-} from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import { Switch } from "@workspace/ui/components/switch";
-import { Separator } from "@workspace/ui/components/separator";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import {
   Select,
   SelectContent,
@@ -76,6 +50,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
+import { Separator } from "@workspace/ui/components/separator";
+import { Switch } from "@workspace/ui/components/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
+import { truncate } from "@workspace/utils";
+import {
+  ChevronDown,
+  ChevronRight,
+  Droplets,
+  Edit,
+  FileText,
+  HelpCircle,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  Video,
+} from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+
 
 type ProductType =
   GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getByCourseDetailed"];
@@ -658,6 +657,7 @@ const CollapsibleSection = ({
   onUpdateGroup: (group: Group, lessonsOrder: string[]) => void;
 }) => {
   const router = useRouter();
+  const { toast } = useToast();
 
   const LessonTypeIcon = ({ type }: { type: LessonType }) => {
     switch (type) {
@@ -688,24 +688,58 @@ const CollapsibleSection = ({
       }));
   }, [product, section]);
 
+  const removeLessonMutation = trpc.lmsModule.courseModule.lesson.delete.useMutation({
+    onSuccess: () => {
+      toast({
+        title: TOAST_TITLE_SUCCESS,
+        description: "Lesson deleted successfully",
+      });
+    },
+  });
+
+  const trpcUtils = trpc.useUtils();
+
+  const handleDeleteLesson = async (item: ProductType["attachedLessons"][number]) => {
+      const response = await NiceModal.show(DeleteConfirmNiceDialog, {
+        title: "Delete Lesson",
+        message: "Are you sure you want to delete this lesson? This action cannot be undone.",
+      });
+      if (response.reason === "confirm") {
+        await removeLessonMutation.mutateAsync({
+          lessonId: item.lessonId,
+        });
+        trpcUtils.lmsModule.courseModule.course.getByCourseDetailed.invalidate();
+      }
+  };
+
   return (
     <div className="space-y-2 ml-8">
       <DragAndDrop
         items={dndItems}
         Renderer={({ lesson }) => (
-          <div
-            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer w-full"
-            onClick={() =>
-              router.push(
-                `/dashboard/products/${product.courseId}/content/section/${section.groupId}/lesson?id=${lesson.lessonId}`,
-              )
-            }
-          >
+          <div className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out w-full">
             <div className="flex items-center space-x-3">
               <LessonTypeIcon type={lesson.type} />
               <span className="text-sm font-medium">{lesson.title}</span>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-gray-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(
+                    `/dashboard/products/${product.courseId}/content/section/${section.groupId}/lesson?id=${lesson.lessonId}`,
+                  );
+                }}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" color="destructive" size="sm" onClick={() => handleDeleteLesson(lesson)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
         onChange={(items: any) => {

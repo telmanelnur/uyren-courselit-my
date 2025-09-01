@@ -112,7 +112,7 @@ export default function NewCustomer({ courseId }: NewCustomerProps) {
               <Button disabled={!email} onClick={inviteCustomer} sx={{ mr: 1 }}>
                 {BTN_INVITE}
               </Button>
-              <Link href={`/dashboard/product/${courseId}`}>
+              <Link href={`/dashboard/products/${courseId}`}>
                 <Button variant="soft">{BTN_GO_BACK}</Button>
               </Link>
             </div>

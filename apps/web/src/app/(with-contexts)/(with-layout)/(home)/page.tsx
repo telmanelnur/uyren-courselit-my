@@ -57,85 +57,20 @@ export default function HomePage() {
 
   // Use featured courses from settings or fallback to hardcoded ones
   const courses = useMemo(() => {
-    if (mainPageSettings?.mainPage.featuredCourses && mainPageSettings.mainPage.featuredCourses.length > 0) {
-      return mainPageSettings.mainPage.featuredCourses
-        .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map(course => ({
-          slug: course.slug,
-          image: "/img/python-course.jpeg", // Default image
-          title: course.title,
-          level: course.level || "Beginner",
-          duration: course.duration ? `${course.duration} weeks` : "8 weeks",
-          rating: 4.9,
-          students: 1200,
-          price: "Free",
-          shortDescription: course.shortDescription,
-        }));
-    }
-    
-    // Fallback to hardcoded courses
-    return [
-      {
-        slug: "python-course",
-        image: "/img/python-course.jpeg",
-        title: t("course_python_title"),
-        level: t("course_python_level"),
-        duration: "8 weeks",
+    return mainPageSettings?.mainPage.featuredCourses
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(course => ({
+        slug: course.slug,
+        image: "/img/python-course.jpeg", // Default image
+        title: course.title,
+        level: course.level || "Beginner",
+        duration: course.duration ? `${course.duration} weeks` : "8 weeks",
         rating: 4.9,
         students: 1200,
         price: "Free",
-      },
-      {
-        slug: "data-analytics-course",
-        image: "/img/data-analytics.jpeg",
-        title: t("course_data_title"),
-        level: t("course_data_level"),
-        duration: "6 weeks",
-        rating: 4.8,
-        students: 850,
-        price: "Free",
-      },
-      {
-        slug: "machine-learning-course",
-        image: "/img/python-course.jpeg",
-        title: "Machine Learning Fundamentals",
-        level: "Intermediate",
-        duration: "10 weeks",
-        rating: 4.7,
-        students: 650,
-        price: "Free",
-      },
-      {
-        slug: "web-development-course",
-        image: "/img/data-analytics.jpeg",
-        title: "Web Development with React",
-        level: "Beginner",
-        duration: "7 weeks",
-        rating: 4.6,
-        students: 950,
-        price: "Free",
-      },
-      {
-        slug: "ai-ethics-course",
-        image: "/img/python-course.jpeg",
-        title: "AI Ethics & Responsible Development",
-        level: "Advanced",
-        duration: "5 weeks",
-        rating: 4.9,
-        students: 420,
-        price: "Free",
-      },
-      {
-        slug: "data-science-course",
-        image: "/img/data-analytics.jpeg",
-        title: "Data Science Essentials",
-        level: "Intermediate",
-        duration: "9 weeks",
-        rating: 4.8,
-        students: 780,
-        price: "Free",
-      },
-    ];
+        shortDescription: course.shortDescription,
+      })) || [];
+  
   }, [mainPageSettings?.mainPage.featuredCourses, t]);
 
   // Use featured reviews from settings or fallback to hardcoded ones

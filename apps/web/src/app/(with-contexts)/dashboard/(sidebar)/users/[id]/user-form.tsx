@@ -13,11 +13,11 @@ import {
 import { trpc } from "@/utils/trpc";
 import {
   ComboBox2,
-  Link,
   Section,
   Switch,
   useToast,
 } from "@workspace/components-library";
+import Link from "next/link";
 import { useEffect } from "react";
 
 export default function UserForm({ id }: { id: string }) {

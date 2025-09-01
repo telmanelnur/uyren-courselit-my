@@ -1,3 +1,4 @@
+import { Metadata, ResolvingMetadata } from "next";
 import { Suspense } from "react";
 import { ReportsTableSkeleton } from "./reports-table-skeleton";
 import { ReportsTable } from "./reports-table";
@@ -8,6 +9,16 @@ import {
   COMMUNITY_SETTINGS,
 } from "@/lib/ui/config/strings";
 import DashboardContent from "@/components/admin/dashboard-content";
+
+export async function generateMetadata(
+  { params }: { params: { id: string } },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = params;
+  return {
+    title: `Reports | Manage | Community ${id} | Community | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 export default function Page({
   params,

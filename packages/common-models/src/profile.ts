@@ -9,6 +9,7 @@ export default interface Profile {
   email: string;
   bio: string;
   permissions: string[];
+  roles?: string[];
   userId: string;
   subscribedToUpdates: boolean;
   avatar: Partial<Media> | null; // MY: union with null to avoid type errors

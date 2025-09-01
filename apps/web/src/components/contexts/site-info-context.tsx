@@ -7,9 +7,11 @@ import {
   PropsWithChildren,
   SetStateAction,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { defaultState } from "./default-state";
+import { getGlobalAppClient } from "@/lib/global-client";
 
 type SiteInfoContextType = {
   siteInfo: SiteInfo;
@@ -31,9 +33,10 @@ export const SiteInfoProvider = ({
     initialSiteInfo || defaultState.siteinfo,
   );
 
-  // useEffect(() => {
-  //   // Site info updated
-  // }, [siteInfo]);
+  useEffect(() => {
+    const appClient = getGlobalAppClient();
+    appClient.setConfig({ siteInfo });
+  }, [siteInfo]);
 
   return (
     <SiteInfoContext.Provider value={{ siteInfo, setSiteInfo }}>

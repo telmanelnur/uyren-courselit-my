@@ -19,7 +19,7 @@ import { checkPermission } from "@workspace/utils";
 import mongoose from "mongoose";
 import pug from "pug";
 import { z } from "zod";
-import { ConflictException, NotFoundException } from "../../core/exceptions";
+import { AuthorizationException, ConflictException, NotFoundException } from "../../core/exceptions";
 import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
@@ -136,20 +136,21 @@ const updateUser = async (
     permissions.manageUsers,
   ]);
   const isModifyingSelf = userData.id === ctx.user._id;
+  console.log(isModifyingSelf, userData.id, ctx.user._id);
   const restrictedKeys = ["permissions", "active"];
 
   if (
     (isModifyingSelf && keys.some((key) => restrictedKeys.includes(key))) ||
     (!isModifyingSelf && !hasPermissionToManageUser)
   ) {
-    throw new Error(responses.action_not_allowed);
+    throw new AuthorizationException();
   }
 
   let user = await UserModel.findOne({
     _id: userData.id,
     domain: ctx.domainData.domainObj._id,
   });
-  if (!user) throw new Error(responses.item_not_found);
+  if (!user) throw new NotFoundException("User not found");
 
   for (const key of keys.filter((key) => key !== "id")) {
     if (key === "tags") {
@@ -219,18 +220,18 @@ export const userRouter = router({
         [orderBy.field]: orderBy.direction === "asc" ? 1 : -1,
       };
 
-      // Build MongoDB query for search
-      const searchQuery = q
+      const query = q
         ? {
-            $or: [
-              { name: { $regex: q, $options: "i" } },
-              { email: { $regex: q, $options: "i" } },
-            ],
-          }
-        : {};
+          $or: [
+            { name: { $regex: q, $options: "i" } },
+            { email: { $regex: q, $options: "i" } },
+          ],
+          domain: ctx.domainData.domainObj._id,
+        }
+        : { domain: ctx.domainData.domainObj._id };
 
       const [items, total] = await Promise.all([
-        UserModel.find(searchQuery)
+        UserModel.find(query)
           .select({
             userId: 1,
             name: 1,
@@ -246,7 +247,7 @@ export const userRouter = router({
           .limit(paginationMeta.take)
           .sort(sortObject),
         paginationMeta.includePaginationCount
-          ? UserModel.countDocuments(searchQuery)
+          ? UserModel.countDocuments(query)
           : Promise.resolve(null),
       ]);
 
@@ -276,6 +277,7 @@ export const userRouter = router({
       purchases: 1,
       avatar: 1,
       subscribedToUpdates: 1,
+      roles: 1,
     });
 
     if (!user) {
@@ -297,6 +299,7 @@ export const userRouter = router({
         })) || [],
       avatar: user.avatar,
       subscribedToUpdates: user.subscribedToUpdates || false,
+      roles: user.roles || [],
     };
   }),
 

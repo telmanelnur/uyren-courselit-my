@@ -21,8 +21,10 @@ import { MyContentExtension } from "../extensions/my-content";
 import SearchAndReplace from "../extensions/search-and-replace";
 import { EditorToolbar } from "../toolbars/editor-toolbar";
 
+
 import "../styles/tiptap.css";
 import { SlashMenuConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu";
+import { memo } from "react";
 
 export type ContentEditorProps = {
   initialContent?: string;
@@ -38,6 +40,8 @@ export type ContentEditorProps = {
   className?: ReturnType<typeof cn>;
   extraExtensions?: AnyExtension[];
   extraSlashMenuConfig?: SlashMenuConfig;
+  toolbar?: boolean | ((props: { editor: Editor }) => React.ReactNode);
+  children?: React.ReactNode;
 };
 
 export type ContentEditorRef = Editor;
@@ -50,6 +54,9 @@ export function ContentEditor({
   editable = true,
   className,
   extraExtensions = [],
+  extraSlashMenuConfig,
+  toolbar = true,
+  children,
 }: ContentEditorProps) {
   const allExtensions = useMemo(() => {
     const defaultExtensions = [
@@ -131,6 +138,7 @@ export function ContentEditor({
         onEditor(null, { reason: "destroy" });
       }
     },
+    editable,
   });
 
   if (!editor) return null;
@@ -143,9 +151,22 @@ export function ContentEditor({
         className,
       )}
     >
-      <EditorToolbar editor={editor} />
-      <FloatingToolbar editor={editor} />
-      <TipTapFloatingMenu editor={editor} />
+      {
+        toolbar && (
+          <>
+            <ToolbarRender editor={editor} toolbar={toolbar} />
+          </>
+        )
+      }
+      {
+        editable && (
+          <>
+            <FloatingToolbar editor={editor} />
+            <TipTapFloatingMenu editor={editor} />
+          </>
+        )
+      }
+      {children}
       <EditorContent
         editor={editor}
         className="content-editor-content w-full min-w-full cursor-text sm:p-3"
@@ -153,3 +174,15 @@ export function ContentEditor({
     </div>
   );
 }
+
+const ToolbarRender = memo(({ toolbar, editor }: {
+  toolbar: ContentEditorProps["toolbar"];
+  editor: Editor;
+}) => {
+  if (typeof toolbar === "function") {
+    return toolbar({ editor });
+  } else if (toolbar === true) {
+    return <EditorToolbar editor={editor} />;
+  }
+  return toolbar;
+});

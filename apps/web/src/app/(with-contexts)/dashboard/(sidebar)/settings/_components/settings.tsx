@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 
 import ApiKeysSettings from "./api-keys-settings";
 import CustomizationsSettings from "./customizations-settings";
+import DatabaseManagement from "./database-management";
 import DomainManagement from "./domain-management";
 import GeneralSettings from "./general-settings";
 import MailsSettings from "./mails-settings";
@@ -40,6 +41,7 @@ export default function Settings({ selectedTab }: SettingsProps) {
     SITE_CUSTOMISATIONS_SETTING_HEADER,
     SITE_APIKEYS_SETTING_HEADER,
     "Domain Management",
+    "Database Management",
   ].includes(selectedTab)
     ? selectedTab
     : SITE_SETTINGS_SECTION_GENERAL;
@@ -52,6 +54,7 @@ export default function Settings({ selectedTab }: SettingsProps) {
     SITE_CUSTOMISATIONS_SETTING_HEADER,
     SITE_APIKEYS_SETTING_HEADER,
     "Domain Management",
+    "Database Management",
   ];
 
   return (
@@ -108,11 +111,16 @@ export default function Settings({ selectedTab }: SettingsProps) {
           <ApiKeysSettings />
         </TabsContent>
 
-
         <TabsContent value="Domain Management" className="flex flex-col gap-8">
           {checkPermission(profile.permissions, [
             UIConstants.permissions.manageSettings,
           ]) && <DomainManagement />}
+        </TabsContent>
+
+        <TabsContent value="Database Management" className="flex flex-col gap-8">
+          {checkPermission(profile.permissions, [
+            UIConstants.permissions.manageSettings,
+          ]) && <DatabaseManagement />}
         </TabsContent>
       </Tabs>
     </div>

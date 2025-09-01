@@ -1,5 +1,5 @@
 import { createModel } from "@workspace/common-logic";
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 export type QuestionType = "multiple_choice" | "short_answer";
 
@@ -20,11 +20,12 @@ export interface MultipleChoiceQuestion extends BaseQuestion {
   type: "multiple_choice";
   options?: Array<{
     _id?: string;
+    uid: string; // Unique identifier for the option
     text: string;
     isCorrect: boolean;
     order?: number;
   }>;
-  correctAnswers?: string[];
+  correctAnswers: string[]; // Stores option UIDs
 }
 
 export interface ShortAnswerQuestion extends BaseQuestion {
@@ -35,6 +36,7 @@ export interface ShortAnswerQuestion extends BaseQuestion {
 export type IQuestion = MultipleChoiceQuestion | ShortAnswerQuestion;
 
 const OptionSchema = new Schema({
+  uid: { type: String, required: true, unique: true }, // Unique identifier
   text: { type: String, required: true, trim: true, maxlength: 500 },
   isCorrect: { type: Boolean, default: false },
   order: { type: Number, default: 0 },

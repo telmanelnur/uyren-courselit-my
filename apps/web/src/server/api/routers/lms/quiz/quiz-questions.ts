@@ -152,6 +152,12 @@ export const quizQuestionsRouter = router({
         type: z.enum(supportedQuestionTypes),
         points: z.number().min(0),
         explanation: z.string().optional(),
+        options: z.array(z.object({
+          uid: z.string(),
+          text: z.string(),
+          isCorrect: z.boolean(),
+        })).optional(),
+        correctAnswers: z.array(z.string()).optional(),
       }).extend({
         quizId: documentIdValidator(),
       }),

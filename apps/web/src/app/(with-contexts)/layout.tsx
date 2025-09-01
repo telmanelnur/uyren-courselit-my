@@ -15,6 +15,7 @@ import { headers } from "next/headers";
 import React from "react";
 import { Toaster } from "sonner";
 import TranslationWrapper from "@/components/layout/translation-wrapper";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 export default async function Layout({
   children,
@@ -24,6 +25,7 @@ export default async function Layout({
   const session = await getServerSession(authOptions);
   const address = await getAddressFromHeaders(headers);
   const siteInfo = await getServerSiteInfo();
+  const formattedSiteInfo = formatInitialSiteInfo(siteInfo);
   return (
     <TranslationWrapper>
       <SessionWrapper session={session}>
@@ -33,7 +35,7 @@ export default async function Layout({
             backend: address,
           }}
         >
-          <SiteInfoProvider initialSiteInfo={formatInitialSiteInfo(siteInfo)}>
+          <SiteInfoProvider initialSiteInfo={formattedSiteInfo}>
             <ServerConfigProvider initialConfig={defaultState.config}>
               <NextThemesProvider
                 attribute="class"
@@ -42,7 +44,9 @@ export default async function Layout({
                 disableTransitionOnChange
               >
                 <ProfileProvider>
-                  <NiceModalProvider>{children}</NiceModalProvider>
+                  <NiceModalProvider>
+                  <NuqsAdapter>{children}</NuqsAdapter>
+                  </NiceModalProvider>
                 </ProfileProvider>
               </NextThemesProvider>
             </ServerConfigProvider>
@@ -58,6 +62,22 @@ const formatInitialSiteInfo = (siteInfo?: SiteInfo) => {
   return {
     title: siteInfo?.title || defaultState.siteinfo.title,
     subtitle: siteInfo?.subtitle || defaultState.siteinfo.subtitle,
+    logo: siteInfo ? {
+      mediaId: siteInfo.logo?.mediaId || defaultState.siteinfo.logo?.mediaId!,
+      originalFileName: siteInfo.logo?.originalFileName!,
+      size: siteInfo.logo?.size!,
+      url: siteInfo.logo?.url || defaultState.siteinfo.logo?.url!,
+      mimeType: siteInfo.logo?.mimeType!,
+      access: siteInfo.logo?.access!,
+      thumbnail: siteInfo.logo?.thumbnail!,
+      storageProvider: siteInfo.logo?.storageProvider!,
+    } :defaultState.siteinfo.logo!,
+    currencyISOCode: siteInfo?.currencyISOCode || defaultState.siteinfo.currencyISOCode,
+    paymentMethod: siteInfo?.paymentMethod || defaultState.siteinfo.paymentMethod,
+    stripeKey: siteInfo?.stripeKey || defaultState.siteinfo.stripeKey,
+    codeInjectionHead: siteInfo?.codeInjectionHead || defaultState.siteinfo.codeInjectionHead,
+    codeInjectionBody: siteInfo?.codeInjectionBody || defaultState.siteinfo.codeInjectionBody,
+    mailingAddress: siteInfo?.mailingAddress || defaultState.siteinfo.mailingAddress,
   };
 };
 

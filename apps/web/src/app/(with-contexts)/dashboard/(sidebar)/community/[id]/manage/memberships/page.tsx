@@ -1,3 +1,4 @@
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { MembershipList } from "@/components/community/membership-list";
 import {
@@ -5,6 +6,16 @@ import {
   COMMUNITY_MEMBERSHIP_LIST_HEADER,
   COMMUNITY_SETTINGS,
 } from "@/lib/ui/config/strings";
+
+export async function generateMetadata(
+  { params }: { params: { id: string } },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = params;
+  return {
+    title: `Memberships | Manage | Community ${id} | Community | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 export default function Page({
   params,

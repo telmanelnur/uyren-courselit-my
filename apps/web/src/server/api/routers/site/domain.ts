@@ -1,6 +1,7 @@
 import { parseHost } from "@/lib/domain";
 import DomainManager from "@/lib/domain";
 import DomainModel from "@/models/Domain";
+import UserModel from "@/models/User";
 
 import { z } from "zod";
 import {
@@ -65,6 +66,38 @@ async function ensureUniqueCustomDomain(
   });
   if (existing)
     throw new ResourceExistsException("Domain", "customDomain", customDomain);
+}
+
+async function ensureDomainHasUser(domainId: string, currentUser: any) {
+  const userCount = await UserModel.countDocuments({ domain: domainId });
+  
+  if (userCount === 0) {
+    // Create a new user with current user's data and admin permissions
+    const newUser = new UserModel({
+      domain: domainId,
+      email: currentUser.email,
+      name: currentUser.name || currentUser.email,
+      active: true,
+      permissions: [
+        "course:manage",
+        "course:manage_any", 
+        "course:publish",
+        "course:enroll",
+        "media:manage",
+        "site:manage",
+        "setting:manage",
+        "user:manage",
+        "community:manage"
+      ],
+      roles: ["admin"],
+      subscribedToUpdates: true,
+      lead: "website",
+      avatar: currentUser.avatar,
+      providerData: currentUser.providerData,
+    });
+    
+    await newUser.save();
+  }
 }
 
 export const domainRouter = router({
@@ -137,7 +170,7 @@ export const domainRouter = router({
       return domain.toObject();
     }),
 
-  create: adminProcedure.input(CreateSchema).mutation(async ({ input }) => {
+  create: adminProcedure.input(CreateSchema).mutation(async ({ input, ctx }) => {
     await ensureUniqueName(input.data.name);
 
     if (input.data.customDomain) {
@@ -154,13 +187,16 @@ export const domainRouter = router({
     const saved = await domain.save();
     const domainObj = saved.toObject();
 
-    // Cache the new domain in Redis
+    // Ensure domain has at least one user (the current user)
+    await ensureDomainHasUser(domainObj._id.toString(), ctx.user);
+
+    await DomainManager.removeFromCache(domainObj);
     await DomainManager.setDomainCache(domainObj);
 
     return domainObj;
   }),
 
-  update: adminProcedure.input(UpdateSchema).mutation(async ({ input }) => {
+  update: adminProcedure.input(UpdateSchema).mutation(async ({ input, ctx }) => {
     const existing = await DomainModel.findOne({
       _id: input.id,
       deleted: false,
@@ -176,7 +212,7 @@ export const domainRouter = router({
       await ensureUniqueCustomDomain(input.data.customDomain, input.id);
     }
 
-    // Remove old cache entries before updating
+    // Remove cache for both previous and current domain data
     await DomainManager.removeFromCache(existing.toObject());
 
     const updated = await DomainModel.findByIdAndUpdate(input.id, input.data, {
@@ -185,6 +221,12 @@ export const domainRouter = router({
 
     const updatedObj = updated!.toObject();
 
+    // Ensure domain has at least one user (the current user)
+    await ensureDomainHasUser(updatedObj._id.toString(), ctx.user);
+
+    // Remove cache for updated domain data
+    await DomainManager.removeFromCache(updatedObj);
+
     // Cache the updated domain data
     await DomainManager.setDomainCache(updatedObj);
 
@@ -192,25 +234,23 @@ export const domainRouter = router({
   }),
 
   delete: adminProcedure
-    .input(documentIdValidator())
+    .input(z.object({ id: documentIdValidator() }))
     .mutation(async ({ input }) => {
       const existing = await DomainModel.findOne({
-        _id: input,
+        _id: input.id,
         deleted: false,
       });
 
-      if (!existing) throw new NotFoundException("Domain", input);
+      if (!existing) throw new NotFoundException("Domain", input.id);
 
       // Soft delete
       const deleted = await DomainModel.findByIdAndUpdate(
-        input,
+        input.id,
         { deleted: true },
         { new: true },
-      );
+      )!;
 
       const deletedObj = deleted!.toObject();
-
-      // Remove from Redis cache
       await DomainManager.removeFromCache(deletedObj);
 
       return deletedObj;

@@ -8,11 +8,11 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { Upload, X } from "lucide-react";
 import React, { ChangeEvent, useEffect, useState } from "react";
-import Button2 from "../button";
 import Dialog2 from "../dialog2";
 import { useToast } from "../hooks/use-toast";
 import { Image } from "../image";
 import Access from "./access";
+import { Button } from "@workspace/ui/components/button";
 
 interface Strings {
   buttonCaption?: string;
@@ -248,7 +248,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
           </div>
         )}
         {props.mediaId && (
-          <Button2
+          <Button
             onClick={removeFile}
             disabled={uploading || disabled}
             size="sm"
@@ -256,28 +256,28 @@ const MediaSelector = (props: MediaSelectorProps) => {
           >
             <X className="mr-2 h-4 w-4" />
             {uploading ? "Working..." : strings.removeButtonCaption || "Remove"}
-          </Button2>
+          </Button>
         )}
         {!props.mediaId && (
           <div>
             <Dialog2
               title={strings.dialogTitle || "Select media"}
               trigger={
-                <Button2 size="sm" variant="secondary" disabled={disabled}>
+                <Button size="sm" variant="secondary" disabled={disabled}>
                   {strings.buttonCaption || "Select media"}
-                </Button2>
+                </Button>
               }
               open={dialogOpened}
               onOpenChange={setDialogOpened}
               okButton={
-                <Button2
+                <Button
                   onClick={uploadFile as any}
                   disabled={!selectedFile || uploading}
                 >
                   {uploading
                     ? strings.uploading || "Uploading"
                     : strings.uploadButtonText || "Upload"}
-                </Button2>
+                </Button>
               }
             >
               {error && <div>{error}</div>}

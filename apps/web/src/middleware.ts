@@ -26,10 +26,8 @@ const PROTECTED_ROUTES = ["/dashboard", "/admin", "/profile", "/settings"];
 // Define public routes that should not require authentication
 const PUBLIC_ROUTES = [
   "/",
-  "/auth",
-  "/login",
-  "/register",
-  "/signup",
+  "/auth/sign-in",
+  "/auth/sign-up",
   "/api/auth",
   "/forgot-password",
   "/reset-password",
@@ -62,6 +60,11 @@ export async function middleware(req: NextRequest) {
       response.headers.set("x-domain-type", domainInfo.type);
       response.headers.set("x-domain-host", domainInfo.cleanHost || "");
       response.headers.set("x-domain-identifier", domainInfo.identifier!);
+      // console.log("[MIDDLEWARE] Domain analysis:", {
+      //   "x-domain-type": domainInfo.type,
+      //   "x-domain-host": domainInfo.cleanHost || "",
+      //   "x-domain-identifier": domainInfo.identifier!,
+      // });
     } catch (error) {
       console.error("[MIDDLEWARE] Error analyzing domain:", error);
     }
@@ -78,7 +81,7 @@ export async function middleware(req: NextRequest) {
 
       if (!token) {
         // Redirect to login with return URL
-        const loginUrl = new URL("/auth/login", req.url);
+        const loginUrl = new URL("/auth/sign-in", req.url);
         loginUrl.searchParams.set("redirect", pathname);
         return NextResponse.redirect(loginUrl);
       }
@@ -86,7 +89,7 @@ export async function middleware(req: NextRequest) {
       console.error("[MIDDLEWARE] Authentication error:", error);
 
       // Redirect to login on authentication error
-      const loginUrl = new URL("/auth/login", req.url);
+      const loginUrl = new URL("/auth/sign-in", req.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -106,6 +109,7 @@ export const config = {
      * 5. trpc routes
      */
     "/((?!api(?!/auth)|_next/static|_next/image|favicon.ico|.*\\..*|public).*)",
+    "/",
     "/api/(.*)",
     "/dashboard/(.*)",
     "/admin/(.*)",

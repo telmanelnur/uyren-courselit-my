@@ -18,7 +18,7 @@ const mainIdentifiers = [
   "main",
   "localhost",
   "127.0.0.1",
-  "uyren-courselit-my-1.loca.lt",
+  // "uyren-courselit-my-1.loca.lt",
 ];
 
 export async function getDomainHeaders() {

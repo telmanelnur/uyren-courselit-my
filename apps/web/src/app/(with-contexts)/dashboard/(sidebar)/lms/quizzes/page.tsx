@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { CreateButton } from "@/components/admin/layout/create-button";
 import HeaderTopbar from "@/components/admin/layout/header-topbar";

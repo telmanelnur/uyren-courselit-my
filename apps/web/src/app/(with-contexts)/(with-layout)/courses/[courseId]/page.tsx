@@ -1,20 +1,28 @@
 "use client"
 
+import Footer from "@/components/layout/footer"
+import Header from "@/components/layout/header"
+import { ScrollAnimation } from "@/components/public/scroll-animation"
+import { trpc } from "@/utils/trpc"
+import { Badge } from "@workspace/ui/components/badge"
+import { Button } from "@workspace/ui/components/button"
+import { Card, CardContent } from "@workspace/ui/components/card"
+import { Skeleton } from "@workspace/ui/components/skeleton"
+import { BookOpen, Clock } from "lucide-react"
+import dynamic from "next/dynamic"
+import Image from "next/image"
+import Link from "next/link"
 import { useParams } from "next/navigation"
 import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
-import Footer from "@/components/layout/footer"
-import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent } from "@workspace/ui/components/card"
-import { Badge } from "@workspace/ui/components/badge"
-import { Skeleton } from "@workspace/ui/components/skeleton"
-import { Clock, Users, Star, BookOpen, Award } from "lucide-react"
-import Link from "next/link"
-import Header from "@/components/layout/header"
-import { ScrollAnimation } from "@/components/public/scroll-animation"
 import CourseLessonsSidebar from "../_components/course-lessons-sidebar"
-import { trpc } from "@/utils/trpc"
-import { notFound } from "next/navigation"
+
+const DescriptionEditor = dynamic(
+  () => import("@/components/editors/tiptap/templates/description/description-editor").then((mod) => ({ default: mod.DescriptionEditor })),
+  {
+    ssr: false,
+  }
+)
 
 function CourseDetailsContent() {
   const { t, i18n } = useTranslation("common")
@@ -107,8 +115,6 @@ function CourseDetailsContent() {
     )
   }
 
-  const lessonsCount = course.attachedLessons?.length || 0
-
   return (
     <div className="min-h-screen bg-background m--course-page">
       <Header />
@@ -127,41 +133,60 @@ function CourseDetailsContent() {
               </div>
             </ScrollAnimation>
 
-            {/* Course Header */}
-            <ScrollAnimation variant="fadeUp">
-              <div className="space-y-4 m--course-header">
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground m--course-title">
-                  {course.title}
-                </h1>
+                         {/* Course Header */}
+             <ScrollAnimation variant="fadeUp">
+               <div className="space-y-4 m--course-header">
+                 {/* Stats at the top */}
+                 <div className="flex flex-wrap items-center gap-4 text-sm m--course-meta">
+                   <div className="flex items-center gap-1">
+                     <Clock className="h-4 w-4 text-brand-primary" />
+                     <span>{course.duration || "Self-paced"} {t("weeks")}</span>
+                   </div>
+                   <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary border-brand-primary/20">
+                     {course.level || "Beginner"}
+                   </Badge>
+                 </div>
+               </div>
+             </ScrollAnimation>
 
-                {/* <p className="text-lg text-muted-foreground leading-relaxed m--course-description">
-                  {course.description}
-                </p> */}
-
-                <div className="flex flex-wrap items-center gap-4 text-sm m--course-meta">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">4.8</span>
-                    <span className="text-muted-foreground">(124 {t("reviews")})</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4 text-brand-primary" />
-                    <span>1,234 {t("students")}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4 text-brand-primary" />
-                    <span>{course.duration || "Self-paced"}</span>
-                  </div>
-                  <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary border-brand-primary/20">
-                    {course.level || "Beginner"}
-                  </Badge>
-                </div>
-              </div>
-            </ScrollAnimation>
-
-            {/* Overview Section */}
+            {/* Course Card with Image, Overview and Description */}
             <ScrollAnimation variant="fadeUp">
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm m--course-overview">
+                {/* Featured Image */}
+                {course.featuredImage && (
+                  <div className="relative w-full h-64 md:h-80 rounded-t-lg overflow-hidden">
+                    <Image
+                      src={course.featuredImage.url || course.featuredImage.thumbnail || "/placeholder-course.jpg"}
+                      alt={course.featuredImage.caption || course.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+                )}
+
+                {/* Course Title */}
+                <div className="p-6 pb-0">
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 m--course-title">
+                    {course.title}
+                  </h1>
+                  
+                  {/* Course Tags */}
+                  {course.tags && course.tags.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      {course.tags.map((tag, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="outline" 
+                          className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 transition-colors"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="border-b border-gray-100 p-6 m--overview-header">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
@@ -175,59 +200,24 @@ function CourseDetailsContent() {
                 </div>
 
                 <div className="p-6 space-y-6 m--overview-content">
-                  {/* Description */}
-                  <div className="space-y-3 m--description-block">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      📖 {t("about_course")}
-                    </h3>
-                    {/* <div className="prose prose-gray max-w-none">
-                      <p className="text-gray-700 leading-relaxed text-base">{course.description}</p>
-                    </div> */}
-                  </div>
-
-                  {/* Tags/Objectives */}
-                  {course.tags && course.tags.length > 0 && (
-                    <div className="space-y-3 m--objectives-block">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        🎯 {t("what_you_will_learn")}
-                      </h3>
-                      <div className="space-y-2">
-                        {course.tags.map((tag: string, i: number) => (
-                          <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg m--objective-item">
-                            <div className="w-2 h-2 rounded-full bg-brand-primary mt-2 flex-shrink-0"></div>
-                            <span className="text-gray-700">{tag}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Stats */}
-                  <div className="space-y-3 m--stats-block">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">📊 {t("course_details")}</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 m--stats-grid">
-                      <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center m--stat-card">
-                        <BookOpen className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-blue-900">{lessonsCount}</div>
-                        <div className="text-sm text-blue-700">{t("Lessons")}</div>
-                      </div>
-                      <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg text-center m--stat-card">
-                        <Clock className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-green-900">{course.duration || "Self-paced"}</div>
-                        <div className="text-sm text-green-700">{t("duration")}</div>
-                      </div>
-                      <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg text-center m--stat-card">
-                        <Users className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-purple-900">1.2K</div>
-                        <div className="text-sm text-purple-700">{t("students")}</div>
-                      </div>
-                      <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg text-center m--stat-card">
-                        <Award className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-orange-900">{course.level || "Beginner"}</div>
-                        <div className="text-sm text-orange-700">{t("level")}</div>
-                      </div>
-                    </div>
-                  </div>
+                                     {/* Description */}
+                   <div className="space-y-3 m--description-block">
+                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                       📖 {t("about_course")}
+                     </h3>
+                     {course.description && (
+                         <DescriptionEditor
+                           editable={false}
+                           toolbar={false}
+                           onEditor={(editor, meta) => {
+                            if (meta.reason === "create") {
+                              editor!.commands.setMyContent(course.description!);
+                            }
+                          }}
+                         />
+                     )}
+                   </div>
+                  
                 </div>
               </div>
             </ScrollAnimation>

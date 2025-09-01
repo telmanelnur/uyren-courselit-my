@@ -12,6 +12,7 @@ const multipleChoiceSchema = z.object({
   options: z
     .array(
       z.object({
+        uid: z.string().min(1, "Option UID is required"),
         text: z.string().min(1, "Option text is required"),
         isCorrect: z.boolean(),
         order: z.number().optional(),
@@ -82,8 +83,10 @@ export class MultipleChoiceProvider extends BaseQuestionProvider<MultipleChoiceQ
 
     const correctAnswers = question.correctAnswers;
 
+    // Sort both arrays for comparison
     const sortedA = [...answer].sort();
     const sortedB = [...correctAnswers].sort();
+
     return (
       sortedA.length === sortedB.length &&
       sortedA.every((v, i) => v === sortedB[i])
@@ -105,12 +108,12 @@ export class MultipleChoiceProvider extends BaseQuestionProvider<MultipleChoiceQ
     questionData: Partial<MultipleChoiceQuestion>,
     ctx: MainContextType,
   ): Partial<MultipleChoiceQuestion> {
-    console.log("questionData", questionData);
     // Ensure options are properly formatted
     if (questionData.options) {
       questionData.options = questionData.options
         .filter((opt) => opt.text && opt.text.trim().length > 0)
         .map((opt) => ({
+          uid: opt.uid || `uid-${Date.now()}-${Math.random()}`,
           text: opt.text.trim(),
           isCorrect: Boolean(opt.isCorrect),
           order: opt.order || 0,
@@ -121,7 +124,7 @@ export class MultipleChoiceProvider extends BaseQuestionProvider<MultipleChoiceQ
     if (!questionData.correctAnswers && questionData.options) {
       questionData.correctAnswers = questionData.options
         .filter((opt) => opt.isCorrect)
-        .map((opt) => opt.text);
+        .map((opt) => opt.uid);
     }
 
     return super.getValidatedData(questionData, ctx);
@@ -137,7 +140,7 @@ export class MultipleChoiceProvider extends BaseQuestionProvider<MultipleChoiceQ
     // if (hideAnswers && processed.options) {
     //   processed.options = processed.options.map((opt) => {
     //     const { isCorrect, ...rest } = opt;
-    //     return rest as { _id?: string; text: string; order?: number };
+    //     return rest as { _id?: string; uid: string; text: string; order?: number };
     //   });
     // }
 

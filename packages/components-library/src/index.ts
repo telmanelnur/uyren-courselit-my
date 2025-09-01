@@ -1,11 +1,8 @@
 import AdminWidgetPanel from "./admin-widget-panel";
-import Button from "./button";
 import CircularProgress from "./circular-progress";
-import CourseItem from "./course-item";
 import Dialog2 from "./dialog2";
 import IconButton from "./icon-button";
 import LessonIcon from "./lesson-icon";
-import Link from "./link";
 import MediaSelector from "./media-selector";
 import { MediaBrowserNiceDialog } from "./media-browser";
 export * from "./nice-modal";
@@ -22,7 +19,6 @@ import Breadcrumbs from "./breadcrumbs";
 import ComboBox2 from "./combo-box2";
 import DragAndDrop from "./drag-and-drop";
 
-export { Button as Button2 } from "@workspace/ui/components/button";
 export * from "./content-card";
 export * from "./paginated-table";
 export * from "./skeleton-card";
@@ -34,13 +30,10 @@ import getSymbolFromCurrency from "currency-symbol-map";
 export {
   getSymbolFromCurrency,
   AdminWidgetPanel,
-  Button,
   CircularProgress,
-  CourseItem,
   Dialog2,
   IconButton,
   LessonIcon,
-  Link,
   MediaSelector,
   MediaBrowserNiceDialog,
   Menu2,

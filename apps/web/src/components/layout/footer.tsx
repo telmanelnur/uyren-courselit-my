@@ -1,7 +1,7 @@
 "use client"
 
+import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Send } from "lucide-react"
 import Link from "next/link"
-import { Linkedin, Mail, Phone, MapPin, Instagram, Facebook, Send } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 export function Footer() {

@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "error": {
+      "invalid_email": "Неверный email адрес",
+      "user_not_found": "Аккаунт не найден",
+      "wrong_password": "Неверный пароль",
+      "invalid_credential": "Неверные учетные данные",
+      "email_already_in_use": "Email уже используется",
+      "weak_password": "Слишком слабый пароль",
+      "too_many_requests": "Слишком много попыток",
+      "network_error": "Ошибка сети",
+      "popup_blocked": "Всплывающее окно заблокировано",
+      "unknown": "Ошибка аутентификации"
+    }
+  }
+}

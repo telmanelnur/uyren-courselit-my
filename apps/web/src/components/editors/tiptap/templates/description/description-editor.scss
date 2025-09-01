@@ -11,4 +11,12 @@
             padding-bottom: 0;
         }
     }
+
+    &.readonly {
+        border: none !important;
+        .tiptap.ProseMirror {
+            padding: 0;
+            max-width: unset;
+        }
+    }
 }

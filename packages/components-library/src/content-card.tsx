@@ -2,7 +2,8 @@ import { cn } from "@workspace/ui/lib/utils";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { JSX, ReactNode } from "react";
 import { Image } from "./image";
-import Link from "./link";
+import Link from "next/link";
+
 
 interface ContentCardImageProps extends React.HTMLAttributes<HTMLDivElement> {
   src: string;

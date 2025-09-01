@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@workspace/components-library";
 import { useEffect } from "react";
 
+const LOGIN_URL = "/auth/sign-in";
+
 const Logout = () => {
   const router = useRouter();
   const { status } = useSession();
@@ -14,7 +16,7 @@ const Logout = () => {
     const handleLogout = async () => {
       try {
         // NextAuth will automatically handle Firebase logout through the callback
-        await signOut({ callbackUrl: "/auth/login" });
+        await signOut({ callbackUrl: LOGIN_URL });  
 
         toast({
           title: "Signed out successfully",
@@ -22,7 +24,7 @@ const Logout = () => {
         });
 
         // Redirect to login page
-        router.replace("/auth/login");
+        router.replace(LOGIN_URL);
       } catch (error) {
         console.error("Logout error:", error);
         toast({
@@ -32,14 +34,14 @@ const Logout = () => {
         });
 
         // Force redirect even if there's an error
-        router.replace("/auth/login");
+        router.replace(LOGIN_URL);
       }
     };
 
     if (status === "authenticated") {
       handleLogout();
     } else if (status === "unauthenticated") {
-      router.replace("/auth/login");
+      router.replace(LOGIN_URL);
     }
   }, [status, router, toast]);
 

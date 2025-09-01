@@ -1,5 +1,6 @@
 "use client";
 
+import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@workspace/components-library";
@@ -12,8 +13,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@workspace/ui/components/dialog";
 import {
   DropdownMenu,
@@ -30,6 +30,7 @@ import {
   FormMessage,
 } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import {
   Select,
   SelectContent,
@@ -58,8 +59,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import z from "zod";
 import { useQuizContext } from "./quiz-context";
-import { GeneralRouterOutputs } from "@/server/api/types";
-import { ScrollArea } from "@workspace/ui/components/scroll-area";
 
 // Base schema for common fields
 const BaseQuestionSchema = z.object({
@@ -83,6 +82,7 @@ const EditQuestionSchema = BaseQuestionSchema.extend({
   options: z
     .array(
       z.object({
+        uid: z.string(),
         text: z.string().min(1, "Option text is required"),
         isCorrect: z.boolean(),
       }),
@@ -385,16 +385,6 @@ function EditQuestionDialog({
       type: "multiple_choice",
       points: 5,
       explanation: "",
-      // Type-specific fields only for edit mode
-      ...(isEdit && {
-        options: [
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-        ],
-        correctAnswers: [""],
-      }),
     },
   });
 
@@ -417,72 +407,36 @@ function EditQuestionDialog({
     name: "correctAnswers" as any,
   });
 
-  // Watch for question type changes to reset type-specific fields
-  const questionType = form.watch("type");
   useEffect(() => {
-    if (open && isEdit) {
-      if (questionType === "multiple_choice") {
-        // Reset to multiple choice defaults
-        form.setValue("options", [
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-        ]);
-        form.setValue("correctAnswers", [""]);
-      } else if (questionType === "short_answer") {
-        // Reset to short answer defaults
-        form.setValue("options", []);
-        form.setValue("correctAnswers", [""]);
-      }
-    }
-  }, [questionType, open, isEdit, form]);
-
-  // Reset form when dialog opens/closes or question changes
-  useEffect(() => {
-    if (open && isEdit && question) {
-      // Edit mode: populate with existing question data
+    if (isEdit && question) {
       form.reset({
         text: question.text || "",
         type: question.type || "multiple_choice",
         points: question.points || 5,
         explanation: question.explanation || "",
-        // Type-specific fields for edit mode
         options:
           question.options && question.options.length > 0
-            ? question.options.map((opt: any) => ({
-                text: typeof opt === "string" ? opt : opt?.text || "",
+            ? question.options.map((opt: any, index: number) => ({
+                uid: opt?.uid || generateUid(index),
+                text: opt?.text || "",
                 isCorrect:
-                  typeof opt === "object" ? opt?.isCorrect || false : false,
+                  question.correctAnswers && question.correctAnswers.includes(opt?.uid ),
               }))
             : [],
-        correctAnswers:
-          question.correctAnswers && question.correctAnswers.length > 0
-            ? question.correctAnswers
-            : [""],
-      });
-    } else if (open && !isEdit) {
-      // Create mode: reset to defaults (no type-specific fields)
-      form.reset({
-        text: "",
-        type: "multiple_choice",
-        points: 5,
-        explanation: "",
-        correctAnswers: [""],
-      });
+                 correctAnswers: question.correctAnswers,
+       });
     }
-  }, [open, isEdit, question, form]);
+  }, [isEdit, question, form]);
 
-  const addOption = () => {
-    append({ text: "", isCorrect: false });
-  };
+     const addOption = () => {
+     append({ uid: generateUid(options.length), text: "", isCorrect: false });
+   };
 
   const removeOption = (index: number) => {
     if (options.length > 2) {
       remove(index);
     }
   };
-
   const handleSubmit = async (data: QuestionFormDataType) => {
     let questionData: any = {
       text: data.text,
@@ -497,18 +451,22 @@ function EditQuestionDialog({
     // Only process type-specific fields in edit mode
     if (isEdit) {
       const typedData = data as z.infer<typeof EditQuestionSchema>;
-      console.log("typedData", typedData);
       if (typedData.type === "multiple_choice" && typedData.options) {
         questionData.options = typedData.options.filter(
           (opt) => opt.text.trim() !== "",
-        );
+        ).map((opt) => ({
+          uid: opt.uid,
+          text: opt.text,
+          isCorrect: opt.isCorrect,
+        }));
         questionData.correctAnswers = typedData.options
           .filter((opt) => opt.isCorrect)
-          .map((opt: any) => opt.text);
+          .map((opt) => opt.uid);
       } else if (
         typedData.type === "short_answer" &&
         typedData.correctAnswers
       ) {
+        questionData.options = [];
         questionData.correctAnswers = typedData.correctAnswers.filter(
           (answer) => answer.trim() !== "",
         );
@@ -532,133 +490,7 @@ function EditQuestionDialog({
       // Error handling is done in mutation callbacks
     }
   };
-
-  // Render functions for type-specific fields
-  const renderMultipleChoiceFields = () => (
-    <div className="grid gap-2">
-      <div className="flex items-center justify-between">
-        <FormLabel>Answer Options</FormLabel>
-        <Button type="button" variant="outline" size="sm" onClick={addOption}>
-          <Plus className="h-3 w-3 mr-1" />
-          Add Option
-        </Button>
-      </div>
-      <div className="space-y-2">
-        {options.map((option, index) => (
-          <div key={option.id} className="flex items-center gap-2">
-            <FormField
-              control={form.control}
-              name={`options.${index}.text`}
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormControl>
-                    <Input {...field} placeholder={`Option ${index + 1}`} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`options.${index}.isCorrect`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              disabled={options.length <= 2}
-              onClick={() => removeOption(index)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Select the checkbox next to the correct answer
-      </p>
-    </div>
-  );
-
-  const renderShortAnswerFields = () => (
-    <div className="grid gap-2">
-      <div className="flex items-center justify-between">
-        <FormLabel>Correct Answers</FormLabel>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => appendCorrectAnswer("")}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Answer
-        </Button>
-      </div>
-      <div className="space-y-2">
-        {correctAnswers.map((field, index) => (
-          <div key={field.id} className="flex items-center gap-2">
-            <FormField
-              control={form.control}
-              name={`correctAnswers.${index}`}
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder={`Correct answer ${index + 1}`}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              disabled={correctAnswers.length <= 1}
-              onClick={() => removeCorrectAnswer(index)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Add multiple correct answers if the question accepts variations
-      </p>
-    </div>
-  );
-
-  const renderTypeSpecificFields = () => {
-    // In create mode, don't show any type-specific fields
-    if (!isEdit) {
-      return null;
-    }
-
-    // Only show type-specific fields in edit mode
-    const currentType = form.watch("type");
-    switch (currentType) {
-      case "multiple_choice":
-        return renderMultipleChoiceFields();
-      case "short_answer":
-        return renderShortAnswerFields();
-      default:
-        return null;
-    }
-  };
-
+  const currentType = form.watch("type");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] h-[600px] flex flex-col">
@@ -667,11 +499,11 @@ function EditQuestionDialog({
             <DialogTitle>
               {isEdit ? "Edit Question" : "Add New Question"}
             </DialogTitle>
-            <DialogDescription>
-              {isEdit
-                ? "Update the question details below."
-                : "Create a new question for this quiz. Type-specific options can be configured after creation."}
-            </DialogDescription>
+              <DialogDescription>
+               {isEdit
+                 ? "Update the question details below."
+                 : "Create a new question for this quiz. Type-specific options can be configured after creation."}
+             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
@@ -770,8 +602,32 @@ function EditQuestionDialog({
                   )}
                 />
 
-                {/* Type-specific fields - only show in edit mode or when type is selected */}
-                {renderTypeSpecificFields()}
+                {
+                  isEdit && (
+                    <>
+                    {
+                      currentType === "multiple_choice" && (
+                        <MultipleChoiceFields
+                          options={options}
+                          addOption={addOption}
+                          removeOption={removeOption}
+                          form={form}
+                        />
+                      )
+                    }
+                    {
+                      currentType === "short_answer" && (
+                        <ShortAnswerFields
+                          correctAnswers={correctAnswers}
+                          appendCorrectAnswer={appendCorrectAnswer}
+                          removeCorrectAnswer={removeCorrectAnswer}
+                          form={form}
+                        />
+                      )
+                    }
+                    </>
+                  )
+                }
               </div>
 
               <DialogFooter className="pt-4">
@@ -795,7 +651,144 @@ function EditQuestionDialog({
             </form>
           </Form>
         </ScrollArea>
-      </DialogContent>
-    </Dialog>
-  );
-}
+             </DialogContent>
+     </Dialog>
+   );
+ }
+
+// Separate component for Multiple Choice fields
+function MultipleChoiceFields({
+   options,
+   addOption,
+   removeOption,
+   form,
+ }: {
+   options: any[];
+   addOption: () => void;
+   removeOption: (index: number) => void;
+   form: any;
+ }) {
+   return (
+     <div className="grid gap-2">
+       <div className="flex items-center justify-between">
+         <FormLabel>Answer Options</FormLabel>
+         <Button type="button" variant="outline" size="sm" onClick={addOption}>
+           <Plus className="h-3 w-3 mr-1" />
+           Add Option
+         </Button>
+       </div>
+       <div className="space-y-2">
+         {options.map((option, index) => (
+           <div key={option.uid} className="flex items-center gap-2">
+             <FormField
+               control={form.control}
+               name={`options.${index}.text`}
+               render={({ field }) => (
+                 <FormItem className="flex-1">
+                   <FormControl>
+                     <Input {...field} placeholder={`Option ${index + 1}`} />
+                   </FormControl>
+                 </FormItem>
+               )}
+             />
+             <FormField
+               control={form.control}
+               name={`options.${index}.isCorrect`}
+               render={({ field }) => (
+                 <FormItem>
+                   <FormControl>
+                     <input
+                       type="checkbox"
+                       checked={field.value}
+                       onChange={(e) => field.onChange(e.target.checked)}
+                     />
+                   </FormControl>
+                 </FormItem>
+               )}
+             />
+             <Button
+               type="button"
+               variant="outline"
+               size="icon"
+               disabled={options.length <= 2}
+               onClick={() => removeOption(index)}
+             >
+               <X className="h-3 w-3" />
+             </Button>
+           </div>
+         ))}
+       </div>
+       <p className="text-xs text-muted-foreground">
+         Select the checkbox next to the correct answer
+       </p>
+     </div>
+   );
+ }
+
+// Separate component for Short Answer fields
+function ShortAnswerFields({
+   correctAnswers,
+   appendCorrectAnswer,
+   removeCorrectAnswer,
+   form,
+ }: {
+   correctAnswers: any[];
+   appendCorrectAnswer: (value: string) => void;
+   removeCorrectAnswer: (index: number) => void;
+   form: any;
+ }) {
+   return (
+     <div className="grid gap-2">
+       <div className="flex items-center justify-between">
+         <FormLabel>Correct Answers</FormLabel>
+         <Button
+           type="button"
+           variant="outline"
+           size="sm"
+           onClick={() => appendCorrectAnswer("")}
+         >
+           <Plus className="h-4 w-4 mr-2" />
+           Add Answer
+         </Button>
+       </div>
+       <div className="space-y-2">
+         {correctAnswers.map((field, index) => (
+           <div key={field.id} className="flex items-center gap-2">
+             <FormField
+               control={form.control}
+               name={`correctAnswers.${index}`}
+               render={({ field }) => (
+                 <FormItem className="flex-1">
+                   <FormControl>
+                     <Input
+                       {...field}
+                       placeholder={`Correct answer ${index + 1}`}
+                       value={field.value || ""}
+                       onChange={(e) => field.onChange(e.target.value)}
+                     />
+                   </FormControl>
+                 </FormItem>
+               )}
+             />
+             <Button
+               type="button"
+               variant="outline"
+               size="icon"
+               disabled={correctAnswers.length <= 1}
+               onClick={() => removeCorrectAnswer(index)}
+             >
+               <X className="h-4 w-4" />
+             </Button>
+           </div>
+         ))}
+       </div>
+       <p className="text-xs text-muted-foreground">
+         Add multiple correct answers if the question accepts variations
+       </p>
+     </div>
+   );
+ }
+
+ const generateUid = (index: number) => {
+  return `uid-${Date.now()}-${index}`;
+ };

@@ -1,5 +1,7 @@
 "use client";
 
+import { Profile, SiteInfo } from "@workspace/common-models";
+
 // add type safety for window
 declare global {
   interface Window {
@@ -20,6 +22,8 @@ export function getGlobalAppClient() {
 
 type AppClientConfig = {
   useNotificationsStream: boolean;
+  siteInfo?: SiteInfo;
+  profile?: Profile;
   meta: Record<string, unknown>;
 };
 

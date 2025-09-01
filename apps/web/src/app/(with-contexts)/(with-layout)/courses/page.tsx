@@ -191,7 +191,7 @@ function CoursesContent() {
                         <CardContent className="p-0">
                           <div className="relative h-48 w-full overflow-hidden">
                             <Image
-                              src={course.featuredImage?.thumbnail || "/placeholder.svg"}
+                              src={course.featuredImage?.thumbnail || "/courselit_backdrop.webp"}
                               alt={course.title}
                               fill
                               className="object-cover group-hover:scale-105 transition-transform duration-300"

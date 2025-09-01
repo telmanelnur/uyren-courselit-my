@@ -9,14 +9,14 @@ import {
 import { MediaSchema } from "./media";
 // import { EmailSchema } from "./email";
 
-export interface InternalCourse extends Omit<Course, "paymentPlans"> {
+export interface InternalCourse extends Omit<Course, "paymentPlans" | "lessons"> {
   domain: mongoose.Types.ObjectId;
   id: mongoose.Types.ObjectId;
   privacy: ProductAccessType;
   published: boolean;
   isFeatured: boolean;
   tags: string[];
-  lessons: any[];
+  lessons: string[];
   sales: number;
   customers: string[];
   paymentPlans: string[];
@@ -73,6 +73,7 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
     published: { type: Boolean, required: true, default: false },
     tags: [{ type: String }],
     lessons: [String],
+    shortDescription: { type: String, required: false },
     description: { type: mongoose.Schema.Types.Mixed, default: {} },
     featuredImage: MediaSchema,
     groups: [GroupSchema],
@@ -93,8 +94,6 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
       required: false,
       default: null,
     },
-
-    shortDescription: { type: String, required: false },
   },
   {
     timestamps: true,

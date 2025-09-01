@@ -188,7 +188,6 @@ export default function AssignmentSettings() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const isSubmitting = form.formState.isSubmitting;
   return (
-    <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="flex justify-end">
@@ -255,12 +254,10 @@ export default function AssignmentSettings() {
                           showCreateButton={true}
                           showEditButton={true}
                           onCreateClick={() => {
-                            // Navigate to course creation page
-                            router.push("/dashboard/products/new");
+                            window.open(`/dashboard/products/new`, '_blank');
                           }}
                           onEditClick={(item) => {
-                            // Navigate to course edit page
-                            router.push(`/dashboard/product/${item.key}`);
+                            window.open(`/dashboard/products/${item.key}`, '_blank');
                           }}
                         />
                       </FormControl>
@@ -417,6 +414,5 @@ export default function AssignmentSettings() {
           </div>
         </form>
       </Form>
-    </div>
   );
 }

@@ -23,7 +23,7 @@ export function TestimonialsSection(props: { testimonials: TestimonialItemType[]
                 quote: t("testimonials_1_quote"),
                 author: "Aigerim K.",
                 role: t("testimonials_1_role"),
-                image: "/placeholder.svg?height=80&width=80&text=AK",
+                image: "/courselit_backdrop.webp?height=80&width=80&text=AK",
                 stars: 5,
                 rotation: "-rotate-12",
             },
@@ -31,7 +31,7 @@ export function TestimonialsSection(props: { testimonials: TestimonialItemType[]
                 quote: t("testimonials_2_quote"),
                 author: "Daniyar T.",
                 role: t("testimonials_2_role"),
-                image: "/placeholder.svg?height=80&width=80&text=DT",
+                image: "/courselit_backdrop.webp?height=80&width=80&text=DT",
                 stars: 5,
                 rotation: "rotate-6",
             },
@@ -39,7 +39,7 @@ export function TestimonialsSection(props: { testimonials: TestimonialItemType[]
                 quote: t("testimonials_3_quote"),
                 author: "Aida S.",
                 role: t("testimonials_3_role"),
-                image: "/placeholder.svg?height=80&width=80&text=AS",
+                image: "/courselit_backdrop.webp?height=80&width=80&text=AS",
                 stars: 5,
                 rotation: "-rotate-3",
             },
@@ -47,7 +47,7 @@ export function TestimonialsSection(props: { testimonials: TestimonialItemType[]
                 quote: t("testimonials_4_quote"),
                 author: "Nurlan B.",
                 role: t("testimonials_4_role"),
-                image: "/placeholder.svg?height=80&width=80&text=NB",
+                image: "/courselit_backdrop.webp?height=80&width=80&text=NB",
                 stars: 5,
                 rotation: "rotate-8",
             },
@@ -55,7 +55,7 @@ export function TestimonialsSection(props: { testimonials: TestimonialItemType[]
                 quote: t("testimonials_5_quote"),
                 author: "Zhanel M.",
                 role: t("testimonials_5_role"),
-                image: "/placeholder.svg?height=80&width=80&text=ZM",
+                image: "/courselit_backdrop.webp?height=80&width=80&text=ZM",
                 stars: 5,
                 rotation: "-rotate-6",
             },
@@ -113,17 +113,18 @@ export function TestimonialsSection(props: { testimonials: TestimonialItemType[]
                                         ))}
                                     </div>
 
-                                    <p className="text-muted-foreground mb-6 text-sm leading-relaxed line-clamp-4">
+                                    {/* <p className="text-muted-foreground mb-6 text-sm leading-relaxed line-clamp-4"> */}
                                         <div dangerouslySetInnerHTML={{ __html: testimonial.content.content }} />
-                                    </p>
+                                    {/* </p> */}
 
                                     <div className="flex items-center mt-auto">
                                         <div className="w-12 h-12 rounded-full overflow-hidden mr-3 flex-shrink-0">
                                             <Image
-                                                src={testimonial.author.avatar.url || "/placeholder.svg"}
+                                                src={testimonial.author.avatar.url || "/courselit_backdrop.webp"}
                                                 alt={testimonial.author.name}
                                                 className="w-full h-full object-cover"
-                                                fill
+                                                width={48}
+                                                height={48}
                                             />
                                         </div>
                                         <div>

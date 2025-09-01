@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { AuthClientService } from "@/lib/auth/client-service";
 
-export type AuthProvider = "google" | "email" | "github" | "facebook";
+export type AuthProvider = "google" | "email" | "signup";
 
 interface AuthMutationResult {
   success: boolean;
@@ -12,6 +12,8 @@ interface AuthMutationResult {
 
 interface AuthData {
   email?: string;
+  password?: string;
+  name?: string;
   // Add other fields for other providers as needed
 }
 
@@ -25,25 +27,37 @@ export const useFirebaseAuth = () => {
     { provider: AuthProvider; data?: AuthData }
   >({
     mutationFn: async ({ provider, data }): Promise<AuthMutationResult> => {
-      switch (provider) {
-        case "google":
-          return await AuthClientService.signInWithGoogle();
-        case "email":
-          // Placeholder for email authentication
-          if (!data?.email) {
-            return { success: false, error: "Email required" };
-          }
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-          return {
-            success: false,
-            error: "Email authentication not yet implemented",
-          };
-        default:
-          return {
-            success: false,
-            error: `Provider '${provider}' not supported`,
-          };
+      try {
+        switch (provider) {
+          case "google":
+            return await AuthClientService.signInWithGoogle();
+          case "email":
+            // Email/password authentication
+            if (!data?.email || !data?.password) {
+              return { success: false, error: "Email and password required" };
+            }
+            return await AuthClientService.signInWithEmail(data.email, data.password);
+          case "signup":
+            // Email/password signup
+            if (!data?.email || !data?.password) {
+              return { success: false, error: "Email and password required" };
+            }
+            if (!data?.name) {
+              return { success: false, error: "Name is required for signup" };
+            }
+            return await AuthClientService.signUpWithEmail(data.email, data.password, data.name);
+          default:
+            return {
+              success: false,
+              error: `Provider '${provider}' not supported`,
+            };
+        }
+      } catch (error) {
+        console.error(`Authentication error for provider ${provider}:`, error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Authentication failed",
+        };
       }
     },
     retry: (failureCount, error) => {
@@ -61,6 +75,7 @@ export const useFirebaseAuth = () => {
     },
     onError: (error, variables) => {
       console.error(`${variables.provider} authentication failed:`, error);
+      // You can add toast notifications here if needed
     },
   });
 };

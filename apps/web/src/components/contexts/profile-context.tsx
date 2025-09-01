@@ -15,6 +15,7 @@ import {
 } from "react";
 import { useToast } from "@workspace/components-library";
 import { defaultState } from "./default-state";
+import { getGlobalAppClient } from "@/lib/global-client";
 
 type ProfileContextType = {
   profile: Profile;
@@ -56,6 +57,7 @@ export const ProfileProvider = ({
         userId: userProfile.userId,
         avatar: userProfile.avatar || {},
         subscribedToUpdates: userProfile.subscribedToUpdates,
+        roles: userProfile.roles,
       });
     }
   }, [userProfile]);
@@ -74,7 +76,7 @@ export const ProfileProvider = ({
         });
 
         // Sign out and redirect to login
-        signOut({ callbackUrl: "/auth/login" });
+        signOut();  
         return;
       }
 
@@ -86,6 +88,11 @@ export const ProfileProvider = ({
       });
     }
   }, [error, toast]);
+
+  useEffect(() => {
+    const appClient = getGlobalAppClient();
+    appClient.setConfig({ profile });
+  }, [profile]);
 
   return (
     <ProfileContext.Provider value={{ profile, setProfile }}>

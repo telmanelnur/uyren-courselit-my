@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { CreateButton } from "@/components/admin/layout/create-button";
 import HeaderTopbar from "@/components/admin/layout/header-topbar";
@@ -29,6 +30,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+export async function generateMetadata(
+  _: any,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  return {
+    title: `Assignments | LMS | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 const breadcrumbs = [
   { label: "LMS", href: "#" },

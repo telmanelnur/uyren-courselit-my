@@ -19,6 +19,6 @@ export interface TextEditorContent {
   widgets: TextEditorContentWidget[];
   content: string;
   config: {
-    editorType: "tiptap";
+    editorType: "tiptap" | "text";
   };
 }

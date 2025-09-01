@@ -17,7 +17,7 @@ import {
 } from "@workspace/ui/components/popover";
 import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import { cn } from "@workspace/ui/lib/utils";
-import { Check, ChevronsUpDown, Edit, LoaderIcon, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Edit, LoaderIcon, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 interface Props<T extends object> {
@@ -128,33 +128,87 @@ const ComboBox2 = <T extends object>({
     [onEditClick],
   );
 
+  const handleClear = useCallback(() => {
+    if (multiple) {
+      onChange?.([] as any);
+    } else {
+      onChange?.(undefined as any);
+    }
+  }, [multiple, onChange]);
+
   useEffect(() => {
     getOptions();
   }, [getOptions]);
 
+  const renderSelectedText = useCallback((value: T) => {
+    return renderText(value);
+  }, [renderText]);
+
   return (
     <Popover modal={true}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-between",
-            (!value || (Array.isArray(value) && value.length === 0)) &&
-            "text-muted-foreground",
-          )}
-          disabled={disabled}
-        >
-          <div className="truncate">
-            {multiple
-              ? Array.isArray(value) && value.length > 0
-                ? value.map(renderText).join(", ")
-                : `${title}`
-              : value
-                ? renderText(value as T)
-                : `${title}`}
+        <div className="relative">
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-between pr-20", // Increased padding for both clear and edit buttons
+              (!value || (Array.isArray(value) && value.length === 0)) &&
+              "text-muted-foreground",
+            )}
+            type="button"
+            disabled={disabled}
+          >
+            <div className="truncate flex-1 text-left">
+              {multiple
+                ? Array.isArray(value) && value.length > 0
+                  ? value.map(renderSelectedText).join(", ")
+                  : `${title}`
+                : value
+                  ? renderSelectedText(value as T)
+                  : `${title}`}
+            </div>
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+          
+          {/* Action buttons positioned absolutely */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {/* Edit button - only show when there's a value and onEditClick is provided */}
+            {value && onEditClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-gray-200"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!multiple && !Array.isArray(value)) {
+                    onEditClick(value);
+                  }
+                }}
+                title="Edit selected item"
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+            )}
+            
+            {/* Clear button */}
+            {value && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-gray-200"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClear();
+                }}
+                title="Clear selection"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+        </div>
       </PopoverTrigger>
       <PopoverContent className="PopoverContent p-0" align="start">
         <Command shouldFilter={false}>
@@ -214,7 +268,7 @@ const ComboBox2 = <T extends object>({
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
+                           type="button"onClick={(e) => {
                             e.stopPropagation();
                             handleEditClick(option);
                           }}
@@ -232,6 +286,7 @@ const ComboBox2 = <T extends object>({
                   <Button
                     variant="ghost"
                     size="sm"
+                    type="button"
                     className="w-full h-7"
                     onClick={getMoreOptions}
                     disabled={isLoading}

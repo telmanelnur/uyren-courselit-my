@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { HEADER_HELP } from "@/lib/ui/config/strings";
 import { Button } from "@workspace/ui/components/button";
@@ -12,6 +13,15 @@ import {
 } from "@workspace/ui/components/card";
 
 const breadcrumbs = [{ label: HEADER_HELP, href: "#" }];
+
+export async function generateMetadata(
+  _: any,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  return {
+    title: `Support | ${(await parent)?.title?.absolute}`,
+  };
+}
 
 export default function Page() {
   return (

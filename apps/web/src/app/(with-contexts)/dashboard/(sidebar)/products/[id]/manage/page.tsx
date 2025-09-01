@@ -1,9 +1,9 @@
 "use client";
 
 import DashboardContent from "@/components/admin/dashboard-content";
-import { useParams } from "next/navigation";
 import { trpc } from "@/utils/trpc";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { useParams } from "next/navigation";
 import ProductManageClient from "./_components/product-manage-client";
 
 export default function ProductManagePage() {

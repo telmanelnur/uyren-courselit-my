@@ -1,3 +1,4 @@
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import {
   PAGE_HEADER_ALL_USER,

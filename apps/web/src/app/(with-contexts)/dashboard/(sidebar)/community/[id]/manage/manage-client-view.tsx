@@ -161,7 +161,6 @@ export const ManageClientView = ({ id }: { id: string }) => {
         setCommunity(data);
       },
       onError: (error) => {
-        console.log(error.message);
         toast({
           title: TOAST_TITLE_ERROR,
           description: error.message,

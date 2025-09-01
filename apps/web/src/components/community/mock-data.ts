@@ -30,7 +30,7 @@ export const mockPosts: Post[] = [
   {
     id: 1,
     author: "John Doe",
-    avatar: "/placeholder.svg",
+    avatar: "/courselit_backdrop.webp",
     time: "2 hours ago",
     category: "Tips",
     content:
@@ -40,7 +40,7 @@ export const mockPosts: Post[] = [
       {
         id: 1,
         author: "Alice Johnson",
-        avatar: "/placeholder.svg",
+        avatar: "/courselit_backdrop.webp",
         content:
           "That's a great tip! I've been using this technique for a while now, and it really helps me stay focused.",
         likes: 5,
@@ -50,7 +50,7 @@ export const mockPosts: Post[] = [
           {
             id: 2,
             author: "John Doe",
-            avatar: "/placeholder.svg",
+            avatar: "/courselit_backdrop.webp",
             content: "Glad you find it helpful too, Alice!",
             likes: 2,
             hasLiked: false,
@@ -64,13 +64,13 @@ export const mockPosts: Post[] = [
     hasLiked: false,
     media: {
       type: "image",
-      url: "/placeholder.svg?height=200&width=300",
+      url: "/courselit_backdrop.webp?height=200&width=300",
     },
   },
   {
     id: 2,
     author: "Jane Smith",
-    avatar: "/placeholder.svg",
+    avatar: "/courselit_backdrop.webp",
     time: "5 hours ago",
     category: "Questions",
     content:
@@ -81,13 +81,13 @@ export const mockPosts: Post[] = [
     hasLiked: false,
     media: {
       type: "gif",
-      url: "/placeholder.svg?height=200&width=300",
+      url: "/courselit_backdrop.webp?height=200&width=300",
     },
   },
   {
     id: 3,
     author: "Alex Johnson",
-    avatar: "/placeholder.svg",
+    avatar: "/courselit_backdrop.webp",
     time: "1 day ago",
     category: "Announcements",
     content:

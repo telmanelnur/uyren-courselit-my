@@ -30,10 +30,6 @@ export default function CoursePage({ course }: CoursePageProps) {
               </h1>
 
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                {/* <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{course.rating}</span>
-                        </div> */}
                 <div className="flex items-center gap-1">
                   <Users className="h-4 w-4" />
                   <span>{course.customers.length} students</span>
@@ -50,37 +46,12 @@ export default function CoursePage({ course }: CoursePageProps) {
                 <DescriptionEditorRender course={course} />
               </CardContent>
             </Card>
-            {/* <Card>
-                            <CardHeader>
-                                <CardTitle>Instructor</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-start gap-4">
-                                    <Avatar className="h-16 w-16">
-                                        <AvatarImage src={course.crea.avatar || "/placeholder.svg"} />
-                                        <AvatarFallback>
-                                            {courseData.instructor.name
-                                                .split(" ")
-                                                .map((n) => n[0])
-                                                .join("")}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <h4 className="font-semibold text-lg">{courseData.instructor.name}</h4>
-                                        <p className="text-muted-foreground">{courseData.instructor.bio}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card> */}
           </div>
           <div className="space-y-6">
             <CourseLessonsSidebar course={course} />
           </div>
         </div>
       </div>
-      <style
-        dangerouslySetInnerHTML={{ __html: course.theme?.stylesCss || "" }}
-      />
     </main>
   );
 }
@@ -111,15 +82,6 @@ const CourseBreadcrumbs = ({
 const DescriptionEditorRender = ({ course }: { course: CourseDetailType }) => {
   if (!course.description) return null;
   return (
-    // <DescriptionEditor
-    //     editable={false}
-    //     onEditor={(editor, meta) => {
-    //         if (meta.reason === "create") {
-    //             console.log(course.description);
-    //             editor!.commands.setContent(course.description!["content"]);
-    //         }
-    //     }}
-    // />
     <div
       className="m-course-description-wrapper"
       dangerouslySetInnerHTML={{ __html: course.description!["content"] }}

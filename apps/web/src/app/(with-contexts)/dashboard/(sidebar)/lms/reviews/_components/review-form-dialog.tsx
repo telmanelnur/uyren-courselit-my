@@ -1,25 +1,22 @@
 "use client";
 
+import { useProfile } from "@/components/contexts/profile-context";
+import { CommentEditorField } from "@/components/editors/tiptap/templates/comment/comment-editor";
+import { trpc } from "@/utils/trpc";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { UIConstants } from "@workspace/common-models";
+import { ComboBox2, NiceModal, NiceModalHocProps, useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
-import { CommentEditorField } from "@/components/editors/tiptap/templates/comment/comment-editor";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import { useToast } from "@workspace/components-library";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
+import { checkPermission } from "@workspace/utils";
+import { Loader2, Star } from "lucide-react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { trpc } from "@/utils/trpc";
-import { Star, Loader2, User } from "lucide-react";
-import { TextEditorContent } from "@workspace/common-models";
-import { NiceModal, NiceModalHocProps } from "@workspace/components-library";
-import { useEffect } from "react";
-import { useProfile } from "@/components/contexts/profile-context";
-import { UIConstants } from "@workspace/common-models";
-import { checkPermission } from "@workspace/utils";
-import {ComboBox2} from "@workspace/components-library";
 
 const { permissions } = UIConstants;
 

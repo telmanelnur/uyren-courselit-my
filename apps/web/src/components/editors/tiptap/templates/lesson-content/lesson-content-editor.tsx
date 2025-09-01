@@ -1,110 +1,142 @@
-// import { ContentEditorProps, ContentEditorRef, NotionContentEditor, VideoIcon } from "@workspace/text-editor/tiptap";
+"use client";
+
+import { Editor } from "@tiptap/react";
 import {
   ContentEditor,
   ContentEditorProps,
-  ContentEditorRef,
+  EditorToolbarItems,
+  ToolbarProvider,
+  useToolbar
 } from "@workspace/text-editor/tiptap-sh";
-import { forwardRef } from "react";
-// import "@workspace/text-editor/tiptap/styles/_keyframe-animations.scss";
-// import "@workspace/text-editor/tiptap/styles/_variables.scss";
+import { Button } from "@workspace/ui/components/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
+import { ScrollArea, ScrollBar } from "@workspace/ui/components/scroll-area";
+import { Separator } from "@workspace/ui/components/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import { cn } from "@workspace/ui/lib/utils";
+import { FileTextIcon, HelpCircleIcon, Plus } from "lucide-react";
 import { AssignmentLinkNodeExtension } from "../../extensions/assignment-link/assignment-link-node-extension";
-// import { ImageIcon, VideoIcon } from "@workspace/text-editor/tiptap";
-import {
-  MediaBrowserNiceDialog,
-  NiceModal,
-} from "@workspace/components-library";
-import { ImageIcon, VideoIcon } from "lucide-react";
-// import { MyEditorContentNodeExtension } from "../../extensions/my-editor-content/my-editor-content-node-extension";
 
 import "./lesson-content-editor.scss";
 
-export const LessonContentEditor = forwardRef<
-  ContentEditorRef,
-  ContentEditorProps
->((props, ref) => {
+export const LessonContentEditor = (props: ContentEditorProps) => {
   return (
     <ContentEditor
-      onEditor={(editor, meta) => {
-        if (ref && typeof ref === "function") {
-          ref(editor);
-        } else if (ref && typeof ref === "object") {
-          (ref as any).current = editor;
-        }
-        if (props.onEditor) {
-          props.onEditor(editor, meta);
-        }
-      }}
-      className="lesson-content-editor-wrapper"
+      className={cn("lesson-content-editor-wrapper", props.className, props.editable ? "" : "readonly")}
       extraExtensions={[AssignmentLinkNodeExtension]}
-      extraSlashMenuConfig={{
-        customItems: [
-          {
-            title: "Upload Media",
-            subtext: "Insert image from media library",
-            badge: ImageIcon,
-            onSelect: ({ editor }: any) => {
-              NiceModal.show(MediaBrowserNiceDialog, {
-                selectMode: true,
-                selectedMedia: null,
-                initialFileType: "image",
-              }).then((result) => {
-                if (result.reason === "submit") {
-                  editor
-                    .chain()
-                    .focus()
-                    .setImage({
-                      src: result.data.url,
-                      alt: result.data.caption || result.data.originalFileName,
-                      title:
-                        result.data.caption || result.data.originalFileName,
-                    })
-                    .run();
-                }
-              });
-            },
-          },
-          {
-            title: "Upload Video",
-            subtext: "Insert video from media library",
-            badge: VideoIcon,
-            onSelect: ({ editor }: any) => {
-              NiceModal.show(MediaBrowserNiceDialog, {
-                selectedMedia: null,
-                initialFileType: "video",
-                selectMode: true,
-              }).then((result) => {
-                if (result.reason === "submit") {
-                  editor
-                    .chain()
-                    .focus()
-                    .setVideo({
-                      src: result.data.url,
-                      alt: result.data.caption || result.data.originalFileName,
-                      title:
-                        result.data.caption || result.data.originalFileName,
-                    })
-                    .run();
-                }
-              });
-            },
-          },
-          {
-            title: "Assignment",
-            subtext: "Insert assignment from media library",
-            // badge: AssignmentLinkNodeExtension,
-            onSelect: ({ editor }: any) => {
-              editor
-                .chain()
-                .focus()
-                .insertAssignmentLink({ label: "Assignment", entityId: "123" })
-                .run();
-            },
-          },
-        ],
-      }}
       {...props}
-    />
+      toolbar={props.toolbar !== undefined ? props.toolbar : EditorToolbar}
+      />
   );
-});
+};
 
-LessonContentEditor.displayName = "LessonContentEditor";
+const EditorToolbar = ({ editor }: { editor: Editor }) => {
+  return (
+    <div className="sticky top-0 z-20 w-full border-b bg-background hidden sm:block">
+      <ToolbarProvider editor={editor as any}>
+        <TooltipProvider>
+          <ScrollArea className="h-fit py-0.5">
+            <div>
+              <div className="flex items-center gap-1 px-2">
+                {/* History Group */}
+                <EditorToolbarItems.UndoToolbar />
+                <EditorToolbarItems.RedoToolbar />
+                <Separator orientation="vertical" className="mx-1 h-7" />
+
+                {/* Text Structure Group */}
+                <EditorToolbarItems.HeadingsToolbar />
+                <EditorToolbarItems.BlockquoteToolbar />
+                <EditorToolbarItems.CodeToolbar />
+                <EditorToolbarItems.CodeBlockToolbar />
+                <Separator orientation="vertical" className="mx-1 h-7" />
+
+                {/* Basic Formatting Group */}
+                <EditorToolbarItems.BoldToolbar />
+                <EditorToolbarItems.ItalicToolbar />
+                <EditorToolbarItems.UnderlineToolbar />
+                <EditorToolbarItems.StrikeThroughToolbar />
+                <EditorToolbarItems.LinkToolbar />
+                <Separator orientation="vertical" className="mx-1 h-7" />
+
+                {/* Lists & Structure Group */}
+                <EditorToolbarItems.BulletListToolbar />
+                <EditorToolbarItems.OrderedListToolbar />
+                <EditorToolbarItems.HorizontalRuleToolbar />
+                <Separator orientation="vertical" className="mx-1 h-7" />
+
+                {/* Alignment Group */}
+                <EditorToolbarItems.AlignmentTooolbar />
+                <Separator orientation="vertical" className="mx-1 h-7" />
+
+                {/* Media & Styling Group */}
+                <EditorToolbarItems.MediaDropdownToolbar />
+                <EditorToolbarItems.ColorHighlightToolbar />
+                <Separator orientation="vertical" className="mx-1 h-7" />
+                <InsertAssignmentToolbar />
+
+                <div className="flex-1" />
+
+                {/* Utility Group */}
+                <EditorToolbarItems.SearchAndReplaceToolbar />
+              </div>
+            </div>
+            <ScrollBar className="hidden" orientation="horizontal" />
+          </ScrollArea>
+        </TooltipProvider>
+      </ToolbarProvider>
+    </div>
+  );
+};
+
+
+const InsertAssignmentToolbar = () => {
+  const { editor } = useToolbar();
+
+  const handleInsertAssingment = (type: "assignment" | "quiz") => {
+    if (type === "assignment") {
+      editor.commands.insertAssignmentLink({ 
+        label: "Assignment",
+        obj: null,
+        link: "#"
+      });
+    } else {
+      editor.commands.insertAssignmentLink({ 
+        label: "Quiz", 
+        obj: null,
+        link: "#"
+      });
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span>Insert Assignment</span>
+        </TooltipContent>
+      </Tooltip>
+
+      <DropdownMenuContent align="start" className="w-48">
+        <DropdownMenuItem onClick={() => handleInsertAssingment("assignment")}>
+          <FileTextIcon className="h-4 w-4 mr-2" />
+          Assignment
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleInsertAssingment("quiz")}>
+          <HelpCircleIcon className="h-4 w-4 mr-2" />
+          Quiz
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};

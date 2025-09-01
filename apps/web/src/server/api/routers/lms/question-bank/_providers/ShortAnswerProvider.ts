@@ -94,27 +94,23 @@ export class ShortAnswerProvider extends BaseQuestionProvider<ShortAnswerQuestio
       return false;
 
     const caseSensitive = question.settings?.caseSensitive ?? false;
-    const partialMatch = question.settings?.partialMatch ?? true;
 
-    return answer.some((ans) => {
+    const value = answer.some((ans) => {
       const answerStr = ans.trim();
 
       return question.correctAnswers!.some((correct: string) => {
         const correctStr = correct.trim();
 
         if (caseSensitive) {
-          return partialMatch
-            ? answerStr.includes(correctStr)
-            : answerStr === correctStr;
+          return answerStr === correctStr;
         } else {
           const answerLower = answerStr.toLowerCase();
           const correctLower = correctStr.toLowerCase();
-          return partialMatch
-            ? answerLower.includes(correctLower)
-            : answerLower === correctLower;
+          return answerLower === correctLower;
         }
       });
     });
+    return value;
   }
 
   getDefaultSettings(): Record<string, unknown> {

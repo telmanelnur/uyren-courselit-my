@@ -1,7 +1,7 @@
 "use client";
+
 import DashboardContent from "@/components/admin/dashboard-content";
 import { useSiteInfo } from "@/components/contexts/site-info-context";
-import { PaginationControls } from "@/components/public/pagination";
 import Resources from "@/components/resources";
 import { SkeletonCard } from "@/components/skeleton-card";
 import { useDialogControl } from "@/hooks/use-dialog-control";
@@ -68,8 +68,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
-
-import { EmptyState } from "@/app/(with-contexts)/(with-layout)/courses/_components/empty-state";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -397,16 +395,15 @@ export default function Page() {
               ))}
             </div>
           )}
-          {totalPages === 0 && <EmptyState />}
         </>
       )}
-      {totalPages > 0 && (
+      {/* {totalPages > 0 && (
         <PaginationControls
           currentPage={page}
           totalPages={Math.ceil(totalPages / ITEMS_PER_PAGE)}
           onPageChange={handlePageChange}
         />
-      )}
+      )} */}
 
       <Resources
         links={[

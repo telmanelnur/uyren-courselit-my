@@ -285,7 +285,7 @@ export function CommunityForum({
               {
                 id: Date.now(),
                 author: "Current User",
-                avatar: "/placeholder.svg",
+                avatar: "/courselit_backdrop.webp",
                 content,
                 likes: 0,
                 hasLiked: false,
@@ -322,7 +322,7 @@ export function CommunityForum({
   //                   {
   //                     id: Date.now(),
   //                     author: "Current User",
-  //                     avatar: "/placeholder.svg",
+  //                     avatar: "/courselit_backdrop.webp",
   //                     content: content.trim(),
   //                     likes: 0,
   //                     hasLiked: false,

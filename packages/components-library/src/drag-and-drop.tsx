@@ -21,7 +21,7 @@ import { FC, useEffect, useState } from "react";
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import clsx from "clsx";
+import { cn } from "@workspace/ui/lib/utils";
 
 export function SortableItem({
   id,
@@ -51,10 +51,10 @@ export function SortableItem({
       {...attributes}
       ref={setNodeRef}
       style={style}
-      className={clsx("flex flex-col text-black", isDragging && "opacity-50")}
+      className={cn("flex flex-col text-black", isDragging && "opacity-50")}
     >
       <div className="flex items-center gap-5">
-        <button className="border" {...listeners}>
+        <button className="border cursor-grab" {...listeners} >
           <DragHandle />
         </button>
         <Renderer {...rendererProps} />
@@ -75,7 +75,11 @@ const DragAndDrop = ({
   const [data, setData] = useState(items);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),

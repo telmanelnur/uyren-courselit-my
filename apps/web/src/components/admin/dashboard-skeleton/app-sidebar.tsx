@@ -9,10 +9,7 @@ import {
   MessageCircleHeart,
   Settings,
   Target,
-  Text,
-  Users,
-  ClipboardList,
-  FileText,
+  Users
 } from "lucide-react";
 
 import { NavMain } from "@/components/admin/dashboard-skeleton/nav-main";
@@ -22,11 +19,10 @@ import { useProfile } from "@/components/contexts/profile-context";
 import { useSiteInfo } from "@/components/contexts/site-info-context";
 import {
   MY_CONTENT_HEADER,
-  SIDEBAR_MENU_BLOGS,
   SIDEBAR_MENU_MAILS,
   SIDEBAR_MENU_PAGES,
   SIDEBAR_MENU_SETTINGS,
-  SIDEBAR_MENU_USERS,
+  SIDEBAR_MENU_USERS
 } from "@/lib/ui/config/strings";
 import { UIConstants } from "@workspace/common-models";
 import { Image } from "@workspace/components-library";
@@ -257,6 +253,15 @@ function getSidebarItems(
           isActive: path === "/dashboard/settings/website-settings",
         },
       ];
+
+      // Add Schools section for admin users
+      if (profile.roles && profile.roles.includes("admin")) {
+        items.push({
+          title: "Schools",
+          url: "/dashboard/settings/schools",
+          isActive: path === "/dashboard/settings/schools",
+        });
+      }
       navMainItems.push({
         title: SIDEBAR_MENU_SETTINGS,
         url: "#",

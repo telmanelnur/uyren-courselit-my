@@ -220,7 +220,7 @@ export const themeRouter = router({
         includeCount ? ThemeModel.countDocuments(query) : Promise.resolve(0),
       ]);
       return {
-        items: items.map((item: any) => ({
+        items: items.map((item) => ({
           ...item,
         })),
         total,

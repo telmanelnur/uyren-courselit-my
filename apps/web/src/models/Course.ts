@@ -12,6 +12,13 @@ CourseSchema.virtual("attachedPaymentPlans", {
   foreignField: "planId",
 });
 
+CourseSchema.virtual("attachedTheme", {
+  ref: "Theme",
+  localField: "themeId",
+  foreignField: "_id",
+  justOne: true,
+});
+
 const CourseModel = createModel("Course", CourseSchema);
 
 export default CourseModel;

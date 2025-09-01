@@ -3,7 +3,9 @@ import { responses } from "@/config/strings";
 import CourseModel from "@/models/Course";
 import LessonModel, { Lesson } from "@/models/Lesson";
 import { AssignmentModel, QuizModel } from "@/models/lms";
+import MembershipModel from "@/models/Membership";
 import {
+  AuthenticationException,
   AuthorizationException,
   ConflictException,
   NotFoundException,
@@ -23,9 +25,9 @@ import {
   mediaWrappedFieldValidator,
   textEditorContentValidator,
 } from "@/server/api/core/validators";
-import { deleteMedia } from "@/server/services/media";
-import { Constants, UIConstants } from "@workspace/common-models";
+import { BASIC_PUBLICATION_STATUS_TYPE, Constants, UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
+import { RootFilterQuery } from "mongoose";
 import { z } from "zod";
 import { getPrevNextCursor } from "./helpers";
 
@@ -173,9 +175,10 @@ export const lessonRouter = router({
         groupId: input.data.groupId,
         requiresEnrollment: input.data.requiresEnrollment,
       });
-
-      course.lessons.push(lesson.lessonId);
-      group.lessonsOrder.push(lesson.lessonId);
+      const newLessonIds = Array.from(new Set([...course.lessons, lesson.lessonId]));
+      course.lessons = newLessonIds;
+      const newLessonsOrder = Array.from(new Set([...group.lessonsOrder, lesson.lessonId]));
+      group.lessonsOrder = newLessonsOrder;
       await course.save();
 
       return lesson;
@@ -212,11 +215,11 @@ export const lessonRouter = router({
     .use(createDomainRequiredMiddleware())
     .input(
       z.object({
-        id: z.string().min(1),
+        lessonId: z.string().min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const lesson = await getLessonOrThrow(input.id, ctx as any);
+      const lesson = await getLessonOrThrow(input.lessonId, ctx as any);
       let course = await CourseModel.findOne({
         domain: ctx.domainData.domainObj._id,
       }).elemMatch("lessons", { $eq: lesson.lessonId });
@@ -224,12 +227,17 @@ export const lessonRouter = router({
         throw new NotFoundException("Course", lesson.courseId);
       }
 
-      course.lessons.splice(course.lessons.indexOf(lesson.lessonId), 1);
+      const newLessonIds = course.lessons.filter((item) => item !== lesson.lessonId);
+      course.groups = course.groups.map((group) => ({
+        ...group,
+        lessonsOrder: group.lessonsOrder.filter((item) => item !== lesson.lessonId),
+      }));
+      course.lessons = Array.from(new Set(newLessonIds));
       await course.save();
 
-      if (lesson.media?.mediaId) {
-        await deleteMedia(lesson.media.mediaId);
-      }
+      // if (lesson.media?.mediaId) {
+      //   await deleteMedia(lesson.media.mediaId);
+      // }
 
       await LessonModel.deleteOne({
         _id: lesson._id,
@@ -248,14 +256,20 @@ export const lessonRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { search } = input;
-      const assignments = await AssignmentModel.find({
+      const assignmentQuery: RootFilterQuery<typeof AssignmentModel> = {
         domain: ctx.domainData.domainObj._id,
-        title: search ? { $regex: search, $options: "i" } : undefined,
-      });
-      const quizzes = await QuizModel.find({
+        status: BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
+      };
+      const quizQuery: RootFilterQuery<typeof QuizModel> = {
         domain: ctx.domainData.domainObj._id,
-        title: search ? { $regex: search, $options: "i" } : undefined,
-      });
+        status: BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED,
+      };
+      if (search) {
+        assignmentQuery.title = { $regex: search, $options: "i" };
+        quizQuery.title = { $regex: search, $options: "i" };
+      }
+      const assignments = await AssignmentModel.find(assignmentQuery);
+      const quizzes = await QuizModel.find(quizQuery);
       return {
         assignments,
         quizzes,
@@ -285,6 +299,21 @@ export const lessonRouter = router({
       });
       if (!lesson) {
         throw new NotFoundException("Lesson", input.lessonId);
+      }
+      if(lesson.requiresEnrollment) {
+        if(!ctx.session?.user) {
+          throw new AuthenticationException("You are not authenticated");
+        }
+        const membership = await MembershipModel.findOne({
+          userId: ctx.session.user.userId,
+          entityId: lesson.courseId,
+          entityType: "course",
+          domain: ctx.domainData.domainObj._id,
+          status: Constants.MembershipStatus.ACTIVE,
+        });
+        if(!membership && !checkPermission(ctx.session.user.permissions, [permissions.manageCourse])) {
+          throw new AuthorizationException("You are not allowed to access this lesson");
+        }
       }
       const { nextLesson, prevLesson } = await getPrevNextCursor(
         lesson.courseId,

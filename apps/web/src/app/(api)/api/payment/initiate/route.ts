@@ -7,6 +7,7 @@ import CommunityModel from "@/models/Community";
 import CourseModel from "@/models/Course";
 import DomainModel from "@/models/Domain";
 import InvoiceModel from "@/models/Invoice";
+import MembershipModel from "@/models/Membership";
 import PaymentPlanModel from "@/models/PaymentPlan";
 import User from "@/models/User";
 import { getMembership } from "@/server/api/routers/user/user";
@@ -105,8 +106,19 @@ export async function POST(req: NextRequest) {
       planId,
     });
 
+    // Check for existing membership status and prevent multiple payments
     if (membership.status === Constants.MembershipStatus.REJECTED) {
-      return Response.json({ status: transactionFailed });
+      return Response.json({ 
+        status: transactionFailed,
+        error: "Your previous enrollment request was rejected. Please contact support for assistance."
+      });
+    }
+
+    if (membership.status === Constants.MembershipStatus.PENDING) {
+      return Response.json({
+        status: transactionFailed,
+        error: "You already have a pending payment for this course. Please complete your existing payment or contact support if you need assistance.",
+      });
     }
 
     if (membership.status === Constants.MembershipStatus.ACTIVE) {
@@ -135,6 +147,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (paymentPlan.type === Constants.PaymentPlanType.FREE) {
+      // Check if user is already enrolled for free courses
+      if (membership.status === Constants.MembershipStatus.ACTIVE) {
+        return Response.json({
+          status: transactionFailed,
+          error: "You are already enrolled in this course.",
+        });
+      }
+
       if (
         type === Constants.MembershipEntityType.COMMUNITY &&
         !(entity as Community).autoAcceptMembers
@@ -157,6 +177,29 @@ export async function POST(req: NextRequest) {
       return Response.json({
         status: transactionSuccess,
       });
+    }
+
+    // Check if there's already a pending or active membership for this user and course
+    const existingMembership = await MembershipModel.findOne({
+      domain: domain._id,
+      userId: user.userId,
+      entityType: type,
+      entityId: id,
+      status: { $in: [Constants.MembershipStatus.PENDING, Constants.MembershipStatus.ACTIVE] },
+    });
+
+    if (existingMembership && existingMembership.membershipId !== membership.membershipId) {
+      if (existingMembership.status === Constants.MembershipStatus.PENDING) {
+        return Response.json({
+          status: transactionFailed,
+          error: "You already have a pending payment for this course. Please complete your existing payment or contact support if you need assistance.",
+        });
+      } else if (existingMembership.status === Constants.MembershipStatus.ACTIVE) {
+        return Response.json({
+          status: transactionFailed,
+          error: "You are already enrolled in this course.",
+        });
+      }
     }
 
     membership.paymentPlanId = planId;

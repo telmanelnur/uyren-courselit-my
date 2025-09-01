@@ -3,7 +3,6 @@
 import DashboardContent from "@/components/admin/dashboard-content";
 import LoadingScreen from "@/components/admin/loading-screen";
 import { useProfile } from "@/components/contexts/profile-context";
-import { PaginationControls } from "@/components/public/pagination";
 import {
   TOAST_TITLE_ERROR,
   USER_TABLE_HEADER_COMMUNITIES,
@@ -18,7 +17,7 @@ import { formattedLocaleDate } from "@/lib/ui/lib/utils";
 import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { Constants, UIConstants } from "@workspace/common-models";
-import { Link, TableBody, useToast } from "@workspace/components-library";
+import { TableBody, useToast } from "@workspace/components-library";
 import {
   Avatar,
   AvatarFallback,
@@ -35,6 +34,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { checkPermission } from "@workspace/utils";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 const { permissions } = UIConstants;
@@ -256,11 +256,6 @@ export default function UsersHub() {
               ))}
           </TableBody>
         </Table>
-        <PaginationControls
-          currentPage={page}
-          totalPages={Math.ceil(count / rowsPerPage)}
-          onPageChange={setPage}
-        />
       </div>
     </DashboardContent>
   );

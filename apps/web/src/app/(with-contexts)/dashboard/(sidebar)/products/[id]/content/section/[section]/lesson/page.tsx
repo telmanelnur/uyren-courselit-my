@@ -1,60 +1,27 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@workspace/ui/components/radio-group";
-import { Switch } from "@workspace/ui/components/switch";
-import {
-  File,
-  FileImage,
-  FileText,
-  Headphones,
-  HelpCircle,
-  Trash2,
-  Tv,
-  Video,
-} from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
 import DashboardContent from "@/components/admin/dashboard-content";
+import HeaderTopbar from "@/components/admin/layout/header-topbar";
 import { useAddress } from "@/components/contexts/address-context";
 import { useProfile } from "@/components/contexts/profile-context";
 import {
-  MIMETYPE_AUDIO,
-  MIMETYPE_PDF,
-  MIMETYPE_VIDEO,
-} from "@/lib/ui/config/constants";
-import {
-  APP_MESSAGE_LESSON_DELETED,
   BUTTON_NEW_LESSON_TEXT,
   COURSE_CONTENT_HEADER,
   EDIT_LESSON_TEXT,
   MANAGE_COURSES_PAGE_HEADING,
   TOAST_TITLE_ERROR,
-  TOAST_TITLE_SUCCESS,
+  TOAST_TITLE_SUCCESS
 } from "@/lib/ui/config/strings";
-import { truncate } from "@workspace/utils";
 import { trpc } from "@/utils/trpc";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Constants,
-  Lesson,
-  LessonType,
-  Media,
-  Quiz,
   TextEditorContent,
-  UIConstants,
+  UIConstants
 } from "@workspace/common-models";
 import { useToast } from "@workspace/components-library";
-import { ContentEditorRef } from "@workspace/text-editor/tiptap";
+import { ContentEditorRef } from "@workspace/text-editor/tiptap-sh";
+import { Button } from "@workspace/ui/components/button";
 import {
   Form,
   FormControl,
@@ -63,8 +30,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@workspace/ui/components/radio-group";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Switch } from "@workspace/ui/components/switch";
+import { truncate } from "@workspace/utils";
+import {
+  File,
+  FileText,
+  HelpCircle,
+  Video
+} from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 const LessonContentEditor = dynamic(() =>
   import(
@@ -149,7 +135,6 @@ export default function LessonPage() {
     ],
     [product, productId, isEditing],
   );
-
   const editorRef = useRef<ContentEditorRef>(null);
   const [editorContent, setEditorContent] = useState<TextEditorContent>({
     type: "doc",
@@ -158,7 +143,6 @@ export default function LessonPage() {
     widgets: [],
     config: { editorType: "tiptap" },
   });
-  const [lessonData, setLessonData] = useState<Lesson | null>(null);
   const currentFormValues = form.watch();
 
   useEffect(() => {
@@ -180,7 +164,6 @@ export default function LessonPage() {
         requiresEnrollment: lesson.requiresEnrollment,
         downloadable: lesson.downloadable,
       });
-      setLessonData(lesson);
     }
   }, [lesson, form, isEditing]);
 
@@ -191,9 +174,6 @@ export default function LessonPage() {
       await createLessonOnServer(data);
     }
   };
-
-  const trpcUtils = trpc.useUtils();
-
   const updateLessonMutation =
     trpc.lmsModule.courseModule.lesson.update.useMutation({
       onSuccess: () => {
@@ -274,7 +254,7 @@ export default function LessonPage() {
             <Skeleton className="h-20" />
           </div>
         </div>
-      </DashboardContent>
+      </DashboardContent> 
     );
   }
 
@@ -301,21 +281,18 @@ export default function LessonPage() {
 
   return (
     <DashboardContent breadcrumbs={breadcrumbs}>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-4xl font-semibold">
-            {isEditing ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {isEditing
-              ? "Edit lesson details"
-              : "Create a new lesson for this section"}
-          </p>
-        </div>
+      <div className="flex flex-col gap-6">
+        <HeaderTopbar
+          backLink={true}
+          header={{
+            title: isEditing ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT,
+            subtitle: isEditing
+            ? "Edit lesson details"
+            : "Create a new lesson for this section",
+          }} />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="title"
@@ -329,9 +306,7 @@ export default function LessonPage() {
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="type"
@@ -355,9 +330,9 @@ export default function LessonPage() {
                               />
                               <Label
                                 htmlFor={type.value}
-                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                               >
-                                <Icon className="mb-3 h-6 w-6" />
+                                <Icon className="mb-2 h-5 w-5" />
                                 {type.label}
                               </Label>
                             </div>
@@ -369,50 +344,31 @@ export default function LessonPage() {
                   </FormItem>
                 )}
               />
-            </div>
 
-            {currentFormValues.type === Constants.LessonType.TEXT && (
-              <div className="space-y-4">
-                <FormLabel>Lesson Content</FormLabel>
-                <LessonContentEditor
-                  ref={editorRef}
-                  onEditor={(editor, meta) => {
-                    if (meta.reason === "create") {
-                      editor!.commands.setMyContent(editorContent);
-                    }
-                  }}
-                  onChange={(content) => {
-                    setEditorContent({
-                      ...editorContent,
-                      content: content,
-                    });
-                  }}
-                />
-              </div>
-            )}
+            <FormItem>
+              <FormLabel
+                onClick={() => {
+                  editorRef.current!.commands.focus('end')
+                }}>
+                Lesson Content
+              </FormLabel>
+              <LessonContentEditor
+                onEditor={(editor, meta) => {
+                  if (meta.reason === "create") {
+                    editorRef.current = editor;
+                    editorRef.current!.commands.setMyContent(editorContent);
+                  }
+                }}
+                onChange={(content) => {
+                  setEditorContent({
+                    ...editorContent,
+                    content: content,
+                  });
+                }}
+              />
+            </FormItem>
 
-            {currentFormValues.type === Constants.LessonType.VIDEO && (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="embedUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Video URL</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter video URL (YouTube, Vimeo, etc.)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
+            <FormItem>
               <FormField
                 control={form.control}
                 name="requiresEnrollment"
@@ -456,7 +412,7 @@ export default function LessonPage() {
                   </FormItem>
                 )}
               />
-            </div>
+            </FormItem>
 
             <div className="flex items-center justify-end gap-4">
               <Button variant="outline" asChild>

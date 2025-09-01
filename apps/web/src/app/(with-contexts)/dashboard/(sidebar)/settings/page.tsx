@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import LoadingScreen from "@/components/admin/loading-screen";
 import { useProfile } from "@/components/contexts/profile-context";
