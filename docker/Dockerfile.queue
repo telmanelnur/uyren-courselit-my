@@ -69,6 +69,7 @@ RUN adduser --system --uid 1001 nodejs
 
 COPY --from=builder --chown=nodejs:nodejs /app/apps/queue/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/apps/queue/package.json ./package.json
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 USER nodejs
 
