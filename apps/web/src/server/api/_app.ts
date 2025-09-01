@@ -6,7 +6,6 @@ import { userModuleRouter } from "./routers/user";
 import { activityModuleRouter } from "./routers/activity";
 import { mediaModuleRouter } from "./routers/media";
 import { paymentModuleRouter } from "./routers/payment";
-import { mailModuleRouter } from "./routers/mail";
 
 /**
  * This is the primary router for your server.
@@ -14,20 +13,13 @@ import { mailModuleRouter } from "./routers/mail";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = router({
-  // auth: authRouter,
   userModule: userModuleRouter,
-  // post: postRouter,
-  // attachment: attachmentRouter,
-  // project: projectRouter,
   siteModule: siteModuleRouter,
   communityModule: communityModuleRouter,
-  // agentModule: agentModuleRouter,
-  // organizationModule: organizationModuleRouter,
   lmsModule: lmsModuleRouter,
   activityModule: activityModuleRouter,
   mediaModule: mediaModuleRouter,
   paymentModule: paymentModuleRouter,
-  mailModule: mailModuleRouter,
 });
 
 // export type definition of API

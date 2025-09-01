@@ -140,9 +140,12 @@ const ComboBox2 = <T extends object>({
     getOptions();
   }, [getOptions]);
 
-  const renderSelectedText = useCallback((value: T) => {
-    return renderText(value);
-  }, [renderText]);
+  const renderSelectedText = useCallback(
+    (value: T) => {
+      return renderText(value);
+    },
+    [renderText],
+  );
 
   return (
     <Popover modal={true}>
@@ -153,7 +156,7 @@ const ComboBox2 = <T extends object>({
             className={cn(
               "w-full justify-between pr-20", // Increased padding for both clear and edit buttons
               (!value || (Array.isArray(value) && value.length === 0)) &&
-              "text-muted-foreground",
+                "text-muted-foreground",
             )}
             type="button"
             disabled={disabled}
@@ -169,7 +172,7 @@ const ComboBox2 = <T extends object>({
             </div>
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
-          
+
           {/* Action buttons positioned absolutely */}
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {/* Edit button - only show when there's a value and onEditClick is provided */}
@@ -190,7 +193,7 @@ const ComboBox2 = <T extends object>({
                 <Edit className="h-3 w-3" />
               </Button>
             )}
-            
+
             {/* Clear button */}
             {value && (
               <Button
@@ -268,7 +271,8 @@ const ComboBox2 = <T extends object>({
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                           type="button"onClick={(e) => {
+                          type="button"
+                          onClick={(e) => {
                             e.stopPropagation();
                             handleEditClick(option);
                           }}

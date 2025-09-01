@@ -54,7 +54,7 @@ export function SortableItem({
       className={cn("flex flex-col text-black", isDragging && "opacity-50")}
     >
       <div className="flex items-center gap-5">
-        <button className="border cursor-grab" {...listeners} >
+        <button className="border cursor-grab" {...listeners}>
           <DragHandle />
         </button>
         <Renderer {...rendererProps} />

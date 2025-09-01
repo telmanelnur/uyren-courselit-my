@@ -1,6 +1,5 @@
 import constants from "@/config/constants";
 import { recordActivity } from "@/lib/models/record-activity";
-import { triggerSequences } from "@/lib/models/trigger-sequences";
 import { getPlanPrice } from "@/lib/ui/lib/utils";
 import CommunityModel from "@/models/Community";
 import CourseModel from "@/models/Course";
@@ -114,9 +113,9 @@ export async function finalizePurchase({
     event = Constants.EventType.PRODUCT_PURCHASED;
   }
 
-  if (event) {
-    await triggerSequences({ user, event, data: membership.entityId });
-  }
+  // if (event) {
+  //   await triggerSequences({ user, event, data: membership.entityId });
+  // }
 }
 
 async function addProductToUser({

@@ -28,7 +28,7 @@ import {
 } from "../../core/procedures";
 import { getFormDataSchema, ListInputSchema } from "../../core/schema";
 import { router } from "../../core/trpc";
-import { buildMongooseQuery } from "../../core/utils";
+import { buildMongooseQuery, paginate } from "../../core/utils";
 import {
   addPostSubscription,
   getCommunityObjOrAssert,
@@ -134,15 +134,15 @@ export const postRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const query: RootFilterQuery<typeof CommunityPostModel> = {
-        domain: ctx.domainData.domainObj._id as any,
-        deleted: false,
-      };
       const communityObj = await getCommunityObjOrAssert(
         ctx,
         input.filter.communityId,
       );
-      query.communityId = communityObj.communityId as any;
+      const query: RootFilterQuery<typeof CommunityPostModel> = {
+        domain: ctx.domainData.domainObj._id,
+        deleted: false,
+        communityId: communityObj.communityId,
+      };
       const member = await getMembership(ctx, communityObj.communityId);
       if (!member) {
         throw new AuthorizationException(
@@ -152,36 +152,34 @@ export const postRouter = router({
       if (input.filter.category) {
         query.category = input.filter.category;
       }
-      const { items, total, meta } = await buildMongooseQuery(
-        CommunityPostModel,
-        {
-          filter: query,
-          pagination: input.pagination,
-          orderBy: input.orderBy,
-          // populate: [{ path: "userId", select: "userId name avatar email" }],
-          includeCount: true,
-        },
-      );
-      // const [items, total] = await Promise.all([
-      //   CommunityPostModel.find(query)
-      //     .skip(metaData.skip)
-      //     .limit(metaData.take)
-      //     .sort(sortObject)
-      //     .populate<{
-      //       user: PostUserType;
-      //     }>({
-      //       path: "userId",
-      //       select: "userId name avatar email",
-      //     })
-      //     .exec(),
-      //   metaData.includePaginationCount
-      //     ? CommunityPostModel.countDocuments(query)
-      //     : Promise.resolve(null),
-      // ]);
+      const metaData = paginate(input.pagination);
+      const orderBy = input.orderBy || {
+        field: "createdAt",
+        direction: "desc",
+      };
+      const sortObject: Record<string, 1 | -1> = {
+        [orderBy.field]: orderBy.direction === "asc" ? 1 : -1,
+      };
+      const [items, total] = await Promise.all([
+        CommunityPostModel.find(query)
+          .skip(metaData.skip)
+          .limit(metaData.take)
+          .sort(sortObject)
+          .populate<{
+            user: PostUserType;
+          }>({
+            path: "userId",
+            select: "userId name avatar email",
+          })
+          .exec(),
+        metaData.includePaginationCount
+          ? CommunityPostModel.countDocuments(query)
+          : Promise.resolve(null),
+      ]);
       return {
-        items: items.map((item) => formatPost(item, ctx.user as any)),
+        items: items.map((item) => formatPost(item, ctx.user)),
         total,
-        meta,
+        meta: metaData,
       };
     }),
 

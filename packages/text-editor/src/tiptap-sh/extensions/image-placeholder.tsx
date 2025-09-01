@@ -32,7 +32,7 @@ export interface ImagePlaceholderOptions {
   onError?: (error: string) => void;
 }
 
-declare module "@tiptap/core" {
+declare module "@tiptap/react" {
   interface Commands<ReturnType> {
     imagePlaceholder: {
       /**

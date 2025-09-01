@@ -1,26 +1,14 @@
-import DomainModel, { Domain } from "@/models/Domain";
-import { NotFoundException } from "./exceptions";
-import mongoose from "mongoose";
+import { Domain } from "@/models/Domain";
 import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
+import { NotFoundException } from "./exceptions";
 
 export const assertDomainExist = async (
   ctx: any,
-  options?: {
-    loadDatabase?: boolean;
-  },
 ) => {
   const domainObj = ctx.domainData.domainObj as Domain;
   if (!domainObj) {
     throw new NotFoundException("Domain", "current");
-  }
-  if (options?.loadDatabase) {
-    const m = await DomainModel.findOne({
-      _id: domainObj._id,
-    });
-    if (!m) {
-      throw new NotFoundException("Domain", "current");
-    }
-    return m.toObject();
   }
   return domainObj;
 };

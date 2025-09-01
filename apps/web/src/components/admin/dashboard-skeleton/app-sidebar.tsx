@@ -189,11 +189,6 @@ function getSidebarItems(
             url: "/dashboard/users",
             isActive: path === "/dashboard/users",
           },
-          {
-            title: "Tags",
-            url: "/dashboard/users/tags",
-            isActive: path === "/dashboard/users/tags",
-          },
         ],
       });
       navMainItems.push({

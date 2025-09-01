@@ -98,7 +98,7 @@ export const studentProcedure = protectedProcedure.use(
 
 export type MainContextType = {
   user: InternalUser;
-  session: Session;
+  session: Session | null;
   domainData: {
     domainObj: Domain;
   };

@@ -2,33 +2,58 @@
 
 import { AssignmentModel, AssignmentSubmissionModel } from "@/models/lms";
 import { connectToDatabase } from "@workspace/common-logic";
+import { BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models";
+import { getServerSession, User } from "next-auth";
+import { AuthenticationException, NotFoundException } from "../api/core/exceptions";
+import { getDomainData } from "@/lib/domain";
+import { authOptions } from "@/lib/auth/options";
+import { Domain } from "@/models/Domain";
+
+// Types
+interface ActionContext {
+  user: User;
+  domainData: {
+    domainObj: Domain;
+    headers: { type: string; host: string; identifier: string };
+  };
+}
 
 interface SubmissionData {
   content: string;
   attachments?: string[];
 }
+// Core functions
+async function getActionContext(): Promise<ActionContext> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    throw new AuthenticationException("User not authenticated");
+  }
 
-export async function createAssignmentSubmission(
-  assignmentId: string,
-  userId: string,
-  domainId: string,
-  data: SubmissionData,
-): Promise<any> {
-  await connectToDatabase();
+  const domainData = await getDomainData();
+  if (!domainData.domainObj) {
+    throw new NotFoundException("Domain");
+  }
 
+  return {
+    user: session.user,
+    domainData: {
+      domainObj: domainData.domainObj,
+      headers: domainData.headers,
+    },
+  };
+}
+
+const validateAssignment = async (assignmentId: string, ctx: ActionContext) => {
   const assignment = await AssignmentModel.findOne({
     _id: assignmentId,
-    domain: domainId,
+    domain: ctx.domainData.domainObj._id,
   });
   if (!assignment) {
     throw new Error("Assignment not found");
   }
-
-  if (!assignment.isPublished) {
+  if (assignment.status !== BASIC_PUBLICATION_STATUS_TYPE.PUBLISHED) {
     throw new Error("Assignment is not published");
   }
-
-  // Check if assignment is overdue
   if (
     assignment.dueDate &&
     new Date() > assignment.dueDate &&
@@ -38,7 +63,18 @@ export async function createAssignmentSubmission(
       "Assignment is overdue and late submissions are not allowed",
     );
   }
+  return assignment;
+};
 
+export async function createAssignmentSubmission(
+  assignmentId: string,
+  userId: string,
+  domainId: string,
+  data: SubmissionData,
+): Promise<any> {
+  await connectToDatabase();
+  const ctx = await getActionContext();
+  const assignment = await validateAssignment(assignmentId, ctx);
   // Check existing submissions
   const existingSubmissions = await AssignmentSubmissionModel.countDocuments({
     assignmentId,

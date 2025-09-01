@@ -1,7 +1,7 @@
 import constants from "@/config/constants";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
 import { recordActivity } from "@/lib/models/record-activity";
-import { triggerSequences } from "@/lib/models/trigger-sequences";
+// import { triggerSequences } from "@/lib/models/trigger-sequences";
 import DomainModel, { Domain } from "@/models/Domain";
 import UserModel from "@/models/User";
 import { Constants, UIConstants } from "@workspace/common-models";
@@ -96,10 +96,10 @@ export async function createUser({
     });
 
     if (createdUser.subscribedToUpdates) {
-      await triggerSequences({
-        user: createdUser,
-        event: Constants.EventType.SUBSCRIBER_ADDED,
-      });
+      // await triggerSequences({
+      //   user: createdUser,
+      //   event: Constants.EventType.SUBSCRIBER_ADDED,
+      // });
 
       await recordActivity({
         domain: domain!._id,

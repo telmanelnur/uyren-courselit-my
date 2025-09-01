@@ -91,7 +91,7 @@ const EditorToolbar = ({ editor }: { editor: Editor }) => {
                 <div className="flex-1" />
 
                 {/* Utility Group */}
-                <EditorToolbarItems.SearchAndReplaceToolbar />
+                {/* <EditorToolbarItems.SearchAndReplaceToolbar /> */}
               </div>
             </div>
             <ScrollBar className="hidden" orientation="horizontal" />

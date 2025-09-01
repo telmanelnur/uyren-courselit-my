@@ -16,7 +16,7 @@ import { LinkToolbar } from "./link";
 import { MediaDropdownToolbar } from "./media-dropdown-toolbar";
 import { OrderedListToolbar } from "./ordered-list";
 import { RedoToolbar } from "./redo";
-import { SearchAndReplaceToolbar } from "./search-and-replace-toolbar";
+// import { SearchAndReplaceToolbar } from "./search-and-replace-toolbar";
 import { StrikeThroughToolbar } from "./strikethrough";
 import { ToolbarProvider } from "./toolbar-provider";
 import { UnderlineToolbar } from "./underline";
@@ -28,47 +28,47 @@ export const EditorToolbar = ({ editor }: { editor: Editor }) => {
       <ToolbarProvider editor={editor}>
         <TooltipProvider>
           <ScrollArea className="h-fit py-0.5">
-              <div className="flex items-center gap-1 px-2">
-                {/* History Group */}
-                <UndoToolbar />
-                <RedoToolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+            <div className="flex items-center gap-1 px-2">
+              {/* History Group */}
+              <UndoToolbar />
+              <RedoToolbar />
+              <Separator orientation="vertical" className="mx-1 h-7" />
 
-                {/* Text Structure Group */}
-                <HeadingsToolbar />
-                <BlockquoteToolbar />
-                <CodeToolbar />
-                <CodeBlockToolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+              {/* Text Structure Group */}
+              <HeadingsToolbar />
+              <BlockquoteToolbar />
+              <CodeToolbar />
+              <CodeBlockToolbar />
+              <Separator orientation="vertical" className="mx-1 h-7" />
 
-                {/* Basic Formatting Group */}
-                <BoldToolbar />
-                <ItalicToolbar />
-                <UnderlineToolbar />
-                <StrikeThroughToolbar />
-                <LinkToolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+              {/* Basic Formatting Group */}
+              <BoldToolbar />
+              <ItalicToolbar />
+              <UnderlineToolbar />
+              <StrikeThroughToolbar />
+              <LinkToolbar />
+              <Separator orientation="vertical" className="mx-1 h-7" />
 
-                {/* Lists & Structure Group */}
-                <BulletListToolbar />
-                <OrderedListToolbar />
-                <HorizontalRuleToolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+              {/* Lists & Structure Group */}
+              <BulletListToolbar />
+              <OrderedListToolbar />
+              <HorizontalRuleToolbar />
+              <Separator orientation="vertical" className="mx-1 h-7" />
 
-                {/* Alignment Group */}
-                <AlignmentTooolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+              {/* Alignment Group */}
+              <AlignmentTooolbar />
+              <Separator orientation="vertical" className="mx-1 h-7" />
 
-                {/* Media & Styling Group */}
-                <MediaDropdownToolbar />
-                <ColorHighlightToolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+              {/* Media & Styling Group */}
+              <MediaDropdownToolbar />
+              <ColorHighlightToolbar />
+              <Separator orientation="vertical" className="mx-1 h-7" />
 
-                <div className="flex-1" />
+              <div className="flex-1" />
 
-                {/* Utility Group */}
-                <SearchAndReplaceToolbar />
-              </div>
+              {/* Utility Group */}
+              {/* <SearchAndReplaceToolbar /> */}
+            </div>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </TooltipProvider>
@@ -95,9 +95,7 @@ export const EditorToolbarItems = {
   AlignmentTooolbar,
   MediaDropdownToolbar,
   ColorHighlightToolbar,
-  SearchAndReplaceToolbar,
-
+  // SearchAndReplaceToolbar,
 
   // ToolbarProvider,
-}
-
+};

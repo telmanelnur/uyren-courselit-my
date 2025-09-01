@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from "react";
+import DocumentationLink from "@/components/public/documentation-link";
 import {
-  TOAST_TITLE_ERROR,
   PERM_SECTION_HEADER,
+  TOAST_TITLE_ERROR,
   USER_PERMISSION_AREA_SUBTEXT,
 } from "@/lib/ui/config/strings";
-import type { User, Address, State } from "@workspace/common-models";
-import { Checkbox, useToast } from "@workspace/components-library";
-import { Section } from "@workspace/components-library";
-import permissionToCaptionMap from "./permissions-to-caption-map";
-import DocumentationLink from "@/components/public/documentation-link";
 import { trpc } from "@/utils/trpc";
+import type { User } from "@workspace/common-models";
+import { Checkbox, Section, useToast } from "@workspace/components-library";
+import { useEffect, useState } from "react";
+import permissionToCaptionMap from "./permissions-to-caption-map";
 
 interface PermissionsEditorProps {
   user: User;

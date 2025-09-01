@@ -1,11 +1,20 @@
 "use client";
 
 import { Address, Media, Profile } from "@workspace/common-models";
-import { FormControl, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
+import {
+  FormControl,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
 import { Progress } from "@workspace/ui/components/progress";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
 import { Upload, X } from "lucide-react";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import Dialog2 from "../dialog2";
@@ -241,9 +250,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                   {srcTitle}
                 </p>
               </TooltipTrigger>
-              <TooltipContent>
-                {srcTitle}
-              </TooltipContent>
+              <TooltipContent>{srcTitle}</TooltipContent>
             </Tooltip>
           </div>
         )}

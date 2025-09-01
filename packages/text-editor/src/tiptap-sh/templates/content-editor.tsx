@@ -21,9 +21,7 @@ import { MyContentExtension } from "../extensions/my-content";
 import SearchAndReplace from "../extensions/search-and-replace";
 import { EditorToolbar } from "../toolbars/editor-toolbar";
 
-
 import "../styles/tiptap.css";
-import { SlashMenuConfig } from "@workspace/text-editor/tiptap/components/tiptap-ui/slash-dropdown-menu";
 import { memo } from "react";
 
 export type ContentEditorProps = {
@@ -39,7 +37,6 @@ export type ContentEditorProps = {
   editable?: boolean;
   className?: ReturnType<typeof cn>;
   extraExtensions?: AnyExtension[];
-  extraSlashMenuConfig?: SlashMenuConfig;
   toolbar?: boolean | ((props: { editor: Editor }) => React.ReactNode);
   children?: React.ReactNode;
 };
@@ -54,7 +51,6 @@ export function ContentEditor({
   editable = true,
   className,
   extraExtensions = [],
-  extraSlashMenuConfig,
   toolbar = true,
   children,
 }: ContentEditorProps) {
@@ -151,21 +147,17 @@ export function ContentEditor({
         className,
       )}
     >
-      {
-        toolbar && (
-          <>
-            <ToolbarRender editor={editor} toolbar={toolbar} />
-          </>
-        )
-      }
-      {
-        editable && (
-          <>
-            <FloatingToolbar editor={editor} />
-            <TipTapFloatingMenu editor={editor} />
-          </>
-        )
-      }
+      {toolbar && (
+        <>
+          <ToolbarRender editor={editor} toolbar={toolbar} />
+        </>
+      )}
+      {editable && (
+        <>
+          <FloatingToolbar editor={editor} />
+          <TipTapFloatingMenu editor={editor} />
+        </>
+      )}
       {children}
       <EditorContent
         editor={editor}
@@ -175,14 +167,19 @@ export function ContentEditor({
   );
 }
 
-const ToolbarRender = memo(({ toolbar, editor }: {
-  toolbar: ContentEditorProps["toolbar"];
-  editor: Editor;
-}) => {
-  if (typeof toolbar === "function") {
-    return toolbar({ editor });
-  } else if (toolbar === true) {
-    return <EditorToolbar editor={editor} />;
-  }
-  return toolbar;
-});
+const ToolbarRender = memo(
+  ({
+    toolbar,
+    editor,
+  }: {
+    toolbar: ContentEditorProps["toolbar"];
+    editor: Editor;
+  }) => {
+    if (typeof toolbar === "function") {
+      return toolbar({ editor });
+    } else if (toolbar === true) {
+      return <EditorToolbar editor={editor} />;
+    }
+    return toolbar;
+  },
+);

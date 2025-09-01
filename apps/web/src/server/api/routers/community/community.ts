@@ -352,7 +352,7 @@ export const communityRouter = router({
         return null;
       }
 
-      return await formatCommunity(community, ctx as any);
+      return await formatCommunity(community, ctx);
     }),
 
   create: protectedProcedure
@@ -410,7 +410,7 @@ export const communityRouter = router({
       });
 
       await MembershipModel.create({
-        domain: ctx.domainData.domainObj!._id,
+        domain: ctx.domainData.domainObj._id,
         userId: ctx.user.userId,
         entityId: community.communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -457,7 +457,7 @@ export const communityRouter = router({
         }
       }
       await community.save();
-      return await formatCommunity(community, ctx as any);
+      return await formatCommunity(community, ctx);  
     }),
 
   delete: protectedProcedure
@@ -492,7 +492,7 @@ export const communityRouter = router({
         },
       );
 
-      return await formatCommunity(community, ctx as any);
+      return await formatCommunity(community, ctx);
     }),
 
   addCategory: protectedProcedure
@@ -521,7 +521,7 @@ export const communityRouter = router({
         community.categories.push(input.data.category);
       }
       await community.save();
-      return await formatCommunity(community, ctx as any);
+      return await formatCommunity(community, ctx);
     }),
 
   deleteCategory: protectedProcedure
@@ -560,7 +560,7 @@ export const communityRouter = router({
         (cat) => cat !== input.data.category,
       );
       await community.save();
-      return await formatCommunity(community, ctx as any);
+      return await formatCommunity(community, ctx);
     }),
 
   createPaymentPlan: protectedProcedure
@@ -674,110 +674,6 @@ export const communityRouter = router({
       return paymentPlan;
     }),
 
-  // // Payment Plan Management
-  // getPlans: protectedProcedure
-  //   .input(z.object({ planIds: z.array(documentIdValidator()) }))
-  //   .query(async ({ ctx, input }) => {
-  //     const domainId = ctx.domainData?.domainObj?._id?.toString();
-  //     if (!domainId) {
-  //       throw new NotFoundException("Domain not found");
-  //     }
-  //     return await getPlans({ planIds: input.planIds, domainId });
-  //   }),
-
-  // createPaymentPlan: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       name: z.string().min(1),
-  //       type: z.nativeEnum(Constants.PaymentPlanType),
-  //       oneTimeAmount: z.number().optional(),
-  //       emiAmount: z.number().optional(),
-  //       emiTotalInstallments: z.number().optional(),
-  //       subscriptionMonthlyAmount: z.number().optional(),
-  //       subscriptionYearlyAmount: z.number().optional(),
-  //       entityId: documentIdValidator(),
-  //       entityType: z.nativeEnum(Constants.MembershipEntityType),
-  //     })
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     try {
-  //       const domainId = ctx.domainData?.domainObj?._id?.toString();
-  //       if (!domainId) {
-  //         throw new NotFoundException("Domain not found");
-  //       }
-
-  //       const userId = ctx.session!.user.userId || ctx.session!.user.id;
-  //       const userPermissions = ctx.session!.user.roles || [];
-
-  //       // Validate payment plan inputs
-  //       await validatePaymentPlanInputs(
-  //         input.type,
-  //         input.oneTimeAmount,
-  //         input.emiAmount,
-  //         input.emiTotalInstallments,
-  //         input.subscriptionMonthlyAmount,
-  //         input.subscriptionYearlyAmount
-  //       );
-
-  //       // Fetch entity and check permissions
-  //       const entity = await fetchEntity(
-  //         input.entityType,
-  //         input.entityId,
-  //         domainId
-  //       );
-  //       if (!entity) {
-  //         throw new NotFoundException("Entity not found");
-  //       }
-
-  //       checkEntityPermission(input.entityType, userPermissions);
-
-  //       // Check for duplicate payment plans
-  //       await checkDuplicatePaymentPlans(
-  //         entity,
-  //         input.type,
-  //         domainId,
-  //         input.subscriptionMonthlyAmount,
-  //         input.subscriptionYearlyAmount
-  //       );
-
-  //       // Create payment plan
-  //       await connectToDatabase();
-  //       const paymentPlan = await (PaymentPlanModel as any).create({
-  //         domain: domainId,
-  //         userId,
-  //         name: input.name,
-  //         type: input.type,
-  //         oneTimeAmount: input.oneTimeAmount,
-  //         emiAmount: input.emiAmount,
-  //         emiTotalInstallments: input.emiTotalInstallments,
-  //         subscriptionMonthlyAmount: input.subscriptionMonthlyAmount,
-  //         subscriptionYearlyAmount: input.subscriptionYearlyAmount,
-  //       });
-
-  //       // Update entity with new payment plan
-  //       if (entity.paymentPlans.length === 0) {
-  //         entity.defaultPaymentPlan = paymentPlan.planId;
-  //       }
-  //       entity.paymentPlans.push(paymentPlan.planId);
-  //       await entity.save();
-
-  //       return {
-  //         success: true,
-  //         planId: paymentPlan.planId,
-  //         message: "Payment plan created successfully",
-  //       };
-  //     } catch (error) {
-  //       if (error instanceof TRPCError) {
-  //         throw error;
-  //       }
-  //       console.error("Error creating payment plan:", error);
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message: "Failed to create payment plan",
-  //       });
-  //     }
-  //   }),
-
   archivePaymentPlan: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .input(
@@ -861,35 +757,6 @@ export const communityRouter = router({
 
       return paymentPlan;
     }),
-
-  // getInternalPaymentPlan: protectedProcedure.query(async ({ ctx }) => {
-  //   const domainId = ctx.domainData?.domainObj?._id?.toString();
-  //   if (!domainId) {
-  //     throw new NotFoundException("Domain not found");
-  //   }
-  //   return await getInternalPaymentPlan(domainId);
-  // }),
-
-  // createInternalPaymentPlan: adminProcedure.mutation(async ({ ctx }) => {
-  //   try {
-  //     const domainId = ctx.domainData?.domainObj?._id?.toString();
-  //     if (!domainId) {
-  //       throw new NotFoundException("Domain not found");
-  //     }
-
-  //     const userId = ctx.session!.user.userId || ctx.session!.user.id;
-  //     return await createInternalPaymentPlan(domainId, userId);
-  //   } catch (error) {
-  //     if (error instanceof TRPCError) {
-  //       throw error;
-  //     }
-  //     console.error("Error creating internal payment plan:", error);
-  //     throw new TRPCError({
-  //       code: "INTERNAL_SERVER_ERROR",
-  //       message: "Failed to create internal payment plan",
-  //     });
-  //   }
-  // }),
 
   reportCommunityContent: protectedProcedure
     .use(createDomainRequiredMiddleware())
@@ -1239,44 +1106,35 @@ export const communityRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       if (ctx.user.userId === input.data.userId) {
-        throw new Error(responses.action_not_allowed);
+        throw new AuthorizationException()
       }
-
-      const community = await CommunityModel.findOne(
-        getCommunityQuery(ctx as any, input.data.communityId),
-      );
-
+      const community = await CommunityModel.findOne(getCommunityQuery(ctx, input.data.communityId));
       if (!community) {
-        throw new Error(responses.item_not_found);
+        throw new NotFoundException("Community", input.data.communityId);
       }
       const memberUser = await UserModel.findOne({
         domain: ctx.domainData.domainObj._id,
         userId: input.data.userId,
       });
       if (!memberUser) {
-        throw new NotFoundException("User not found");
+        throw new NotFoundException("User", input.data.userId);
       }
-
       const member = await getMembership(ctx, community.communityId);
-
       if (
         !member ||
         !hasCommunityPermission(member, Constants.MembershipRole.MODERATE)
       ) {
-        throw new Error(responses.item_not_found);
+        throw new NotFoundException("Member", input.data.userId);
       }
-
       const targetMember = await MembershipModel.findOne({
         domain: ctx.domainData.domainObj._id,
         userId: input.data.userId,
         entityId: community.communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
       });
-
       if (!targetMember) {
-        throw new Error(responses.item_not_found);
+        throw new NotFoundException("Member", input.data.userId);
       }
-
       const otherActiveModeratorsCount = await MembershipModel.countDocuments({
         domain: ctx.domainData.domainObj._id,
         entityId: community.communityId,
@@ -1285,11 +1143,9 @@ export const communityRouter = router({
         status: Constants.MembershipStatus.ACTIVE,
         userId: { $ne: input.data.userId },
       });
-
       if (otherActiveModeratorsCount === 0) {
-        throw new Error(responses.action_not_allowed);
+        throw new AuthorizationException();
       }
-
       const nextStatus = getNextStatusForCommunityMember(
         targetMember.status as CommunityMemberStatus,
       );
@@ -1323,7 +1179,7 @@ export const communityRouter = router({
       await targetMember.save();
 
       return {
-        ...targetMember,
+        ...targetMember.toObject(),
         user: {
           userId: memberUser.userId,
           name: memberUser.name,

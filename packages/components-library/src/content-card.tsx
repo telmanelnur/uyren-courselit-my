@@ -4,7 +4,6 @@ import { JSX, ReactNode } from "react";
 import { Image } from "./image";
 import Link from "next/link";
 
-
 interface ContentCardImageProps extends React.HTMLAttributes<HTMLDivElement> {
   src: string;
   alt?: string;

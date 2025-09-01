@@ -1,5 +1,4 @@
 import { cleanHost, getBackendAddress } from "@/lib/domain-utils";
-// import { trpcCaller } from "@/server/api/caller";
 import type {
   CommunityMemberStatus,
   CommunityReportStatus,
@@ -14,8 +13,6 @@ import { Constants, UIConstants } from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { createHash, randomInt } from "crypto";
 const { permissions } = UIConstants;
-
-export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const formattedLocaleDate = (
   epochString?: Date | number | string,
