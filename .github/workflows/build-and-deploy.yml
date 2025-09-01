@@ -44,11 +44,6 @@ jobs:
       with:
         images: ${{ env.IMAGE_NAME }}-web
         tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=sha,prefix={{branch}}-
           type=raw,value=latest
       
     - name: Extract metadata for queue image
@@ -57,11 +52,6 @@ jobs:
       with:
         images: ${{ env.IMAGE_NAME }}-queue
         tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=sha,prefix={{branch}}-
           type=raw,value=latest
       
     # - name: Build and push web image
