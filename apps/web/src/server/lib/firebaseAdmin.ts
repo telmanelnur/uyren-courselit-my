@@ -1,6 +1,15 @@
 import admin from "firebase-admin";
 import { getApps, initializeApp, ServiceAccount } from "firebase-admin/app";
 
+// Only initialize Firebase during runtime, not build time
+const shouldInitializeFirebase = () => {
+  // Skip initialization during build time
+  if (process.env.NODE_ENV === "production" && !process.env.FIREBASE_CLIENT_EMAIL) {
+    return false;
+  }
+  return true;
+};
+
 const serviceAccount: ServiceAccount = {
   projectId: process.env.NEXT_PUBLIC_FB_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
@@ -9,10 +18,14 @@ const serviceAccount: ServiceAccount = {
     : "",
 };
 
-if (!getApps().length) {
-  initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+if (shouldInitializeFirebase() && !getApps().length) {
+  try {
+    initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (error) {
+    console.warn("Firebase Admin initialization skipped:", error);
+  }
 }
 
 const adminAuth = admin.auth();
