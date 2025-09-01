@@ -158,17 +158,9 @@ jobs:
           print_status "Stopping services..."
           sudo docker-compose -f $COMPOSE_FILE down
           
-          # Pull latest images
-          print_status "Pulling latest images..."
-          sudo docker pull ${{ env.IMAGE_NAME }}-web:latest
-          sudo docker pull ${{ env.IMAGE_NAME }}-queue:latest
-          
-          # Start services
-          print_status "Starting services..."
-          if [ -f "$ENV_FILE" ]; then
-            sudo docker-compose -f $COMPOSE_FILE --env-file $ENV_FILE up -d
-          else
-            sudo docker-compose -f $COMPOSE_FILE up -d
-          fi
+          # Pull latest images and start services
+          print_status "Pulling latest images and starting services..."
+          sudo DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }} IMAGE_TAG=latest docker-compose -f $COMPOSE_FILE --env-file $ENV_FILE pull
+          sudo DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }} IMAGE_TAG=latest docker-compose -f $COMPOSE_FILE --env-file $ENV_FILE up -d
           
           print_success "Deployment completed!"
