@@ -33,6 +33,8 @@ services:
       - "${WEB_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
+    env_file:
+      - .env.prod
     depends_on:
       - redis
       - mongodb
@@ -47,6 +49,8 @@ services:
       - "${QUEUE_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
+    env_file:
+      - .env.prod
     depends_on:
       - redis
       - mongodb
