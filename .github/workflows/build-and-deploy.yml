@@ -110,7 +110,7 @@ jobs:
           EMAIL_FROM=temp@temp.com
 
   deploy:
-    # needs: build-and-push
+    needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
     
