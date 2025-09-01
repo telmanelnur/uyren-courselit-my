@@ -72,10 +72,6 @@ jobs:
         file: ./docker/Dockerfile.web
         push: true
         tags: ${{ steps.web-meta.outputs.tags }}
-        labels: ${{ steps.web-meta.outputs.labels }}
-        cache-from: type=gha,scope=web
-        cache-to: type=gha,mode=max,scope=web
-        platforms: linux/amd64
         build-args: |
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -101,10 +97,6 @@ jobs:
         file: ./docker/Dockerfile.queue
         push: true
         tags: ${{ steps.queue-meta.outputs.tags }}
-        labels: ${{ steps.queue-meta.outputs.labels }}
-        cache-from: type=gha,scope=queue
-        cache-to: type=gha,mode=max,scope=queue
-        platforms: linux/amd64
         build-args: |
           NODE_ENV=production
           HOST=localhost
@@ -116,7 +108,6 @@ jobs:
           SMTP_HOST=smtp.temp.com
           SMTP_PORT=587
           EMAIL_FROM=temp@temp.com
-      continue-on-error: true
 
   deploy:
     needs: build-and-push
