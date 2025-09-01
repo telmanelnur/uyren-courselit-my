@@ -1,22 +1,51 @@
-import {
-  Community,
-  Domain,
-  Constants,
-  Membership,
-  PaymentPlan,
-  Progress,
-  Event,
-} from "@workspace/common-models";
-import { User } from "@workspace/common-models";
-// import { triggerSequences } from "@/lib/trigger-sequences";
-import { recordActivity } from "@/lib/record-activity";
-import constants from "@/config/constants";
-import CourseModel from "@/models/Course";
-import { getPlanPrice } from "@/lib/ui/lib/utils";
-import UserModel from "@/models/User";
-import CommunityModel from "@/models/Community";
 import mongoose from "mongoose";
-import { InternalCourse } from "@workspace/common-logic";
+import CommunityModel from "@/models/Community";
+import CourseModel from "@/models/Course";
+import PaymentPlanModel from "@/models/PaymentPlan";
+import User from "@/models/User";
+import { Community, Course, PaymentPlan, Constants, Membership, Domain } from "@workspace/common-models";
+import { finalizePurchase } from "@/server/api/routers/payment/helpers";
+
+export async function getUser(session: any, domainId: mongoose.Types.ObjectId) {
+  if (!session) return null;
+  return await User.findOne({
+    email: session.user!.email,
+    domain: domainId,
+    active: true,
+  });
+}
+
+export async function getEntity(
+  type: string,
+  id: string,
+  domainId: mongoose.Types.ObjectId,
+) {
+  if (type === Constants.MembershipEntityType.COMMUNITY) {
+    return await CommunityModel.findOne<Community>({
+      communityId: id,
+      domain: domainId,
+      deleted: false,
+    });
+  } else if (type === Constants.MembershipEntityType.COURSE) {
+    return await CourseModel.findOne<Course>({
+      courseId: id,
+      domain: domainId,
+    });
+  }
+  return null;
+}
+
+export async function getPaymentPlan(
+  domainId: mongoose.Types.ObjectId,
+  planId: string,
+) {
+  return await PaymentPlanModel.findOne<PaymentPlan>({
+    domain: domainId,
+    planId,
+    archived: false,
+    internal: false,
+  });
+}
 
 export async function activateMembership(
   domain: Domain & { _id: mongoose.Types.ObjectId },
@@ -54,89 +83,5 @@ export async function activateMembership(
   await (membership as any).save();
   if (paymentPlan) {
     await finalizePurchase({ domain, membership, paymentPlan });
-  }
-}
-
-export async function finalizePurchase({
-  domain,
-  membership,
-  paymentPlan,
-}: {
-  domain: Domain & { _id: mongoose.Types.ObjectId };
-  membership: Membership;
-  paymentPlan: PaymentPlan;
-}) {
-  const user = await UserModel.findOne<User>({ userId: membership.userId });
-  if (!user) {
-    return;
-  }
-
-  let event: Event | undefined = undefined;
-  if (paymentPlan.type !== Constants.PaymentPlanType.FREE) {
-    await recordActivity({
-      domain: domain._id,
-      userId: user.userId,
-      type: constants.activityTypes[1],
-      entityId: membership.entityId,
-      metadata: {
-        cost: getPlanPrice(paymentPlan).amount,
-        purchaseId: membership.sessionId,
-      },
-    });
-  }
-  if (membership.entityType === Constants.MembershipEntityType.COMMUNITY) {
-    await recordActivity({
-      domain: domain._id,
-      userId: user.userId,
-      type: constants.activityTypes[15],
-      entityId: membership.entityId,
-    });
-
-    event = Constants.EventType.COMMUNITY_JOINED;
-  }
-  if (membership.entityType === Constants.MembershipEntityType.COURSE) {
-    const product = await CourseModel.findOne({
-      courseId: membership.entityId,
-    });
-    if (product) {
-      await addProductToUser({
-        user,
-        product,
-        // cost: getPlanPrice(paymentPlan).amount,
-      });
-    }
-    await recordActivity({
-      domain: domain._id,
-      userId: user.userId,
-      type: constants.activityTypes[0],
-      entityId: membership.entityId,
-    });
-
-    event = Constants.EventType.PRODUCT_PURCHASED;
-  }
-
-  if (event) {
-    // await triggerSequences({ user, event, data: membership.entityId });
-  }
-}
-
-async function addProductToUser({
-  user,
-  product,
-}: {
-  user: User;
-  product: InternalCourse;
-}) {
-  if (
-    !user.purchases.some(
-      (purchase: Progress) => purchase.courseId === product.courseId,
-    )
-  ) {
-    user.purchases.push({
-      courseId: product.courseId,
-      completedLessons: [],
-      accessibleGroups: [],
-    });
-    await (user as any).save();
   }
 }

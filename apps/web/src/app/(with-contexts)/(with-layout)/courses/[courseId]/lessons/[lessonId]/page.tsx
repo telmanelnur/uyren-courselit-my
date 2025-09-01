@@ -17,6 +17,5 @@ export default function LessonDetailsPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <LessonView />
     </Suspense>
-  )
+  );
 }
-

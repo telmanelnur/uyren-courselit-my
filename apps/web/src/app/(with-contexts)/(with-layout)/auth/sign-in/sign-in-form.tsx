@@ -4,7 +4,13 @@ import { ScrollAnimation } from "@/components/public/scroll-animation";
 import { useFirebaseAuth } from "@/hooks/use-auth";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,7 +33,7 @@ export default function SignInForm() {
     try {
       setAuthError(null);
       const result = await firebaseAuth.mutateAsync({ provider: "google" });
-      
+
       if (result.success) {
         router.push("/dashboard");
       } else {
@@ -45,13 +51,13 @@ export default function SignInForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    
+
     try {
-      const result = await firebaseAuth.mutateAsync({ 
-        provider: "email", 
-        data: formData 
+      const result = await firebaseAuth.mutateAsync({
+        provider: "email",
+        data: formData,
       });
-      
+
       if (result.success) {
         router.push("/dashboard");
       } else {
@@ -134,21 +140,26 @@ export default function SignInForm() {
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
-                                        {/* Error Display */}
-                          {authError && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                              {t(authError)}
-                            </div>
-                          )}
+              {/* Error Display */}
+              {authError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {t(authError)}
+                </div>
+              )}
 
-                          {/* Email/Password Form */}
-                          <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email/Password Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="email"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Email Address
                   </label>
                   <div className="relative">
@@ -157,8 +168,10 @@ export default function SignInForm() {
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                             className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-200 bg-background text-foreground"
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-200 bg-background text-foreground"
                       placeholder="Enter your email"
                       required
                     />
@@ -166,7 +179,10 @@ export default function SignInForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Password
                   </label>
                   <div className="relative">
@@ -175,8 +191,10 @@ export default function SignInForm() {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                             className="w-full pl-10 pr-12 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-200 bg-background text-foreground"
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      className="w-full pl-10 pr-12 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-200 bg-background text-foreground"
                       placeholder="Enter your password"
                       required
                     />
@@ -185,7 +203,11 @@ export default function SignInForm() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -203,13 +225,17 @@ export default function SignInForm() {
               {/* Sign Up Link */}
               <div className="text-center text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link href="/auth/sign-up" className="text-brand-primary hover:text-brand-primary-hover font-semibold transition-colors">
+                <Link
+                  href="/auth/sign-up"
+                  className="text-brand-primary hover:text-brand-primary-hover font-semibold transition-colors"
+                >
                   Sign up
                 </Link>
               </div>
 
               <div className="text-center text-xs text-muted-foreground">
-                By signing in, you agree to our Terms of Service and Privacy Policy
+                By signing in, you agree to our Terms of Service and Privacy
+                Policy
               </div>
             </CardContent>
           </Card>

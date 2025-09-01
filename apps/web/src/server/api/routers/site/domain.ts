@@ -70,7 +70,7 @@ async function ensureUniqueCustomDomain(
 
 async function ensureDomainHasUser(domainId: string, currentUser: any) {
   const userCount = await UserModel.countDocuments({ domain: domainId });
-  
+
   if (userCount === 0) {
     // Create a new user with current user's data and admin permissions
     const newUser = new UserModel({
@@ -80,14 +80,14 @@ async function ensureDomainHasUser(domainId: string, currentUser: any) {
       active: true,
       permissions: [
         "course:manage",
-        "course:manage_any", 
+        "course:manage_any",
         "course:publish",
         "course:enroll",
         "media:manage",
         "site:manage",
         "setting:manage",
         "user:manage",
-        "community:manage"
+        "community:manage",
       ],
       roles: ["admin"],
       subscribedToUpdates: true,
@@ -95,7 +95,7 @@ async function ensureDomainHasUser(domainId: string, currentUser: any) {
       avatar: currentUser.avatar,
       providerData: currentUser.providerData,
     });
-    
+
     await newUser.save();
   }
 }
@@ -170,68 +170,76 @@ export const domainRouter = router({
       return domain.toObject();
     }),
 
-  create: adminProcedure.input(CreateSchema).mutation(async ({ input, ctx }) => {
-    await ensureUniqueName(input.data.name);
+  create: adminProcedure
+    .input(CreateSchema)
+    .mutation(async ({ input, ctx }) => {
+      await ensureUniqueName(input.data.name);
 
-    if (input.data.customDomain) {
-      await ensureUniqueCustomDomain(input.data.customDomain);
-    }
+      if (input.data.customDomain) {
+        await ensureUniqueCustomDomain(input.data.customDomain);
+      }
 
-    const domain = new DomainModel({
-      name: input.data.name,
-      customDomain: input.data.customDomain,
-      email: input.data.email,
-      settings: input.data.settings || {},
-    });
+      const domain = new DomainModel({
+        name: input.data.name,
+        customDomain: input.data.customDomain,
+        email: input.data.email,
+        settings: input.data.settings || {},
+      });
 
-    const saved = await domain.save();
-    const domainObj = saved.toObject();
+      const saved = await domain.save();
+      const domainObj = saved.toObject();
 
-    // Ensure domain has at least one user (the current user)
-    await ensureDomainHasUser(domainObj._id.toString(), ctx.user);
+      // Ensure domain has at least one user (the current user)
+      await ensureDomainHasUser(domainObj._id.toString(), ctx.user);
 
-    await DomainManager.removeFromCache(domainObj);
-    await DomainManager.setDomainCache(domainObj);
+      await DomainManager.removeFromCache(domainObj);
+      await DomainManager.setDomainCache(domainObj);
 
-    return domainObj;
-  }),
+      return domainObj;
+    }),
 
-  update: adminProcedure.input(UpdateSchema).mutation(async ({ input, ctx }) => {
-    const existing = await DomainModel.findOne({
-      _id: input.id,
-      deleted: false,
-    });
+  update: adminProcedure
+    .input(UpdateSchema)
+    .mutation(async ({ input, ctx }) => {
+      const existing = await DomainModel.findOne({
+        _id: input.id,
+        deleted: false,
+      });
 
-    if (!existing) throw new NotFoundException("Domain", input.id);
+      if (!existing) throw new NotFoundException("Domain", input.id);
 
-    if (input.data.name) {
-      await ensureUniqueName(input.data.name, input.id);
-    }
+      if (input.data.name) {
+        await ensureUniqueName(input.data.name, input.id);
+      }
 
-    if (input.data.customDomain) {
-      await ensureUniqueCustomDomain(input.data.customDomain, input.id);
-    }
+      if (input.data.customDomain) {
+        await ensureUniqueCustomDomain(input.data.customDomain, input.id);
+      }
 
-    // Remove cache for both previous and current domain data
-    await DomainManager.removeFromCache(existing.toObject());
+      // Remove cache for both previous and current domain data
+      await DomainManager.removeFromCache(existing.toObject());
 
-    const updated = await DomainModel.findByIdAndUpdate(input.id, input.data, {
-      new: true,
-    });
+      const updated = await DomainModel.findByIdAndUpdate(
+        input.id,
+        input.data,
+        {
+          new: true,
+        },
+      );
 
-    const updatedObj = updated!.toObject();
+      const updatedObj = updated!.toObject();
 
-    // Ensure domain has at least one user (the current user)
-    await ensureDomainHasUser(updatedObj._id.toString(), ctx.user);
+      // Ensure domain has at least one user (the current user)
+      await ensureDomainHasUser(updatedObj._id.toString(), ctx.user);
 
-    // Remove cache for updated domain data
-    await DomainManager.removeFromCache(updatedObj);
+      // Remove cache for updated domain data
+      await DomainManager.removeFromCache(updatedObj);
 
-    // Cache the updated domain data
-    await DomainManager.setDomainCache(updatedObj);
+      // Cache the updated domain data
+      await DomainManager.setDomainCache(updatedObj);
 
-    return updatedObj;
-  }),
+      return updatedObj;
+    }),
 
   delete: adminProcedure
     .input(z.object({ id: documentIdValidator() }))

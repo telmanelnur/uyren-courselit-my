@@ -41,7 +41,10 @@ export const CommentEditorField = forwardRef<
 
   return (
     <CommentEditorTemplate
-      onEditor={(editor: CommentEditorRef | null, meta: { reason: "create" | "destroy" }) => {
+      onEditor={(
+        editor: CommentEditorRef | null,
+        meta: { reason: "create" | "destroy" },
+      ) => {
         if (ref && typeof ref === "function") {
           ref(editor);
         } else if (ref && typeof ref === "object") {

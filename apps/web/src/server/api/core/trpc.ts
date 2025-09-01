@@ -58,7 +58,7 @@ export const t = initTRPC.context<Context>().create({
           code: error.code,
           message: error.message,
           name: "AuthorizationError",
-          redirectTo: "/auth/sign-in", 
+          redirectTo: "/auth/sign-in",
           stack:
             process.env.NODE_ENV === "development" ? error.stack : undefined,
         },

@@ -4,12 +4,10 @@ import { Domain as PublicDomain } from "@workspace/common-models";
 import mongoose from "mongoose";
 import SettingsSchema from "./SiteInfo";
 
-
 export interface Domain extends PublicDomain {
   _id: mongoose.Types.ObjectId;
   lastEditedThemeId?: string;
 }
-
 
 const DomainSchema = new mongoose.Schema<Domain>(
   {

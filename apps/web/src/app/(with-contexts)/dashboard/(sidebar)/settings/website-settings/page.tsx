@@ -11,7 +11,7 @@ const { permissions } = UIConstants;
 
 const breadcrumbs = [
   { label: "Settings", href: "/dashboard/settings" },
-  { label: "Website Settings", href: "#" }
+  { label: "Website Settings", href: "#" },
 ];
 
 export default function WebsiteSettingsPage() {

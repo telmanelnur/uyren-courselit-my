@@ -583,7 +583,7 @@ export const courseRouter = router({
       if (input.filter.status) {
         query.status = input.filter.status;
       }
-      if(input.search?.q) {
+      if (input.search?.q) {
         query.$or = [
           { "user.name": { $regex: input.search?.q, $options: "i" } },
           { "user.email": { $regex: input.search?.q, $options: "i" } },

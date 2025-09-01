@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardContent from "@/components/admin/dashboard-content";
+import { FormMode } from "@/components/admin/layout/types";
 import {
   BTN_CONTINUE,
   BUTTON_CANCEL_TEXT,
@@ -23,7 +24,12 @@ import {
   Group,
   LessonType,
 } from "@workspace/common-models";
-import { DeleteConfirmNiceDialog, DragAndDrop, NiceModal, useToast } from "@workspace/components-library";
+import {
+  DeleteConfirmNiceDialog,
+  DragAndDrop,
+  NiceModal,
+  useToast,
+} from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -31,7 +37,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@workspace/ui/components/dialog";
 import {
   DropdownMenu,
@@ -75,7 +81,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-
 type ProductType =
   GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["getByCourseDetailed"];
 
@@ -99,7 +104,7 @@ export default function ContentPage() {
     null,
   );
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
-  const [sectionDialogMode, setSectionDialogMode] = useState<"create" | "edit">(
+  const [sectionDialogMode, setSectionDialogMode] = useState<FormMode>(
     "create",
   );
   const [editingSection, setEditingSection] = useState<Group | null>(null);
@@ -149,7 +154,7 @@ export default function ContentPage() {
     );
   };
 
-  const openSectionDialog = (mode: "create" | "edit", section?: Group) => {
+  const openSectionDialog = (mode: FormMode, section?: Group) => {
     setSectionDialogMode(mode);
     if (mode === "edit" && section) {
       setEditingSection(section);
@@ -688,28 +693,32 @@ const CollapsibleSection = ({
       }));
   }, [product, section]);
 
-  const removeLessonMutation = trpc.lmsModule.courseModule.lesson.delete.useMutation({
-    onSuccess: () => {
-      toast({
-        title: TOAST_TITLE_SUCCESS,
-        description: "Lesson deleted successfully",
-      });
-    },
-  });
+  const removeLessonMutation =
+    trpc.lmsModule.courseModule.lesson.delete.useMutation({
+      onSuccess: () => {
+        toast({
+          title: TOAST_TITLE_SUCCESS,
+          description: "Lesson deleted successfully",
+        });
+      },
+    });
 
   const trpcUtils = trpc.useUtils();
 
-  const handleDeleteLesson = async (item: ProductType["attachedLessons"][number]) => {
-      const response = await NiceModal.show(DeleteConfirmNiceDialog, {
-        title: "Delete Lesson",
-        message: "Are you sure you want to delete this lesson? This action cannot be undone.",
+  const handleDeleteLesson = async (
+    item: ProductType["attachedLessons"][number],
+  ) => {
+    const response = await NiceModal.show(DeleteConfirmNiceDialog, {
+      title: "Delete Lesson",
+      message:
+        "Are you sure you want to delete this lesson? This action cannot be undone.",
+    });
+    if (response.reason === "confirm") {
+      await removeLessonMutation.mutateAsync({
+        lessonId: item.lessonId,
       });
-      if (response.reason === "confirm") {
-        await removeLessonMutation.mutateAsync({
-          lessonId: item.lessonId,
-        });
-        trpcUtils.lmsModule.courseModule.course.getByCourseDetailed.invalidate();
-      }
+      trpcUtils.lmsModule.courseModule.course.getByCourseDetailed.invalidate();
+    }
   };
 
   return (
@@ -736,7 +745,12 @@ const CollapsibleSection = ({
               >
                 <Edit className="h-4 w-4" />
               </Button>
-              <Button variant="outline" color="destructive" size="sm" onClick={() => handleDeleteLesson(lesson)}>
+              <Button
+                variant="outline"
+                color="destructive"
+                size="sm"
+                onClick={() => handleDeleteLesson(lesson)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>

@@ -25,21 +25,36 @@ import { Input } from "@workspace/ui/components/input";
 import { trpc } from "@/utils/trpc";
 import { useToast } from "@workspace/components-library";
 import { Building2, Edit, Plus } from "lucide-react";
+import { FormMode } from "@/components/admin/layout/types";
 
 // Validation schema
-const schoolSchema = z.object({
-  name: z.string().min(1, "Subdomain is required").max(50, "Subdomain too long"),
-  customDomain: z.string().max(100, "Custom domain too long").optional(),
-  email: z.string().email("Invalid email address").min(1, "Email is required"),
-  title: z.string().min(1, "School name is required").max(100, "School name too long"),
-  subtitle: z.string().max(200, "Description too long").optional(),
-}).refine((data) => {
-  // Either customDomain OR name must be set (or both)
-  return data.customDomain || data.name;
-}, {
-  message: "Either subdomain or custom domain must be provided",
-  path: ["customDomain"], // This will show the error on the customDomain field
-});
+const schoolSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Subdomain is required")
+      .max(50, "Subdomain too long"),
+    customDomain: z.string().max(100, "Custom domain too long").optional(),
+    email: z
+      .string()
+      .email("Invalid email address")
+      .min(1, "Email is required"),
+    title: z
+      .string()
+      .min(1, "School name is required")
+      .max(100, "School name too long"),
+    subtitle: z.string().max(200, "Description too long").optional(),
+  })
+  .refine(
+    (data) => {
+      // Either customDomain OR name must be set (or both)
+      return data.customDomain || data.name;
+    },
+    {
+      message: "Either subdomain or custom domain must be provided",
+      path: ["customDomain"], // This will show the error on the customDomain field
+    },
+  );
 
 type SchoolFormData = z.infer<typeof schoolSchema>;
 
@@ -47,16 +62,16 @@ interface SchoolDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  mode: "create" | "edit";
+  mode: FormMode;
   domain?: any; // Domain data for edit mode
 }
 
-export default function SchoolDialog({ 
-  open, 
-  onOpenChange, 
-  onSuccess, 
-  mode, 
-  domain 
+export default function SchoolDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+  mode,
+  domain,
 }: SchoolDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -168,7 +183,10 @@ export default function SchoolDialog({
     onOpenChange(false);
   };
 
-  const isLoading = createDomainMutation.isPending || updateDomainMutation.isPending || isSubmitting;
+  const isLoading =
+    createDomainMutation.isPending ||
+    updateDomainMutation.isPending ||
+    isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,10 +206,9 @@ export default function SchoolDialog({
             )}
           </DialogTitle>
           <DialogDescription>
-            {mode === "create" 
+            {mode === "create"
               ? "Create a new school/domain in your multi-tenant system. Each school will have its own subdomain."
-              : "Update the school information and settings."
-            }
+              : "Update the school information and settings."}
           </DialogDescription>
         </DialogHeader>
 
@@ -205,10 +222,7 @@ export default function SchoolDialog({
                   <FormItem>
                     <FormLabel>Subdomain *</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="school-name"
-                        {...field}
-                      />
+                      <Input placeholder="school-name" {...field} />
                     </FormControl>
                     <FormMessage />
                     <p className="text-xs text-muted-foreground">
@@ -224,10 +238,7 @@ export default function SchoolDialog({
                   <FormItem>
                     <FormLabel>Custom Domain</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="school.com"
-                        {...field}
-                      />
+                      <Input placeholder="school.com" {...field} />
                     </FormControl>
                     <FormMessage />
                     <p className="text-xs text-muted-foreground">
@@ -263,10 +274,7 @@ export default function SchoolDialog({
                 <FormItem>
                   <FormLabel>School Name *</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="School Name"
-                      {...field}
-                    />
+                    <Input placeholder="School Name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -304,10 +312,13 @@ export default function SchoolDialog({
                 disabled={isLoading}
                 className="flex items-center gap-2"
               >
-                {isLoading 
-                  ? (mode === "create" ? "Creating..." : "Updating...") 
-                  : (mode === "create" ? "Create School" : "Update School")
-                }
+                {isLoading
+                  ? mode === "create"
+                    ? "Creating..."
+                    : "Updating..."
+                  : mode === "create"
+                    ? "Create School"
+                    : "Update School"}
               </Button>
             </DialogFooter>
           </form>

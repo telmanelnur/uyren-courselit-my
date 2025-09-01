@@ -78,7 +78,6 @@ export const isLessonCompleted = ({
   return tmp.completedLessons.some((lesson) => lesson === lessonId);
 };
 
-
 const swapMembers = (arr: any[], index1: number, index2: number): any[] => {
   if (index1 < 0 || index1 > arr.length - 1) {
     return arr;

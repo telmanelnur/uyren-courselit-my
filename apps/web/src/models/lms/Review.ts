@@ -20,7 +20,7 @@ const ReviewSchema = new mongoose.Schema<InternalReview>(
     isFeatured: { type: Boolean, required: true, default: false },
     featuredImage: MediaSchema,
     tags: [{ type: String }],
-    authorId:  {
+    authorId: {
       type: String,
       required: true,
     },

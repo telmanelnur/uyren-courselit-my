@@ -1,6 +1,10 @@
 import { trpc } from "@/utils/trpc";
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { ComboBox2, NiceModal, NiceModalHocProps } from "@workspace/components-library";
+import {
+  ComboBox2,
+  NiceModal,
+  NiceModalHocProps,
+} from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -8,7 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@workspace/ui/components/dialog";
 import { Edit } from "lucide-react";
 import Link from "next/link";
@@ -39,8 +43,8 @@ export function AssignmentLinkNodeComponent({
     NiceModal.show(AssignmentSelectNiceDialog, {
       args: {
         obj: obj || null,
-      }
-    }).then(response => {
+      },
+    }).then((response) => {
       if (response.reason === "submit" && response.data) {
         const selectedItem = response.data as SelectItemType;
         let link = "";
@@ -49,11 +53,11 @@ export function AssignmentLinkNodeComponent({
         } else if (selectedItem.type === "quiz") {
           link = `/quiz/${selectedItem.key}`;
         }
-        updateAttributes({ 
+        updateAttributes({
           obj: {
             type: selectedItem.type,
             id: selectedItem.key,
-            title: selectedItem.title
+            title: selectedItem.title,
           },
           label: `${selectedItem.title} (${selectedItem.type})`,
           link: link,
@@ -66,18 +70,21 @@ export function AssignmentLinkNodeComponent({
       as="div"
       className="entity-card border rounded p-3 bg-white shadow"
     >
-        <div className="flex items-center justify-between">
-          <Link href={link || '#'} target="_blank">
-            {label}
-          </Link>
-          {
-            editor.isEditable ? (
-              <Button type="button" onClick={handleSelectDialog} variant="ghost" size="icon">
-                <Edit />
-              </Button>
-            ) : null
-          }
-        </div>
+      <div className="flex items-center justify-between">
+        <Link href={link || "#"} target="_blank">
+          {label}
+        </Link>
+        {editor.isEditable ? (
+          <Button
+            type="button"
+            onClick={handleSelectDialog}
+            variant="ghost"
+            size="icon"
+          >
+            <Edit />
+          </Button>
+        ) : null}
+      </div>
     </NodeViewWrapper>
   );
 }
@@ -89,9 +96,9 @@ type SelectItemType = {
 };
 
 const AssignmentSelectNiceDialog = NiceModal.create<
-NiceModalHocProps & { args: { obj: AssignmentLinkAttrs["obj"] | null } },
-{ reason: "cancel"; data: null } | { reason: "submit"; data: any }
->(({ args}) => {
+  NiceModalHocProps & { args: { obj: AssignmentLinkAttrs["obj"] | null } },
+  { reason: "cancel"; data: null } | { reason: "submit"; data: any }
+>(({ args }) => {
   const { visible, hide, resolve } = NiceModal.useModal();
 
   const handleClose = () => {
@@ -138,11 +145,15 @@ NiceModalHocProps & { args: { obj: AssignmentLinkAttrs["obj"] | null } },
 
   useEffect(() => {
     console.log("args.obj", args.obj, typeof args.obj);
-    setSelectedOptions(args.obj ? {
-      key: args.obj.id,
-      title: args.obj.title,
-      type: args.obj.type,
-    } : null);
+    setSelectedOptions(
+      args.obj
+        ? {
+            key: args.obj.id,
+            title: args.obj.title,
+            type: args.obj.type,
+          }
+        : null,
+    );
   }, [args.obj]);
 
   return (
@@ -184,7 +195,9 @@ NiceModalHocProps & { args: { obj: AssignmentLinkAttrs["obj"] | null } },
           />
         </DialogDescription>
         <DialogFooter>
-          <Button onClick={handleSubmit} variant="default">Save</Button>
+          <Button onClick={handleSubmit} variant="default">
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

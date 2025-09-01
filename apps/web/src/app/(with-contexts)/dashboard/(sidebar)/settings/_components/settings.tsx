@@ -117,7 +117,10 @@ export default function Settings({ selectedTab }: SettingsProps) {
           ]) && <DomainManagement />}
         </TabsContent>
 
-        <TabsContent value="Database Management" className="flex flex-col gap-8">
+        <TabsContent
+          value="Database Management"
+          className="flex flex-col gap-8"
+        >
           {checkPermission(profile.permissions, [
             UIConstants.permissions.manageSettings,
           ]) && <DatabaseManagement />}

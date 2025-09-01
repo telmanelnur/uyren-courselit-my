@@ -119,16 +119,32 @@ export default function UserForm({ id }: { id: string }) {
             <ComboBox2
               title="Select tags"
               valueKey="tag"
-              value={(userData.tags || []).map(tag => ({ tag }))}
-              searchFn={async (search: string, offset: number, size: number) => {
+              value={(userData.tags || []).map((tag) => ({ tag }))}
+              searchFn={async (
+                search: string,
+                offset: number,
+                size: number,
+              ) => {
                 const tags = tagsData || [];
-                if (!search) return tags.slice(offset, offset + size).map(tag => ({ tag }));
-                return tags.filter(tag => 
-                  tag.toLowerCase().includes(search.toLowerCase())
-                ).slice(offset, offset + size).map(tag => ({ tag }));
+                if (!search)
+                  return tags
+                    .slice(offset, offset + size)
+                    .map((tag) => ({ tag }));
+                return tags
+                  .filter((tag) =>
+                    tag.toLowerCase().includes(search.toLowerCase()),
+                  )
+                  .slice(offset, offset + size)
+                  .map((tag) => ({ tag }));
               }}
               renderText={(item) => item.tag}
-              onChange={(items) => updateTags(Array.isArray(items) ? items.map(item => item.tag) : [items.tag])}
+              onChange={(items) =>
+                updateTags(
+                  Array.isArray(items)
+                    ? items.map((item) => item.tag)
+                    : [items.tag],
+                )
+              }
               multiple={true}
             />
           </div>

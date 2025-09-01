@@ -188,231 +188,227 @@ export default function AssignmentSettings() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const isSubmitting = form.formState.isSubmitting;
   return (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSaving || isSubmitting}>
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving || isSubmitting ? "Saving..." : "Save Settings"}
-            </Button>
-          </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isSaving || isSubmitting}>
+            <Save className="h-4 w-4 mr-2" />
+            {isSaving || isSubmitting ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Assignment Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter assignment title" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Enter assignment description"
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="course"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Associated Course</FormLabel>
+                    <FormControl>
+                      <ComboBox2<CourseSelectItemType>
+                        title="Select a course"
+                        valueKey="key"
+                        value={field.value || undefined}
+                        searchFn={fetchCourses}
+                        renderText={(item) => item.title}
+                        onChange={field.onChange}
+                        multiple={false}
+                        showCreateButton={true}
+                        showEditButton={true}
+                        onCreateClick={() => {
+                          window.open(`/dashboard/products/new`, "_blank");
+                        }}
+                        onEditClick={(item) => {
+                          window.open(
+                            `/dashboard/products/${item.key}`,
+                            "_blank",
+                          );
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="instructions"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Instructions</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Enter detailed instructions for students"
+                        rows={4}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Assignment Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="title"
+                  name="availableFrom"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Assignment Title</FormLabel>
+                      <FormLabel>Available From</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="datetime-local"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value
+                                ? new Date(e.target.value)
+                                : undefined,
+                            )
+                          }
+                          value={
+                            field.value
+                              ? new Date(field.value).toISOString().slice(0, 16)
+                              : ""
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Due Date</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter assignment title"
+                          type="datetime-local"
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value
+                                ? new Date(e.target.value)
+                                : undefined,
+                            )
+                          }
+                          value={
+                            field.value
+                              ? new Date(field.value).toISOString().slice(0, 16)
+                              : ""
+                          }
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
+              </div>
+              <FormField
+                control={form.control}
+                name="assignmentType"
+                render={({ field }) => {
+                  return (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Enter assignment description"
-                          rows={3}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="course"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Associated Course</FormLabel>
-                      <FormControl>
-                        <ComboBox2<CourseSelectItemType>
-                          title="Select a course"
-                          valueKey="key"
-                          value={field.value || undefined}
-                          searchFn={fetchCourses}
-                          renderText={(item) => item.title}
-                          onChange={field.onChange}
-                          multiple={false}
-                          showCreateButton={true}
-                          showEditButton={true}
-                          onCreateClick={() => {
-                            window.open(`/dashboard/products/new`, '_blank');
-                          }}
-                          onEditClick={(item) => {
-                            window.open(`/dashboard/products/${item.key}`, '_blank');
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="instructions"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Instructions</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Enter detailed instructions for students"
-                          rows={4}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Assignment Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="availableFrom"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Available From</FormLabel>
+                      <FormLabel>Assignment Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
-                          <Input
-                            type="datetime-local"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value
-                                  ? new Date(e.target.value)
-                                  : undefined,
-                              )
-                            }
-                            value={
-                              field.value
-                                ? new Date(field.value)
-                                    .toISOString()
-                                    .slice(0, 16)
-                                : ""
-                            }
-                          />
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="dueDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Due Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="datetime-local"
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value
-                                  ? new Date(e.target.value)
-                                  : undefined,
-                              )
-                            }
-                            value={
-                              field.value
-                                ? new Date(field.value)
-                                    .toISOString()
-                                    .slice(0, 16)
-                                : ""
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="assignmentType"
-                  render={({ field }) => {
-                    return (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Assignment Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="essay">Essay</SelectItem>
-                            <SelectItem value="project">Project</SelectItem>
-                            <SelectItem value="presentation">
-                              Presentation
-                            </SelectItem>
-                            <SelectItem value="file_upload">
-                              File Upload
-                            </SelectItem>
-                            <SelectItem value="peer_review">
-                              Peer Review
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-                <FormField
-                  control={form.control}
-                  name="allowLateSubmission"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Allow Late Submissions
-                        </FormLabel>
-                        <div className="text-sm text-muted-foreground">
-                          Students can submit after due date
-                        </div>
+                        <SelectContent>
+                          <SelectItem value="essay">Essay</SelectItem>
+                          <SelectItem value="project">Project</SelectItem>
+                          <SelectItem value="presentation">
+                            Presentation
+                          </SelectItem>
+                          <SelectItem value="file_upload">
+                            File Upload
+                          </SelectItem>
+                          <SelectItem value="peer_review">
+                            Peer Review
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+              <FormField
+                control={form.control}
+                name="allowLateSubmission"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Allow Late Submissions
+                      </FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Students can submit after due date
                       </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </form>
-      </Form>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </form>
+    </Form>
   );
 }

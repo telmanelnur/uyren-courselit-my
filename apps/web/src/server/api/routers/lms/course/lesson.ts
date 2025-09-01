@@ -25,7 +25,11 @@ import {
   mediaWrappedFieldValidator,
   textEditorContentValidator,
 } from "@/server/api/core/validators";
-import { BASIC_PUBLICATION_STATUS_TYPE, Constants, UIConstants } from "@workspace/common-models";
+import {
+  BASIC_PUBLICATION_STATUS_TYPE,
+  Constants,
+  UIConstants,
+} from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { RootFilterQuery } from "mongoose";
 import { z } from "zod";
@@ -175,9 +179,13 @@ export const lessonRouter = router({
         groupId: input.data.groupId,
         requiresEnrollment: input.data.requiresEnrollment,
       });
-      const newLessonIds = Array.from(new Set([...course.lessons, lesson.lessonId]));
+      const newLessonIds = Array.from(
+        new Set([...course.lessons, lesson.lessonId]),
+      );
       course.lessons = newLessonIds;
-      const newLessonsOrder = Array.from(new Set([...group.lessonsOrder, lesson.lessonId]));
+      const newLessonsOrder = Array.from(
+        new Set([...group.lessonsOrder, lesson.lessonId]),
+      );
       group.lessonsOrder = newLessonsOrder;
       await course.save();
 
@@ -227,10 +235,14 @@ export const lessonRouter = router({
         throw new NotFoundException("Course", lesson.courseId);
       }
 
-      const newLessonIds = course.lessons.filter((item) => item !== lesson.lessonId);
+      const newLessonIds = course.lessons.filter(
+        (item) => item !== lesson.lessonId,
+      );
       course.groups = course.groups.map((group) => ({
         ...group,
-        lessonsOrder: group.lessonsOrder.filter((item) => item !== lesson.lessonId),
+        lessonsOrder: group.lessonsOrder.filter(
+          (item) => item !== lesson.lessonId,
+        ),
       }));
       course.lessons = Array.from(new Set(newLessonIds));
       await course.save();
@@ -300,8 +312,8 @@ export const lessonRouter = router({
       if (!lesson) {
         throw new NotFoundException("Lesson", input.lessonId);
       }
-      if(lesson.requiresEnrollment) {
-        if(!ctx.session?.user) {
+      if (lesson.requiresEnrollment) {
+        if (!ctx.session?.user) {
           throw new AuthenticationException("You are not authenticated");
         }
         const membership = await MembershipModel.findOne({
@@ -311,8 +323,15 @@ export const lessonRouter = router({
           domain: ctx.domainData.domainObj._id,
           status: Constants.MembershipStatus.ACTIVE,
         });
-        if(!membership && !checkPermission(ctx.session.user.permissions, [permissions.manageCourse])) {
-          throw new AuthorizationException("You are not allowed to access this lesson");
+        if (
+          !membership &&
+          !checkPermission(ctx.session.user.permissions, [
+            permissions.manageCourse,
+          ])
+        ) {
+          throw new AuthorizationException(
+            "You are not allowed to access this lesson",
+          );
         }
       }
       const { nextLesson, prevLesson } = await getPrevNextCursor(

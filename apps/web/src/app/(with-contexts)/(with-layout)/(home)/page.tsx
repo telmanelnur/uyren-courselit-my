@@ -1,8 +1,11 @@
-"use client"
+"use client";
 
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
-import { ScrollAnimation, ScrollGroup } from "@/components/public/scroll-animation";
+import {
+  ScrollAnimation,
+  ScrollGroup,
+} from "@/components/public/scroll-animation";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -17,11 +20,10 @@ import GearsIcon from "@/../public/img/gears.svg";
 import PythonIcon from "@/../public/img/python.svg";
 import ChartLineUpIcon from "@/../public/img/chart-line-up.svg";
 import SupportIcon from "@/../public/img/support.svg";
-import "./home.css"
-
+import "./home.css";
 
 export default function HomePage() {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("common");
 
   const features = [
     {
@@ -44,45 +46,49 @@ export default function HomePage() {
       title: t("feature_feedback_title"),
       description: t("feature_feedback_desc"),
     },
-  ]
+  ];
 
   const stats = [
     { number: "10+", label: t("stats_years_experience") },
     { number: "200+", label: t("stats_students_enrolled") },
     { number: "40+", label: t("stats_popular_courses") },
     { number: "40+", label: t("stats_ai_powered_courses") },
-  ]
+  ];
 
-  const { data: mainPageSettings, isLoading } = trpc.siteModule.websiteSettings.getPublicWebsiteSettings.useQuery();
+  const { data: mainPageSettings, isLoading } =
+    trpc.siteModule.websiteSettings.getPublicWebsiteSettings.useQuery();
 
   // Use featured courses from settings or fallback to hardcoded ones
   const courses = useMemo(() => {
-    return mainPageSettings?.mainPage.featuredCourses
-      .sort((a, b) => (a.order || 0) - (b.order || 0))
-      .map(course => ({
-        slug: course.slug,
-        image: "/img/python-course.jpeg", // Default image
-        title: course.title,
-        level: course.level || "Beginner",
-        duration: course.duration ? `${course.duration} weeks` : "8 weeks",
-        rating: 4.9,
-        students: 1200,
-        price: "Free",
-        shortDescription: course.shortDescription,
-      })) || [];
-  
+    return (
+      mainPageSettings?.mainPage.featuredCourses
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((course) => ({
+          slug: course.slug,
+          image: "/img/python-course.jpeg", // Default image
+          title: course.title,
+          level: course.level || "Beginner",
+          duration: course.duration ? `${course.duration} weeks` : "8 weeks",
+          rating: 4.9,
+          students: 1200,
+          price: "Free",
+          shortDescription: course.shortDescription,
+        })) || []
+    );
   }, [mainPageSettings?.mainPage.featuredCourses, t]);
 
   // Use featured reviews from settings or fallback to hardcoded ones
   const testimonials = useMemo(() => {
-     return mainPageSettings?.mainPage.featuredReviews
+    return (
+      mainPageSettings?.mainPage.featuredReviews
         .sort((a, b) => (a.order || 0) - (b.order || 0))
         .map((review) => ({
           content: review.content,
           author: review.author,
           role: "Student",
           rating: review.rating,
-        })) || [];
+        })) || []
+    );
   }, [mainPageSettings?.mainPage.featuredReviews, t]);
 
   // Loading skeleton
@@ -117,7 +123,15 @@ export default function HomePage() {
                   {t("badge_ai_platform")}
                 </Badge>
                 <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
-                  <Trans i18nKey="hero_title" t={t} components={{ "primary-label": <span className="text-brand-primary font-bold" /> }} />
+                  <Trans
+                    i18nKey="hero_title"
+                    t={t}
+                    components={{
+                      "primary-label": (
+                        <span className="text-brand-primary font-bold" />
+                      ),
+                    }}
+                  />
                 </h1>
                 <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
                   {t("hero_subtitle")}
@@ -188,7 +202,13 @@ export default function HomePage() {
           <ScrollAnimation variant="fadeUp">
             <div className="text-center mb-12">
               <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
-                <Trans i18nKey="features_title" t={t} components={{ "primary-label": <span className="text-brand-primary" /> }} />
+                <Trans
+                  i18nKey="features_title"
+                  t={t}
+                  components={{
+                    "primary-label": <span className="text-brand-primary" />,
+                  }}
+                />
               </h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 {t("features_subtitle")}
@@ -213,7 +233,9 @@ export default function HomePage() {
                           <feature.icon className="w-6 h-6 fill-brand-primary group-hover/item:fill-white" />
                         }
                       </div>
-                      <h3 className="text-lg font-bold text-foreground mb-3">{feature.title}</h3>
+                      <h3 className="text-lg font-bold text-foreground mb-3">
+                        {feature.title}
+                      </h3>
                       <p className="text-muted-foreground text-sm leading-relaxed">
                         {feature.description}
                       </p>
@@ -232,10 +254,17 @@ export default function HomePage() {
           <ScrollAnimation variant="fadeUp">
             <div className="text-center mb-12">
               <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
-                <Trans i18nKey="courses_title" t={t} components={{ "primary-label": <span className="text-brand-primary" /> }} />
+                <Trans
+                  i18nKey="courses_title"
+                  t={t}
+                  components={{
+                    "primary-label": <span className="text-brand-primary" />,
+                  }}
+                />
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Master in-demand skills with our AI-powered courses designed for real-world success
+                Master in-demand skills with our AI-powered courses designed for
+                real-world success
               </p>
             </div>
           </ScrollAnimation>
@@ -244,7 +273,10 @@ export default function HomePage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {courses.map((course, index) => (
                 <ScrollAnimation key={index} variant="fadeUp">
-                  <Link href={`/courses/${course.slug}`} className="block group">
+                  <Link
+                    href={`/courses/${course.slug}`}
+                    className="block group"
+                  >
                     <Card className="pt-0 h-full hover:shadow-xl transition-all duration-300 bg-card group border border-transparent hover:border-brand-primary/20 hover:bg-card/80 overflow-hidden">
                       <CardContent className="p-0">
                         <div className="relative">
@@ -269,7 +301,9 @@ export default function HomePage() {
                               height={16}
                               className="w-4 h-4 p-0.5 border border-muted-foreground rounded"
                             />
-                            <p className="text-xs text-muted-foreground">{t("courses_provider")}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {t("courses_provider")}
+                            </p>
                           </div>
 
                           <h3 className="text-lg font-bold text-foreground line-clamp-2 group-hover:text-brand-primary transition-colors">
@@ -283,22 +317,34 @@ export default function HomePage() {
                           )} */}
 
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{course.level}</span>
-                            <span className="text-muted-foreground">{course.duration}</span>
+                            <span className="text-muted-foreground">
+                              {course.level}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {course.duration}
+                            </span>
                           </div>
 
                           <div className="flex items-center justify-between pt-2">
                             <div className="flex items-center gap-1">
                               <div className="flex text-yellow-400">
                                 {[...Array(5)].map((_, i) => (
-                                  <svg key={i} className={`w-3 h-3 ${i < Math.floor(course.rating) ? 'fill-current' : 'fill-gray-300'}`} viewBox="0 0 20 20">
+                                  <svg
+                                    key={i}
+                                    className={`w-3 h-3 ${i < Math.floor(course.rating) ? "fill-current" : "fill-gray-300"}`}
+                                    viewBox="0 0 20 20"
+                                  >
                                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                                   </svg>
                                 ))}
                               </div>
-                              <span className="text-xs text-muted-foreground ml-1">{course.rating}</span>
+                              <span className="text-xs text-muted-foreground ml-1">
+                                {course.rating}
+                              </span>
                             </div>
-                            <span className="text-xs text-muted-foreground">{course.students.toLocaleString()} students</span>
+                            <span className="text-xs text-muted-foreground">
+                              {course.students.toLocaleString()} students
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -331,7 +377,9 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center relative z-10">
           <ScrollAnimation variant="fadeUp">
             <div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">{t("cta_title")}</h2>
+              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+                {t("cta_title")}
+              </h2>
               <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
                 {t("cta_subtitle")}
               </p>
@@ -365,5 +413,5 @@ export default function HomePage() {
 
       <Footer />
     </div>
-  )
+  );
 }

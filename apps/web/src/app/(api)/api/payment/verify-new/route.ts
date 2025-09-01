@@ -3,9 +3,9 @@ import InvoiceModel from "@/models/Invoice";
 import MembershipModel from "@/models/Membership";
 import { getDomainData } from "@/lib/domain";
 import { getServerSession } from "next-auth";
-import { getUser } from "../initiate/route";
 import { authOptions } from "@/lib/auth/options";
 import { Log } from "@/lib/logger";
+import { getUser } from "../helpers";
 
 interface RequestPayload {
   id: string;

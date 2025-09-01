@@ -27,13 +27,17 @@ import {
   Star,
   Users,
   AlertCircle,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert";
 
 interface PaymentPlan {
   planId: string;
@@ -204,7 +208,9 @@ export default function CheckoutView() {
           description: "Please log in to enroll in this course.",
           variant: "destructive",
         });
-        router.push(`/auth/sign-in?redirect=/checkout?id=${course!.courseId}&type=${courseType}`);   
+        router.push(
+          `/auth/sign-in?redirect=/checkout?id=${course!.courseId}&type=${courseType}`,
+        );
         return;
       }
 
@@ -288,7 +294,9 @@ export default function CheckoutView() {
           description: "Please log in to purchase this course.",
           variant: "destructive",
         });
-        router.push(`/auth/sign-in?redirect=/checkout?id=${course!.courseId}&type=${courseType}`);
+        router.push(
+          `/auth/sign-in?redirect=/checkout?id=${course!.courseId}&type=${courseType}`,
+        );
         return;
       }
 
@@ -360,7 +368,8 @@ export default function CheckoutView() {
     if (!membershipStatus) return true; // No existing membership, can proceed
     if (membershipStatus === Constants.MembershipStatus.ACTIVE) return false; // Already enrolled
     if (membershipStatus === Constants.MembershipStatus.PENDING) return false; // Payment pending
-    if (membershipStatus === Constants.MembershipStatus.PAYMENT_FAILED) return true; // Can retry
+    if (membershipStatus === Constants.MembershipStatus.PAYMENT_FAILED)
+      return true; // Can retry
     if (membershipStatus === Constants.MembershipStatus.EXPIRED) return true; // Can re-enroll
     if (membershipStatus === Constants.MembershipStatus.REJECTED) return true; // Can re-apply
     return true; // Default case
@@ -369,41 +378,46 @@ export default function CheckoutView() {
   // Get membership status message
   const getMembershipStatusMessage = useCallback(() => {
     if (!membershipStatus) return null;
-    
+
     switch (membershipStatus) {
       case Constants.MembershipStatus.ACTIVE:
         return {
           type: "default" as const,
           title: "Already Enrolled",
-          description: "You are already enrolled in this course. You can access it from your dashboard.",
+          description:
+            "You are already enrolled in this course. You can access it from your dashboard.",
           icon: CheckCircle,
         };
       case Constants.MembershipStatus.PENDING:
         return {
           type: "default" as const,
           title: "Payment Pending",
-          description: "You have a pending payment for this course. Please complete your payment or contact support if you need assistance.",
+          description:
+            "You have a pending payment for this course. Please complete your payment or contact support if you need assistance.",
           icon: Clock,
         };
       case Constants.MembershipStatus.PAYMENT_FAILED:
         return {
           type: "destructive" as const,
           title: "Payment Failed",
-          description: "Your previous payment attempt failed. You can try again or contact support for assistance.",
+          description:
+            "Your previous payment attempt failed. You can try again or contact support for assistance.",
           icon: XCircle,
         };
       case Constants.MembershipStatus.EXPIRED:
         return {
           type: "default" as const,
           title: "Membership Expired",
-          description: "Your previous membership has expired. You can re-enroll to regain access.",
+          description:
+            "Your previous membership has expired. You can re-enroll to regain access.",
           icon: AlertCircle,
         };
       case Constants.MembershipStatus.REJECTED:
         return {
           type: "destructive" as const,
           title: "Enrollment Rejected",
-          description: "Your previous enrollment request was rejected. You can try enrolling again.",
+          description:
+            "Your previous enrollment request was rejected. You can try enrolling again.",
           icon: XCircle,
         };
       default:
@@ -418,7 +432,8 @@ export default function CheckoutView() {
     if (!canProceedWithCheckout) {
       toast({
         title: "Cannot Proceed",
-        description: "You already have an active enrollment or pending payment for this course.",
+        description:
+          "You already have an active enrollment or pending payment for this course.",
         variant: "destructive",
       });
       return;
@@ -446,9 +461,7 @@ export default function CheckoutView() {
           <h1 className="text-2xl font-bold text-red-600 mb-4">
             {t("checkout_course_not_found")}
           </h1>
-          <p className="text-gray-600">
-            {t("checkout_course_not_exist")}
-          </p>
+          <p className="text-gray-600">{t("checkout_course_not_exist")}</p>
         </div>
       </div>
     );
@@ -495,9 +508,7 @@ export default function CheckoutView() {
           <h1 className="text-2xl font-bold text-gray-600 mb-4">
             {t("checkout_course_not_available")}
           </h1>
-          <p className="text-gray-600">
-            {t("checkout_check_course_id")}
-          </p>
+          <p className="text-gray-600">{t("checkout_check_course_id")}</p>
         </div>
       </div>
     );
@@ -539,32 +550,34 @@ export default function CheckoutView() {
                 {/* Featured Image */}
                 <div className="relative w-full h-48 rounded-lg overflow-hidden mb-4">
                   <Image
-                    src={course.featuredImage?.url || "/courselit_backdrop.webp"}
+                    src={
+                      course.featuredImage?.url || "/courselit_backdrop.webp"
+                    }
                     alt={course.title}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                   />
                 </div>
-                
+
                 {/* Course Title */}
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
                   {course.title}
                 </h3>
-                
+
                 {/* Course Tags */}
                 {course.tags && course.tags.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     {course.tags.map((tag, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="outline" 
+                      <Badge
+                        key={index}
+                        variant="outline"
                         className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 transition-colors text-xs"
                       >
                         {tag}
                       </Badge>
                     ))}
-              </div>
+                  </div>
                 )}
 
                 {/* Essential Course Info with Gradient Icons */}
@@ -574,7 +587,9 @@ export default function CheckoutView() {
                       <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
                         <Star className="w-4 h-4 text-white" />
                       </div>
-                      <span>{t("checkout_level")}: {course.level}</span>
+                      <span>
+                        {t("checkout_level")}: {course.level}
+                      </span>
                     </div>
                   )}
                   {course.duration && (
@@ -582,21 +597,27 @@ export default function CheckoutView() {
                       <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
                         <Clock className="w-4 h-4 text-white" />
                       </div>
-                      <span>{course.duration} {t("weeks")}</span>
+                      <span>
+                        {course.duration} {t("weeks")}
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
                       <BookOpen className="w-4 h-4 text-white" />
                     </div>
-                    <span>{t("checkout_by")} {course.creatorName}</span>
+                    <span>
+                      {t("checkout_by")} {course.creatorName}
+                    </span>
                   </div>
                   {course.attachedLessons && (
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-orange-600 rounded-lg flex items-center justify-center">
                         <FileText className="w-4 h-4 text-white" />
                       </div>
-                      <span>{course.attachedLessons.length} {t("lessons")}</span>
+                      <span>
+                        {course.attachedLessons.length} {t("lessons")}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -631,9 +652,9 @@ export default function CheckoutView() {
                           {priceInfo.isFree
                             ? t("checkout_free")
                             : formatCurrency(
-                              priceInfo.amount,
-                              siteInfo.currencyISOCode,
-                            )}
+                                priceInfo.amount,
+                                siteInfo.currencyISOCode,
+                              )}
                         </span>
                         {priceInfo.period && (
                           <span className="text-sm text-muted-foreground">
@@ -668,7 +689,8 @@ export default function CheckoutView() {
                   <span className="text-white text-sm font-bold">💳</span>
                 </div>
                 <p className="text-sm">
-                  <strong>{t("checkout_payment_methods")}:</strong> {t("checkout_payment_description")}
+                  <strong>{t("checkout_payment_methods")}:</strong>{" "}
+                  {t("checkout_payment_description")}
                 </p>
               </div>
             </div>
@@ -733,15 +755,17 @@ export default function CheckoutView() {
                           <div className="w-6 h-6 rounded-sm border-2 border-brand-primary/30 flex items-center justify-center bg-white">
                             <CheckCircle className="h-3 w-3 text-brand-primary" />
                           </div>
-                          <span className="font-medium">{selectedPlanData.name}</span>
+                          <span className="font-medium">
+                            {selectedPlanData.name}
+                          </span>
                         </div>
                         <span className="font-bold text-brand-primary">
                           {getPlanPrice(selectedPlanData).isFree
                             ? t("checkout_free")
                             : formatCurrency(
-                              getPlanPrice(selectedPlanData).amount,
-                              siteInfo.currencyISOCode,
-                            )}
+                                getPlanPrice(selectedPlanData).amount,
+                                siteInfo.currencyISOCode,
+                              )}
                         </span>
                       </div>
                     </div>
@@ -761,9 +785,9 @@ export default function CheckoutView() {
                           {getPlanPrice(selectedPlanData).isFree
                             ? t("checkout_free")
                             : formatCurrency(
-                              getPlanPrice(selectedPlanData).amount,
-                              siteInfo.currencyISOCode,
-                            )}
+                                getPlanPrice(selectedPlanData).amount,
+                                siteInfo.currencyISOCode,
+                              )}
                         </span>
                       </div>
                     </div>
@@ -789,9 +813,12 @@ export default function CheckoutView() {
                               : t("checkout_redirecting_to_payment")}
                           </>
                         ) : !canProceedWithCheckout ? (
-                          membershipStatus === Constants.MembershipStatus.ACTIVE 
-                            ? "Already Enrolled" 
-                            : "Payment Pending"
+                          membershipStatus ===
+                          Constants.MembershipStatus.ACTIVE ? (
+                            "Already Enrolled"
+                          ) : (
+                            "Payment Pending"
+                          )
                         ) : getPlanPrice(selectedPlanData).isFree ? (
                           t("checkout_enroll_for_free")
                         ) : (
@@ -816,13 +843,17 @@ export default function CheckoutView() {
                           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
                               <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">S</span>
+                                <span className="text-white text-xs font-bold">
+                                  S
+                                </span>
                               </div>
                               <span>{t("checkout_ssl_secured")}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">✓</span>
+                                <span className="text-white text-xs font-bold">
+                                  ✓
+                                </span>
                               </div>
                               <span>{t("checkout_pci_compliant")}</span>
                             </div>

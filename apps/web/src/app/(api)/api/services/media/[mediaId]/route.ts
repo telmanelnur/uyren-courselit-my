@@ -7,7 +7,7 @@ import { connectToDatabase } from "@workspace/common-logic";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { mediaId: string } },
+  { params }: { params: Promise<{ mediaId: string }> },
 ) {
   try {
     // Check authentication
@@ -16,7 +16,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { mediaId } = params;
+    const { mediaId } = await params;
 
     if (!mediaId) {
       return NextResponse.json(
@@ -25,9 +25,6 @@ export async function DELETE(
       );
     }
 
-    // Get query parameters for storage type
-    const { searchParams } = new URL(request.url);
-    const storageType = searchParams.get("storageType") || "cloudinary";
 
     // Connect to database
     await connectToDatabase();
@@ -44,6 +41,7 @@ export async function DELETE(
         { status: 404 },
       );
     }
+    const storageType = mediaRecord.storageProvider;
 
     // Delete from storage service based on storage type
     let deleted = false;
@@ -61,7 +59,6 @@ export async function DELETE(
     if (deleted) {
       // Remove from database
       await MediaModel.deleteOne({ _id: mediaRecord._id });
-
       return NextResponse.json({
         success: true,
         message: "success",

@@ -42,7 +42,8 @@ const breadcrumbs = [{ label: MY_CONTENT_HEADER, href: "#" }];
 export default function Page() {
   const [data, setData] = useState<ContentItem[]>([]);
 
-  const loadUserContentQuery = trpc.userModule.userContent.getProtectedUserContent.useQuery();
+  const loadUserContentQuery =
+    trpc.userModule.userContent.getProtectedUserContent.useQuery();
 
   useEffect(() => {
     if (loadUserContentQuery.data) {

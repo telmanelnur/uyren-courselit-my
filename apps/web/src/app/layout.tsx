@@ -8,14 +8,11 @@ import { Inter } from "next/font/google";
 import NoSubdomainPage from "./_components/no-subdomain-page";
 import { getT } from "./i18n/server";
 
-
 import "@/lib/global-client";
 // import "@workspace/components-library/styles.css";
 import "@/styles/globals.css";
 
-
 const inter = Inter({ subsets: ["latin"] });
-
 
 // export async function generateStaticParams() {
 //   return languages.map((lng) => ({ lng }))
@@ -57,8 +54,6 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-
-
 export default async function RootLayout({ children }: RootLayoutProps) {
   let hasError = false;
   let serverSiteInfo: any = null;
@@ -71,7 +66,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   }
 
   const { i18n } = await getT();
-  const cls = `${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans ${inter.className}`
+  const cls = `${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans ${inter.className}`;
   if (hasError || !serverSiteInfo) {
     return (
       <html lang={i18n.language} suppressHydrationWarning>
@@ -88,9 +83,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang={i18n.language} suppressHydrationWarning>
       <head>{/* <style>{themeStyles}</style> */}</head>
-      <body
-        className={cls}
-      >
+      <body className={cls}>
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>
     </html>

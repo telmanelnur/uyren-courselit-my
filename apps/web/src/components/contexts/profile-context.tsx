@@ -76,7 +76,7 @@ export const ProfileProvider = ({
         });
 
         // Sign out and redirect to login
-        signOut();  
+        signOut();
         return;
       }
 

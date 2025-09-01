@@ -279,10 +279,13 @@ export default function QuizSettings() {
                           showCreateButton={true}
                           showEditButton={true}
                           onCreateClick={() => {
-                            window.open(`/dashboard/products/new`, '_blank');
+                            window.open(`/dashboard/products/new`, "_blank");
                           }}
                           onEditClick={(item) => {
-                            window.open(`/dashboard/products/${item.key}`, '_blank');
+                            window.open(
+                              `/dashboard/products/${item.key}`,
+                              "_blank",
+                            );
                           }}
                         />
                       </FormControl>

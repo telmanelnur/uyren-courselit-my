@@ -43,7 +43,7 @@ export default function QuizSubmissions() {
 
   const { toast } = useToast();
   const trpcUtils = trpc.useUtils();
-  
+
   const deleteSubmissionMutation =
     trpc.lmsModule.quizModule.quizAttempt.delete.useMutation({
       onSuccess: () => {
@@ -77,7 +77,7 @@ export default function QuizSubmissions() {
     (submission: QuizAttemptType) => {
       // Open existing results page in new tab
       const resultsUrl = `/quiz/${quiz?._id}/attempts/${submission._id}/results`;
-      window.open(resultsUrl, '_blank');
+      window.open(resultsUrl, "_blank");
     },
     [quiz?._id],
   );
@@ -257,7 +257,7 @@ export default function QuizSubmissions() {
                   <Eye className="h-4 w-4 mr-2" />
                   View Results
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => handleRegradeAttempt(attempt)}
                   disabled={regradeAttemptMutation.isPending}
                 >
@@ -277,7 +277,13 @@ export default function QuizSubmissions() {
         },
       },
     ];
-  }, [quiz?.totalPoints, handleViewResults, handleRegradeAttempt, handleDeleteSubmission, regradeAttemptMutation.isPending]);
+  }, [
+    quiz?.totalPoints,
+    handleViewResults,
+    handleRegradeAttempt,
+    handleDeleteSubmission,
+    regradeAttemptMutation.isPending,
+  ]);
 
   const { table } = useDataTable({
     columns,

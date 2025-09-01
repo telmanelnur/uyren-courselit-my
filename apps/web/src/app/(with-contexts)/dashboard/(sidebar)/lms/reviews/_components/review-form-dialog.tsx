@@ -1,17 +1,42 @@
 "use client";
 
+import { FormMode } from "@/components/admin/layout/types";
 import { useProfile } from "@/components/contexts/profile-context";
 import { CommentEditorField } from "@/components/editors/tiptap/templates/comment/comment-editor";
 import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UIConstants } from "@workspace/common-models";
-import { ComboBox2, NiceModal, NiceModalHocProps, useToast } from "@workspace/components-library";
+import {
+  ComboBox2,
+  NiceModal,
+  NiceModalHocProps,
+  useToast,
+} from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
 import { checkPermission } from "@workspace/utils";
 import { Loader2, Star } from "lucide-react";
 import { useEffect } from "react";
@@ -23,7 +48,10 @@ const { permissions } = UIConstants;
 const reviewSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
   content: z.any().optional(),
-  rating: z.number().min(1, "Rating must be at least 1").max(10, "Rating cannot exceed 10"),
+  rating: z
+    .number()
+    .min(1, "Rating must be at least 1")
+    .max(10, "Rating cannot exceed 10"),
   targetType: z.enum(["website", "course", "product", "blog"]),
   targetId: z.string().optional(),
   published: z.boolean(),
@@ -35,7 +63,7 @@ const reviewSchema = z.object({
 type ReviewFormData = z.infer<typeof reviewSchema>;
 
 interface ReviewFormDialogProps extends NiceModalHocProps {
-  mode: "create" | "edit";
+  mode: FormMode;
   reviewId?: string;
   initialData?: Partial<ReviewFormData>;
 }
@@ -54,41 +82,60 @@ export const ReviewFormDialog = NiceModal.create<
   const { toast } = useToast();
   const { profile } = useProfile();
   const trpcUtils = trpc.useUtils();
-  
-  const canManageSite = checkPermission(profile.permissions!, [permissions.manageSite]);
-  
-  const createReviewMutation = trpc.lmsModule.reviewModule.review.create.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Review created successfully" });
-      resolve({ reason: "submit", data: form.getValues() });
-      hide();
-    },
-    onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
 
-  const updateReviewMutation = trpc.lmsModule.reviewModule.review.update.useMutation({
-    onSuccess: () => {
-      toast({ title: "Success", description: "Review updated successfully" });
-      resolve({ reason: "submit", data: form.getValues() });
-      hide();
-    },
-    onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
+  const canManageSite = checkPermission(profile.permissions!, [
+    permissions.manageSite,
+  ]);
 
-  const loadExistingReviewQuery = trpc.lmsModule.reviewModule.review.getByReviewId.useQuery(
-    { reviewId: reviewId! },
-    { enabled: mode === "edit" && !!reviewId }
-  );
+  const createReviewMutation =
+    trpc.lmsModule.reviewModule.review.create.useMutation({
+      onSuccess: () => {
+        toast({ title: "Success", description: "Review created successfully" });
+        resolve({ reason: "submit", data: form.getValues() });
+        hide();
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+
+  const updateReviewMutation =
+    trpc.lmsModule.reviewModule.review.update.useMutation({
+      onSuccess: () => {
+        toast({ title: "Success", description: "Review updated successfully" });
+        resolve({ reason: "submit", data: form.getValues() });
+        hide();
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+
+  const loadExistingReviewQuery =
+    trpc.lmsModule.reviewModule.review.getByReviewId.useQuery(
+      { reviewId: reviewId! },
+      { enabled: mode === "edit" && !!reviewId },
+    );
 
   const form = useForm<ReviewFormData>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
       title: "",
-      content: { content: "", type: "doc", assets: [], widgets: [], config: { editorType: "tiptap" } },
+      content: {
+        content: "",
+        type: "doc",
+        assets: [],
+        widgets: [],
+        config: { editorType: "tiptap" },
+      },
       rating: 5,
       targetType: "website",
       targetId: "",
@@ -100,11 +147,17 @@ export const ReviewFormDialog = NiceModal.create<
   });
 
   useEffect(() => {
-    const existingReview = loadExistingReviewQuery.data;    
+    const existingReview = loadExistingReviewQuery.data;
     if (existingReview && mode === "edit") {
       form.reset({
         title: existingReview.title,
-        content: existingReview.content || { content: "", type: "doc", assets: [], widgets: [], config: { editorType: "tiptap" } },
+        content: existingReview.content || {
+          content: "",
+          type: "doc",
+          assets: [],
+          widgets: [],
+          config: { editorType: "tiptap" },
+        },
         rating: existingReview.rating,
         targetType: existingReview.targetType as any,
         targetId: existingReview.targetId || "",
@@ -117,15 +170,21 @@ export const ReviewFormDialog = NiceModal.create<
   }, [form, mode, loadExistingReviewQuery.data]);
 
   const onSubmit = (data: ReviewFormData) => {
-    const tags = data.tags ? data.tags.split(",").map(tag => tag.trim()).filter(Boolean) : [];
-    
+    const tags = data.tags
+      ? data.tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+      : [];
+
     // Clean up authorId - if empty string, set to null
     const cleanData = {
       ...data,
-      authorId: data.authorId && data.authorId.trim() !== "" ? data.authorId : null,
+      authorId:
+        data.authorId && data.authorId.trim() !== "" ? data.authorId : null,
       tags,
     };
-    
+
     if (mode === "create") {
       createReviewMutation.mutate({
         data: cleanData,
@@ -145,7 +204,8 @@ export const ReviewFormDialog = NiceModal.create<
     hide();
   };
 
-  const isLoading = createReviewMutation.isPending || updateReviewMutation.isPending;
+  const isLoading =
+    createReviewMutation.isPending || updateReviewMutation.isPending;
 
   // Function to fetch users for ComboBox2
   const fetchUsers = async (search: string) => {
@@ -154,8 +214,8 @@ export const ReviewFormDialog = NiceModal.create<
         pagination: { take: 15 },
         search: { q: search || undefined },
       });
-      
-      return result.items.map(user => ({
+
+      return result.items.map((user) => ({
         key: user.userId,
         title: user.name || user.email,
         email: user.email,
@@ -175,15 +235,17 @@ export const ReviewFormDialog = NiceModal.create<
               {mode === "create" ? "Create New Review" : "Edit Review"}
             </DialogTitle>
             <DialogDescription>
-              {mode === "create" 
-                ? "Add a new customer review or testimonial" 
-                : "Update review details"
-              }
+              {mode === "create"
+                ? "Add a new customer review or testimonial"
+                : "Update review details"}
             </DialogDescription>
           </DialogHeader>
-          
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-col flex-1"
+            >
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 border-t border-b border-border/50">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
@@ -199,7 +261,7 @@ export const ReviewFormDialog = NiceModal.create<
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="rating"
@@ -208,19 +270,29 @@ export const ReviewFormDialog = NiceModal.create<
                         <FormLabel>Rating</FormLabel>
                         <FormControl>
                           <div className="flex items-center gap-2">
-                            <Select value={field.value.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
+                            <Select
+                              value={field.value.toString()}
+                              onValueChange={(value) =>
+                                field.onChange(parseInt(value))
+                              }
+                            >
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                                  <SelectItem key={rating} value={rating.toString()}>
-                                    <div className="flex items-center gap-2">
-                                      <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                      {rating}/10
-                                    </div>
-                                  </SelectItem>
-                                ))}
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(
+                                  (rating) => (
+                                    <SelectItem
+                                      key={rating}
+                                      value={rating.toString()}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                                        {rating}/10
+                                      </div>
+                                    </SelectItem>
+                                  ),
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -230,8 +302,6 @@ export const ReviewFormDialog = NiceModal.create<
                     )}
                   />
                 </div>
-
-
 
                 {canManageSite && (
                   <FormField
@@ -244,10 +314,18 @@ export const ReviewFormDialog = NiceModal.create<
                           <ComboBox2<UserSelectItemType>
                             title="Select a user"
                             valueKey="key"
-                            value={field.value ? { key: field.value, title: "", email: "" } : undefined}
+                            value={
+                              field.value
+                                ? { key: field.value, title: "", email: "" }
+                                : undefined
+                            }
                             searchFn={fetchUsers}
-                            renderText={(item) => `${item.title} (${item.email})`}
-                            onChange={(item) => field.onChange(item?.key || null)}
+                            renderText={(item) =>
+                              `${item.title} (${item.email})`
+                            }
+                            onChange={(item) =>
+                              field.onChange(item?.key || null)
+                            }
                             multiple={false}
                             showCreateButton={false}
                             showEditButton={false}
@@ -266,7 +344,10 @@ export const ReviewFormDialog = NiceModal.create<
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Target Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select target type" />
@@ -283,7 +364,7 @@ export const ReviewFormDialog = NiceModal.create<
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="targetId"
@@ -326,7 +407,10 @@ export const ReviewFormDialog = NiceModal.create<
                     <FormItem>
                       <FormLabel>Tags (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter tags separated by commas" {...field} />
+                        <Input
+                          placeholder="Enter tags separated by commas"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -351,7 +435,7 @@ export const ReviewFormDialog = NiceModal.create<
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="isFeatured"
@@ -381,17 +465,16 @@ export const ReviewFormDialog = NiceModal.create<
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading}
-                >
+                <Button type="submit" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       {mode === "create" ? "Creating..." : "Updating..."}
                     </>
+                  ) : mode === "create" ? (
+                    "Create Review"
                   ) : (
-                    mode === "create" ? "Create Review" : "Update Review"
+                    "Update Review"
                   )}
                 </Button>
               </div>

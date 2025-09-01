@@ -3,27 +3,21 @@ import { responses } from "@/config/strings";
 import { authOptions } from "@/lib/auth/options";
 import { getDomainData } from "@/lib/domain";
 import { Log } from "@/lib/logger";
-import CommunityModel from "@/models/Community";
-import CourseModel from "@/models/Course";
 import DomainModel from "@/models/Domain";
 import InvoiceModel from "@/models/Invoice";
 import MembershipModel from "@/models/Membership";
-import PaymentPlanModel from "@/models/PaymentPlan";
-import User from "@/models/User";
 import { getMembership } from "@/server/api/routers/user/user";
 import { getPaymentMethodFromSettings } from "@/server/services/payment";
 import {
   Community,
   Constants,
   Course,
-  MembershipEntityType,
-  PaymentPlan,
+  MembershipEntityType
 } from "@workspace/common-models";
 import { generateUniqueId } from "@workspace/utils";
-import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
-import { activateMembership } from "../helpers";
+import { activateMembership, getEntity, getPaymentPlan, getUser } from "../helpers";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
   constants;
@@ -108,16 +102,18 @@ export async function POST(req: NextRequest) {
 
     // Check for existing membership status and prevent multiple payments
     if (membership.status === Constants.MembershipStatus.REJECTED) {
-      return Response.json({ 
+      return Response.json({
         status: transactionFailed,
-        error: "Your previous enrollment request was rejected. Please contact support for assistance."
+        error:
+          "Your previous enrollment request was rejected. Please contact support for assistance.",
       });
     }
 
     if (membership.status === Constants.MembershipStatus.PENDING) {
       return Response.json({
         status: transactionFailed,
-        error: "You already have a pending payment for this course. Please complete your existing payment or contact support if you need assistance.",
+        error:
+          "You already have a pending payment for this course. Please complete your existing payment or contact support if you need assistance.",
       });
     }
 
@@ -185,16 +181,27 @@ export async function POST(req: NextRequest) {
       userId: user.userId,
       entityType: type,
       entityId: id,
-      status: { $in: [Constants.MembershipStatus.PENDING, Constants.MembershipStatus.ACTIVE] },
+      status: {
+        $in: [
+          Constants.MembershipStatus.PENDING,
+          Constants.MembershipStatus.ACTIVE,
+        ],
+      },
     });
 
-    if (existingMembership && existingMembership.membershipId !== membership.membershipId) {
+    if (
+      existingMembership &&
+      existingMembership.membershipId !== membership.membershipId
+    ) {
       if (existingMembership.status === Constants.MembershipStatus.PENDING) {
         return Response.json({
           status: transactionFailed,
-          error: "You already have a pending payment for this course. Please complete your existing payment or contact support if you need assistance.",
+          error:
+            "You already have a pending payment for this course. Please complete your existing payment or contact support if you need assistance.",
         });
-      } else if (existingMembership.status === Constants.MembershipStatus.ACTIVE) {
+      } else if (
+        existingMembership.status === Constants.MembershipStatus.ACTIVE
+      ) {
         return Response.json({
           status: transactionFailed,
           error: "You are already enrolled in this course.",
@@ -266,45 +273,4 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-export async function getUser(session: any, domainId: mongoose.Types.ObjectId) {
-  if (!session) return null;
-  return await User.findOne({
-    email: session.user!.email,
-    domain: domainId,
-    active: true,
-  });
-}
-
-async function getEntity(
-  type: string,
-  id: string,
-  domainId: mongoose.Types.ObjectId,
-) {
-  if (type === Constants.MembershipEntityType.COMMUNITY) {
-    return await CommunityModel.findOne<Community>({
-      communityId: id,
-      domain: domainId,
-      deleted: false,
-    });
-  } else if (type === Constants.MembershipEntityType.COURSE) {
-    return await CourseModel.findOne<Course>({
-      courseId: id,
-      domain: domainId,
-    });
-  }
-  return null;
-}
-
-async function getPaymentPlan(
-  domainId: mongoose.Types.ObjectId,
-  planId: string,
-) {
-  return await PaymentPlanModel.findOne<PaymentPlan>({
-    domain: domainId,
-    planId,
-    archived: false,
-    internal: false,
-  });
 }

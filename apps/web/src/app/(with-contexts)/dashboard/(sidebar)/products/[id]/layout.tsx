@@ -7,13 +7,14 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const { id } = await params;
-  
+
   // Fetch course details for better metadata
   try {
-    const course = await trpcCaller.lmsModule.courseModule.course.getByCourseDetailed({
-      courseId: id,
-    });
-    
+    const course =
+      await trpcCaller.lmsModule.courseModule.course.getByCourseDetailed({
+        courseId: id,
+      });
+
     if (course?.title) {
       return {
         title: `${course.title} | ${(await parent)?.title?.absolute}`,
@@ -22,7 +23,7 @@ export async function generateMetadata(
   } catch (error) {
     console.error("Error fetching course for metadata:", error);
   }
-  
+
   // Fallback to ID if course details unavailable
   return {
     title: `Product [#${id}] ${(await parent)?.title?.absolute}`,

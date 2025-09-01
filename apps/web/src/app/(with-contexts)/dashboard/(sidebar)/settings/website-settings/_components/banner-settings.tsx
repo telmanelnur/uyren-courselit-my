@@ -11,7 +11,12 @@ import {
   FormDescription,
 } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 
 interface BannerSettingsProps {
   form: UseFormReturn<any>;
@@ -54,14 +59,16 @@ export const BannerSettings = React.memo<BannerSettingsProps>(({ form }) => {
                 <FormItem>
                   <FormLabel>Banner Title</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter banner title" 
-                      {...field} 
+                    <Input
+                      placeholder="Enter banner title"
+                      {...field}
                       className={fieldState.error ? "border-destructive" : ""}
                     />
                   </FormControl>
                   {fieldState.error && (
-                    <p className="text-sm text-destructive">{fieldState.error.message}</p>
+                    <p className="text-sm text-destructive">
+                      {fieldState.error.message}
+                    </p>
                   )}
                 </FormItem>
               )}
@@ -74,14 +81,16 @@ export const BannerSettings = React.memo<BannerSettingsProps>(({ form }) => {
                 <FormItem>
                   <FormLabel>Banner Subtitle</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter banner subtitle" 
-                      {...field} 
+                    <Input
+                      placeholder="Enter banner subtitle"
+                      {...field}
                       className={fieldState.error ? "border-destructive" : ""}
                     />
                   </FormControl>
                   {fieldState.error && (
-                    <p className="text-sm text-destructive">{fieldState.error.message}</p>
+                    <p className="text-sm text-destructive">
+                      {fieldState.error.message}
+                    </p>
                   )}
                 </FormItem>
               )}

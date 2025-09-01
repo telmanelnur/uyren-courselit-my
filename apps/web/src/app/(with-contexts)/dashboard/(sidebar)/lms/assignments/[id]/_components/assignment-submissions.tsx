@@ -179,7 +179,7 @@ export default function AssignmentSubmissions() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          {/* <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
@@ -293,7 +293,7 @@ export default function AssignmentSubmissions() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table> */}
         </CardContent>
       </Card>
     </>

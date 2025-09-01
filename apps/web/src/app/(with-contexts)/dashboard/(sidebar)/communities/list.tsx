@@ -6,16 +6,20 @@ import {
 } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
 import {
-  Button,
-  Link,
   PaginatedTable,
   Table,
   TableBody,
   TableHead,
   TableRow,
 } from "@workspace/components-library";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import { Button } from "@workspace/ui/components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
 import { Eye, Settings } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 const communitiesResultsLimit = 10;
@@ -44,7 +48,7 @@ export default function List() {
         </h1>
         <div>
           <Link href={`/dashboard/community/new`}>
-            <Button>{NEW_COMMUNITY_BUTTON}</Button>
+            <Button asChild>{NEW_COMMUNITY_BUTTON}</Button>
           </Link>
         </div>
       </div>
@@ -90,28 +94,23 @@ export default function List() {
                       <Link href={`/p/${community.pageId}`}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="soft">
+                            <Button>
                               <Eye width={16} />{" "}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            View page
-                          </TooltipContent>
+                          <TooltipContent>View page</TooltipContent>
                         </Tooltip>
-
                       </Link>
                       <Link
                         href={`/dashboard/community/${community._id || community.id}/manage`}
                       >
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="soft">
+                            <Button>
                               <Settings width={16} />{" "}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            Settings
-                          </TooltipContent>
+                          <TooltipContent>Settings</TooltipContent>
                         </Tooltip>
                       </Link>
                     </div>

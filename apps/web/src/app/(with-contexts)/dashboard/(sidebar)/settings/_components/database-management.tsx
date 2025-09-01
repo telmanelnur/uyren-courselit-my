@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
 import { Switch } from "@workspace/ui/components/switch";
 import { Label } from "@workspace/ui/components/label";
@@ -16,7 +21,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { Loader2, Database, AlertTriangle, CheckCircle, Settings, Wrench, RefreshCw } from "lucide-react";
+import {
+  Loader2,
+  Database,
+  AlertTriangle,
+  CheckCircle,
+  Settings,
+  Wrench,
+  RefreshCw,
+} from "lucide-react";
 import { useToast } from "@workspace/components-library";
 import { clearDomainManagerCache } from "@/server/actions/domain";
 
@@ -68,7 +81,9 @@ export default function DatabaseManagement() {
   const [clearingCache, setClearingCache] = useState(false);
   const [report, setReport] = useState<SyncReport | null>(null);
   const [results, setResults] = useState<SyncResults | null>(null);
-  const [entityType, setEntityType] = useState<"all" | "courses" | "lessons" | "memberships">("all");
+  const [entityType, setEntityType] = useState<
+    "all" | "courses" | "lessons" | "memberships"
+  >("all");
   const [detailed, setDetailed] = useState(false);
   const [actions, setActions] = useState({
     removeOrphanedLessons: false,
@@ -150,7 +165,7 @@ export default function DatabaseManagement() {
 
       const data = await response.json();
       setResults(data);
-      
+
       if (data.errors && data.errors.length > 0) {
         alert("Sync completed with errors. Check results for details.");
       } else if (!dryRun) {
@@ -172,7 +187,8 @@ export default function DatabaseManagement() {
     if (!report) return 0;
     let total = 0;
     if (report.summary.courses) total += report.summary.courses.totalIssues;
-    if (report.summary.memberships) total += report.summary.memberships.totalIssues;
+    if (report.summary.memberships)
+      total += report.summary.memberships.totalIssues;
     if (report.summary.lessons) total += report.summary.lessons.totalIssues;
     return total;
   };
@@ -203,8 +219,8 @@ export default function DatabaseManagement() {
               <p className="text-sm text-muted-foreground">
                 Clear the domain manager cache to refresh domain data
               </p>
-              <Button 
-                onClick={handleClearCache} 
+              <Button
+                onClick={handleClearCache}
                 disabled={clearingCache}
                 className="w-full"
                 variant="outline"
@@ -252,7 +268,8 @@ export default function DatabaseManagement() {
                       Database Clean & Sync
                     </DialogTitle>
                     <DialogDescription>
-                      Analyze and fix database integrity issues across courses, lessons, and memberships
+                      Analyze and fix database integrity issues across courses,
+                      lessons, and memberships
                     </DialogDescription>
                   </DialogHeader>
 
@@ -272,13 +289,17 @@ export default function DatabaseManagement() {
                             <select
                               id="entityType"
                               value={entityType}
-                              onChange={(e) => setEntityType(e.target.value as any)}
+                              onChange={(e) =>
+                                setEntityType(e.target.value as any)
+                              }
                               className="w-full mt-1 p-2 border rounded-md"
                             >
                               <option value="all">All Entities</option>
                               <option value="courses">Courses Only</option>
                               <option value="lessons">Lessons Only</option>
-                              <option value="memberships">Memberships Only</option>
+                              <option value="memberships">
+                                Memberships Only
+                              </option>
                             </select>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -290,9 +311,9 @@ export default function DatabaseManagement() {
                             <Label htmlFor="detailed">Detailed Report</Label>
                           </div>
                         </div>
-                        
-                        <Button 
-                          onClick={generateReport} 
+
+                        <Button
+                          onClick={generateReport}
                           disabled={loading}
                           className="w-full"
                         >
@@ -317,7 +338,8 @@ export default function DatabaseManagement() {
                             Analysis Report
                           </CardTitle>
                           <p className="text-sm text-muted-foreground">
-                            Generated at: {new Date(report.timestamp).toLocaleString()}
+                            Generated at:{" "}
+                            {new Date(report.timestamp).toLocaleString()}
                           </p>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -325,31 +347,57 @@ export default function DatabaseManagement() {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {report.summary.courses && (
                               <div className="p-4 border rounded-lg">
-                                <h3 className="font-semibold text-lg mb-2">Courses</h3>
+                                <h3 className="font-semibold text-lg mb-2">
+                                  Courses
+                                </h3>
                                 <div className="space-y-1 text-sm">
-                                  <div>Total: {report.summary.courses.totalCourses}</div>
-                                  <div>Lessons: {report.summary.courses.totalLessons}</div>
-                                  <div className="text-red-600">Issues: {report.summary.courses.totalIssues}</div>
+                                  <div>
+                                    Total: {report.summary.courses.totalCourses}
+                                  </div>
+                                  <div>
+                                    Lessons:{" "}
+                                    {report.summary.courses.totalLessons}
+                                  </div>
+                                  <div className="text-red-600">
+                                    Issues: {report.summary.courses.totalIssues}
+                                  </div>
                                 </div>
                               </div>
                             )}
-                            
+
                             {report.summary.lessons && (
                               <div className="p-4 border rounded-lg">
-                                <h3 className="font-semibold text-lg mb-2">Lessons</h3>
+                                <h3 className="font-semibold text-lg mb-2">
+                                  Lessons
+                                </h3>
                                 <div className="space-y-1 text-sm">
-                                  <div>Total: {report.summary.lessons.totalLessons}</div>
-                                  <div className="text-red-600">Issues: {report.summary.lessons.totalIssues}</div>
+                                  <div>
+                                    Total: {report.summary.lessons.totalLessons}
+                                  </div>
+                                  <div className="text-red-600">
+                                    Issues: {report.summary.lessons.totalIssues}
+                                  </div>
                                 </div>
                               </div>
                             )}
-                            
+
                             {report.summary.memberships && (
                               <div className="p-4 border rounded-lg">
-                                <h3 className="font-semibold text-lg mb-2">Memberships</h3>
+                                <h3 className="font-semibold text-lg mb-2">
+                                  Memberships
+                                </h3>
                                 <div className="space-y-1 text-sm">
-                                  <div>Total: {report.summary.memberships.totalMemberships}</div>
-                                  <div className="text-red-600">Issues: {report.summary.memberships.totalIssues}</div>
+                                  <div>
+                                    Total:{" "}
+                                    {
+                                      report.summary.memberships
+                                        .totalMemberships
+                                    }
+                                  </div>
+                                  <div className="text-red-600">
+                                    Issues:{" "}
+                                    {report.summary.memberships.totalIssues}
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -362,7 +410,9 @@ export default function DatabaseManagement() {
                             </h3>
                             {report.recommendations.length > 0 && (
                               <div className="space-y-1">
-                                <p className="text-red-700 font-medium">Recommendations:</p>
+                                <p className="text-red-700 font-medium">
+                                  Recommendations:
+                                </p>
                                 <ul className="list-disc list-inside text-red-600 text-sm space-y-1">
                                   {report.recommendations.map((rec, index) => (
                                     <li key={index}>{rec}</li>
@@ -377,46 +427,78 @@ export default function DatabaseManagement() {
                             <div className="space-y-4">
                               <Separator />
                               <h3 className="font-semibold">Detailed Issues</h3>
-                              
-                              {report.details.courses && report.details.courses.length > 0 && (
-                                <div>
-                                  <h4 className="font-medium mb-2">Course Issues:</h4>
-                                  <div className="space-y-2">
-                                    {report.details.courses.map((course, index) => (
-                                      <div key={index} className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-                                        <p className="font-medium">{course.title} ({course.courseId})</p>
-                                        {course.issues && course.issues.length > 0 && (
-                                          <ul className="list-disc list-inside text-sm text-gray-700 mt-1">
-                                            {course.issues.map((issue: string, i: number) => (
-                                              <li key={i}>{issue}</li>
-                                            ))}
-                                          </ul>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
 
-                              {report.details.lessons && report.details.lessons.length > 0 && (
-                                <div>
-                                  <h4 className="font-medium mb-2">Lesson Issues:</h4>
-                                  <div className="space-y-2">
-                                    {report.details.lessons.map((lesson, index) => (
-                                      <div key={index} className="p-3 bg-red-50 border border-red-200 rounded">
-                                        <p className="font-medium">{lesson.title} ({lesson.lessonId})</p>
-                                        {lesson.issues && lesson.issues.length > 0 && (
-                                          <ul className="list-disc list-inside text-sm text-gray-700 mt-1">
-                                            {lesson.issues.map((issue: string, i: number) => (
-                                              <li key={i}>{issue}</li>
-                                            ))}
-                                          </ul>
-                                        )}
-                                      </div>
-                                    ))}
+                              {report.details.courses &&
+                                report.details.courses.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-2">
+                                      Course Issues:
+                                    </h4>
+                                    <div className="space-y-2">
+                                      {report.details.courses.map(
+                                        (course, index) => (
+                                          <div
+                                            key={index}
+                                            className="p-3 bg-yellow-50 border border-yellow-200 rounded"
+                                          >
+                                            <p className="font-medium">
+                                              {course.title} ({course.courseId})
+                                            </p>
+                                            {course.issues &&
+                                              course.issues.length > 0 && (
+                                                <ul className="list-disc list-inside text-sm text-gray-700 mt-1">
+                                                  {course.issues.map(
+                                                    (
+                                                      issue: string,
+                                                      i: number,
+                                                    ) => (
+                                                      <li key={i}>{issue}</li>
+                                                    ),
+                                                  )}
+                                                </ul>
+                                              )}
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
+
+                              {report.details.lessons &&
+                                report.details.lessons.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-2">
+                                      Lesson Issues:
+                                    </h4>
+                                    <div className="space-y-2">
+                                      {report.details.lessons.map(
+                                        (lesson, index) => (
+                                          <div
+                                            key={index}
+                                            className="p-3 bg-red-50 border border-red-200 rounded"
+                                          >
+                                            <p className="font-medium">
+                                              {lesson.title} ({lesson.lessonId})
+                                            </p>
+                                            {lesson.issues &&
+                                              lesson.issues.length > 0 && (
+                                                <ul className="list-disc list-inside text-sm text-gray-700 mt-1">
+                                                  {lesson.issues.map(
+                                                    (
+                                                      issue: string,
+                                                      i: number,
+                                                    ) => (
+                                                      <li key={i}>{issue}</li>
+                                                    ),
+                                                  )}
+                                                </ul>
+                                              )}
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                             </div>
                           )}
                         </CardContent>
@@ -439,23 +521,29 @@ export default function DatabaseManagement() {
                               <select
                                 id="entityType"
                                 value={entityType}
-                                onChange={(e) => setEntityType(e.target.value as any)}
+                                onChange={(e) =>
+                                  setEntityType(e.target.value as any)
+                                }
                                 className="w-full mt-1 p-2 border rounded-md"
                               >
                                 <option value="all">All Entities</option>
                                 <option value="courses">Courses Only</option>
                                 <option value="lessons">Lessons Only</option>
-                                <option value="memberships">Memberships Only</option>
+                                <option value="memberships">
+                                  Memberships Only
+                                </option>
                               </select>
                             </div>
-                            
+
                             <div className="flex items-center space-x-2">
                               <Switch
                                 id="dryRun"
                                 checked={dryRun}
                                 onCheckedChange={setDryRun}
                               />
-                              <Label htmlFor="dryRun">Dry Run (Preview Only)</Label>
+                              <Label htmlFor="dryRun">
+                                Dry Run (Preview Only)
+                              </Label>
                             </div>
                           </div>
 
@@ -467,21 +555,31 @@ export default function DatabaseManagement() {
                                   <Switch
                                     id="fixLessonOrder"
                                     checked={actions.fixLessonOrder}
-                                    onCheckedChange={(checked) => 
-                                      setActions(prev => ({ ...prev, fixLessonOrder: checked }))
+                                    onCheckedChange={(checked) =>
+                                      setActions((prev) => ({
+                                        ...prev,
+                                        fixLessonOrder: checked,
+                                      }))
                                     }
                                   />
-                                  <Label htmlFor="fixLessonOrder">Fix Lesson Order</Label>
+                                  <Label htmlFor="fixLessonOrder">
+                                    Fix Lesson Order
+                                  </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Switch
                                     id="fixCourseReferences"
                                     checked={actions.fixCourseReferences}
-                                    onCheckedChange={(checked) => 
-                                      setActions(prev => ({ ...prev, fixCourseReferences: checked }))
+                                    onCheckedChange={(checked) =>
+                                      setActions((prev) => ({
+                                        ...prev,
+                                        fixCourseReferences: checked,
+                                      }))
                                     }
                                   />
-                                  <Label htmlFor="fixCourseReferences">Fix Course References</Label>
+                                  <Label htmlFor="fixCourseReferences">
+                                    Fix Course References
+                                  </Label>
                                 </div>
                               </div>
                             </div>
@@ -493,29 +591,39 @@ export default function DatabaseManagement() {
                                   <Switch
                                     id="removeOrphanedLessons"
                                     checked={actions.removeOrphanedLessons}
-                                    onCheckedChange={(checked) => 
-                                      setActions(prev => ({ ...prev, removeOrphanedLessons: checked }))
+                                    onCheckedChange={(checked) =>
+                                      setActions((prev) => ({
+                                        ...prev,
+                                        removeOrphanedLessons: checked,
+                                      }))
                                     }
                                   />
-                                  <Label htmlFor="removeOrphanedLessons">Remove Orphaned Lessons</Label>
+                                  <Label htmlFor="removeOrphanedLessons">
+                                    Remove Orphaned Lessons
+                                  </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Switch
                                     id="removeInvalidMemberships"
                                     checked={actions.removeInvalidMemberships}
-                                    onCheckedChange={(checked) => 
-                                      setActions(prev => ({ ...prev, removeInvalidMemberships: checked }))
+                                    onCheckedChange={(checked) =>
+                                      setActions((prev) => ({
+                                        ...prev,
+                                        removeInvalidMemberships: checked,
+                                      }))
                                     }
                                   />
-                                  <Label htmlFor="removeInvalidMemberships">Remove Invalid Memberships</Label>
+                                  <Label htmlFor="removeInvalidMemberships">
+                                    Remove Invalid Memberships
+                                  </Label>
                                 </div>
                               </div>
                             </div>
                           </div>
 
                           <div className="flex gap-4">
-                            <Button 
-                              onClick={executeSync} 
+                            <Button
+                              onClick={executeSync}
                               disabled={executing}
                               variant="default"
                               className="flex-1"
@@ -537,8 +645,9 @@ export default function DatabaseManagement() {
                             <Alert>
                               <AlertTriangle className="h-4 w-4" />
                               <AlertDescription>
-                                <strong>Warning:</strong> This will make permanent changes to your database. 
-                                Make sure you have a backup before proceeding.
+                                <strong>Warning:</strong> This will make
+                                permanent changes to your database. Make sure
+                                you have a backup before proceeding.
                               </AlertDescription>
                             </Alert>
                           )}
@@ -555,7 +664,10 @@ export default function DatabaseManagement() {
                             Sync Results
                           </CardTitle>
                           <p className="text-sm text-muted-foreground">
-                            {results.dryRun ? "Dry Run Results" : "Execution Results"} - {new Date(results.timestamp).toLocaleString()}
+                            {results.dryRun
+                              ? "Dry Run Results"
+                              : "Execution Results"}{" "}
+                            - {new Date(results.timestamp).toLocaleString()}
                           </p>
                         </CardHeader>
                         <CardContent>

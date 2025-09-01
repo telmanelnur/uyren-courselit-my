@@ -21,7 +21,7 @@ export default function AssignmentGrading() {
     trpc.lmsModule.assignmentModule.assignmentSubmission.listSubmissions.useQuery(
       {
         filter: {
-          assignmentId: assignment?._id,
+          assignmentId: assignment?._id ? `${assignment._id}` : undefined,
         },
         pagination: {
           take: 50,

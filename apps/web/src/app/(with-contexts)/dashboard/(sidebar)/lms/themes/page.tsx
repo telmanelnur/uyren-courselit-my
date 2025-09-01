@@ -23,17 +23,8 @@ import { Input } from "@workspace/ui/components/input";
 import { Edit, Eye, Palette, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BASIC_PUBLICATION_STATUS_TYPE } from "@workspace/common-models";
+import { BASIC_PUBLICATION_STATUS_TYPE, BasicPublicationStatus } from "@workspace/common-models";
 import { GeneralRouterOutputs } from "@/server/api/types";
-
-export async function generateMetadata(
-  _: any,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
-  return {
-    title: `Themes | LMS | ${(await parent)?.title?.absolute}`,
-  };
-}
 
 const breadcrumbs = [
   { label: "LMS", href: "#" },
@@ -63,7 +54,7 @@ export default function Page() {
   const handleDelete = useCallback(
     (theme: ItemType) => {
       if (confirm("Are you sure you want to delete this theme?")) {
-        deleteMutation.mutate(theme._id);
+        deleteMutation.mutate(`${theme._id}`);
       }
     },
     [deleteMutation],
@@ -209,7 +200,7 @@ export default function Page() {
         )
           ? (
               tableState.columnFilters.find((filter) => filter.id === "status")
-                ?.value as string[]
+                ?.value as BasicPublicationStatus[]
             )[0]
           : undefined,
       },

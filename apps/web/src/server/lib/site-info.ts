@@ -1,7 +1,6 @@
 import { getDomainData } from "@/lib/domain";
 import { cache } from "react";
 
-
 /**
  * Server-side site info fetcher
  * - Uses Redis-first domain resolution with clear [DEBUG] logs

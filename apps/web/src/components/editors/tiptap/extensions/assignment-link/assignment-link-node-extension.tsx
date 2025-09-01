@@ -1,6 +1,9 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { AssignmentLinkAttrs, AssignmentLinkNodeComponent } from "./assignment-link-node-component";
+import {
+  AssignmentLinkAttrs,
+  AssignmentLinkNodeComponent,
+} from "./assignment-link-node-component";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -32,7 +35,7 @@ export const AssignmentLinkNodeExtension = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'assignment-link',
+        tag: "assignment-link",
         getAttrs: (node) => {
           if (typeof node === "string") return {};
           const element = node as HTMLElement;
@@ -44,7 +47,7 @@ export const AssignmentLinkNodeExtension = Node.create({
             let obj = {
               type: "assignment" as const,
               id: "",
-              title: "Sample Assignment"
+              title: "Sample Assignment",
             };
 
             if (objRaw && objRaw !== "null") {
@@ -68,7 +71,8 @@ export const AssignmentLinkNodeExtension = Node.create({
 
   renderHTML({ HTMLAttributes }) {
     const { label, obj, link } = HTMLAttributes;
-    const safeObj = obj && typeof obj === "object" ? JSON.stringify(obj) : "null";
+    const safeObj =
+      obj && typeof obj === "object" ? JSON.stringify(obj) : "null";
     console.log("safeObj", obj, safeObj);
 
     return [

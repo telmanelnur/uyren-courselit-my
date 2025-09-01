@@ -71,7 +71,10 @@ const ProductSchema = z.object({
     .string()
     .min(1, "Title is required")
     .max(255, "Title must be less than 255 characters"),
-  shortDescription: z.string().max(500, "Short description must be less than 500 characters").optional(),
+  shortDescription: z
+    .string()
+    .max(500, "Short description must be less than 500 characters")
+    .optional(),
   description: z.any().optional(),
   themeId: z.string().nullable(),
 });
@@ -199,7 +202,14 @@ export default function ProductManageClient({
     if (product) {
       setPaymentPlans(product.attachedPaymentPlans || []);
       setDefaultPaymentPlan(product?.defaultPaymentPlan || "");
-      setSelectedTheme(product.attachedTheme ? { key: product.attachedTheme._id, title: product.attachedTheme.name } : null);
+      setSelectedTheme(
+        product.attachedTheme
+          ? {
+              key: product.attachedTheme._id,
+              title: product.attachedTheme.name,
+            }
+          : null,
+      );
     }
   }, [product, setPaymentPlans, setDefaultPaymentPlan, setSelectedTheme]);
 
@@ -348,29 +358,29 @@ export default function ProductManageClient({
             />
 
             <FormItem>
-              <FormLabel 
-              className="text-base font-semibold"
-              onClick={() => {
-                editorRef.current!.commands.focus('end')
-              }}
+              <FormLabel
+                className="text-base font-semibold"
+                onClick={() => {
+                  editorRef.current!.commands.focus("end");
+                }}
               >
                 Description
               </FormLabel>
               <DescriptionEditor
-                  placeholder="Enter a detailed description for your product..."
-                  onEditor={(editor, meta) => {
-                    if (meta.reason === "create") {
-                      editorRef.current = editor;
-                      editorRef.current!.commands.setMyContent(editorContent);
-                    }
-                  }}
-                  onChange={(content) => {
-                    setEditorContent({
-                      ...editorContent,
-                      content: content,
-                    });
-                  }}
-                />
+                placeholder="Enter a detailed description for your product..."
+                onEditor={(editor, meta) => {
+                  if (meta.reason === "create") {
+                    editorRef.current = editor;
+                    editorRef.current!.commands.setMyContent(editorContent);
+                  }
+                }}
+                onChange={(content) => {
+                  setEditorContent({
+                    ...editorContent,
+                    content: content,
+                  });
+                }}
+              />
               <FormMessage />
             </FormItem>
 
@@ -397,10 +407,13 @@ export default function ProductManageClient({
                       showCreateButton={true}
                       showEditButton={true}
                       onCreateClick={() => {
-                        window.open(`/dashboard/lms/themes/new`, '_blank');
+                        window.open(`/dashboard/lms/themes/new`, "_blank");
                       }}
                       onEditClick={(item) => {
-                        window.open(`/dashboard/lms/themes/${item.key}`, '_blank');
+                        window.open(
+                          `/dashboard/lms/themes/${item.key}`,
+                          "_blank",
+                        );
                       }}
                     />
                   </FormControl>

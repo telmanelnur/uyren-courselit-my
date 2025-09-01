@@ -32,9 +32,7 @@ dotenv.config(); // Load .env as fallback
 async function connectToDatabase() {
   const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
-    throw new Error(
-      "MONGODB_URI environment variable is required",
-    );
+    throw new Error("MONGODB_URI environment variable is required");
   }
 
   if (mongoose.connection.readyState === 0) {

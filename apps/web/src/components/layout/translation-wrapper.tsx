@@ -4,15 +4,11 @@ import i18next from "@/app/i18n/i18next";
 import { I18nextProvider } from "react-i18next";
 
 interface TranslationWrapperProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export default function TranslationWrapper({
-    children,
+  children,
 }: TranslationWrapperProps) {
-    return (
-        <I18nextProvider i18n={i18next}>
-            {children}
-        </I18nextProvider>
-    )
+  return <I18nextProvider i18n={i18next}>{children}</I18nextProvider>;
 }

@@ -164,9 +164,9 @@ export const quizAttemptRouter = router({
           .sort(
             input.orderBy
               ? {
-                [input.orderBy.field]:
-                  input.orderBy.direction === "asc" ? 1 : -1,
-              }
+                  [input.orderBy.field]:
+                    input.orderBy.direction === "asc" ? 1 : -1,
+                }
               : { createdAt: -1 },
           )
           .lean(),
@@ -228,7 +228,7 @@ export const quizAttemptRouter = router({
     .input(documentIdValidator())
     .mutation(async ({ ctx, input }) => {
       const result = await regradeQuizAttempt(input);
-      
+
       if (!result.success) {
         throw new Error(result.message);
       }
@@ -255,7 +255,7 @@ export const quizAttemptRouter = router({
         .lean();
 
       if (!attempt) throw new NotFoundException("Quiz attempt not found");
-      
+
       return attempt;
     }),
 });

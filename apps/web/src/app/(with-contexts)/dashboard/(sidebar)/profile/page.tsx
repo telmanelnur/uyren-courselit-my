@@ -1,6 +1,5 @@
 "use client";
 
-import { Metadata, ResolvingMetadata } from "next";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { useProfile } from "@/components/contexts/profile-context";
 import { AuthClientService } from "@/lib/auth/client-service";
@@ -39,15 +38,6 @@ import { generateUniqueId } from "@workspace/utils";
 import { useSession } from "next-auth/react";
 import { MediaAccessType } from "node_modules/@workspace/common-models/src/constants";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-
-export async function generateMetadata(
-  _: any,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
-  return {
-    title: `Profile | ${(await parent)?.title?.absolute}`,
-  };
-}
 
 const breadcrumbs = [{ label: PROFILE_PAGE_HEADER, href: "#" }];
 

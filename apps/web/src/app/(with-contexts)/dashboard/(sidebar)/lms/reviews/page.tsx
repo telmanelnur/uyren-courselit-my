@@ -10,7 +10,11 @@ import { GeneralRouterOutputs } from "@/server/api/types";
 import { trpc } from "@/utils/trpc";
 import { type ColumnDef } from "@tanstack/react-table";
 import { NiceModal } from "@workspace/components-library";
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -25,15 +29,6 @@ import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import { Archive, Edit, MoreHorizontal, Plus, Star, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReviewFormDialog } from "./_components/review-form-dialog";
-
-export async function generateMetadata(
-  _: any,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
-  return {
-    title: `Reviews | LMS | ${(await parent)?.title?.absolute}`,
-  };
-}
 
 const breadcrumbs = [
   { label: "LMS", href: "#" },
@@ -62,7 +57,11 @@ export default function Page() {
 
   const handleDelete = useCallback(
     (review: ItemType) => {
-      if (confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+      if (
+        confirm(
+          "Are you sure you want to delete this review? This action cannot be undone.",
+        )
+      ) {
         deleteMutation.mutate({ reviewId: review.reviewId });
       }
     },
@@ -93,7 +92,7 @@ export default function Page() {
       {
         accessorKey: "title",
         header: "Review Title",
-                cell: ({ row }) => {
+        cell: ({ row }) => {
           const review = row.original;
           return (
             <div className="flex items-center gap-2">
@@ -161,11 +160,11 @@ export default function Page() {
         cell: ({ row }) => {
           const published = row.original.published;
           const isFeatured = row.original.isFeatured;
-          
+
           if (isFeatured) {
             return <Badge variant="default">Featured</Badge>;
           }
-          
+
           return (
             <Badge variant={published ? "default" : "secondary"}>
               {published ? "Published" : "Draft"}
@@ -182,46 +181,46 @@ export default function Page() {
         },
         enableColumnFilter: true,
       },
-             {
-         accessorKey: "authorId",
-         header: "Linked User",
-         cell: ({ row }) => {
-           const authorId = row.original.authorId;
-           if (!authorId) {
-             return <span className="text-muted-foreground">Not linked</span>;
-           }
-           return (
-             <div className="flex items-center gap-2">
-               <User className="h-4 w-4 text-blue-500" />
-               <span className="text-sm font-medium">{authorId}</span>
-             </div>
-           );
-         },
-       },
-       {
-         accessorKey: "tags",
-         header: "Tags",
-         cell: ({ row }) => {
-           const tags = row.original.tags || [];
-           if (tags.length === 0) {
-             return <span className="text-muted-foreground">No tags</span>;
-           }
-           return (
-             <div className="flex flex-wrap gap-1">
-               {tags.slice(0, 3).map((tag, index) => (
-                 <Badge key={index} variant="outline" className="text-xs">
-                   {tag}
-                 </Badge>
-               ))}
-               {tags.length > 3 && (
-                 <Badge variant="outline" className="text-xs">
-                   +{tags.length - 3}
-                 </Badge>
-               )}
-             </div>
-           );
-         },
-       },
+      {
+        accessorKey: "authorId",
+        header: "Linked User",
+        cell: ({ row }) => {
+          const authorId = row.original.authorId;
+          if (!authorId) {
+            return <span className="text-muted-foreground">Not linked</span>;
+          }
+          return (
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-blue-500" />
+              <span className="text-sm font-medium">{authorId}</span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "tags",
+        header: "Tags",
+        cell: ({ row }) => {
+          const tags = row.original.tags || [];
+          if (tags.length === 0) {
+            return <span className="text-muted-foreground">No tags</span>;
+          }
+          return (
+            <div className="flex flex-wrap gap-1">
+              {tags.slice(0, 3).map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+              {tags.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{tags.length - 3}
+                </Badge>
+              )}
+            </div>
+          );
+        },
+      },
       {
         accessorKey: "createdAt",
         header: "Created",
@@ -252,7 +251,7 @@ export default function Page() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditReview(review)}>
+                <DropdownMenuItem onClick={() => handleEditReview(review)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Review
                 </DropdownMenuItem>
@@ -293,15 +292,21 @@ export default function Page() {
           tableState.columnFilters.find((filter) => filter.id === "published")
             ?.value,
         )
-          ? (tableState.columnFilters.find((filter) => filter.id === "published")
-              ?.value as string[])[0] === "true"
+          ? (
+              tableState.columnFilters.find(
+                (filter) => filter.id === "published",
+              )?.value as string[]
+            )[0] === "true"
           : undefined,
         targetType: Array.isArray(
           tableState.columnFilters.find((filter) => filter.id === "targetType")
             ?.value,
         )
-          ? (tableState.columnFilters.find((filter) => filter.id === "targetType")
-              ?.value as string[])[0]
+          ? (
+              tableState.columnFilters.find(
+                (filter) => filter.id === "targetType",
+              )?.value as string[]
+            )[0]
           : undefined,
       },
     };
@@ -351,7 +356,10 @@ export default function Page() {
             subtitle: "Manage customer reviews and testimonials",
           }}
           rightAction={
-            <Button onClick={handleCreateReview} className="flex items-center gap-2">
+            <Button
+              onClick={handleCreateReview}
+              className="flex items-center gap-2"
+            >
               <Plus className="h-4 w-4" />
               Add Review
             </Button>

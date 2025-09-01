@@ -8,7 +8,12 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PaymentVerificationStatus } from "./payment-verification-status";
 import { useAddress } from "@/components/contexts/address-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
 
 export default function Page() {
@@ -100,9 +105,7 @@ export default function Page() {
             <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
               Payment Verification
             </CardTitle>
-            <p className="text-muted-foreground">
-              Order #{id}
-            </p>
+            <p className="text-muted-foreground">Order #{id}</p>
           </CardHeader>
           <CardContent className="text-center space-y-6">
             {/* Status Icon */}
@@ -122,7 +125,9 @@ export default function Page() {
             <div className="bg-muted/30 p-4 rounded-lg border border-muted-foreground/20">
               <div className="flex items-center justify-center gap-3 mb-3">
                 <div className="w-6 h-6 rounded-sm border-2 border-brand-primary/30 flex items-center justify-center bg-white">
-                  <span className="text-brand-primary text-xs font-bold">#</span>
+                  <span className="text-brand-primary text-xs font-bold">
+                    #
+                  </span>
                 </div>
                 <span className="font-medium">Order Number</span>
               </div>
@@ -135,10 +140,14 @@ export default function Page() {
             {paymentStatus === "paid" ? (
               <div className="space-y-4">
                 <p className="text-muted-foreground">
-                  We have sent a confirmation email with order details and tracking information.
+                  We have sent a confirmation email with order details and
+                  tracking information.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button asChild className="bg-brand-primary hover:bg-brand-primary-hover text-white">
+                  <Button
+                    asChild
+                    className="bg-brand-primary hover:bg-brand-primary-hover text-white"
+                  >
                     <Link href="/dashboard/my-content">Go to Dashboard</Link>
                   </Button>
                   <Button variant="outline" asChild>
@@ -154,7 +163,7 @@ export default function Page() {
                   loading={loading}
                 />
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button 
+                  <Button
                     onClick={verifyPayment}
                     disabled={loading}
                     className="bg-brand-primary hover:bg-brand-primary-hover text-white"
@@ -178,7 +187,8 @@ export default function Page() {
             {/* Additional Info */}
             <div className="pt-4 border-t border-gray-100">
               <p className="text-sm text-muted-foreground">
-                If you have any questions about your order, please don't hesitate to contact our support team.
+                If you have any questions about your order, please don't
+                hesitate to contact our support team.
               </p>
             </div>
           </CardContent>

@@ -8,7 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { ClipboardList, FileText, Plus, Users, Target, Star } from "lucide-react";
+import {
+  ClipboardList,
+  FileText,
+  Plus,
+  Users,
+  Target,
+  Star,
+} from "lucide-react";
 import Link from "next/link";
 
 export async function generateMetadata(

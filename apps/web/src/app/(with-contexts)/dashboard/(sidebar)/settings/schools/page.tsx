@@ -11,7 +11,7 @@ const { permissions } = UIConstants;
 
 const breadcrumbs = [
   { label: "Settings", href: "/dashboard/settings" },
-  { label: "Schools", href: "#" }
+  { label: "Schools", href: "#" },
 ];
 
 export default function SchoolsPage() {
@@ -19,7 +19,9 @@ export default function SchoolsPage() {
 
   // Check if user has admin role and manageSettings permission
   const isAdmin = profile?.roles?.includes("admin");
-  const hasPermission = checkPermission(profile?.permissions || [], [permissions.manageSettings]);
+  const hasPermission = checkPermission(profile?.permissions || [], [
+    permissions.manageSettings,
+  ]);
 
   if (!isAdmin || !hasPermission) {
     return <LoadingScreen />;

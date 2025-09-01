@@ -65,7 +65,10 @@ export class AuthClientService {
   /**
    * Sign in with email and password
    */
-  static async signInWithEmail(email: string, password: string): Promise<{
+  static async signInWithEmail(
+    email: string,
+    password: string,
+  ): Promise<{
     success: boolean;
     error?: string;
   }> {
@@ -73,7 +76,7 @@ export class AuthClientService {
       const result: UserCredential = await signInWithEmailAndPassword(
         firebaseAuth,
         email,
-        password
+        password,
       );
 
       const idToken = await result.user.getIdToken();
@@ -100,7 +103,11 @@ export class AuthClientService {
   /**
    * Sign up with email and password
    */
-  static async signUpWithEmail(email: string, password: string, name?: string): Promise<{
+  static async signUpWithEmail(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<{
     success: boolean;
     error?: string;
   }> {
@@ -108,7 +115,7 @@ export class AuthClientService {
       const result: UserCredential = await createUserWithEmailAndPassword(
         firebaseAuth,
         email,
-        password
+        password,
       );
 
       // Update display name if provided

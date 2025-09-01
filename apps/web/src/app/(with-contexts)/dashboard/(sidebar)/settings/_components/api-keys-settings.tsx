@@ -1,5 +1,21 @@
 "use client";
 
+import Resources from "@/components/resources";
+import {
+  APIKEY_EXISTING_HEADER,
+  APIKEY_EXISTING_TABLE_HEADER_CREATED,
+  APIKEY_EXISTING_TABLE_HEADER_NAME,
+  APIKEY_NEW_BUTTON,
+  APIKEY_REMOVE_BTN,
+  APIKEY_REMOVE_DIALOG_HEADER,
+  APIKYE_REMOVE_DIALOG_DESC,
+  SETTINGS_RESOURCE_API,
+  TOAST_TITLE_ERROR,
+  TOAST_TITLE_SUCCESS,
+} from "@/lib/ui/config/strings";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { trpc } from "@/utils/trpc";
+import { useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -18,25 +34,8 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import { useToast } from "@workspace/components-library";
-import {
-  APIKEY_EXISTING_HEADER,
-  APIKEY_EXISTING_TABLE_HEADER_CREATED,
-  APIKEY_EXISTING_TABLE_HEADER_NAME,
-  APIKEY_NEW_BUTTON,
-  APIKEY_REMOVE_BTN,
-  APIKEY_REMOVE_DIALOG_HEADER,
-  APIKYE_REMOVE_DIALOG_DESC,
-  TOAST_TITLE_SUCCESS,
-  TOAST_TITLE_ERROR,
-  SETTINGS_RESOURCE_API,
-} from "@/lib/ui/config/strings";
-import { GeneralRouterOutputs } from "@/server/api/types";
-import { trpc } from "@/utils/trpc";
-import { useState } from "react";
-import Resources from "@/components/resources";
-import { useSettingsContext } from "./settings-context";
 import NewApiKeyDialog from "./new-api-key-dialog";
+import { useSettingsContext } from "./settings-context";
 
 type ApiKeyType =
   GeneralRouterOutputs["siteModule"]["siteInfo"]["listApiKeys"][number] & {
@@ -46,7 +45,6 @@ type ApiKeyType =
 export default function ApiKeysSettings() {
   const { loadSettingsQuery } = useSettingsContext();
   const { toast } = useToast();
-  const [apikeyPage, setApikeyPage] = useState(1);
 
   const loadApiKeysQuery = trpc.siteModule.siteInfo.listApiKeys.useQuery();
   const removeApiKeyMutation =

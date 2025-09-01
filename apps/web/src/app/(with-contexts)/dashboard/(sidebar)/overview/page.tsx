@@ -14,11 +14,7 @@ import dynamic from "next/dynamic";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { useSiteInfo } from "@/components/contexts/site-info-context";
 import { TIME_RANGES } from "@/lib/ui/config/constants";
-const Todo = dynamic(() =>
-  import("@/components/admin/dashboard/to-do").then((mod) => ({
-    default: mod.default,
-  })),
-);
+
 const LoadingScreen = dynamic(
   () => import("@/components/admin/loading-screen"),
 );
@@ -133,7 +129,6 @@ export default function Page() {
                                 ))}
                             </SelectContent>
                         </Select> */}
-      <Todo />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         <MetricCard
           title="Sales"

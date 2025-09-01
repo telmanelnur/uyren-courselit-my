@@ -10,14 +10,14 @@ import {
   EDIT_LESSON_TEXT,
   MANAGE_COURSES_PAGE_HEADING,
   TOAST_TITLE_ERROR,
-  TOAST_TITLE_SUCCESS
+  TOAST_TITLE_SUCCESS,
 } from "@/lib/ui/config/strings";
 import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Constants,
   TextEditorContent,
-  UIConstants
+  UIConstants,
 } from "@workspace/common-models";
 import { useToast } from "@workspace/components-library";
 import { ContentEditorRef } from "@workspace/text-editor/tiptap-sh";
@@ -39,12 +39,7 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Switch } from "@workspace/ui/components/switch";
 import { truncate } from "@workspace/utils";
-import {
-  File,
-  FileText,
-  HelpCircle,
-  Video
-} from "lucide-react";
+import { File, FileText, HelpCircle, Video } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -254,7 +249,7 @@ export default function LessonPage() {
             <Skeleton className="h-20" />
           </div>
         </div>
-      </DashboardContent> 
+      </DashboardContent>
     );
   }
 
@@ -287,69 +282,71 @@ export default function LessonPage() {
           header={{
             title: isEditing ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT,
             subtitle: isEditing
-            ? "Edit lesson details"
-            : "Create a new lesson for this section",
-          }} />
+              ? "Edit lesson details"
+              : "Create a new lesson for this section",
+          }}
+        />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lesson Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter lesson title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lesson Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter lesson title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lesson Type</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="grid grid-cols-2 gap-4"
-                      >
-                        {lessonTypes.map((type) => {
-                          const Icon = type.icon;
-                          return (
-                            <div key={type.value}>
-                              <RadioGroupItem
-                                value={type.value}
-                                id={type.value}
-                                className="peer sr-only"
-                              />
-                              <Label
-                                htmlFor={type.value}
-                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                              >
-                                <Icon className="mb-2 h-5 w-5" />
-                                {type.label}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lesson Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      {lessonTypes.map((type) => {
+                        const Icon = type.icon;
+                        return (
+                          <div key={type.value}>
+                            <RadioGroupItem
+                              value={type.value}
+                              id={type.value}
+                              className="peer sr-only"
+                            />
+                            <Label
+                              htmlFor={type.value}
+                              className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                            >
+                              <Icon className="mb-2 h-5 w-5" />
+                              {type.label}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormItem>
               <FormLabel
                 onClick={() => {
-                  editorRef.current!.commands.focus('end')
-                }}>
+                  editorRef.current!.commands.focus("end");
+                }}
+              >
                 Lesson Content
               </FormLabel>
               <LessonContentEditor

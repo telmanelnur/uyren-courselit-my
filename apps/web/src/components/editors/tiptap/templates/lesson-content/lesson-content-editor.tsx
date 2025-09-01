@@ -6,13 +6,23 @@ import {
   ContentEditorProps,
   EditorToolbarItems,
   ToolbarProvider,
-  useToolbar
+  useToolbar,
 } from "@workspace/text-editor/tiptap-sh";
 import { Button } from "@workspace/ui/components/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@workspace/ui/components/scroll-area";
 import { Separator } from "@workspace/ui/components/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
 import { cn } from "@workspace/ui/lib/utils";
 import { FileTextIcon, HelpCircleIcon, Plus } from "lucide-react";
 import { AssignmentLinkNodeExtension } from "../../extensions/assignment-link/assignment-link-node-extension";
@@ -22,11 +32,15 @@ import "./lesson-content-editor.scss";
 export const LessonContentEditor = (props: ContentEditorProps) => {
   return (
     <ContentEditor
-      className={cn("lesson-content-editor-wrapper", props.className, props.editable ? "" : "readonly")}
+      className={cn(
+        "lesson-content-editor-wrapper",
+        props.className,
+        props.editable ? "" : "readonly",
+      )}
       extraExtensions={[AssignmentLinkNodeExtension]}
       {...props}
       toolbar={props.toolbar !== undefined ? props.toolbar : EditorToolbar}
-      />
+    />
   );
 };
 
@@ -88,22 +102,21 @@ const EditorToolbar = ({ editor }: { editor: Editor }) => {
   );
 };
 
-
 const InsertAssignmentToolbar = () => {
   const { editor } = useToolbar();
 
   const handleInsertAssingment = (type: "assignment" | "quiz") => {
     if (type === "assignment") {
-      editor.commands.insertAssignmentLink({ 
+      editor.commands.insertAssignmentLink({
         label: "Assignment",
         obj: null,
-        link: "#"
+        link: "#",
       });
     } else {
-      editor.commands.insertAssignmentLink({ 
-        label: "Quiz", 
+      editor.commands.insertAssignmentLink({
+        label: "Quiz",
         obj: null,
-        link: "#"
+        link: "#",
       });
     }
   };

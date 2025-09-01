@@ -343,14 +343,18 @@ export const siteInfoRouter = router({
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([permissions.manageSettings]))
     .query(async ({ ctx }) => {
-      const apikeys = await ApikeyModel.find(
+      const apikeys = (await ApikeyModel.find(
         { domain: ctx.domainData.domainObj._id },
         {
           name: 1,
           keyId: 1,
           createdAt: 1,
         },
-      ).lean();
+      ).lean()) as unknown as {
+        name: string;
+        keyId: string;
+        createdAt: string;
+      }[];
 
       return apikeys;
     }),

@@ -19,7 +19,11 @@ import { checkPermission } from "@workspace/utils";
 import mongoose from "mongoose";
 import pug from "pug";
 import { z } from "zod";
-import { AuthorizationException, ConflictException, NotFoundException } from "../../core/exceptions";
+import {
+  AuthorizationException,
+  ConflictException,
+  NotFoundException,
+} from "../../core/exceptions";
 import {
   createDomainRequiredMiddleware,
   createPermissionMiddleware,
@@ -222,12 +226,12 @@ export const userRouter = router({
 
       const query = q
         ? {
-          $or: [
-            { name: { $regex: q, $options: "i" } },
-            { email: { $regex: q, $options: "i" } },
-          ],
-          domain: ctx.domainData.domainObj._id,
-        }
+            $or: [
+              { name: { $regex: q, $options: "i" } },
+              { email: { $regex: q, $options: "i" } },
+            ],
+            domain: ctx.domainData.domainObj._id,
+          }
         : { domain: ctx.domainData.domainObj._id };
 
       const [items, total] = await Promise.all([

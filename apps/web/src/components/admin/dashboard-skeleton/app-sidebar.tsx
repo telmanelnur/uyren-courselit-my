@@ -9,7 +9,7 @@ import {
   MessageCircleHeart,
   Settings,
   Target,
-  Users
+  Users,
 } from "lucide-react";
 
 import { NavMain } from "@/components/admin/dashboard-skeleton/nav-main";
@@ -22,7 +22,7 @@ import {
   SIDEBAR_MENU_MAILS,
   SIDEBAR_MENU_PAGES,
   SIDEBAR_MENU_SETTINGS,
-  SIDEBAR_MENU_USERS
+  SIDEBAR_MENU_USERS,
 } from "@/lib/ui/config/strings";
 import { UIConstants } from "@workspace/common-models";
 import { Image } from "@workspace/components-library";

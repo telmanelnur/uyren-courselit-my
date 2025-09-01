@@ -45,7 +45,7 @@ export default async function Layout({
               >
                 <ProfileProvider>
                   <NiceModalProvider>
-                  <NuqsAdapter>{children}</NuqsAdapter>
+                    <NuqsAdapter>{children}</NuqsAdapter>
                   </NiceModalProvider>
                 </ProfileProvider>
               </NextThemesProvider>
@@ -62,22 +62,30 @@ const formatInitialSiteInfo = (siteInfo?: SiteInfo) => {
   return {
     title: siteInfo?.title || defaultState.siteinfo.title,
     subtitle: siteInfo?.subtitle || defaultState.siteinfo.subtitle,
-    logo: siteInfo ? {
-      mediaId: siteInfo.logo?.mediaId || defaultState.siteinfo.logo?.mediaId!,
-      originalFileName: siteInfo.logo?.originalFileName!,
-      size: siteInfo.logo?.size!,
-      url: siteInfo.logo?.url || defaultState.siteinfo.logo?.url!,
-      mimeType: siteInfo.logo?.mimeType!,
-      access: siteInfo.logo?.access!,
-      thumbnail: siteInfo.logo?.thumbnail!,
-      storageProvider: siteInfo.logo?.storageProvider!,
-    } :defaultState.siteinfo.logo!,
-    currencyISOCode: siteInfo?.currencyISOCode || defaultState.siteinfo.currencyISOCode,
-    paymentMethod: siteInfo?.paymentMethod || defaultState.siteinfo.paymentMethod,
+    logo: siteInfo
+      ? {
+          mediaId:
+            siteInfo.logo?.mediaId || defaultState.siteinfo.logo?.mediaId!,
+          originalFileName: siteInfo.logo?.originalFileName!,
+          size: siteInfo.logo?.size!,
+          url: siteInfo.logo?.url || defaultState.siteinfo.logo?.url!,
+          mimeType: siteInfo.logo?.mimeType!,
+          access: siteInfo.logo?.access!,
+          thumbnail: siteInfo.logo?.thumbnail!,
+          storageProvider: siteInfo.logo?.storageProvider!,
+        }
+      : defaultState.siteinfo.logo!,
+    currencyISOCode:
+      siteInfo?.currencyISOCode || defaultState.siteinfo.currencyISOCode,
+    paymentMethod:
+      siteInfo?.paymentMethod || defaultState.siteinfo.paymentMethod,
     stripeKey: siteInfo?.stripeKey || defaultState.siteinfo.stripeKey,
-    codeInjectionHead: siteInfo?.codeInjectionHead || defaultState.siteinfo.codeInjectionHead,
-    codeInjectionBody: siteInfo?.codeInjectionBody || defaultState.siteinfo.codeInjectionBody,
-    mailingAddress: siteInfo?.mailingAddress || defaultState.siteinfo.mailingAddress,
+    codeInjectionHead:
+      siteInfo?.codeInjectionHead || defaultState.siteinfo.codeInjectionHead,
+    codeInjectionBody:
+      siteInfo?.codeInjectionBody || defaultState.siteinfo.codeInjectionBody,
+    mailingAddress:
+      siteInfo?.mailingAddress || defaultState.siteinfo.mailingAddress,
   };
 };
 

@@ -160,100 +160,100 @@ export default function UsersHub() {
           <TableBody>
             {loading
               ? Array(5)
-                .fill(0)
-                .map((_, index) => (
+                  .fill(0)
+                  .map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-10 w-10 rounded-full" />
+                          <div className="space-y-1.5">
+                            <Skeleton className="h-5 w-[200px]" />
+                            <Skeleton className="h-3.5 w-[150px]" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-8" />
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <Skeleton className="h-4 w-[100px] ml-auto" />
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <Skeleton className="h-4 w-[100px] ml-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+              : users.map((user, index) => (
                   <TableRow key={index}>
-                    <TableCell>
+                    <TableCell className="py-2">
                       <div className="flex items-center gap-2">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="space-y-1.5">
-                          <Skeleton className="h-5 w-[200px]" />
-                          <Skeleton className="h-3.5 w-[150px]" />
+                        <Avatar>
+                          <AvatarImage
+                            src={
+                              user.avatar
+                                ? user.avatar.url
+                                : "/courselit_backdrop_square.webp"
+                            }
+                          />
+                          <AvatarFallback>
+                            {getUserNamePreview(user)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <Link href={`/dashboard/users/${user.userId}`}>
+                            <span className="font-medium text-base">
+                              {user.name ? user.name : user.email}
+                            </span>
+                          </Link>
+                          <div className="text-xs text-muted-foreground">
+                            {user.email}
+                          </div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-6 w-20" />
+                      <Badge variant={user.active ? "default" : "secondary"}>
+                        {user.active ? "Active" : "Restricted"}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-4 w-8" />
+                      {
+                        user.content.filter(
+                          (content: any) =>
+                            content.entityType.toLowerCase() ===
+                            Constants.MembershipEntityType.COURSE,
+                        ).length
+                      }
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-4 w-8" />
+                      {
+                        user.content.filter(
+                          (content: any) =>
+                            content.entityType.toLowerCase() ===
+                            Constants.MembershipEntityType.COMMUNITY,
+                        ).length
+                      }
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      <Skeleton className="h-4 w-[100px] ml-auto" />
+                      {user.createdAt
+                        ? formattedLocaleDate(user.createdAt)
+                        : ""}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      <Skeleton className="h-4 w-[100px] ml-auto" />
+                      {user.updatedAt !== user.createdAt
+                        ? user.updatedAt
+                          ? formattedLocaleDate(user.updatedAt)
+                          : ""
+                        : ""}
                     </TableCell>
                   </TableRow>
-                ))
-              : users.map((user, index) => (
-                <TableRow key={index}>
-                  <TableCell className="py-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar>
-                        <AvatarImage
-                          src={
-                            user.avatar
-                              ? user.avatar.url
-                              : "/courselit_backdrop_square.webp"
-                          }
-                        />
-                        <AvatarFallback>
-                          {getUserNamePreview(user)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <Link href={`/dashboard/users/${user.userId}`}>
-                          <span className="font-medium text-base">
-                            {user.name ? user.name : user.email}
-                          </span>
-                        </Link>
-                        <div className="text-xs text-muted-foreground">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.active ? "default" : "secondary"}>
-                      {user.active ? "Active" : "Restricted"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {
-                      user.content.filter(
-                        (content: any) =>
-                          content.entityType.toLowerCase() ===
-                          Constants.MembershipEntityType.COURSE,
-                      ).length
-                    }
-                  </TableCell>
-                  <TableCell>
-                    {
-                      user.content.filter(
-                        (content: any) =>
-                          content.entityType.toLowerCase() ===
-                          Constants.MembershipEntityType.COMMUNITY,
-                      ).length
-                    }
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {user.createdAt
-                      ? formattedLocaleDate(user.createdAt)
-                      : ""}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {user.updatedAt !== user.createdAt
-                      ? user.updatedAt
-                        ? formattedLocaleDate(user.updatedAt)
-                        : ""
-                      : ""}
-                  </TableCell>
-                </TableRow>
-              ))}
+                ))}
           </TableBody>
         </Table>
       </div>

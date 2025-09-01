@@ -52,9 +52,12 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import SalesCard from "./_components/sales-card";
 import MetricCard from "./_components/metric-card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
 const { ActivityType } = Constants;
-
 
 export default function ProductPage() {
   const [timeRange, setTimeRange] = useState("7d");

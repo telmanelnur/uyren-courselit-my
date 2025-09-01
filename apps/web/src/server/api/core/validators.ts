@@ -64,23 +64,31 @@ export const mediaWrappedFieldValidator = (zod = z) => {
   });
 };
 
-export const textEditorContentValidator = (zod = z, options?: {
-  requiredEditorType?: "tiptap" | "text";
-}) => {
-  return zod.object({
-    type: z.enum(["doc"]),
-    content: z.string(),
-    assets: z.array(z.any()),
-    widgets: z.array(z.any()),
-    config: z.object({
-      editorType: z.enum(["tiptap", "text"]),
-    }),
-  }).refine((data) => {
-    if (options?.requiredEditorType) {
-      return data.config.editorType === options.requiredEditorType;
-    }
-    return true;
-  }, {
-    message: "Editor type must be " + options?.requiredEditorType,
-  });
+export const textEditorContentValidator = (
+  zod = z,
+  options?: {
+    requiredEditorType?: "tiptap" | "text";
+  },
+) => {
+  return zod
+    .object({
+      type: z.enum(["doc"]),
+      content: z.string(),
+      assets: z.array(z.any()),
+      widgets: z.array(z.any()),
+      config: z.object({
+        editorType: z.enum(["tiptap", "text"]),
+      }),
+    })
+    .refine(
+      (data) => {
+        if (options?.requiredEditorType) {
+          return data.config.editorType === options.requiredEditorType;
+        }
+        return true;
+      },
+      {
+        message: "Editor type must be " + options?.requiredEditorType,
+      },
+    );
 };

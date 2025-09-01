@@ -5,7 +5,14 @@ import { useSiteInfo } from "@/components/contexts/site-info-context";
 import { useToast } from "@workspace/components-library";
 import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
-import { ChevronDown, LogOut, Menu, Settings, UserCircle, X } from "lucide-react";
+import {
+  ChevronDown,
+  LogOut,
+  Menu,
+  Settings,
+  UserCircle,
+  X,
+} from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,19 +21,19 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function Header() {
-  const { t, i18n } = useTranslation("common")
+  const { t, i18n } = useTranslation("common");
   const { siteInfo } = useSiteInfo();
   const { profile } = useProfile();
   const { data: session, status } = useSession();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false)
+  const [langOpen, setLangOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const [isNavigating, setIsNavigating] = useState(false)
-  const pathname = usePathname()
-  const router = useRouter()
-  const [currentLang, setCurrentLang] = useState(i18n.language || "en")
+  const [isNavigating, setIsNavigating] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const [currentLang, setCurrentLang] = useState(i18n.language || "en");
 
   const navigationItems = [
     { name: t("nav_home"), href: "/" },
@@ -35,51 +42,50 @@ export default function Header() {
     { name: t("nav_grants"), href: "/grants" },
     { name: t("nav_community"), href: "/community" },
     { name: t("nav_sponsorship"), href: "/sponsorship" },
-  ]
+  ];
 
   const languages = [
     { code: "en-US", label: "EN" },
     { code: "ru", label: "RU" },
     { code: "kz", label: "KZ" },
-  ]
-
+  ];
 
   const handleNavigation = (href: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    if (href === pathname) return
+    e.preventDefault();
+    if (href === pathname) return;
 
     // Show loading bar
-    setIsNavigating(true)
+    setIsNavigating(true);
 
     // Create loading bar element
-    const loadingBar = document.createElement("div")
-    loadingBar.className = "nav-loading"
-    document.body.appendChild(loadingBar)
+    const loadingBar = document.createElement("div");
+    loadingBar.className = "nav-loading";
+    document.body.appendChild(loadingBar);
 
     // Navigate after short delay
     setTimeout(() => {
-      router.push(href)
+      router.push(href);
       // Remove loading bar after animation
       setTimeout(() => {
         if (document.body.contains(loadingBar)) {
-          document.body.removeChild(loadingBar)
+          document.body.removeChild(loadingBar);
         }
-      }, 800)
-    }, 50)
-  }
+      }, 800);
+    }, 50);
+  };
 
   const changeLanguage = (lng: string) => {
-    console.log('[change langauge]', lng)
-    i18n.changeLanguage(lng)
-    setCurrentLang(lng)
-    setLangOpen(false)
-  }
+    console.log("[change langauge]", lng);
+    i18n.changeLanguage(lng);
+    setCurrentLang(lng);
+    setLangOpen(false);
+  };
 
   // Close mobile menu when route changes
   useEffect(() => {
-    setMobileMenuOpen(false)
-    setIsNavigating(false)
-  }, [pathname])
+    setMobileMenuOpen(false);
+    setIsNavigating(false);
+  }, [pathname]);
 
   // Handle click outside to close user menu
   useEffect(() => {
@@ -129,14 +135,28 @@ export default function Header() {
           <Branding
             title={siteInfo?.title || "Uyren Academy"}
             subtitle={siteInfo?.subtitle}
-            icon={siteInfo?.logo?.url ? <Image src={siteInfo.logo.url} alt={siteInfo.logo.caption || siteInfo.title || "Logo"} width={40} height={40} className="h-10 w-10 object-contain" /> : <span className="text-white font-bold text-lg">U</span>}
+            icon={
+              siteInfo?.logo?.url ? (
+                <Image
+                  src={siteInfo.logo.url}
+                  alt={siteInfo.logo.caption || siteInfo.title || "Logo"}
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-contain"
+                />
+              ) : (
+                <span className="text-white font-bold text-lg">U</span>
+              )
+            }
             onClick={handleNavigation}
           />
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-4 lg:space-x-8">
             {navigationItems.map((item) => {
-              const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/" && pathname?.startsWith(item.href));
               return (
                 <Link
                   key={item.name}
@@ -155,7 +175,7 @@ export default function Header() {
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-primary transform transition-all duration-300 group-hover:w-full" />
                   )}
                 </Link>
-              )
+              );
             })}
 
             {/* Language selector */}
@@ -164,7 +184,7 @@ export default function Header() {
                 onClick={() => setLangOpen(!langOpen)}
                 className="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-md"
               >
-                {languages.find(l => l.code === currentLang)?.label}
+                {languages.find((l) => l.code === currentLang)?.label}
                 <ChevronDown className="w-4 h-4" />
               </Button>
               {langOpen && (
@@ -186,9 +206,12 @@ export default function Header() {
 
             {/* Get Started */}
             {!isAuthenticated ? (
-              <Link href="/auth/sign-in" onClick={(e) => handleNavigation("/auth/sign-in", e)}>
+              <Link
+                href="/auth/sign-in"
+                onClick={(e) => handleNavigation("/auth/sign-in", e)}
+              >
                 <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:scale-105">
-                  {t("nav_get_started")}  
+                  {t("nav_get_started")}
                 </Button>
               </Link>
             ) : (
@@ -259,7 +282,9 @@ export default function Header() {
         >
           <div className="flex flex-col space-y-2 py-4">
             {navigationItems.map((item) => {
-              const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/" && pathname?.startsWith(item.href));
               return (
                 <Link
                   key={item.name}
@@ -274,7 +299,7 @@ export default function Header() {
                 >
                   {item.name}
                 </Link>
-              )
+              );
             })}
             {/* 
             <div className="flex items-center justify-between py-2 px-2">
@@ -284,7 +309,9 @@ export default function Header() {
 
             {/* Mobile language selector */}
             <div className="flex items-center justify-between py-2 px-2">
-              <span className="text-gray-700 font-medium">{t("nav_language")}</span>
+              <span className="text-gray-700 font-medium">
+                {t("nav_language")}
+              </span>
               <select
                 value={currentLang}
                 onChange={(e) => changeLanguage(e.target.value)}
@@ -298,28 +325,31 @@ export default function Header() {
               </select>
             </div>
 
-            {
-              !isAuthenticated ? (
-                <Link href="/auth/sign-in" onClick={(e) => handleNavigation("/auth/sign-in", e)}>
-                  <Button className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white py-2 rounded-lg font-medium transition-all duration-300">
-                    {t("nav_get_started")}
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/dashboard" onClick={(e) => handleNavigation("/dashboard", e)}>
-                  <Button className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white py-2 rounded-lg font-medium transition-all duration-300">
-                    {t("nav_dashboard")}
-                  </Button>
-                </Link>
-              )
-            }
+            {!isAuthenticated ? (
+              <Link
+                href="/auth/sign-in"
+                onClick={(e) => handleNavigation("/auth/sign-in", e)}
+              >
+                <Button className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white py-2 rounded-lg font-medium transition-all duration-300">
+                  {t("nav_get_started")}
+                </Button>
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard"
+                onClick={(e) => handleNavigation("/dashboard", e)}
+              >
+                <Button className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white py-2 rounded-lg font-medium transition-all duration-300">
+                  {t("nav_dashboard")}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
-    </header >
+    </header>
   );
 }
-
 
 const Branding = (props: {
   onClick: (href: string, e: React.MouseEvent) => void;
@@ -334,14 +364,12 @@ const Branding = (props: {
       onClick={(e) => props.onClick("/", e)}
     >
       <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-primary-hover rounded-full flex items-center justify-center transition-transform duration-300">
-        <span className="text-white font-bold text-lg">
-          {props.icon}
-        </span>
+        <span className="text-white font-bold text-lg">{props.icon}</span>
       </div>
       <div>
         <div className="text-lg font-bold text-gray-900">{props.title}</div>
         <div className="text-xs text-brand-primary">{props.subtitle}</div>
       </div>
-    </Link >
-  )
-}
+    </Link>
+  );
+};

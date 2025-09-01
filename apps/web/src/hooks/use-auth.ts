@@ -36,7 +36,10 @@ export const useFirebaseAuth = () => {
             if (!data?.email || !data?.password) {
               return { success: false, error: "Email and password required" };
             }
-            return await AuthClientService.signInWithEmail(data.email, data.password);
+            return await AuthClientService.signInWithEmail(
+              data.email,
+              data.password,
+            );
           case "signup":
             // Email/password signup
             if (!data?.email || !data?.password) {
@@ -45,7 +48,11 @@ export const useFirebaseAuth = () => {
             if (!data?.name) {
               return { success: false, error: "Name is required for signup" };
             }
-            return await AuthClientService.signUpWithEmail(data.email, data.password, data.name);
+            return await AuthClientService.signUpWithEmail(
+              data.email,
+              data.password,
+              data.name,
+            );
           default:
             return {
               success: false,
@@ -56,7 +63,8 @@ export const useFirebaseAuth = () => {
         console.error(`Authentication error for provider ${provider}:`, error);
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Authentication failed",
+          error:
+            error instanceof Error ? error.message : "Authentication failed",
         };
       }
     },

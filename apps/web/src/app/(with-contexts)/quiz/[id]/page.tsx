@@ -1,78 +1,90 @@
-import { getAttemptStatistics, getUserQuizAttempts } from "@/server/actions/quiz-attempt"
-import { trpcCaller } from "@/server/api/caller"
-import { Badge } from "@workspace/ui/components/badge"
-import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
-import { BarChart3, Clock, Eye, Target, ArrowLeft } from "lucide-react"
-import { Metadata, ResolvingMetadata } from "next"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import QuizActions from "./_components/quiz-actions"
+import {
+  getAttemptStatistics,
+  getUserQuizAttempts,
+} from "@/server/actions/quiz-attempt";
+import { trpcCaller } from "@/server/api/caller";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import { BarChart3, Clock, Eye, Target, ArrowLeft } from "lucide-react";
+import { Metadata, ResolvingMetadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import QuizActions from "./_components/quiz-actions";
 
 interface QuizPageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 const fetchQuizDetails = async (id: string) => {
-  const quiz = await trpcCaller.lmsModule.quizModule.quiz.publicGetByQuizId({ quizId: id })
-  return quiz
-}
+  const quiz = await trpcCaller.lmsModule.quizModule.quiz.publicGetByQuizId({
+    quizId: id,
+  });
+  return quiz;
+};
 
 export async function generateMetadata(
-    { params }: { params: Promise<{ id: string }> },
-    parent: ResolvingMetadata,
+  { params }: { params: Promise<{ id: string }> },
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const { id } = await params
-  const quiz = await fetchQuizDetails(id)
-  
+  const { id } = await params;
+  const quiz = await fetchQuizDetails(id);
+
   if (!quiz) {
     return {
       title: `Quiz Not Found | Quizzes | LMS | ${(await parent)?.title?.absolute}`,
-    }
+    };
   }
 
-    return {
+  return {
     title: `${quiz.title} | Quizzes | LMS | ${(await parent)?.title?.absolute}`,
     description: quiz.description || `Take the ${quiz.title} quiz`,
-  }
+  };
 }
 
 export default async function QuizPage({ params }: QuizPageProps) {
-        const { id } = await params
+  const { id } = await params;
 
   try {
-    const quiz = await fetchQuizDetails(id)
+    const quiz = await fetchQuizDetails(id);
 
     if (!quiz) {
-      notFound()
+      notFound();
     }
 
-    let attemptStats = null
-    let userAttempts: any[] = []
+    let attemptStats = null;
+    let userAttempts: any[] = [];
 
     try {
       [attemptStats, userAttempts] = await Promise.all([
         getAttemptStatistics(id),
-        getUserQuizAttempts(id)
-      ])
+        getUserQuizAttempts(id),
+      ]);
     } catch (error) {
-      console.warn("Failed to load attempt data:", error)
+      console.warn("Failed to load attempt data:", error);
     }
 
-    const currentAttempt = userAttempts.find(attempt => attempt.status === "in_progress")
+    const currentAttempt = userAttempts.find(
+      (attempt) => attempt.status === "in_progress",
+    );
 
     const getRemainingAttempts = () => {
-      if (!quiz.maxAttempts) return Infinity
-      return Math.max(0, quiz.maxAttempts - (attemptStats?.totalAttempts || 0))
-    }
+      if (!quiz.maxAttempts) return Infinity;
+      return Math.max(0, quiz.maxAttempts - (attemptStats?.totalAttempts || 0));
+    };
 
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Back Navigation */}
           <div className="mb-6">
-            <Link 
-              href="/courses" 
+            <Link
+              href="/courses"
               className="inline-flex items-center text-muted-foreground hover:text-brand-primary transition-colors duration-300"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -97,7 +109,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
                 )}
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-8 px-8 pb-8">
               {/* Quiz Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -110,9 +122,11 @@ export default async function QuizPage({ params }: QuizPageProps) {
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                     {quiz.passingScore}%
                   </div>
-                  <div className="text-sm text-muted-foreground font-medium">Passing Score</div>
+                  <div className="text-sm text-muted-foreground font-medium">
+                    Passing Score
+                  </div>
                 </div>
-                
+
                 <div className="group bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 p-6 rounded-xl text-center border border-green-200/50 dark:border-green-800/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <div className="flex items-center justify-center mb-3">
                     <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center group-hover:bg-green-200 dark:group-hover:bg-green-800/40 transition-colors duration-300">
@@ -120,11 +134,13 @@ export default async function QuizPage({ params }: QuizPageProps) {
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
-                    {quiz.timeLimit ? `${quiz.timeLimit} min` : 'No limit'}
+                    {quiz.timeLimit ? `${quiz.timeLimit} min` : "No limit"}
                   </div>
-                  <div className="text-sm text-muted-foreground font-medium">Time Limit</div>
+                  <div className="text-sm text-muted-foreground font-medium">
+                    Time Limit
+                  </div>
                 </div>
-                
+
                 <div className="group bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 p-6 rounded-xl text-center border border-purple-200/50 dark:border-purple-800/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <div className="flex items-center justify-center mb-3">
                     <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-purple-800/40 transition-colors duration-300">
@@ -134,31 +150,47 @@ export default async function QuizPage({ params }: QuizPageProps) {
                   <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
                     {quiz.totalPoints}
                   </div>
-                  <div className="text-sm text-muted-foreground font-medium">Total Points</div>
+                  <div className="text-sm text-muted-foreground font-medium">
+                    Total Points
+                  </div>
                 </div>
               </div>
 
               {/* Progress Summary */}
               {attemptStats && (
                 <div className="bg-muted/50 p-6 rounded-xl border border-border/50">
-                  <h3 className="font-semibold text-lg mb-4 text-foreground">Your Progress</h3>
+                  <h3 className="font-semibold text-lg mb-4 text-foreground">
+                    Your Progress
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Attempts Used</span>
-                        <span className="font-semibold text-foreground">{attemptStats.totalAttempts}</span>
+                        <span className="text-sm text-muted-foreground">
+                          Attempts Used
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {attemptStats.totalAttempts}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Remaining</span>
-                        <span className="font-semibold text-foreground">{getRemainingAttempts()}</span>
+                        <span className="text-sm text-muted-foreground">
+                          Remaining
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {getRemainingAttempts()}
+                        </span>
                       </div>
                     </div>
-                    
+
                     <div>
                       {userAttempts.length > 0 && (
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Total Attempts</span>
-                          <span className="font-semibold text-foreground">{userAttempts.length}</span>
+                          <span className="text-sm text-muted-foreground">
+                            Total Attempts
+                          </span>
+                          <span className="font-semibold text-foreground">
+                            {userAttempts.length}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -168,7 +200,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <QuizActions 
+                <QuizActions
                   quizId={id}
                   currentAttempt={currentAttempt}
                   remainingAttempts={getRemainingAttempts()}
@@ -187,24 +219,39 @@ export default async function QuizPage({ params }: QuizPageProps) {
               {/* Quick Attempt History */}
               {userAttempts.length > 0 && (
                 <div className="border-t border-border/50 pt-8">
-                  <h3 className="font-semibold text-lg mb-6 text-foreground">Recent Attempts</h3>
+                  <h3 className="font-semibold text-lg mb-6 text-foreground">
+                    Recent Attempts
+                  </h3>
                   <div className="space-y-3">
                     {userAttempts.slice(0, 3).map((attempt) => (
-                      <div key={attempt._id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors duration-300">
+                      <div
+                        key={attempt._id}
+                        className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors duration-300"
+                      >
                         <div className="flex items-center gap-4">
-                          <div className={`w-3 h-3 rounded-full ${
-                            attempt.status === "completed" ? "bg-green-500" :
-                            attempt.status === "in_progress" ? "bg-brand-primary" :
-                            "bg-muted-foreground"
-                          }`} />
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              attempt.status === "completed"
+                                ? "bg-green-500"
+                                : attempt.status === "in_progress"
+                                  ? "bg-brand-primary"
+                                  : "bg-muted-foreground"
+                            }`}
+                          />
                           <span className="text-sm font-medium text-foreground">
                             {new Date(attempt.startedAt).toLocaleDateString()}
                           </span>
-                          <Badge variant={attempt.status === "completed" ? "default" : "secondary"}>
+                          <Badge
+                            variant={
+                              attempt.status === "completed"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
                             {attempt.status.replace("_", " ")}
                           </Badge>
                         </div>
-                        
+
                         <div className="flex items-center gap-4">
                           {attempt.percentageScore !== undefined && (
                             <span className="text-sm font-semibold text-foreground">
@@ -213,13 +260,23 @@ export default async function QuizPage({ params }: QuizPageProps) {
                           )}
                           {attempt.status === "in_progress" ? (
                             <Link href={`/quiz/${id}/attempts/${attempt._id}`}>
-                              <Button variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white"
+                              >
                                 Continue
                               </Button>
                             </Link>
                           ) : (
-                            <Link href={`/quiz/${id}/attempts/${attempt._id}/results`}>
-                              <Button variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white">
+                            <Link
+                              href={`/quiz/${id}/attempts/${attempt._id}/results`}
+                            >
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white"
+                              >
                                 View Results
                               </Button>
                             </Link>
@@ -228,12 +285,17 @@ export default async function QuizPage({ params }: QuizPageProps) {
                       </div>
                     ))}
                   </div>
-                  
+
                   {/* View All Results Link */}
                   {userAttempts.length > 3 && (
                     <div className="mt-6 text-center">
-                      <Link href={`/quiz/${id}/attempts/${userAttempts[0]._id}/results`}>
-                        <Button variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white">
+                      <Link
+                        href={`/quiz/${id}/attempts/${userAttempts[0]._id}/results`}
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white"
+                        >
                           <Eye className="w-4 h-4 mr-2" />
                           View All Results & Attempt History
                         </Button>
@@ -246,8 +308,8 @@ export default async function QuizPage({ params }: QuizPageProps) {
           </Card>
         </div>
       </div>
-        )
-    } catch (error) {
-        notFound()
-    }
+    );
+  } catch (error) {
+    notFound();
+  }
 }

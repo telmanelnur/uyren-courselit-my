@@ -10,7 +10,12 @@ import {
   FormLabel,
   FormDescription,
 } from "@workspace/ui/components/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 
 interface GeneralSettingsProps {
   form: UseFormReturn<any>;
@@ -58,7 +63,8 @@ export const GeneralSettings = React.memo<GeneralSettingsProps>(({ form }) => {
               <div className="space-y-1 leading-none">
                 <FormLabel>Show features section</FormLabel>
                 <FormDescription>
-                  Display platform features like systematic learning, practice, growth, and support
+                  Display platform features like systematic learning, practice,
+                  growth, and support
                 </FormDescription>
               </div>
             </FormItem>

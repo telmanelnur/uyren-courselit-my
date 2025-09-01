@@ -7,7 +7,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { CheckCircle, BookOpen, ArrowRight, Home, Clock, Users, Star } from "lucide-react";
+import {
+  CheckCircle,
+  BookOpen,
+  ArrowRight,
+  Home,
+  Clock,
+  Users,
+  Star,
+} from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { trpc } from "@/utils/trpc";
@@ -75,7 +83,10 @@ export default function CheckoutSuccessPage() {
           <p className="text-gray-600 mb-6">
             Course or payment plan not found.
           </p>
-          <Button onClick={() => router.push("/")} className="bg-brand-primary hover:bg-brand-primary-hover">
+          <Button
+            onClick={() => router.push("/")}
+            className="bg-brand-primary hover:bg-brand-primary-hover"
+          >
             <Home className="w-4 h-4 mr-2" />
             Go Home
           </Button>
@@ -96,7 +107,10 @@ export default function CheckoutSuccessPage() {
             Enrollment Successful!
           </h1>
           <p className="text-xl text-muted-foreground">
-            Welcome to <span className="font-semibold text-brand-primary">{course.title}</span>
+            Welcome to{" "}
+            <span className="font-semibold text-brand-primary">
+              {course.title}
+            </span>
           </p>
         </div>
 
@@ -114,13 +128,15 @@ export default function CheckoutSuccessPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-3">{course.title}</h3>
+                  <h3 className="font-bold text-xl text-gray-900 mb-3">
+                    {course.title}
+                  </h3>
                   {course.tags && course.tags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 mb-4">
                       {course.tags.map((tag, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="outline" 
+                        <Badge
+                          key={index}
+                          variant="outline"
                           className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 transition-colors"
                         >
                           {tag}
@@ -143,7 +159,9 @@ export default function CheckoutSuccessPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Duration</p>
-                      <p className="font-medium">{course.duration || "Self-paced"} weeks</p>
+                      <p className="font-medium">
+                        {course.duration || "Self-paced"} weeks
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -152,7 +170,9 @@ export default function CheckoutSuccessPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Level</p>
-                      <p className="font-medium">{course.level || "Beginner"}</p>
+                      <p className="font-medium">
+                        {course.level || "Beginner"}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -198,7 +218,8 @@ export default function CheckoutSuccessPage() {
                     Access Your Course
                   </h3>
                   <p className="text-blue-700 text-sm">
-                    Start learning immediately with full access to all course content.
+                    Start learning immediately with full access to all course
+                    content.
                   </p>
                 </div>
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -209,7 +230,8 @@ export default function CheckoutSuccessPage() {
                     Complete Lessons
                   </h3>
                   <p className="text-green-700 text-sm">
-                    Work through the course at your own pace and track your progress.
+                    Work through the course at your own pace and track your
+                    progress.
                   </p>
                 </div>
               </CardContent>
@@ -225,8 +247,8 @@ export default function CheckoutSuccessPage() {
                 Start Learning
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => router.push("/dashboard")}
                 className="w-full border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white transition-all duration-300"
               >
@@ -237,9 +259,12 @@ export default function CheckoutSuccessPage() {
             {/* Additional Info */}
             <div className="text-sm text-muted-foreground space-y-2">
               <p className="text-center">
-                You'll receive a confirmation email shortly with your enrollment details.
+                You'll receive a confirmation email shortly with your enrollment
+                details.
               </p>
-              <p className="text-center">Need help? Contact our support team.</p>
+              <p className="text-center">
+                Need help? Contact our support team.
+              </p>
             </div>
           </div>
         </div>

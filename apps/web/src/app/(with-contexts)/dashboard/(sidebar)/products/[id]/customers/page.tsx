@@ -37,11 +37,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
 import { useDebounce } from "@workspace/ui/hooks/use-debounce";
 import { capitalize, truncate } from "@workspace/utils";
 import { ArrowLeft, Copy, MoreHorizontal, UserPlus } from "lucide-react";
@@ -92,14 +101,17 @@ export default function ProductCustomersPage() {
     trpc.userModule.user.inviteCustomer.useMutation();
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  
-  const handleCopyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: TOAST_TITLE_SUCCESS,
-      description: "Copied to clipboard",
-    });
-  }, [toast]);
+
+  const handleCopyToClipboard = useCallback(
+    (text: string) => {
+      navigator.clipboard.writeText(text);
+      toast({
+        title: TOAST_TITLE_SUCCESS,
+        description: "Copied to clipboard",
+      });
+    },
+    [toast],
+  );
 
   const columns: ColumnDef<ItemType>[] = useMemo(() => {
     return [
@@ -199,26 +211,26 @@ export default function ProductCustomersPage() {
         },
       },
       {
-          id: "actions",
-          header: "Actions",
-          cell: ({ row }) => {
-              const quiz = row.original;
-              return (
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                          </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                          <DropdownMenuItem >
-                              {/* <Link href={`/dashboard/lms/quizzes/${quiz._id}`}>
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const quiz = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  {/* <Link href={`/dashboard/lms/quizzes/${quiz._id}`}>
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit Quiz
                               </Link> */}
-                          </DropdownMenuItem>
-                          {/* {quiz.status !== "archived" && (
+                </DropdownMenuItem>
+                {/* {quiz.status !== "archived" && (
                               <DropdownMenuItem
                                   onClick={() => handleArchive(quiz)}
                                   className="text-orange-600"
@@ -227,10 +239,10 @@ export default function ProductCustomersPage() {
                                   Archive Quiz
                               </DropdownMenuItem>
                           )} */}
-                      </DropdownMenuContent>
-                  </DropdownMenu>
-              );
-          },
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
       },
     ];
   }, [handleCopyToClipboard]);

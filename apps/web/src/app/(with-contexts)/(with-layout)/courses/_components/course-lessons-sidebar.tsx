@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import { useProfile } from "@/components/contexts/profile-context"
-import { useSiteInfo } from "@/components/contexts/site-info-context"
-import { getPlanPrice } from "@/lib/ui/lib/utils"
-import { GeneralRouterOutputs } from "@/server/api/types"
-import { trpc } from "@/utils/trpc"
-import { Constants } from "@workspace/common-models"
-import { Badge } from "@workspace/ui/components/badge"
-import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
-import { Separator } from "@workspace/ui/components/separator"
-import { Skeleton } from "@workspace/ui/components/skeleton"
-import { formatCurrency } from "@workspace/utils"
+import { useProfile } from "@/components/contexts/profile-context";
+import { useSiteInfo } from "@/components/contexts/site-info-context";
+import { getPlanPrice } from "@/lib/ui/lib/utils";
+import { GeneralRouterOutputs } from "@/server/api/types";
+import { trpc } from "@/utils/trpc";
+import { Constants } from "@workspace/common-models";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import { Separator } from "@workspace/ui/components/separator";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { formatCurrency } from "@workspace/utils";
 import {
   BookOpen,
   ChevronDown,
@@ -23,20 +29,21 @@ import {
   Lock,
   Play,
   Video,
-  CheckCircle
-} from "lucide-react"
-import Link from "next/link"
-import { useCallback, useState } from "react"
-import { useTranslation } from "react-i18next"
+  CheckCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-type CourseType = GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["publicGetByCourseId"]
+type CourseType =
+  GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["publicGetByCourseId"];
 
 interface CourseLessonsSidebarProps {
-  course: CourseType
-  currentLessonId?: string
-  showPricing?: boolean
-  showCourseInfo?: boolean
-  loading?: boolean
+  course: CourseType;
+  currentLessonId?: string;
+  showPricing?: boolean;
+  showCourseInfo?: boolean;
+  loading?: boolean;
 }
 
 export default function CourseLessonsSidebar({
@@ -46,7 +53,7 @@ export default function CourseLessonsSidebar({
   showCourseInfo = true,
   loading = false,
 }: CourseLessonsSidebarProps) {
-  const { t } = useTranslation("common")
+  const { t } = useTranslation("common");
   const { siteInfo } = useSiteInfo();
   const { profile } = useProfile();
 
@@ -97,23 +104,23 @@ export default function CourseLessonsSidebar({
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "video":
-        return <Video className="h-4 w-4" />
+        return <Video className="h-4 w-4" />;
       case "text":
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
       case "quiz":
-        return <HelpCircle className="h-4 w-4" />
+        return <HelpCircle className="h-4 w-4" />;
       case "audio":
-        return <Play className="h-4 w-4" />
+        return <Play className="h-4 w-4" />;
       case "pdf":
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
       case "file":
-        return <Download className="h-4 w-4" />
+        return <Download className="h-4 w-4" />;
       case "embed":
-        return <Play className="h-4 w-4" />
+        return <Play className="h-4 w-4" />;
       default:
-        return <Play className="h-4 w-4" />
+        return <Play className="h-4 w-4" />;
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -167,7 +174,7 @@ export default function CourseLessonsSidebar({
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -302,11 +309,16 @@ export default function CourseLessonsSidebar({
                 <div className="space-y-3 pt-4 border-t">
                   <div className="flex items-center gap-3 text-sm">
                     <Clock className="h-4 w-4 text-brand-primary" />
-                    <span>{course.duration} {t("weeks")}</span>
+                    <span>
+                      {course.duration} {t("weeks")}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <BookOpen className="h-4 w-4 text-brand-primary" />
-                    <span>{course.attachedLessons.length || 0} {t("course_sidebar_lessons")}</span>
+                    <span>
+                      {course.attachedLessons.length || 0}{" "}
+                      {t("course_sidebar_lessons")}
+                    </span>
                   </div>
                 </div>
               )}
@@ -315,14 +327,17 @@ export default function CourseLessonsSidebar({
         </Card>
       )}
 
-             {/* Course Content */}
-       <Card>
-         <CardHeader>
-           <CardTitle className="text-xl">{t("course_sidebar_course_content")}</CardTitle>
-           <CardDescription>
-             {course.groups?.length || 0} {t("course_sidebar_sections")} • {course.attachedLessons.length || 0} {t("course_sidebar_lessons")}
-           </CardDescription>
-         </CardHeader>
+      {/* Course Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">
+            {t("course_sidebar_course_content")}
+          </CardTitle>
+          <CardDescription>
+            {course.groups?.length || 0} {t("course_sidebar_sections")} •{" "}
+            {course.attachedLessons.length || 0} {t("course_sidebar_lessons")}
+          </CardDescription>
+        </CardHeader>
         <CardContent className="p-0">
           {isAuthenticated && isMembershipLoading ? (
             <div className="p-6 space-y-4">
@@ -347,10 +362,13 @@ export default function CourseLessonsSidebar({
                       ) : (
                         <ChevronRight className="h-4 w-4 text-brand-primary" />
                       )}
-                      <span className="font-medium group-hover:text-brand-primary transition-colors">{group.name}</span>
+                      <span className="font-medium group-hover:text-brand-primary transition-colors">
+                        {group.name}
+                      </span>
                     </div>
                     <Badge variant="secondary" className="text-xs">
-                      {group.lessonsOrder.length || 0} {t("course_sidebar_lessons")}
+                      {group.lessonsOrder.length || 0}{" "}
+                      {t("course_sidebar_lessons")}
                     </Badge>
                   </button>
 
@@ -374,13 +392,17 @@ export default function CourseLessonsSidebar({
                             <Link
                               href={`/courses/${course.courseId}/lessons/${lessonId}`}
                               className={`block p-3 pl-6 text-left hover:bg-muted/50 transition-colors border-l-2 hover:border-brand-primary ${
-                                isCurrentLesson ? "bg-brand-primary/5 border-brand-primary" : "border-transparent"
+                                isCurrentLesson
+                                  ? "bg-brand-primary/5 border-brand-primary"
+                                  : "border-transparent"
                               } ${!(hasAccess || !lesson?.requiresEnrollment) ? "opacity-60 pointer-events-none" : ""}`}
                             >
                               <div className="flex items-center gap-3">
                                 <div className="flex-shrink-0 w-6 h-6 rounded-sm border-2 border-brand-primary/30 flex items-center justify-center bg-white">
                                   {hasAccess || !lesson?.requiresEnrollment ? (
-                                    <div className="text-brand-primary">{getTypeIcon(lesson?.type || "text")}</div>
+                                    <div className="text-brand-primary">
+                                      {getTypeIcon(lesson?.type || "text")}
+                                    </div>
                                   ) : (
                                     <Lock className="h-3 w-3 text-muted-foreground" />
                                   )}
@@ -389,7 +411,9 @@ export default function CourseLessonsSidebar({
                                   <div className="flex items-center justify-between">
                                     <span
                                       className={`text-sm font-medium truncate ${
-                                        isCurrentLesson ? "text-brand-primary" : ""
+                                        isCurrentLesson
+                                          ? "text-brand-primary"
+                                          : ""
                                       }`}
                                     >
                                       {lesson?.title || `Lesson ${lessonId}`}
@@ -416,5 +440,5 @@ export default function CourseLessonsSidebar({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

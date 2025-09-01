@@ -76,32 +76,47 @@ export const websiteSettingsRouter = router({
     .input(
       getFormDataSchema({
         mainPage: z.object({
-          showBanner: z.boolean(),
-          bannerTitle: z.string().min(1, "Banner title is required"),
+          showBanner: z.boolean().optional(),
+          bannerTitle: z.string().min(1, "Banner title is required").optional(),
           bannerSubtitle: z.string().optional(),
-          featuredCourses: z.array(z.object({
-            courseId: z.string().min(1, "Course ID is required"),
-            title: z.string().min(1, "Course title is required"),
-            slug: z.string().min(1, "Course slug is required"),
-            shortDescription: z.string().optional(),
-            level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
-            duration: z.number().min(0, "Duration must be at least 0").optional(),
-            isFeatured: z.boolean().optional(),
-            order: z.number().min(0, "Order must be at least 0").optional(),
-          })).optional(),
-          featuredReviews: z.array(z.object({
-            reviewId: z.string().min(1, "Review ID is required"),
-            author: z.any().optional(),
-            rating: z.number().min(1, "Rating must be at least 1").max(10, "Rating cannot exceed 10"),
-            content: textEditorContentValidator(),
-            courseId: z.string().optional(),
-            order: z.number().min(0, "Order must be at least 0").optional(),
-          })).optional(),
-          showStats: z.boolean(),
-          showFeatures: z.boolean(),
-          showTestimonials: z.boolean(),
+          featuredCourses: z
+            .array(
+              z.object({
+                courseId: z.string().min(1, "Course ID is required"),
+                title: z.string().min(1, "Course title is required"),
+                slug: z.string().min(1, "Course slug is required"),
+                shortDescription: z.string(),
+                level: z
+                  .enum(["beginner", "intermediate", "advanced"]),
+                duration: z
+                  .number()
+                  .min(0, "Duration must be at least 0"),
+                isFeatured: z.boolean(),
+                order: z.number().min(0, "Order must be at least 0"),
+              }),
+            )
+            .optional(),
+          featuredReviews: z
+            .array(
+              z.object({
+                reviewId: z.string().min(1, "Review ID is required"),
+                author: z.any(),
+                rating: z
+                  .number()
+                  .min(1, "Rating must be at least 1")
+                  .max(10, "Rating cannot exceed 10"),
+                content: textEditorContentValidator().optional(),
+                targetType: z.string(),
+                targetId: z.string(),
+                order: z.number().min(0, "Order must be at least 0"),
+              }),
+            )
+            .optional(),
+          showStats: z.boolean().optional(),
+          showFeatures: z.boolean().optional(),
+          showTestimonials: z.boolean().optional(),
         }),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       let websiteSettings = await WebsiteSettingsModel.findOne({

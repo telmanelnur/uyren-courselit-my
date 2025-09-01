@@ -2,26 +2,40 @@
 
 import { useState } from "react";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
 import { Plus, Trash2, Globe, Building2, Edit } from "lucide-react";
 import { trpc } from "@/utils/trpc";
-import { useToast, DeleteConfirmNiceDialog } from "@workspace/components-library";
-import {NiceModal} from "@workspace/components-library";
+import {
+  useToast,
+  DeleteConfirmNiceDialog,
+} from "@workspace/components-library";
+import { NiceModal } from "@workspace/components-library";
 import SchoolDialog from "./school-dialog";
 import { GeneralRouterOutputs } from "@/server/api/types";
+import { FormMode } from "@/components/admin/layout/types";
 
-type DomainItemType = GeneralRouterOutputs["siteModule"]["domain"]["list"]["items"][number];
+type DomainItemType =
+  GeneralRouterOutputs["siteModule"]["domain"]["list"]["items"][number];
 
 export default function SchoolsManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [dialogMode, setDialogMode] = useState<FormMode>("create");
   const [selectedDomain, setSelectedDomain] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: domains, isLoading, refetch } = trpc.siteModule.domain.list.useQuery({
+  const {
+    data: domains,
+    isLoading,
+    refetch,
+  } = trpc.siteModule.domain.list.useQuery({
     pagination: { take: 100, skip: 0 },
-    orderBy: { field: "createdAt", direction: "desc" }
+    orderBy: { field: "createdAt", direction: "desc" },
   });
 
   const deleteDomainMutation = trpc.siteModule.domain.delete.useMutation({
@@ -104,12 +118,10 @@ export default function SchoolsManagement() {
             <div className="text-center py-8">
               <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No schools found</h3>
-                             <p className="text-muted-foreground mb-4">
-                 Get started by adding your first school.
-               </p>
-               <Button onClick={handleAdd}>
-                 Add First School
-               </Button>
+              <p className="text-muted-foreground mb-4">
+                Get started by adding your first school.
+              </p>
+              <Button onClick={handleAdd}>Add First School</Button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -124,7 +136,9 @@ export default function SchoolsManagement() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{domain.settings?.title || domain.name}</h3>
+                        <h3 className="font-semibold">
+                          {domain.settings?.title || domain.name}
+                        </h3>
                         {isMainDomain(domain) && (
                           <Badge variant="secondary">Main</Badge>
                         )}
@@ -140,25 +154,25 @@ export default function SchoolsManagement() {
                       </p>
                     </div>
                   </div>
-                                     <div className="flex items-center gap-2">
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={() => handleEdit(domain)}
-                     >
-                       <Edit className="w-4 h-4" />
-                     </Button>
-                     {!isMainDomain(domain) && (
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => handleDelete(domain)}
-                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                       >
-                         <Trash2 className="w-4 h-4" />
-                       </Button>
-                     )}
-                   </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(domain)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    {!isMainDomain(domain) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(domain)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -166,15 +180,15 @@ export default function SchoolsManagement() {
         </CardContent>
       </Card>
 
-                    <SchoolDialog
-         open={isDialogOpen}
-         onOpenChange={setIsDialogOpen}
-         mode={dialogMode}
-         domain={dialogMode === "edit" ? selectedDomain : undefined}
-         onSuccess={() => {
-           refetch();
-         }}
-       />
+      <SchoolDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        mode={dialogMode}
+        domain={dialogMode === "edit" ? selectedDomain : undefined}
+        onSuccess={() => {
+          refetch();
+        }}
+      />
     </div>
   );
 }

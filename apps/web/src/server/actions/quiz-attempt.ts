@@ -10,11 +10,14 @@ import {
   AuthenticationException,
   ConflictException,
   NotFoundException,
-  ValidationException
+  ValidationException,
 } from "@/server/api/core/exceptions";
 import { QuestionProviderFactory } from "@/server/api/routers/lms/question-bank/_providers";
 import { connectToDatabase } from "@workspace/common-logic";
-import { BASIC_PUBLICATION_STATUS_TYPE, UIConstants } from "@workspace/common-models";
+import {
+  BASIC_PUBLICATION_STATUS_TYPE,
+  UIConstants,
+} from "@workspace/common-models";
 import { checkPermission } from "@workspace/utils";
 import { User } from "next-auth";
 import { getServerSession } from "next-auth";
@@ -93,7 +96,7 @@ async function validateAttempt(attemptId: string, ctx: ActionContext) {
 async function validateAnswer(
   answer: any,
   questionId: string,
-  questions: IQuestion[]
+  questions: IQuestion[],
 ): Promise<{ isValid: boolean; normalizedAnswer?: any; error?: string }> {
   const question = questions.find((q) => q._id?.toString() === questionId);
   if (!question) {
@@ -102,7 +105,10 @@ async function validateAnswer(
 
   const provider = QuestionProviderFactory.getProvider(question.type);
   if (!provider) {
-    return { isValid: false, error: `Question type ${question.type} not supported` };
+    return {
+      isValid: false,
+      error: `Question type ${question.type} not supported`,
+    };
   }
 
   try {
@@ -110,12 +116,14 @@ async function validateAnswer(
     if (!validation.isValid) {
       return { isValid: false, error: validation.errors.join(", ") };
     }
-    return { isValid: true, normalizedAnswer: validation.normalizedAnswer || answer };
+    return {
+      isValid: true,
+      normalizedAnswer: validation.normalizedAnswer || answer,
+    };
   } catch (error: any) {
     return { isValid: false, error: error.message };
   }
 }
-
 
 async function validateAndProcessAnswers(
   answers: AnswerSubmission[],
@@ -263,7 +271,6 @@ export async function startQuizAttempt(
   }
 }
 
-
 export async function getQuizAttempt(attemptId: string) {
   try {
     await connectToDatabase();
@@ -273,13 +280,15 @@ export async function getQuizAttempt(attemptId: string) {
       _id: attemptId,
       userId: ctx.user.userId,
       domain: ctx.domainData.domainObj._id,
-    }).populate<{
-      quiz: {
-        quizId: string;
-        title: string;
-        totalPoints: number;
-      };
-    }>("quiz", "quizId title totalPoints").lean();
+    })
+      .populate<{
+        quiz: {
+          quizId: string;
+          title: string;
+          totalPoints: number;
+        };
+      }>("quiz", "quizId title totalPoints")
+      .lean();
 
     if (!attempt) {
       throw new NotFoundException("Quiz attempt", attemptId);
@@ -323,23 +332,25 @@ export async function getQuizAttemptDetails(attemptId: string) {
       domain: ctx.domainData.domainObj._id,
     });
 
-    const questionsData = questions.map(question => ({
+    const questionsData = questions.map((question) => ({
       _id: question._id?.toString(),
       text: question.text,
       type: question.type,
       points: question.points || 1,
-      options: question.type === "multiple_choice" ?
-        question.options?.map(opt => ({
-          _id: opt._id?.toString(),
-          uid: opt.uid,
-          text: opt.text,
-          isCorrect: opt.isCorrect,
-          order: opt.order
-        })) : undefined,
-      correctAnswers: question.correctAnswers?.map(id => id.toString()),
+      options:
+        question.type === "multiple_choice"
+          ? question.options?.map((opt) => ({
+              _id: opt._id?.toString(),
+              uid: opt.uid,
+              text: opt.text,
+              isCorrect: opt.isCorrect,
+              order: opt.order,
+            }))
+          : undefined,
+      correctAnswers: question.correctAnswers?.map((id) => id.toString()),
     }));
 
-    const answersData = attempt.answers.map(answer => ({
+    const answersData = attempt.answers.map((answer) => ({
       questionId: answer.questionId?.toString(),
       userAnswer: answer.answer,
       isCorrect: answer.isCorrect,
@@ -370,7 +381,7 @@ export async function getQuizAttemptDetails(attemptId: string) {
 export async function saveTeacherFeedback(
   attemptId: string,
   questionId: string,
-  feedback: string
+  feedback: string,
 ) {
   try {
     await connectToDatabase();
@@ -383,7 +394,9 @@ export async function saveTeacherFeedback(
     ]);
 
     if (!hasPermission) {
-      throw new ValidationException("You don't have permission to leave feedback");
+      throw new ValidationException(
+        "You don't have permission to leave feedback",
+      );
     }
 
     const attempt = await QuizAttemptModel.findOne({
@@ -397,7 +410,7 @@ export async function saveTeacherFeedback(
 
     // Find the answer and update its feedback
     const answerIndex = attempt.answers.findIndex(
-      a => a.questionId?.toString() === questionId
+      (a) => a.questionId?.toString() === questionId,
     );
 
     if (answerIndex === -1) {
@@ -424,8 +437,6 @@ export async function saveTeacherFeedback(
   }
 }
 
-
-
 export async function navigateQuizQuestion(params: {
   attemptId: string;
   currentQuestionId: string;
@@ -433,7 +444,7 @@ export async function navigateQuizQuestion(params: {
   targetQuestionIndex: number;
   saveAnswer?: boolean;
 }) {
-  console.log("navigateQuizQuestion", params)
+  console.log("navigateQuizQuestion", params);
   try {
     await connectToDatabase();
     const ctx = await getActionContext();
@@ -454,7 +465,10 @@ export async function navigateQuizQuestion(params: {
       domain: ctx.domainData.domainObj._id,
     });
 
-    if (params.targetQuestionIndex < 0 || params.targetQuestionIndex >= questions.length) {
+    if (
+      params.targetQuestionIndex < 0 ||
+      params.targetQuestionIndex >= questions.length
+    ) {
       throw new ValidationException("Invalid question index");
     }
 
@@ -464,16 +478,20 @@ export async function navigateQuizQuestion(params: {
       throw new ValidationException("Target question not found");
     }
 
-    if (params.saveAnswer && params.currentAnswer !== null && params.currentAnswer !== undefined) {
+    if (
+      params.saveAnswer &&
+      params.currentAnswer !== null &&
+      params.currentAnswer !== undefined
+    ) {
       const validation = await validateAnswer(
         params.currentAnswer,
         params.currentQuestionId,
-        questions
+        questions,
       );
       if (validation.isValid) {
         // Find existing answer or create new one
         const existingAnswerIndex = attempt.answers.findIndex(
-          (a) => a.questionId?.toString() === params.currentQuestionId
+          (a) => a.questionId?.toString() === params.currentQuestionId,
         );
 
         if (existingAnswerIndex >= 0) {
@@ -491,26 +509,26 @@ export async function navigateQuizQuestion(params: {
 
         await attempt.save();
       }
-
     }
 
     // Get target question's current answer from attempt
     const targetQuestionAnswer = attempt.answers.find(
-      (a) => a.questionId?.toString() === targetQuestion._id?.toString()
+      (a) => a.questionId?.toString() === targetQuestion._id?.toString(),
     )?.answer;
     const targetQuestionInfo = {
-      _id: targetQuestion._id?.toString() || '',
+      _id: targetQuestion._id?.toString() || "",
       text: targetQuestion.text,
       type: targetQuestion.type,
       points: targetQuestion.points,
-      options: targetQuestion.type === "multiple_choice"
-        ? targetQuestion.options?.map(opt => ({
-          _id: opt._id?.toString() || '',
-          uid: opt.uid,
-          text: opt.text,
-          order: opt.order
-        }))
-        : []
+      options:
+        targetQuestion.type === "multiple_choice"
+          ? targetQuestion.options?.map((opt) => ({
+              _id: opt._id?.toString() || "",
+              uid: opt.uid,
+              text: opt.text,
+              order: opt.order,
+            }))
+          : [],
     };
 
     const answeredQuestions = attempt.answers
@@ -526,9 +544,11 @@ export async function navigateQuizQuestion(params: {
       answeredQuestions,
     };
   } catch (error: any) {
-    if (error instanceof ValidationException ||
+    if (
+      error instanceof ValidationException ||
       error instanceof ConflictException ||
-      error instanceof NotFoundException) {
+      error instanceof NotFoundException
+    ) {
       return {
         success: false,
         message: error.message,
@@ -542,9 +562,7 @@ export async function navigateQuizQuestion(params: {
     };
   }
 }
-export async function submitQuizAttempt(
-  attemptId: string,
-) {
+export async function submitQuizAttempt(attemptId: string) {
   try {
     await connectToDatabase();
     const ctx = await getActionContext();
@@ -563,7 +581,7 @@ export async function submitQuizAttempt(
     let totalScore = 0;
     const gradedAnswers = attempt.answers.map((answer) => {
       const question = questions.find(
-        (q) => q._id?.toString() === answer.questionId?.toString()
+        (q) => q._id?.toString() === answer.questionId?.toString(),
       );
 
       if (!question) {
@@ -585,7 +603,10 @@ export async function submitQuizAttempt(
         };
       }
 
-      const questionScore = provider.calculateScore(answer.answer, question as any);
+      const questionScore = provider.calculateScore(
+        answer.answer,
+        question as any,
+      );
       const isCorrect = questionScore > 0;
       totalScore += questionScore;
 
@@ -597,8 +618,12 @@ export async function submitQuizAttempt(
       };
     });
     // Calculate percentage and pass/fail
-    const totalPossiblePoints = questions.reduce((sum, q) => sum + (q.points || 1), 0);
-    const percentageScore = totalPossiblePoints > 0 ? (totalScore / totalPossiblePoints) * 100 : 0;
+    const totalPossiblePoints = questions.reduce(
+      (sum, q) => sum + (q.points || 1),
+      0,
+    );
+    const percentageScore =
+      totalPossiblePoints > 0 ? (totalScore / totalPossiblePoints) * 100 : 0;
     const passed = percentageScore >= (quiz.passingScore || 60);
 
     // Update attempt with final results
@@ -606,14 +631,14 @@ export async function submitQuizAttempt(
     if (!updatedAttempt) {
       throw new NotFoundException("Quiz attempt", attemptId);
     }
-    
+
     updatedAttempt.status = "completed";
     updatedAttempt.completedAt = new Date();
     updatedAttempt.answers = gradedAnswers;
     updatedAttempt.score = totalScore;
     updatedAttempt.percentageScore = percentageScore;
     updatedAttempt.passed = passed;
-    
+
     await updatedAttempt.save();
     return {
       success: true,
@@ -633,9 +658,6 @@ export async function submitQuizAttempt(
     };
   }
 }
-
-
-
 
 export async function getQuizQuestions(quizId: string): Promise<{
   _id: string;
@@ -709,7 +731,9 @@ export async function regradeQuizAttempt(attemptId: string) {
     ]);
 
     if (!hasPermission) {
-      throw new ValidationException("You don't have permission to regrade attempts");
+      throw new ValidationException(
+        "You don't have permission to regrade attempts",
+      );
     }
 
     const attempt = await QuizAttemptModel.findOne({
@@ -735,7 +759,7 @@ export async function regradeQuizAttempt(attemptId: string) {
     let totalScore = 0;
     const gradedAnswers = attempt.answers.map((answer) => {
       const question = questions.find(
-        (q) => q._id?.toString() === answer.questionId?.toString()
+        (q) => q._id?.toString() === answer.questionId?.toString(),
       );
 
       if (!question) {
@@ -757,7 +781,10 @@ export async function regradeQuizAttempt(attemptId: string) {
         };
       }
 
-      const questionScore = provider.calculateScore(answer.answer, question as any);
+      const questionScore = provider.calculateScore(
+        answer.answer,
+        question as any,
+      );
       const isCorrect = questionScore > 0;
       totalScore += questionScore;
 
@@ -770,8 +797,12 @@ export async function regradeQuizAttempt(attemptId: string) {
     });
 
     // Calculate percentage and pass/fail
-    const totalPossiblePoints = questions.reduce((sum, q) => sum + (q.points || 1), 0);
-    const percentageScore = totalPossiblePoints > 0 ? (totalScore / totalPossiblePoints) * 100 : 0;
+    const totalPossiblePoints = questions.reduce(
+      (sum, q) => sum + (q.points || 1),
+      0,
+    );
+    const percentageScore =
+      totalPossiblePoints > 0 ? (totalScore / totalPossiblePoints) * 100 : 0;
     const passed = percentageScore >= (quiz.passingScore || 60);
 
     // Update attempt with new results
@@ -779,14 +810,14 @@ export async function regradeQuizAttempt(attemptId: string) {
     if (!updatedAttempt) {
       throw new NotFoundException("Quiz attempt", attemptId);
     }
-    
+
     updatedAttempt.status = "graded";
     updatedAttempt.answers = gradedAnswers;
     updatedAttempt.score = totalScore;
     updatedAttempt.percentageScore = percentageScore;
     updatedAttempt.passed = passed;
     updatedAttempt.gradedAt = new Date();
-    
+
     await updatedAttempt.save();
 
     return {
@@ -836,9 +867,9 @@ export async function getAttemptStatistics(quizId: string): Promise<{
     const averageScore =
       completedAttempts.length > 0
         ? completedAttempts.reduce(
-          (sum, a) => sum + (a.percentageScore || 0),
-          0,
-        ) / completedAttempts.length
+            (sum, a) => sum + (a.percentageScore || 0),
+            0,
+          ) / completedAttempts.length
         : 0;
 
     return {
