@@ -2,13 +2,12 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main, master]
+    branches: [master]
     tags:
       - 'v*'
   workflow_dispatch:
 
 env:
-  REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
   IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
 
 jobs:
@@ -19,7 +18,6 @@ jobs:
       packages: write
     
     outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
       web-image: ${{ steps.web-meta.outputs.tags }}
       queue-image: ${{ steps.queue-meta.outputs.tags }}
     
@@ -27,10 +25,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       
-    - name: Log in to Container Registry
+    - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
-        registry: ${{ env.REGISTRY }}
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         
@@ -41,24 +38,11 @@ jobs:
           image=moby/buildkit:v0.12.0
         buildkitd-flags: --debug
         
-    # - name: Extract metadata for web image
-    #   id: web-meta
-    #   uses: docker/metadata-action@v5
-    #   with:
-    #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web
-    #     tags: |
-    #       type=ref,event=branch
-    #       type=ref,event=pr
-    #       type=semver,pattern={{version}}
-    #       type=semver,pattern={{major}}.{{minor}}
-    #       type=sha,prefix={{branch}}-
-    #       type=raw,value=latest,enable={{is_default_branch}}
-      
-    - name: Extract metadata for queue image
-      id: queue-meta
+    - name: Extract metadata for web image
+      id: web-meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue
+        images: ${{ env.IMAGE_NAME }}-web
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -67,33 +51,46 @@ jobs:
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
       
-    # - name: Build and push web image
-    #   uses: docker/build-push-action@v5
-    #   with:
-    #     context: .
-    #     file: ./docker/Dockerfile.web
-    #     push: true
-    #     tags: ${{ steps.web-meta.outputs.tags }}
-    #     labels: ${{ steps.web-meta.outputs.labels }}
-    #     cache-from: type=gha,scope=web
-    #     cache-to: type=gha,mode=max,scope=web
-    #     platforms: linux/amd64
-    #     build-args: |
-    #       FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
-    #       FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
-    #       NEXT_PUBLIC_APP_DOMAIN=${{ secrets.NEXT_PUBLIC_APP_DOMAIN }}
-    #       NEXT_PUBLIC_SERVER_DOMAIN=${{ secrets.NEXT_PUBLIC_SERVER_DOMAIN }}
-    #       NEXT_PUBLIC_FB_API_KEY=${{ secrets.NEXT_PUBLIC_FB_API_KEY }}
-    #       NEXT_PUBLIC_FB_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FB_AUTH_DOMAIN }}
-    #       NEXT_PUBLIC_FB_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FB_PROJECT_ID }}
-    #       NEXT_PUBLIC_FB_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FB_STORAGE_BUCKET }}
-    #       NEXT_PUBLIC_FB_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FB_MESSAGING_SENDER_ID }}
-    #       NEXT_PUBLIC_FB_APP_ID=${{ secrets.NEXT_PUBLIC_FB_APP_ID }}
-    #       NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-    #       NEXTAUTH_URL=http://temp-build-auth
-    #       CLOUDINARY_CLOUD_NAME=temp-build-cloud
-    #       CLOUDINARY_API_KEY=temp-build-api-key
-    #       CLOUDINARY_API_SECRET=temp-build-api-secret
+    - name: Extract metadata for queue image
+      id: queue-meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.IMAGE_NAME }}-queue
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+      
+    - name: Build and push web image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/Dockerfile.web
+        push: true
+        tags: ${{ steps.web-meta.outputs.tags }}
+        labels: ${{ steps.web-meta.outputs.labels }}
+        cache-from: type=gha,scope=web
+        cache-to: type=gha,mode=max,scope=web
+        platforms: linux/amd64
+        build-args: |
+          FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
+          NEXT_PUBLIC_APP_DOMAIN=${{ secrets.NEXT_PUBLIC_APP_DOMAIN }}
+          NEXT_PUBLIC_SERVER_DOMAIN=${{ secrets.NEXT_PUBLIC_SERVER_DOMAIN }}
+          NEXT_PUBLIC_FB_API_KEY=${{ secrets.NEXT_PUBLIC_FB_API_KEY }}
+          NEXT_PUBLIC_FB_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FB_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FB_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FB_PROJECT_ID }}
+          NEXT_PUBLIC_FB_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FB_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FB_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FB_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FB_APP_ID=${{ secrets.NEXT_PUBLIC_FB_APP_ID }}
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXTAUTH_URL=http://temp-build-auth
+          CLOUDINARY_CLOUD_NAME=temp-build-cloud
+          CLOUDINARY_API_KEY=temp-build-api-key
+          CLOUDINARY_API_SECRET=temp-build-api-secret
           
         
     - name: Build and push queue image
@@ -122,7 +119,7 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
     
     steps:
     - name: Deploy to VPS
@@ -160,6 +157,10 @@ jobs:
             exit 1
           }
           
+          # Pull latest code from repository
+          print_status "Pulling latest code from repository..."
+          git pull origin master
+          
           # Check if docker-compose file exists
           if [ ! -f "$COMPOSE_FILE" ]; then
             print_error "Docker compose file not found: $COMPOSE_FILE"
@@ -181,29 +182,24 @@ jobs:
           
           print_status "Deploying with image tag: $IMAGE_TAG"
           
-          # Stop existing services
-          print_status "Stopping existing services..."
-          docker-compose -f $COMPOSE_FILE down || {
-            print_warning "Failed to stop services, continuing..."
-          }
-          
-          # Pull latest images with the specified tag
-          print_status "Pulling latest images with tag: $IMAGE_TAG"
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:$IMAGE_TAG
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue:$IMAGE_TAG
-          
-          # Tag images as latest for docker-compose
-          print_status "Tagging images as latest..."
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-queue:latest
-          
-          # Start services with new images
-          print_status "Starting services with new images..."
-          if [ -f "$ENV_FILE" ]; then
-            IMAGE_TAG=$IMAGE_TAG docker-compose -f $COMPOSE_FILE --env-file $ENV_FILE up -d
-          else
-            IMAGE_TAG=$IMAGE_TAG docker-compose -f $COMPOSE_FILE up -d
-          fi
+                     # Stop existing services
+           print_status "Stopping existing services..."
+           docker-compose -f $COMPOSE_FILE down || {
+             print_warning "Failed to stop services, continuing..."
+           }
+           
+           # Pull latest images with the specified tag
+           print_status "Pulling latest images with tag: $IMAGE_TAG"
+           docker pull ${{ env.IMAGE_NAME }}-web:$IMAGE_TAG
+           docker pull ${{ env.IMAGE_NAME }}-queue:$IMAGE_TAG
+           
+           # Start services with new images
+           print_status "Starting services with new images..."
+           if [ -f "$ENV_FILE" ]; then
+             IMAGE_TAG=$IMAGE_TAG docker-compose -f $COMPOSE_FILE --env-file $ENV_FILE up -d
+           else
+             IMAGE_TAG=$IMAGE_TAG docker-compose -f $COMPOSE_FILE up -d
+           fi
           
           # Wait for services to start
           print_status "Waiting for services to start..."

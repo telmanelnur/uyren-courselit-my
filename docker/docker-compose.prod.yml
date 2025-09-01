@@ -27,7 +27,7 @@ services:
   #     - courselit-prod-network
 
   web:
-    image: ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}-web:${IMAGE_TAG:-latest}
+    image: ${DOCKER_IMAGE_NAME}-web:${IMAGE_TAG:-latest}
     container_name: courselit-web-prod
     ports:
       - "${WEB_PORT:-3000}:3000"
@@ -43,7 +43,7 @@ services:
       - courselit-prod-network
 
   queue:
-    image: ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}-queue:${IMAGE_TAG:-latest}
+    image: ${DOCKER_IMAGE_NAME}-queue:${IMAGE_TAG:-latest}
     container_name: courselit-queue-prod
     ports:
       - "${QUEUE_PORT:-3001}:3001"
