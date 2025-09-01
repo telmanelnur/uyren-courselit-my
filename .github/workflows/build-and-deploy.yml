@@ -152,7 +152,7 @@ jobs:
           
           # Pull latest code
           print_status "Pulling latest code..."
-          git pull origin master
+          sudo git pull origin master
           
           # Stop services
           print_status "Stopping services..."
