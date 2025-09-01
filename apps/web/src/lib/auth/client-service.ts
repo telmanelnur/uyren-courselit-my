@@ -11,7 +11,7 @@ import {
   UserCredential,
 } from "firebase/auth";
 import { signIn as nextAuthSignIn } from "next-auth/react";
-import { firebaseAuth } from "./firebase";
+import { getFirebaseAuth } from "./firebase";
 
 export class AuthClientService {
   private static googleProvider = new GoogleAuthProvider();
@@ -25,7 +25,7 @@ export class AuthClientService {
   }> {
     try {
       const result: UserCredential = await signInWithPopup(
-        firebaseAuth,
+        getFirebaseAuth(),
         this.googleProvider,
       );
 
@@ -55,7 +55,7 @@ export class AuthClientService {
    */
   static async signInWithGoogleRedirect(): Promise<void> {
     try {
-      await signInWithRedirect(firebaseAuth, this.googleProvider);
+      await signInWithRedirect(getFirebaseAuth(), this.googleProvider);
     } catch (error) {
       console.error("Error initiating Google redirect:", error);
       throw error;
@@ -74,7 +74,7 @@ export class AuthClientService {
   }> {
     try {
       const result: UserCredential = await signInWithEmailAndPassword(
-        firebaseAuth,
+        getFirebaseAuth(),
         email,
         password,
       );
@@ -113,7 +113,7 @@ export class AuthClientService {
   }> {
     try {
       const result: UserCredential = await createUserWithEmailAndPassword(
-        firebaseAuth,
+        getFirebaseAuth(),
         email,
         password,
       );
@@ -154,7 +154,7 @@ export class AuthClientService {
     error?: string;
   }> {
     try {
-      const result = await getRedirectResult(firebaseAuth);
+      const result = await getRedirectResult(getFirebaseAuth());
 
       if (!result) {
         return { success: false, error: "No redirect result found" };
@@ -186,7 +186,7 @@ export class AuthClientService {
    */
   static async signOut(): Promise<void> {
     try {
-      await firebaseAuth.signOut();
+      await getFirebaseAuth().signOut();
     } catch (error) {
       console.error("Error signing out:", error);
       throw error;
@@ -197,14 +197,14 @@ export class AuthClientService {
    * Get current Firebase user
    */
   static getCurrentUser(): FirebaseUser | null {
-    return firebaseAuth.currentUser;
+    return getFirebaseAuth().currentUser;
   }
 
   /**
    * Get current user's Firebase profile picture
    */
   static getCurrentUserPhoto(): string | null {
-    const user = firebaseAuth.currentUser;
+    const user = getFirebaseAuth().currentUser;
     return user?.photoURL || null;
   }
 
@@ -216,7 +216,7 @@ export class AuthClientService {
     displayName: string | null;
     email: string | null;
   } | null {
-    const user = firebaseAuth.currentUser;
+    const user = getFirebaseAuth().currentUser;
     if (!user) return null;
 
     return {

@@ -8,7 +8,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import z from "zod";
 import { Log } from "../logger";
-import { firebaseAuth } from "./firebase";
+import { getFirebaseAuth } from "./firebase";
 
 const AuthorizeFirebaseSchema = z.object({
   idToken: z.string().min(1, "ID Token is required"),
@@ -43,6 +43,12 @@ export const authOptions: NextAuthOptions = {
         try {
           // Connect to database
           //   await connectToDatabase();
+          
+          // Check if Firebase Admin is initialized (skip during build time)
+          if (!adminAuth) {
+            throw new Error("Firebase Admin is not initialized during build time");
+          }
+          
           const decoded = await adminAuth.verifyIdToken(idToken);
 
           console.log("decoded", decoded);
@@ -173,9 +179,14 @@ export const authOptions: NextAuthOptions = {
     signOut: async () => {
       try {
         // Sign out from Firebase if user is authenticated
-        if (firebaseAuth.currentUser) {
-          await firebaseAuth.signOut();
-          console.log("Firebase user signed out successfully");
+        try {
+          const firebaseAuth = getFirebaseAuth();
+          if (firebaseAuth.currentUser) {
+            await firebaseAuth.signOut();
+            console.log("Firebase user signed out successfully");
+          }
+        } catch (error) {
+          console.log("Firebase not initialized, skipping sign out");
         }
       } catch (error) {
         console.error("Error signing out from Firebase:", error);

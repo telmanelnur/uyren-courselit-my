@@ -28,6 +28,14 @@ if (shouldInitializeFirebase() && !getApps().length) {
   }
 }
 
-const adminAuth = admin.auth();
+let adminAuth: admin.auth.Auth | null = null;
+
+if (shouldInitializeFirebase()) {
+  try {
+    adminAuth = admin.auth();
+  } catch (error) {
+    console.warn("Firebase Admin Auth initialization failed:", error);
+  }
+}
 
 export { adminAuth };
