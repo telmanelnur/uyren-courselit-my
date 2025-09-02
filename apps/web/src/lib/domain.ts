@@ -32,7 +32,7 @@ export async function getDomainHeaders() {
       | "subdomain"
       | "custom",
     host: headersList.get("x-domain-host") || "",
-    identifier: mainIdentifiers.includes(identifier) ? "main" : identifier,
+    identifier: identifier,
   };
 }
 

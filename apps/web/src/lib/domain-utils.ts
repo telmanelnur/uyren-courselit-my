@@ -95,6 +95,8 @@ export function parseHost(
   };
 }
 
+const MAIN_IDENTIFIERS = ["main", "localhost", "127.0.0.1", "85.202.193.94", "uyrenai.kz"];
+
 /**
  * Determines domain type and identifier from host
  * @param host - The host string
@@ -120,10 +122,16 @@ export function analyzeDomain(
   }
 
   if (subdomain) {
+    if (MAIN_IDENTIFIERS.includes(subdomain)) {
+      return { type: "subdomain", identifier: "main", cleanHost };
+    }
     return { type: "subdomain", identifier: subdomain, cleanHost };
   }
 
   if (isCustomDomain) {
+    if (MAIN_IDENTIFIERS.includes(cleanHost)) {
+      return { type: "custom", identifier: "main", cleanHost };
+    }
     return { type: "custom", identifier: cleanHost, cleanHost };
   }
 
