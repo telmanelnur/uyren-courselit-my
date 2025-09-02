@@ -222,10 +222,10 @@ export default function HomePage() {
                   <Card className="h-full hover:shadow-xl transition-all duration-300 bg-background group/item border border-transparent hover:border-brand-primary/20 hover:bg-background/80">
                     <CardContent className="p-6">
                       <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 group-hover/item:bg-brand-primary transition-all duration-300">
-                        {/* {(() => {
+                        {(() => {
                           const IconComponent = feature.icon;
                           return <IconComponent className="w-6 h-6 fill-brand-primary group-hover/item:fill-white" />;
-                        })()} */}
+                        })()}
                       </div>
                       <h3 className="text-lg font-bold text-foreground mb-3">
                         {feature.title}

@@ -19,6 +19,13 @@ const nextConfig = {
             },
           }, 
     },
+    webpack: (config) => {
+        config.module.rules.push({
+            test: /\.svg$/,
+            use: ['@svgr/webpack'],
+        });
+        return config;
+    },
     // Enable standalone output for Docker
     output: process.env.NEXT_FOR_DOCKER ? 'standalone' : undefined,
 };
