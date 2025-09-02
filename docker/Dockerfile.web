@@ -95,20 +95,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/next.config.mjs ./apps/web/next.config.mjs
 
-# Copy seed script and dependencies for seeding capability
-COPY --from=deps --chown=nextjs:nodejs /app/apps/web/scripts ./apps/web/scripts
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=deps --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=deps --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=deps --chown=nextjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=deps --chown=nextjs:nodejs /app/packages ./packages
-
-# Install tsx globally for running TypeScript scripts
-RUN npm install -g tsx
-
-# Ensure proper permissions for node_modules
-RUN chown -R nextjs:nodejs /app/node_modules
-
 USER nextjs
 
 ARG PORT=3000
@@ -116,9 +102,4 @@ ENV PORT=${PORT}
 
 EXPOSE ${PORT}
 
-# Copy and setup entrypoint script for conditional commands
-COPY --from=deps --chown=nextjs:nodejs /app/apps/web/scripts/entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh
-
-ENTRYPOINT ["./entrypoint.sh"]
-CMD ["server"]
+CMD ["node", "apps/web/server.js"]
