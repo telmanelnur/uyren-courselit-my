@@ -103,6 +103,12 @@ COPY --from=deps --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=deps --chown=nextjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=deps --chown=nextjs:nodejs /app/packages ./packages
 
+# Install tsx globally for running TypeScript scripts
+RUN npm install -g tsx
+
+# Ensure proper permissions for node_modules
+RUN chown -R nextjs:nodejs /app/node_modules
+
 USER nextjs
 
 ARG PORT=3000
