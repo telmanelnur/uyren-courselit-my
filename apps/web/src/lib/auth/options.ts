@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
           name: domainInfo,
         });
         if (!domain) {
-          throw new Error("Domain not found");
+          throw new Error(`Domain not found: ${domainInfo}`);
         }
         const parsed = AuthorizeFirebaseSchema.safeParse(credentials);
         if (!parsed.success) {
