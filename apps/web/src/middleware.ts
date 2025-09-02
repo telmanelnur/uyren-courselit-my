@@ -60,11 +60,11 @@ export async function middleware(req: NextRequest) {
       response.headers.set("x-domain-type", domainInfo.type);
       response.headers.set("x-domain-host", domainInfo.cleanHost || "");
       response.headers.set("x-domain-identifier", domainInfo.identifier!);
-      // console.log("[MIDDLEWARE] Domain analysis:", {
-      //   "x-domain-type": domainInfo.type,
-      //   "x-domain-host": domainInfo.cleanHost || "",
-      //   "x-domain-identifier": domainInfo.identifier!,
-      // });
+      console.log("[MIDDLEWARE] Domain analysis:", {
+        "x-domain-type": domainInfo.type,
+        "x-domain-host": domainInfo.cleanHost || "",
+        "x-domain-identifier": domainInfo.identifier!,
+      });
     } catch (error) {
       console.error("[MIDDLEWARE] Error analyzing domain:", error);
     }
