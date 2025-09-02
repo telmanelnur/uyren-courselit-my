@@ -100,7 +100,6 @@ jobs:
         build-args: |
           NODE_ENV=production
           HOST=localhost
-          PORT=3001
           MONGODB_URI=mongodb://temp:temp@temp:27017/temp
           REDIS_HOST=localhost
           REDIS_PORT=6379

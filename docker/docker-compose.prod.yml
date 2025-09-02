@@ -42,21 +42,21 @@ services:
     networks:
       - courselit-prod-network
 
-  queue:
-    image: ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}-queue:${IMAGE_TAG:-latest}
-    container_name: courselit-queue-prod
-    ports:
-      - "${QUEUE_PORT:-3001}:3001"
-    environment:
-      - NODE_ENV=production
-    env_file:
-      - .env.prod
-    depends_on:
-      - redis
-      - mongodb
-    restart: unless-stopped
-    networks:
-      - courselit-prod-network
+  # queue:
+  #   image: ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}-queue:${IMAGE_TAG:-latest}
+  #   container_name: courselit-queue-prod
+  #   ports:
+  #     - "${QUEUE_PORT:-3001}:3001"
+  #   environment:
+  #     - NODE_ENV=production
+  #   env_file:
+  #     - .env.prod
+  #   depends_on:
+  #     - redis
+  #     - mongodb
+  #   restart: unless-stopped
+  #   networks:
+  #     - courselit-prod-network
 
   redis:
     image: redis
