@@ -75,7 +75,7 @@ export default function HomePage() {
           shortDescription: course.shortDescription,
         })) || []
     );
-  }, [mainPageSettings?.mainPage.featuredCourses, t]);
+  }, [mainPageSettings?.mainPage.featuredCourses]);
 
   // Use featured reviews from settings or fallback to hardcoded ones
   const testimonials = useMemo(() => {
@@ -89,8 +89,7 @@ export default function HomePage() {
           rating: review.rating,
         })) || []
     );
-  }, [mainPageSettings?.mainPage.featuredReviews, t]);
-
+  }, [mainPageSettings?.mainPage.featuredReviews]);
   // Loading skeleton
   if (isLoading) {
     return (
@@ -223,15 +222,10 @@ export default function HomePage() {
                   <Card className="h-full hover:shadow-xl transition-all duration-300 bg-background group/item border border-transparent hover:border-brand-primary/20 hover:bg-background/80">
                     <CardContent className="p-6">
                       <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 group-hover/item:bg-brand-primary transition-all duration-300">
-                        {/* <Image
-                          src={feature.icon}
-                          alt={feature.title}
-                          width={24}
-                          height={24}
-                        /> */}
-                        {
-                          <feature.icon className="w-6 h-6 fill-brand-primary group-hover/item:fill-white" />
-                        }
+                        {/* {(() => {
+                          const IconComponent = feature.icon;
+                          return <IconComponent className="w-6 h-6 fill-brand-primary group-hover/item:fill-white" />;
+                        })()} */}
                       </div>
                       <h3 className="text-lg font-bold text-foreground mb-3">
                         {feature.title}

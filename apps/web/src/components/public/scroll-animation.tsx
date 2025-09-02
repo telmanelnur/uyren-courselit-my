@@ -7,7 +7,7 @@ import {
   type TargetAndTransition,
   useInView,
 } from "framer-motion";
-import { CSSProperties, HTMLAttributes, type ReactNode, useRef } from "react";
+import { CSSProperties, HTMLAttributes, type ReactNode, useRef, useEffect, useState } from "react";
 type AnimationVariant =
   | "fadeIn"
   | "fadeUp"
@@ -101,17 +101,22 @@ export function ScrollAnimation({
   style,
 }: ScrollAnimationProps) {
   const ref = useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
   const isInView = useInView(ref, {
     once: true,
     margin: "-50px 0px -50px 0px",
     amount: 0.5,
   });
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <motion.div
       ref={ref}
       initial={getInitialVariant(variant)}
-      animate={isInView ? variants[variant] : "hidden"}
+      animate={isMounted && isInView ? variants[variant] : "hidden"}
       transition={{
         duration,
         delay,
@@ -139,10 +144,15 @@ export function ScrollGroup({
   staggerChildren?: boolean;
 }) {
   const ref = useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
   const isInView = useInView(ref, {
     once,
     amount: "some",
   });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const container = {
     hidden: { opacity: 0 },
@@ -171,7 +181,7 @@ export function ScrollGroup({
       ref={ref}
       variants={container}
       initial="hidden"
-      animate={isInView ? "show" : "hidden"}
+      animate={isMounted && isInView ? "show" : "hidden"}
       className={cn(className)}
     >
       {Array.isArray(children)
