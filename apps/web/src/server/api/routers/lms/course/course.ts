@@ -836,17 +836,16 @@ export const courseRouter = router({
           path: "attachedLessons",
           select: "lessonId type title groupId requiresEnrollment",
         })
-        .populate<{
-          attachedPaymentPlans: Array<PaymentPlan>;
-        }>({
-          path: "attachedPaymentPlans",
-          // select: "planId name type -_id",
-        })
         .lean();
 
       if (!course) {
         throw new NotFoundException("Course", String(input.courseId));
       }
+
+      const paymentPlans = await getPlans({
+        planIds: course.paymentPlans,
+        domainId: ctx.domainData.domainObj._id,
+      });
 
       return {
         courseId: course.courseId,
@@ -869,8 +868,7 @@ export const courseRouter = router({
         privacy: course.privacy,
         themeId: course.themeId,
         defaultPaymentPlan: course.defaultPaymentPlan,
-        attachedPaymentPlans:
-          course.attachedPaymentPlans.map(formatPaymentPlan),
+        attachedPaymentPlans: paymentPlans.map(formatPaymentPlan),
         attachedLessons: course.attachedLessons.map(formatLesson),
         createdAt: course.createdAt,
         groups: course.groups,
