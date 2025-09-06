@@ -185,6 +185,15 @@ export default function CourseLessonsSidebar({
           <CardContent className="p-6">
             <div className="space-y-4">
               <div className="text-center">
+                  {!hasAccess && (
+                    <div className="flex flex-col items-center justify-center gap-2 mb-2 text-muted-foreground">
+                      <Lock className="h-10 w-10 text-[rgb(var(--brand-primary))]" aria-label="Доступ ограничен" />
+                        <span className="text-sm">
+                            Самозачисление пока недоступно —{" "}
+                          {isAuthenticated ? "оформите доступ, чтобы начать" : "войдите или оформите доступ"}
+                        </span>
+                    </div>
+                  )}
                 {isAuthenticated && isMembershipLoading ? (
                   <div className="space-y-3">
                     <Skeleton className="h-8 w-32 mx-auto" />
