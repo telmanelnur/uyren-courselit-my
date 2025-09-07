@@ -483,5 +483,16 @@
     "checkout_secure_payment_description": "Secure payment powered by Stripe. Your payment information is encrypted and secure.",
     "checkout_ssl_secured": "SSL Secured",
     "checkout_pci_compliant": "PCI Compliant",
-    "checkout_after_payment_description": "After successful payment, you'll be redirected back to complete your enrollment."
+    "checkout_after_payment_description": "After successful payment, you'll be redirected back to complete your enrollment.",
+    "success": "Success",
+    "enrollment_requested_or_granted": "Enrollment requested or granted",
+    "enrollment_pending": "Your enrollment is pending",
+    "get_free_course": "Enroll for Free",
+    "sign_in_to_enroll": "Sign in to enroll",
+    "purchase_course": "Purchase Course",
+    "access_restricted": "Access restricted",
+    "self_enroll_available": "You can enroll for free — click the button below",
+    "self_enroll_moderated": "Your request will be sent for moderation",
+    "purchase_to_start": "Purchase access to get started",
+    "sign_in_or_purchase": "Sign in or purchase access"
 }

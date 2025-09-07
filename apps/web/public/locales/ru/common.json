@@ -483,5 +483,16 @@
   "checkout_secure_payment_description": "Безопасная оплата через Stripe. Ваша платежная информация зашифрована и защищена.",
   "checkout_ssl_secured": "Защищено SSL",
   "checkout_pci_compliant": "Соответствует PCI",
-  "checkout_after_payment_description": "После успешной оплаты вы будете перенаправлены обратно для завершения записи."
+  "checkout_after_payment_description": "После успешной оплаты вы будете перенаправлены обратно для завершения записи.",
+  "success": "Готово",
+  "enrollment_requested_or_granted": "Заявка на зачисление отправлена или доступ предоставлен",
+  "enrollment_pending": "Ваше зачисление ожидает подтверждения",
+  "get_free_course": "Записаться бесплатно",
+  "sign_in_to_enroll": "Войдите, чтобы записаться",
+  "purchase_course": "Купить курс",
+  "access_restricted": "Доступ ограничен",
+  "self_enroll_available": "Можно записаться бесплатно — нажмите кнопку ниже",
+  "self_enroll_moderated": "Заявка будет отправлена на модерацию",
+  "purchase_to_start": "Оформите доступ, чтобы начать",
+  "sign_in_or_purchase": "Войдите или оформите доступ"
 }

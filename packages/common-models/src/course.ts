@@ -43,4 +43,5 @@ export interface Course {
   level: CourseLevel;
   duration: number;
   shortDescription?: string;
+  allowSelfEnrollment?: boolean;
 }

@@ -52,6 +52,11 @@ import {
   getPrevNextCursor,
 } from "./helpers";
 
+import PaymentPlanModel from "@/models/PaymentPlan";
+import { activateMembership } from "@/server/api/routers/payment/helpers";
+import { AuthorizationException } from "@/server/api/core/exceptions"; 
+
+
 const { permissions } = UIConstants;
 
 async function formatCourse(
@@ -651,6 +656,66 @@ export const courseRouter = router({
       };
     }),
 
+  enrollFree: protectedProcedure
+  .use(createDomainRequiredMiddleware())
+  .input(z.object({ courseId: z.string().min(1) }))
+  .mutation(async ({ ctx, input }) => {
+    // (опционально) проверка права на запись
+    if (
+      !checkPermission(ctx.user.permissions, [UIConstants.permissions.enrollInCourse])
+    ) {
+      throw new AuthorizationException("You are not allowed to enroll");
+    }
+
+    const course = await CourseModel.findOne({
+      courseId: input.courseId,
+      domain: ctx.domainData.domainObj._id,
+      published: true,
+    }).lean();
+
+    if (!course) {
+      throw new NotFoundException("Course", input.courseId);
+    }
+
+    const freePlan = await PaymentPlanModel.findOne({
+      domain: ctx.domainData.domainObj._id,
+      planId: { $in: course.paymentPlans },
+      type: Constants.PaymentPlanType.FREE,
+      archived: false,
+    }).lean();
+
+    if (!freePlan) {
+      throw new ConflictException("Free plan is not configured for this course");
+    }
+
+    let membership = await MembershipModel.findOne({
+      domain: ctx.domainData.domainObj._id,
+      userId: ctx.user.userId,
+      entityId: course.courseId,
+      entityType: Constants.MembershipEntityType.COURSE,
+    });
+
+    if (!membership) {
+      membership = await MembershipModel.create({
+        domain: ctx.domainData.domainObj._id,
+        userId: ctx.user.userId,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        paymentPlanId: freePlan.planId,
+        status: Constants.MembershipStatus.PENDING,
+      });
+    } else if (!membership.paymentPlanId) {
+      membership.paymentPlanId = freePlan.planId;
+      await membership.save();
+    }
+
+    // активируем/оставляем pending в зависимости от allowSelfEnrollment
+    await activateMembership(ctx.domainData.domainObj as any, membership as any, freePlan as any);
+
+    return { status: membership.status };
+  }),
+
+
   create: protectedProcedure
     .use(createDomainRequiredMiddleware())
     .use(createPermissionMiddleware([UIConstants.permissions.manageCourse]))
@@ -687,6 +752,7 @@ export const courseRouter = router({
         description: textEditorContentValidator().optional(),
         featuredImage: mediaWrappedFieldValidator().nullable().optional(),
         themeId: z.string().nullish(),
+        allowSelfEnrollment: z.boolean().optional(),
       }).extend({
         courseId: z.string(),
       }),
@@ -710,6 +776,10 @@ export const courseRouter = router({
       }
       if (input.data.shortDescription !== undefined)
         updateData.shortDescription = input.data.shortDescription;
+
+    if (input.data.allowSelfEnrollment !== undefined) {
+      updateData.allowSelfEnrollment = input.data.allowSelfEnrollment;
+    }
 
       const updatedCourse = await CourseModel.findOneAndUpdate(
         { courseId: input.courseId },
@@ -847,6 +917,35 @@ export const courseRouter = router({
         domainId: ctx.domainData.domainObj._id,
       });
 
+      const userId = ctx.session?.user?.userId;
+    let membershipStatus: any = "NONE";
+    if (userId) {
+      const m = await MembershipModel.findOne({
+        userId,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        domain: ctx.domainData.domainObj._id,
+      }).lean();
+      membershipStatus = m?.status ?? "NONE";
+    }
+    const hasAccess = membershipStatus === Constants.MembershipStatus.ACTIVE;
+
+    const hasAnyPlan = (paymentPlans || []).length > 0;
+    const isFreePlanPresent = (paymentPlans || []).some(
+      (p) => p.type === Constants.PaymentPlanType.FREE,
+    );
+
+    const canPurchase =
+      !hasAccess &&
+      course.published &&
+      hasAnyPlan &&
+      // если есть только FREE, "purchase" не нужен — будет enroll
+      (isFreePlanPresent ? true : true);
+
+    const canSelfEnrollFreeNow =
+      !!course.allowSelfEnrollment && isFreePlanPresent && !hasAccess;
+
+
       return {
         courseId: course.courseId,
         title: course.title,
@@ -873,6 +972,11 @@ export const courseRouter = router({
         createdAt: course.createdAt,
         groups: course.groups,
         customers: course.customers,
+        allowSelfEnrollment: !!course.allowSelfEnrollment,
+        membershipStatus,
+        hasAccess,
+        canPurchase,
+        canSelfEnrollFreeNow,
       };
     }),
 });

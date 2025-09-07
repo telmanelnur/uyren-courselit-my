@@ -34,6 +34,8 @@ import {
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
+import { useToast } from "@workspace/components-library";
 
 type CourseType =
   GeneralRouterOutputs["lmsModule"]["courseModule"]["course"]["publicGetByCourseId"];
@@ -56,6 +58,8 @@ export default function CourseLessonsSidebar({
   const { t } = useTranslation("common");
   const { siteInfo } = useSiteInfo();
   const { profile } = useProfile();
+  const { toast } = useToast?.() || { toast: (x:any)=>{} }; 
+  const utils = trpc.useUtils();
 
   // Get membership status via tRPC only if user is authenticated
   const { data: membershipStatus, isLoading: isMembershipLoading } =
@@ -69,9 +73,26 @@ export default function CourseLessonsSidebar({
       },
     );
 
-  const handlePurchase = useCallback(() => {
-    window.location.href = `/checkout?type=course&id=${course.courseId}`;
-  }, [course.courseId]);
+  const enrollFree = trpc.lmsModule.courseModule.course.enrollFree.useMutation({
+    onSuccess: async () => {
+     await Promise.all([
+        utils.lmsModule.courseModule.course.publicGetByCourseId.invalidate({
+          courseId: course.courseId,
+        }),
+        utils.userModule.user.getMembershipStatus.invalidate({
+          entityId: course.courseId,
+          entityType: Constants.MembershipEntityType.COURSE,
+        }),
+      ]);
+      toast?.({
+        title: t("success"),
+        description: t("enrollment_requested_or_granted"),
+      });
+    },
+    onError: (err) => {
+      toast?.({ title: t("error_heading"), description: err.message, variant: "destructive" });
+    },
+  });
 
   const allLessons =
     course.groups?.flatMap((group) => group.lessonsOrder || []) || [];
@@ -93,6 +114,26 @@ export default function CourseLessonsSidebar({
   const planPrice = defaultPlan
     ? getPlanPrice(defaultPlan)
     : { amount: 0, period: "" };
+
+  const hasFreePlan = isFree || (course.attachedPaymentPlans || []).some(p => p.type === Constants.PaymentPlanType.FREE);
+  const canSelfEnrollFreeNow = Boolean((course as any).canSelfEnrollFreeNow); 
+
+     const handlePrimaryCta = useCallback(() => {
+    // FREE план: идём по веткам
+    if (isFree) {
+      if (!profile?.userId) {
+        // попросим войти
+       window.location.href = `/auth/signin?next=/courses/${course.courseId}`;
+        return;
+     }
+      // самозачисление включено — станет ACTIVE
+      // выключено — станет PENDING (ожидание модератора)
+      enrollFree.mutate({ courseId: course.courseId });
+      return;
+    }
+    // платные планы -> checkout
+    window.location.href = `/checkout?type=course&id=${course.courseId}`;
+  }, [course.courseId, isFree, profile?.userId, enrollFree]);
 
   // Determine if user has access to the course
   const isAuthenticated = !!profile?.userId;
@@ -184,16 +225,26 @@ export default function CourseLessonsSidebar({
         <Card className="border-2 border-brand-primary/20">
           <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="text-center">
-                  {!hasAccess && (
-                    <div className="flex flex-col items-center justify-center gap-2 mb-2 text-muted-foreground">
-                      <Lock className="h-10 w-10 text-[rgb(var(--brand-primary))]" aria-label="Доступ ограничен" />
-                        <span className="text-sm">
-                            Самозачисление пока недоступно —{" "}
-                          {isAuthenticated ? "оформите доступ, чтобы начать" : "войдите или оформите доступ"}
-                        </span>
-                    </div>
-                  )}
+<div className="text-center">
+  {!hasAccess && !isMembershipLoading && (
+    <div className="flex flex-col items-center justify-center gap-2 mb-2 text-muted-foreground">
+      <Lock
+        className="h-10 w-10 text-[rgb(var(--brand-primary))]"
+        aria-label={t("access_restricted")}
+      />
+      <span className="text-sm">
+        {isFree
+          ? !isAuthenticated
+            ? t("sign_in_to_enroll")
+            : canSelfEnrollFreeNow
+              ? t("self_enroll_available")
+              : t("self_enroll_moderated")
+          : isAuthenticated
+            ? t("purchase_to_start")
+            : t("sign_in_or_purchase")}
+      </span>
+    </div>
+  )}
                 {isAuthenticated && isMembershipLoading ? (
                   <div className="space-y-3">
                     <Skeleton className="h-8 w-32 mx-auto" />
@@ -304,11 +355,14 @@ export default function CourseLessonsSidebar({
                   <Button
                     size="sm"
                     className="bg-[rgb(var(--brand-primary))] hover:bg-[rgb(var(--brand-primary-hover))] text-white"
-                    onClick={handlePurchase}
+                    onClick={handlePrimaryCta}
+                    disabled={enrollFree.isPending}
                   >
-                    {defaultPlan?.type === Constants.PaymentPlanType.FREE
-                      ? "Get Free Course"
-                      : "Purchase Course"}
+                    {isFree
+                      ? profile?.userId
+                      ? (isPending ? t("enrollment_pending") : t("get_free_course"))
+                     : t("sign_in_to_enroll")
+                     : t("purchase_course")}
                   </Button>
                 )}
               </div>

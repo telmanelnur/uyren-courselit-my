@@ -50,7 +50,7 @@ export async function activateMembership(
 
   await membership.save();
 
-  if (paymentPlan) {
+  if (paymentPlan && membership.status === Constants.MembershipStatus.ACTIVE) {
     await finalizePurchase({ domain, membership, paymentPlan });
   }
 }

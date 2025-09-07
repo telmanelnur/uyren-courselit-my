@@ -1,5 +1,9 @@
 import { CourseSchema, createModel } from "@workspace/common-logic";
 
+CourseSchema.add({
+  allowSelfEnrollment: { type: Boolean, default: false },
+});
+
 CourseSchema.virtual("attachedLessons", {
   ref: "Lesson",
   localField: "lessons",

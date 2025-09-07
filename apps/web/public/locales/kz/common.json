@@ -470,5 +470,16 @@
   "checkout_secure_payment_description": "Stripe арқылы қауіпсіз төлем. Сіздің төлем ақпаратыңыз шифрланған және қорғалған.",
   "checkout_ssl_secured": "SSL арқылы қорғалған",
   "checkout_pci_compliant": "PCI стандартына сәйкес",
-  "checkout_after_payment_description": "Сәтті төлемнен кейін сіз тіркеуді аяқтау үшін қайта бағытталасыз."
+  "checkout_after_payment_description": "Сәтті төлемнен кейін сіз тіркеуді аяқтау үшін қайта бағытталасыз.",
+  "success": "Сәтті",
+  "enrollment_requested_or_granted": "Тіркелу өтінімі жіберілді немесе қол жеткізу берілді",
+  "enrollment_pending": "Тіркелуіңіз растауды күтуде",
+  "get_free_course": "Тегін тіркелу",
+  "sign_in_to_enroll": "Тіркелу үшін жүйеге кіріңіз",
+  "purchase_course": "Курсты сатып алу",
+  "access_restricted": "Қол жеткізу шектелген",
+  "self_enroll_available": "Тегін тіркеле аласыз — төмендегі батырманы басыңыз",
+  "self_enroll_moderated": "Өтінім модерацияға жіберіледі",
+  "purchase_to_start": "Бастау үшін қол жеткізуді рәсімдеңіз",
+  "sign_in_or_purchase": "Кіру немесе қол жеткізуді рәсімдеу"
 }

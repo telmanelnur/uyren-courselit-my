@@ -111,6 +111,9 @@ export default function ProductManageClient({
   const [isPrivate, setPrivate] = useState(
     product.privacy === "unlisted" || false,
   );
+  const [allowSelfEnrollment, setAllowSelfEnrollment] = useState<boolean>(
+  Boolean((product as any).allowSelfEnrollment),
+  );
   const [selectedTheme, setSelectedTheme] = useState<{
     key: string;
     title: string;
@@ -128,6 +131,10 @@ export default function ProductManageClient({
     id: product.courseId,
     entityType: MembershipEntityType.COURSE,
   });
+
+  const hasFreePlan = (paymentPlans || []).some(
+  (p) => p.type === Constants.PaymentPlanType.FREE,
+  );  
 
   const form = useForm<ProductFormDataType>({
     resolver: zodResolver(ProductSchema),
@@ -196,6 +203,17 @@ export default function ProductManageClient({
         });
       },
     });
+
+    const updateAllowSelfEnrollment = async (checked: boolean) => {
+      try {
+        await updateCourseMutation.mutateAsync({
+          courseId: product.courseId,
+          data: { allowSelfEnrollment: checked },
+        });
+      } catch (error) {
+        console.error("Error updating allowSelfEnrollment:", error);
+      }
+    };
 
   // Initialize payment plans and default plan
   useEffect(() => {
@@ -557,6 +575,24 @@ export default function ProductManageClient({
               disabled={!published}
             />
           </div>
+                    <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+    <Label className={`text-base font-semibold ${!published ? "text-muted-foreground" : ""}`}>
+      Allow self-enrollment
+    </Label>
+    <p className="text-sm text-muted-foreground">
+      Автоматически активировать доступ при бесплатной записи
+    </p>
+  </div>
+  <Switch
+    checked={allowSelfEnrollment}
+    onCheckedChange={async (checked) => {
+      setAllowSelfEnrollment(checked);
+      await updateAllowSelfEnrollment(checked);
+    }}
+    disabled={!published || !hasFreePlan}
+  />
+  </div>
         </div>
 
         <Separator />
