@@ -17,6 +17,8 @@ import { memo, useRef } from "react";
 import { Editor } from "@tiptap/react";
 import { useProfile } from "@/components/contexts/profile-context";
 import { Constants } from "@workspace/common-models";
+import { ThemeHeadLinks } from "@/app/(theme)/ThemeAssetTags";
+import { skipToken } from "@tanstack/react-query";
 
 const LessonContentEditor = dynamic(
   () =>
@@ -93,6 +95,12 @@ export default function LessonView() {
     },
   );
 
+  const themeQuery =
+    trpc.lmsModule.themeModule.theme.getById.useQuery(
+      course?.themeId ? { id: course.themeId } : skipToken
+  );
+  const theme = themeQuery.data;
+
   // Get lesson access permissions
   const { hasAccess, isMembershipLoading } = useLessonAccess(courseId);
 
@@ -158,6 +166,7 @@ export default function LessonView() {
     <div className="min-h-screen bg-background m--lesson-page">
       <Header />
 
+      <ThemeHeadLinks assets={theme?.assets} />
       <main className="container mx-auto px-4 py-8 m--lesson-main">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 m--lesson-layout">
           <div className="lg:col-span-2 space-y-6 m--lesson-content">

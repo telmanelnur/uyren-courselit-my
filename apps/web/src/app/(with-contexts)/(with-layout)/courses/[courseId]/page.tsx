@@ -16,6 +16,8 @@ import { useParams } from "next/navigation";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import CourseLessonsSidebar from "../_components/course-lessons-sidebar";
+import { ThemeHeadLinks } from "@/app/(theme)/ThemeAssetTags";
+import { skipToken } from "@tanstack/react-query";
 
 const DescriptionEditor = dynamic(
   () =>
@@ -32,7 +34,6 @@ function CourseDetailsContent() {
   const params = useParams();
   const courseId = params.courseId as string;
 
-  // Load course data using tRPC
   const {
     data: course,
     isLoading,
@@ -44,6 +45,19 @@ function CourseDetailsContent() {
     {
       enabled: !!courseId,
     },
+  );
+
+  const themeQuery =
+    trpc.lmsModule.themeModule.theme.getById.useQuery(
+      course?.themeId ? { id: course.themeId } : skipToken
+  );
+  const theme = themeQuery.data;
+
+  const isNeon =
+  /neon|неон/i.test(
+    [theme?.name, ...(theme?.assets ?? []).map(a => `${(a as any).name ?? ""} ${(a as any).src ?? ""}`)]
+      .filter(Boolean)
+      .join(" ")
   );
 
   if (isLoading) {
@@ -128,8 +142,71 @@ function CourseDetailsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background m--course-page">
+    <div className={`min-h-screen bg-background m--course-page ${isNeon ? "theme-neon" : ""}`}>
+<style jsx global>{`
+  /* Применяется ТОЛЬКО когда на корне есть .theme-neon */
+  .theme-neon .description-editor-wrapper,
+  .theme-neon .content-editor-wrapper {
+    /* bg-card берёт этот токен — красим под неон */
+    --card: #0f1320 !important;
+    --card-foreground: var(--neon-text) !important;
+
+    background: linear-gradient(180deg, rgba(10,15,25,.65), rgba(10,15,25,.4)) !important;
+    border: 1px solid var(--neon-border) !important;
+    box-shadow: var(--neon-shadow) !important;
+    color: var(--neon-text) !important;
+  }
+
+  /* Убираем border:none у readonly-обёртки */
+  .theme-neon .description-editor-wrapper.readonly {
+    border: 1px solid var(--neon-border) !important;
+  }
+
+  /* Внутрянка редактора — без белых подложек */
+  .theme-neon .description-editor-wrapper .content-editor-content,
+  .theme-neon .description-editor-wrapper .tiptap,
+  .theme-neon .description-editor-wrapper .ProseMirror {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: var(--neon-text) !important;
+  }
+
+  /* Неоновые токены для tiptap */
+  .theme-neon .description-editor-wrapper {
+    --editor-text-default: #e6f0ff;
+    --editor-text-gray: #9db0d1;
+    --editor-bg-default: #0f1320;
+    --editor-bg-subtle: #0b1120;
+    --editor-bg-muted: #0e1626;
+    --editor-border-default: rgba(0,229,255,.25);
+    --editor-border-strong: rgba(0,229,255,.35);
+  }
+
+  .theme-neon .description-editor-wrapper pre {
+    background: var(--editor-bg-subtle) !important;
+    border: 1px solid var(--editor-border-default) !important;
+    box-shadow: inset 0 0 18px rgba(0,229,255,.12);
+    color: #d2e4ff !important;
+  }
+
+  .theme-neon .description-editor-wrapper ul > li::marker { color: var(--neon-primary-2); }
+
+  .theme-neon .description-editor-wrapper a {
+    color: var(--neon-primary-2);
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(0,229,255,.35);
+  }
+  .theme-neon .description-editor-wrapper a:hover {
+    color: var(--neon-pink);
+    text-shadow: 0 0 10px rgba(255,0,229,.6);
+    border-bottom-color: rgba(255,0,229,.45);
+  }
+`}</style>
+
       <Header />
+
+      <ThemeHeadLinks assets={theme?.assets} />
 
       <main className="container mx-auto px-4 py-8 m--course-main">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 m--course-layout">
@@ -241,6 +318,7 @@ function CourseDetailsContent() {
                       📖 {t("about_course")}
                     </h3>
                     {course.description && (
+                        <div className="m-course-description-wrapper">
                       <DescriptionEditor
                         editable={false}
                         toolbar={false}
@@ -250,6 +328,7 @@ function CourseDetailsContent() {
                           }
                         }}
                       />
+                      </div>
                     )}
                   </div>
                 </div>

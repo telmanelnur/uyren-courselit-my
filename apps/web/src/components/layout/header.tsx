@@ -162,8 +162,8 @@ export default function Header() {
                   key={item.name}
                   href={item.href}
                   onClick={(e) => handleNavigation(item.href, e)}
-                  className={cn(
-                    "relative py-2 px-1 text-gray-700 text-sm transition-all duration-300 hover:text-brand-primary group",
+                    className={cn(
+                    "relative py-2 px-1 text-foreground/80 text-sm transition-all duration-300 hover:text-brand-primary group",
                     isActive ? "font-bold text-brand-primary" : "font-medium",
                   )}
                 >
@@ -182,13 +182,16 @@ export default function Header() {
             <div className="relative">
               <Button
                 onClick={() => setLangOpen(!langOpen)}
-                className="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-md"
+                className="flex items-center space-x-1 px-3 py-1 rounded-md
+                  border border-border bg-accent/30 hover:bg-accent
+                   text-foreground"
               >
                 {languages.find((l) => l.code === currentLang)?.label}
                 <ChevronDown className="w-4 h-4" />
               </Button>
               {langOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white border rounded-md shadow-lg z-50">
+                <div className="absolute right-0 mt-2 w-32 bg-popover text-foreground
+                 border border-border rounded-md shadow-lg z-50">
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
@@ -218,7 +221,8 @@ export default function Header() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center space-x-2 p-2 rounded-md text-muted-foreground hover:text-brand-primary hover:bg-accent transition-colors duration-200"
+                  className="flex items-center space-x-2 p-2 rounded-md text-foreground/80
+                  hover:text-brand-primary hover:bg-accent transition-colors duration-200"
                 >
                   {profile?.avatar?.file ? (
                     <Image
@@ -237,10 +241,11 @@ export default function Header() {
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-popover text-foreground
+                     border border-border rounded-md shadow-lg py-1 z-50">
                     <Link
                       href="/dashboard"
-                      className="block px-4 py-2 text-sm text-muted-foreground hover:text-brand-primary hover:bg-accent"
+                      className="block px-4 py-2 text-sm text-foreground/80 hover:text-brand-primary hover:bg-accent"
                       onClick={() => setUserMenuOpen(false)}
                     >
                       <Settings className="w-4 h-4 inline mr-2" />
@@ -248,7 +253,7 @@ export default function Header() {
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-red-500 hover:bg-accent"
+                      className="block w-full text-left px-4 py-2 text-sm text-foreground/80 hover:text-red-500 hover:bg-accent"
                     >
                       <LogOut className="w-4 h-4 inline mr-2" />
                       Sign Out
@@ -293,8 +298,8 @@ export default function Header() {
                   className={cn(
                     "block py-2 px-2 transition-all duration-200 rounded-md",
                     isActive
-                      ? "text-brand-primary font-bold bg-orange-50 border-l-4 border-brand-primary pl-4"
-                      : "text-gray-700 hover:text-brand-primary hover:bg-orange-50/50 font-medium",
+                    ? "text-brand-primary font-bold bg-brand-primary/10 border-l-4 border-brand-primary pl-4"
+                    : "text-foreground/80 hover:text-brand-primary hover:bg-accent font-medium",
                   )}
                 >
                   {item.name}
@@ -367,7 +372,7 @@ const Branding = (props: {
         <span className="text-white font-bold text-lg">{props.icon}</span>
       </div>
       <div>
-        <div className="text-lg font-bold text-gray-900">{props.title}</div>
+        <div className="text-lg font-bold text-foreground">{props.title}</div>
         <div className="text-xs text-brand-primary">{props.subtitle}</div>
       </div>
     </Link>

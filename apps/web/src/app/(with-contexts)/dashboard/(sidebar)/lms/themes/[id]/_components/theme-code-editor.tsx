@@ -105,7 +105,7 @@ type AssetType = {
 const assetSchema = z.object({
   name: z.string().min(1, "Name is required"),
   assetType: z.enum(["stylesheet", "font", "script", "image"]),
-  url: z.string().min(1, "URL is required"),
+  url: z.string(),
   content: z.string().optional(),
   preload: z.boolean().optional(),
   async: z.boolean().optional(),
@@ -162,13 +162,31 @@ export default function ThemeCodeEditor() {
   });
 
   // Map assets with proper _id handling
-  const assets = useMemo(() => {
-    if (!assetsData?.assets) return [];
-    return assetsData.assets.map((asset, index) => ({
-      ...asset,
-      _id: (asset as any)._id?.toString() || `temp-${Date.now()}-${index}`,
-    }));
-  }, [assetsData?.assets]);
+const assets: AssetType[] = useMemo(() => {
+  if (!assetsData?.assets) return [];
+  return assetsData.assets.map((a, index): AssetType => ({
+    _id: (a as any)._id?.toString?.() ?? `temp-${Date.now()}-${index}`,
+    assetType: (a as any).assetType ?? "stylesheet",
+    url: (a as any).url ?? "",              
+    name: (a as any).name ?? "",
+    description: (a as any).description ?? "",
+    content: (a as any).content ?? "",
+    rel: (a as any).rel,
+    media: (a as any).media,
+    preload: (a as any).preload,
+    async: (a as any).async,
+    defer: (a as any).defer,
+    crossorigin: (a as any).crossorigin,
+    integrity: (a as any).integrity,
+    sizes: (a as any).sizes,
+    mimeType: (a as any).mimeType,
+  }));
+}, [assetsData?.assets]);
+
+  const serializeAssets = (list: AssetType[]) =>
+  list.map(({ _id, ...rest }) => ({ ...rest, url: rest.url ?? "" }));
+
+  
 
   const handleSaveAssets = () => {
     if (!theme?._id) return;
@@ -315,12 +333,12 @@ function MailList({
 
   const onSubmit = (data: NewAssetFormData) => {
     // Generate default URL based on filename
-    const defaultUrl = `/${data.name}`;
+    // const defaultUrl = `/${data.name}`;
 
     const asset: AssetType = {
       _id: Date.now().toString(),
       assetType: data.assetType,
-      url: defaultUrl,
+      url: "",
       name: data.name,
       description: "",
       content: "",

@@ -40,7 +40,7 @@ export const themeRouter = router({
           .array(
             z.object({
               assetType: z.enum(["stylesheet", "font", "script", "image"]),
-              url: z.string().url(),
+              url: z.string().url().optional(),
               content: z.string().optional(),
               preload: z.boolean().optional(),
               async: z.boolean().optional(),
